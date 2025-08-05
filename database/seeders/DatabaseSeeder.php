@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             PermissionRoleSeeder::class,
             UserRoleSeeder::class,
             CouponSeeder::class,
+            BrandSeeder::class,
                
         ]);
     }

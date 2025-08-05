@@ -3,6 +3,7 @@
 use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\Products\AdminBrandController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 
 // Trang chủ client
@@ -24,6 +25,13 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
     });
 
+    // Quản lý thương hiệu sản phẩm
+    Route::prefix('products/brands')->name('products.brands.')->group(function () {
+    Route::get('trashed', [AdminBrandController::class, 'trashed'])->name('trashed');
+    Route::post('{id}/restore', [AdminBrandController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force-delete', [AdminBrandController::class, 'forceDelete'])->name('force-delete');
+    Route::resource('/', AdminBrandController::class)->parameters(['' => 'brand'])->names('');
+});
 
 });
 

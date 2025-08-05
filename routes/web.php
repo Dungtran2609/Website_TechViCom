@@ -4,6 +4,7 @@ use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\Products\AdminBrandController;
+use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
@@ -51,7 +52,14 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::get('values/{value}/edit', [AdminAttributeValueController::class, 'edit'])->name('values.edit');
         Route::put('values/{value}', [AdminAttributeValueController::class, 'update'])->name('values.update');
         Route::delete('values/{value}', [AdminAttributeValueController::class, 'destroy'])->name('values.destroy');
-    });    
+    });
+    
+    Route::prefix('products')->name('products.')->group(function () {
+    Route::get('trashed', [AdminProductController::class, 'trashed'])->name('trashed');
+    Route::post('{id}/restore', [AdminProductController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
+    Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
+});
 
 });
 

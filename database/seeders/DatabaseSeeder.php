@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             UserRoleSeeder::class,
             CouponSeeder::class,
             BrandSeeder::class,
+            AttributeSeeder::class,
+            AttributeValueSeeder::class,
                
         ]);
     }

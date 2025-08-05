@@ -1,0 +1,106 @@
+<?php
+
+
+namespace App\Models;
+
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Number;
+
+
+class Product extends Model
+{
+    use HasFactory, SoftDeletes;
+
+
+    protected $fillable = [
+        'name',
+        'slug',
+        'type',
+        'short_description',
+        'long_description',
+        'thumbnail',
+        'status',
+        'brand_id',
+        'category_id',
+        'is_featured',
+        'view_count',
+    ];
+
+
+    protected $casts = [
+        'is_featured' => 'boolean',
+    ];
+
+
+    protected $appends = [
+        'price_range',
+        'total_stock',
+    ];
+
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+
+    public function allImages()
+    {
+        return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+    }
+
+
+    public function getPriceRangeAttribute(): string
+    {
+        if ($this->variants->isEmpty()) {
+            return 'Chưa có giá';
+        }
+
+
+        if ($this->type === 'simple') {
+            return Number::format($this->variants->first()->price) . ' đ';
+        }
+
+
+        $minPrice = $this->variants->min('price');
+        $maxPrice = $this->variants->max('price');
+
+
+        if ($minPrice === $maxPrice) {
+            return Number::format($minPrice) . ' đ';
+        }
+
+
+        return Number::format($minPrice) . ' - ' . Number::format($maxPrice) . ' đ';
+    }
+
+
+    public function getTotalStockAttribute(): int
+    {
+        return $this->variants->sum('stock');
+    }
+
+
+ public function comments()
+    {
+        return $this->hasMany(ProductComment::class);
+    }
+
+
+}

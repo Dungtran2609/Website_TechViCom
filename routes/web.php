@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\IsAdmin;
 
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\Products\ProductCommentAdminController;
 // Trang chủ client
 Route::get('/', function () {
     return view('client.home');

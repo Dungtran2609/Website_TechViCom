@@ -121,7 +121,7 @@
                 </a>
                 <div class="collapse" id="6">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Mã giảm giá</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.coupons.index') }}">Mã giảm giá</a></li>
                         <li class="sub-nav-item"><a class="sub-nav-link" href="#">Chương trình</a></li>
                     </ul>
                 </div>

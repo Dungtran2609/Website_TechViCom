@@ -35,10 +35,10 @@
                 </a>
                 <div class="collapse" id="1">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh sách sản phẩm</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh mục</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thương hiệu</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thuộc tính</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.index') }}">Danh sách sản phẩm</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.categories.index') }}">Danh mục</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.brands.index') }}">Thương hiệu</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.attributes.index') }}">Thuộc tính</a></li>
                         <li class="sub-nav-item"><a class="sub-nav-link" href="#">Biến thể</a></li>
                     </ul>
                 </div>
@@ -52,7 +52,7 @@
                 </a>
                 <div class="collapse" id="user-management">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh sách tài khoản </a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.users.index') }}">Danh sách tài khoản </a></li>
                         <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thùng rác</a></li>
                     </ul>
                 </div>
@@ -66,8 +66,8 @@
                 </a>
                 <div class="collapse" id="3">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Đơn hàng</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Hủy/Đổi trả</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.orders.index') }}">Đơn hàng</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.orders.returns') }}">Hủy/Đổi trả</a></li>
                     </ul>
                 </div>
             </li>
@@ -80,9 +80,9 @@
                 </a>
                 <div class="collapse" id="4">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh mục bài viết</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bài viết</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bình luận bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news-categories.index') }}">Danh mục bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news.index') }}">Bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news-comments.index') }}">Bình luận bài viết</a></li>
                     </ul>
                 </div>
             </li>
@@ -95,7 +95,7 @@
                 </a>
                 <div class="collapse" id="9">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Người dùng</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.contacts.index') }}">Người dùng</a></li>
                     </ul>
                 </div>
             </li>
@@ -108,7 +108,7 @@
                 </a>
                 <div class="collapse" id="5">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bình luận</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.comments.products-with-comments') }}">Bình luận</a></li>
                     </ul>
                 </div>
             </li>
@@ -135,8 +135,8 @@
                 </a>
                 <div class="collapse" id="8">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Vai trò</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Phân quyền chi tiết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.roles.index') }}">Vai trò</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.permissions.index') }}">Phân quyền chi tiết</a></li>
                     </ul>
                 </div>
             </li>
@@ -149,7 +149,7 @@
                 </a>
                 <div class="collapse" id="7">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Quản lý banner</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.banner.index') }}">Quản lý banner</a></li>
                     </ul>
                 </div>
             </li>

@@ -35,10 +35,10 @@
                 </a>
                 <div class="collapse" id="1">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh sách sản phẩm</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh mục</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thương hiệu</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thuộc tính</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.index') }}">Danh sách sản phẩm</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.categories.index') }}">Danh mục</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.brands.index') }}">Thương hiệu</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.attributes.index') }}">Thuộc tính</a></li>
                         <li class="sub-nav-item"><a class="sub-nav-link" href="#">Biến thể</a></li>
                     </ul>
                 </div>
@@ -52,7 +52,7 @@
                 </a>
                 <div class="collapse" id="user-management">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh sách tài khoản </a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.users.index') }}">Danh sách tài khoản </a></li>
                         <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thùng rác</a></li>
                     </ul>
                 </div>

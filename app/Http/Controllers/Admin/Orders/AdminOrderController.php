@@ -11,15 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-class OrderController extends Controller
+class AdminOrderController extends Controller
 {
-    // app/Http/Controllers/Admin/Orders/OrderController.php
 
     public function index(Request $request)
     {
         $orders = Order::with([
             'user:id,name',
-            // eager-load cả product và ảnh của product
             'orderItems.productVariant.product.images'
         ])
             ->when(
@@ -38,22 +36,40 @@ class OrderController extends Controller
         $orderData = $orders->map(fn($order) => [
             'id' => $order->id,
             'user_name' => $order->user->name ?? 'Khách vãng lai',
-            // Lấy orderItem đầu tiên, rồi lấy product, rồi lấy ảnh đầu tiên
-            'image' => optional(
-                $order
-                    ->orderItems
-                    ->first()?->productVariant
-                    ->product?->images
-                    ->first()
-            )->image_path,
+
+            // lấy orderItem đầu tiên
+            'image' => optional($order->orderItems->first(), function ($item) {
+                $variant = $item->productVariant;
+                $prod = $variant->product;
+
+                // 1. Ảnh lưu tạm trên order_item
+                if (!empty($item->image_product)) {
+                    $path = $item->image_product;
+                }
+                // 2. Ảnh đầu tiên của product
+                elseif ($prod->images->isNotEmpty()) {
+                    $path = $prod->images->first()->image_path;
+                }
+                // 3. Ảnh của variant
+                elseif (!empty($variant->image)) {
+                    $path = $variant->image;
+                } else {
+                    return null;
+                }
+
+                return asset('storage/' . ltrim($path, '/'));
+            }),
         ]);
+
         return view('admin.orders.index', [
             'orders' => $orderData,
             'pagination' => $orders,
         ]);
     }
 
-    // show
+
+
+    // show  
     public function show(int $id)
     {
         // Eager-load quan hệ cần thiết
@@ -140,6 +156,10 @@ class OrderController extends Controller
             'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'payment_status_vietnamese' => Order::PAYMENT_STATUSES[$order->payment_status]
+                ?? $order->payment_status,
+            'payment_statuses' => Order::PAYMENT_STATUSES,  // ← đây
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
@@ -185,7 +205,7 @@ class OrderController extends Controller
 
 
 
-    //Update
+    //Update 
 // app/Http/Controllers/Admin/Orders/OrderController.php
 
     public function edit(int $id)
@@ -253,6 +273,8 @@ class OrderController extends Controller
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'payment_statuses' => Order::PAYMENT_STATUSES,
             'recipient_name' => $order->recipient_name,
             'recipient_phone' => $order->recipient_phone,
             'recipient_address' => $order->recipient_address,
@@ -290,10 +312,12 @@ class OrderController extends Controller
         // Các giá trị hợp lệ
         $validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
         $validPayments = ['credit_card', 'bank_transfer', 'cod'];
-
+        $validPayments = ['credit_card', 'bank_transfer', 'cod'];
+        $validPaymentStatus = array_keys(Order::PAYMENT_STATUSES);
         // Lấy dữ liệu cần thiết
         $data = $request->only([
             'status',
+            'payment_status',
             'recipient_name',
             'recipient_phone',
             'recipient_address',
@@ -309,6 +333,7 @@ class OrderController extends Controller
         // Validate
         $validator = Validator::make($data, [
             'status' => 'nullable|in:' . implode(',', $validStatuses),
+            'payment_status' => 'nullable|in:' . implode(',', $validPaymentStatus),
             'payment_method' => 'nullable|in:' . implode(',', $validPayments),
             'shipped_at' => 'nullable|date',
             'recipient_name' => 'nullable|string|max:255',
@@ -334,12 +359,20 @@ class OrderController extends Controller
             'coupon_id',
             'to_district_id',
             'to_ward_code',
+            'payment_status',    // ← cho phép fill chung
         ];
+        // if ($oldStatus === 'pending') {
+            // $editable[] = 'payment_method';
+            // $editable[] = 'shipping_method_id';
+        // }
+        // Chỉ cho đổi payment_method khi pending
         if ($oldStatus === 'pending') {
             $editable[] = 'payment_method';
             $editable[] = 'shipping_method_id';
+        } else {
+            // Nếu không phải pending, bỏ luôn payment_status và payment_method
+            unset($data['payment_status'], $data['payment_method']);
         }
-
         // Tính tổng tiền sản phẩm (theo input mới nếu có)
         $totalAmount = collect($order->orderItems)->sum(function ($item) use ($data) {
             $itm = collect($data['order_items'] ?? [])->firstWhere('id', $item->id);

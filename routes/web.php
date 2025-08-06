@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBannerController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\Contacts\AdminContactsController;
@@ -11,14 +12,14 @@ use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
-use App\Http\Controllers\Admin\Orders\OrderController;
+
 use App\Http\Controllers\Admin\Users\AdminPermissionController;
 use App\Http\Controllers\Admin\Users\AdminRoleController;
 use App\Http\Controllers\Admin\Users\AdminUserController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\CheckRole;
 
-use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\Orders\AdminOrderController;
 use App\Http\Controllers\Admin\Products\ProductCommentAdminController;
 // Trang chủ client
 Route::get('/', fn() => view('client.home'))->name('home');
@@ -50,7 +51,7 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 
 
     // Banners
-    Route::resource('banner', BannerController::class);
+    Route::resource('banner', AdminBannerController::class);
     // Quản lý thương hiệu sản phẩm
     Route::prefix('products/brands')->name('products.brands.')->group(function () {
         Route::get('trashed', [AdminBrandController::class, 'trashed'])->name('trashed');
@@ -145,23 +146,17 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('trashed', [OrderController::class, 'trashed'])->name('trashed');
-        Route::post('{id}/restore', [OrderController::class, 'restore'])->name('restore');
-        Route::delete('{id}/force-delete', [OrderController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('{id}/update-status', [OrderController::class, 'updateOrders'])->name('updateOrders');
-        Route::get('returns', [OrderController::class, 'returnsIndex'])->name('returns');
-        Route::post('returns/{id}/process', [OrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminPermissionController::class)
-            ->parameters(['' => 'permission'])
-            ->names([
-                'index' => 'index',
-                'create' => 'create',
-                'store' => 'store',
-                'show' => 'show',
-                'edit' => 'edit',
-                'update' => 'update',
-                'destroy' => 'destroy',
-            ]);
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
+        Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
+        Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
+        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     });
 
     // Liên hệ (Contacts)

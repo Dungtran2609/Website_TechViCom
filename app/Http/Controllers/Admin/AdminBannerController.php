@@ -8,7 +8,7 @@ use App\Http\Requests\Banner\StoreBannerRequest;
 use App\Http\Requests\Banner\UpdateBannerRequest;
 use App\Models\Banner;
 
-class BannerController extends Controller
+class AdminBannerController extends Controller
 {
     public function index()
     {

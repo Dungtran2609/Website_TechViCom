@@ -29,6 +29,7 @@ class Order extends Model
         'recipient_phone',
         'recipient_address',
         'shipped_at',
+        'payment_status',
     ];
 
     /**
@@ -129,5 +130,11 @@ class Order extends Model
         'paid' => 'Đã thanh toán',
         'failed' => 'Thất bại',
     ];
+    public function getPaymentStatusVietnameseAttribute(): string
+    {
+        return self::PAYMENT_STATUSES[$this->payment_status]
+            ?? $this->payment_status;
+    }
+    // ...
     
 }

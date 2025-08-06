@@ -45,7 +45,10 @@ class OrderController extends Controller
             ->where('user_id', $user->id)
             ->findOrFail($id);
 
-        return view('client.orders.show', compact('order'));
+        return view('client.orders.show', [
+            'order' => $order,
+            'paymentStatusMap' => Order::PAYMENT_STATUSES,
+        ]);
     }
 
     /**
@@ -127,6 +130,7 @@ class OrderController extends Controller
                 'recipient_address' => $request->recipient_address,
                 'shipping_method_id' => $shipId,
                 'payment_method' => $request->payment_method,
+                'payment_status' => 'pending',
                 'coupon_id' => $request->coupon_id,
                 'shipping_fee' => $shippingFee,
                 'total_amount' => $subtotal,
@@ -184,6 +188,23 @@ class OrderController extends Controller
         $order->save();
 
         return back()->with('success', 'Đơn hàng đã được hủy.');
+    }
+
+    /**
+     * Xác nhận thanh toán (chỉ khi pending)
+     */
+    public function confirmPayment($id)
+    {
+        $user = Auth::user();
+        $order = Order::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('payment_status', 'pending')
+            ->findOrFail($id);
+
+        $order->payment_status = 'paid';
+        $order->save();
+
+        return back()->with('success', 'Đã xác nhận thanh toán!');
     }
 
     /**

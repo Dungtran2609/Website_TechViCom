@@ -155,6 +155,10 @@ class OrderController extends Controller
             'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'payment_status_vietnamese' => Order::PAYMENT_STATUSES[$order->payment_status]
+                ?? $order->payment_status,
+            'payment_statuses' => Order::PAYMENT_STATUSES,  // ← đây
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
@@ -268,6 +272,8 @@ class OrderController extends Controller
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
+            'payment_status' => $order->payment_status,
+            'payment_statuses' => Order::PAYMENT_STATUSES,
             'recipient_name' => $order->recipient_name,
             'recipient_phone' => $order->recipient_phone,
             'recipient_address' => $order->recipient_address,
@@ -305,10 +311,12 @@ class OrderController extends Controller
         // Các giá trị hợp lệ
         $validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
         $validPayments = ['credit_card', 'bank_transfer', 'cod'];
-
+        $validPayments = ['credit_card', 'bank_transfer', 'cod'];
+        $validPaymentStatus = array_keys(Order::PAYMENT_STATUSES);
         // Lấy dữ liệu cần thiết
         $data = $request->only([
             'status',
+            'payment_status',
             'recipient_name',
             'recipient_phone',
             'recipient_address',
@@ -324,6 +332,7 @@ class OrderController extends Controller
         // Validate
         $validator = Validator::make($data, [
             'status' => 'nullable|in:' . implode(',', $validStatuses),
+            'payment_status' => 'nullable|in:' . implode(',', $validPaymentStatus),
             'payment_method' => 'nullable|in:' . implode(',', $validPayments),
             'shipped_at' => 'nullable|date',
             'recipient_name' => 'nullable|string|max:255',
@@ -349,12 +358,20 @@ class OrderController extends Controller
             'coupon_id',
             'to_district_id',
             'to_ward_code',
+            'payment_status',    // ← cho phép fill chung
         ];
+        // if ($oldStatus === 'pending') {
+            // $editable[] = 'payment_method';
+            // $editable[] = 'shipping_method_id';
+        // }
+        // Chỉ cho đổi payment_method khi pending
         if ($oldStatus === 'pending') {
             $editable[] = 'payment_method';
             $editable[] = 'shipping_method_id';
+        } else {
+            // Nếu không phải pending, bỏ luôn payment_status và payment_method
+            unset($data['payment_status'], $data['payment_method']);
         }
-
         // Tính tổng tiền sản phẩm (theo input mới nếu có)
         $totalAmount = collect($order->orderItems)->sum(function ($item) use ($data) {
             $itm = collect($data['order_items'] ?? [])->firstWhere('id', $item->id);

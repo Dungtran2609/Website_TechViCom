@@ -68,7 +68,7 @@
 
     <!-- JS -->
     <script src="{{ asset('admin_css/js/config.js') }}"></script>
-    <script src="{{ asset('admin_css/js/vendor.js') }}"></script>
+    <script src="{{ asset('admin_css/js/vendor.min.js') }}"></script>
     <script src="{{ asset('admin_css/js/app.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>

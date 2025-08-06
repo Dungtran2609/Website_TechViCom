@@ -14,10 +14,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             UserAddressSeeder::class,
-            UserRoleSeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             PermissionRoleSeeder::class,
+            UserRoleSeeder::class,
             ShippingMethodSeeder::class,
             BrandSeeder::class,
             CategorySeeder::class,
@@ -32,7 +32,6 @@ class DatabaseSeeder extends Seeder
             NewsSeeder::class,
             NewsCommentSeeder::class,
             ContactSeeder::class,
-            CouponSeeder::class,
         ]);
     }
 }

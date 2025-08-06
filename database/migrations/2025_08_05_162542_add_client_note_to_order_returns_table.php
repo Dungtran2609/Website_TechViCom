@@ -7,15 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->softDeletes(); // tạo cột deleted_at TIMESTAMP NULL
+        Schema::table('order_returns', function (Blueprint $table) {
+            $table->text('client_note')->nullable()->after('admin_note');
         });
     }
 
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropSoftDeletes();
+        Schema::table('order_returns', function (Blueprint $table) {
+            $table->dropColumn('client_note');
         });
     }
 };

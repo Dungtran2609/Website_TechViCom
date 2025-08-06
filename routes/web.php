@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
-
+use App\Http\Controllers\Admin\Orders\OrderController;
 // Trang chủ client
 Route::get('/', function () {
     return view('client.home');
@@ -60,7 +60,16 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     Route::delete('{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
     Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
 });
-
+    //Quản lí đơn hàng
+    Route::prefix('order')->name('order.')->group(function () {
+        Route::get('trashed', [OrderController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [OrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [OrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [OrderController::class, 'updateOrders'])->name('updateOrders');
+        Route::get('returns', [OrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [OrderController::class, 'processReturn'])->name('process-return');
+        Route::resource('', OrderController::class)->parameters(['' => 'order'])->names('');
+    });
 });
 
 require __DIR__.'/auth.php';

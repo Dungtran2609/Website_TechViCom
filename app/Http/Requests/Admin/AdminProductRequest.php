@@ -30,23 +30,25 @@ class AdminProductRequest extends FormRequest
             'short_description' => 'nullable|string|max:500',
             'long_description' => 'nullable|string',
             'gallery' => 'nullable|array',
-            'gallery.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048', 
+            'gallery.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'integer|exists:product_all_images,id',
         ];
 
-        // SKU là bắt buộc khi cập nhật, và được bỏ qua khi tạo mới (sẽ được sinh tự động)
-        $skuRule = $isUpdating
-            ? ['required', 'string', 'max:255']
-            : ['nullable', 'string', 'max:255'];
-
         if ($this->input('type') === 'simple') {
             $rules['price'] = 'required|numeric|min:0';
             $rules['stock'] = 'required|integer|min:0';
-            
-            $simpleVariantId = $isUpdating ? $product->variants->first()?->id : null;
-            $rules['sku'] = array_merge($skuRule, [Rule::unique('product_variants', 'sku')->ignore($simpleVariantId)]);
-            
+            $rules['low_stock_amount'] = 'nullable|integer|min:0';
+
+            // SKU không bắt buộc, nếu để trống sẽ được sinh tự động
+            $simpleVariantId = $isUpdating ? $product->variants->whereNull('deleted_at')->first()?->id : null;
+            $rules['sku'] = [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('product_variants', 'sku')->ignore($simpleVariantId)
+            ];
+
             $rules['weight'] = 'nullable|numeric|min:0';
             $rules['length'] = 'nullable|numeric|min:0';
             $rules['width'] = 'nullable|numeric|min:0';
@@ -59,15 +61,22 @@ class AdminProductRequest extends FormRequest
             $rules['variants'] = 'required|array|min:1';
             $rules['variants.*.price'] = 'required|numeric|min:0';
             $rules['variants.*.stock'] = 'required|integer|min:0';
+            $rules['variants.*.low_stock_amount'] = 'nullable|integer|min:0';
             $rules['variants.*.attributes'] = 'required|array|min:1';
-            
+
             if ($this->input('variants')) {
                 foreach ($this->input('variants') as $key => $variant) {
                     $variantId = $variant['id'] ?? null;
+                    
+                    // SKU là bắt buộc khi cập nhật một biến thể đã có, và được bỏ qua khi tạo biến thể mới
+                    $skuRule = ($isUpdating && $variantId)
+                        ? ['required', 'string', 'max:255']
+                        : ['nullable', 'string', 'max:255'];
+
                     $rules["variants.{$key}.sku"] = array_merge($skuRule, [Rule::unique('product_variants', 'sku')->ignore($variantId)]);
                 }
             }
-            
+
             $rules['variants.*.weight'] = 'nullable|numeric|min:0';
             $rules['variants.*.length'] = 'nullable|numeric|min:0';
             $rules['variants.*.width'] = 'nullable|numeric|min:0';
@@ -82,7 +91,6 @@ class AdminProductRequest extends FormRequest
     {
         return [
 
-            'sku.required' => 'SKU không được để trống khi cập nhật.',
             'sku.unique' => 'SKU này đã tồn tại.',
             'variants.*.sku.required' => 'SKU của biến thể không được để trống khi cập nhật.',
             'variants.*.sku.unique' => 'SKU của biến thể đã tồn tại.',
@@ -124,6 +132,9 @@ class AdminProductRequest extends FormRequest
             'stock.integer' => 'Tồn kho phải là số nguyên.',
             'stock.min' => 'Tồn kho phải lớn hơn hoặc bằng 0.',
 
+            'low_stock_amount.integer' => 'Ngưỡng tồn kho thấp phải là số nguyên.',
+            'low_stock_amount.min' => 'Ngưỡng tồn kho thấp phải lớn hơn hoặc bằng 0.',
+
             'sku.string' => 'SKU phải là chuỗi ký tự.',
             'sku.max' => 'SKU không được vượt quá 255 ký tự.',
 
@@ -148,6 +159,8 @@ class AdminProductRequest extends FormRequest
             'variants.*.stock.required' => 'Tồn kho của biến thể là bắt buộc.',
             'variants.*.stock.integer' => 'Tồn kho của biến thể phải là số nguyên.',
             'variants.*.stock.min' => 'Tồn kho của biến thể phải lớn hơn hoặc bằng 0.',
+            'variants.*.low_stock_amount.integer' => 'Ngưỡng tồn kho thấp của biến thể phải là số nguyên.',
+            'variants.*.low_stock_amount.min' => 'Ngưỡng tồn kho thấp của biến thể phải lớn hơn hoặc bằng 0.',
             'variants.*.attributes.required' => 'Thuộc tính của biến thể là bắt buộc.',
             'variants.*.attributes.array' => 'Thuộc tính của biến thể không hợp lệ.',
             'variants.*.attributes.min' => 'Mỗi biến thể phải có ít nhất một thuộc tính.',

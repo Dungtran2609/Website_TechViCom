@@ -127,7 +127,7 @@ class AdminProductController extends Controller
     {
         $submittedVariantIds = [];
         if ($request->type === 'simple') {
-        $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'weight', 'length', 'width', 'height']);
+        $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
         $simpleVariantData['is_active'] = true;
 
         // Sinh SKU tự động nếu không nhập

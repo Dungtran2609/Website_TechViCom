@@ -13,13 +13,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 class OrderController extends Controller
 {
-    // app/Http/Controllers/Admin/Orders/OrderController.php
-
     public function index(Request $request)
     {
         $orders = Order::with([
             'user:id,name',
-            // eager-load cả product và ảnh của product
             'orderItems.productVariant.product.images'
         ])
             ->when(
@@ -38,20 +35,38 @@ class OrderController extends Controller
         $orderData = $orders->map(fn($order) => [
             'id' => $order->id,
             'user_name' => $order->user->name ?? 'Khách vãng lai',
-            // Lấy orderItem đầu tiên, rồi lấy product, rồi lấy ảnh đầu tiên
-            'image' => optional(
-                $order
-                    ->orderItems
-                    ->first()?->productVariant
-                    ->product?->images
-                    ->first()
-            )->image_path,
+
+            // lấy orderItem đầu tiên
+            'image' => optional($order->orderItems->first(), function ($item) {
+                $variant = $item->productVariant;
+                $prod = $variant->product;
+
+                // 1. Ảnh lưu tạm trên order_item
+                if (!empty($item->image_product)) {
+                    $path = $item->image_product;
+                }
+                // 2. Ảnh đầu tiên của product
+                elseif ($prod->images->isNotEmpty()) {
+                    $path = $prod->images->first()->image_path;
+                }
+                // 3. Ảnh của variant
+                elseif (!empty($variant->image)) {
+                    $path = $variant->image;
+                } else {
+                    return null;
+                }
+
+                return asset('storage/' . ltrim($path, '/'));
+            }),
         ]);
+
         return view('admin.orders.index', [
             'orders' => $orderData,
             'pagination' => $orders,
         ]);
     }
+
+
 
     // show  
     public function show(int $id)
@@ -155,8 +170,8 @@ class OrderController extends Controller
                 $imageUrl = $path
                     ? asset('storage/' . ltrim($path, '/'))
                     : null;
-                
-                
+
+
 
                 return [
                     'image_product_url' => $imageUrl,

@@ -124,4 +124,10 @@ class Order extends Model
 
         return $statuses[$this->status] ?? $this->status;
     }
+    public const PAYMENT_STATUSES = [
+        'pending' => 'Đang chờ xử lý',
+        'paid' => 'Đã thanh toán',
+        'failed' => 'Thất bại',
+    ];
+    
 }

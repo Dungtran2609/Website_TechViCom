@@ -5,10 +5,10 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Sửa đơn hàng #{{ $orderData['id'] }}</h1>
                 <div>
-                    <a href="{{ route('admin.order.index') }}" class="btn btn-outline-secondary btn-sm me-2">
+                    <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-secondary btn-sm me-2">
                         <i class="fas fa-arrow-left"></i> Quay lại
                     </a>
-                    <a href="{{ route('admin.order.show', $orderData['id']) }}" class="btn btn-outline-info btn-sm">
+                    <a href="{{ route('admin.orders.show', $orderData['id']) }}" class="btn btn-outline-info btn-sm">
                         <i class="fas fa-eye"></i> Xem
                     </a>
                 </div>
@@ -17,7 +17,7 @@
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
-            <form action="{{ route('admin.order.updateOrders', $orderData['id']) }}" method="POST">
+            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST">
                 @csrf
 
                 {{-- Thông tin đơn hàng --}}
@@ -211,7 +211,7 @@
 
                 <div class="d-flex justify-content-end mb-5">
                     <button type="submit" class="btn btn-primary me-2">Cập nhật</button>
-                    <a href="{{ route('admin.order.show', $orderData['id']) }}" class="btn btn-outline-secondary">Hủy</a>
+                    <a href="{{ route('admin.orders.show', $orderData['id']) }}" class="btn btn-outline-secondary">Hủy</a>
                 </div>
             </form>
         </div>

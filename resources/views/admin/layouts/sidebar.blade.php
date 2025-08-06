@@ -66,8 +66,8 @@
                 </a>
                 <div class="collapse" id="3">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.order.index') }}">Đơn hàng</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.order.returns') }}">Hủy/Đổi trả</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.orders.index') }}">Đơn hàng</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.orders.returns') }}">Hủy/Đổi trả</a></li>
                     </ul>
                 </div>
             </li>
@@ -135,8 +135,8 @@
                 </a>
                 <div class="collapse" id="8">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Vai trò</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Phân quyền chi tiết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.roles.index') }}">Vai trò</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.permissions.index') }}">Phân quyền chi tiết</a></li>
                     </ul>
                 </div>
             </li>

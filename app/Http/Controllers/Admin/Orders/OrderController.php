@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Storage;
 class OrderController extends Controller
 {
     // app/Http/Controllers/Admin/Orders/OrderController.php
@@ -53,64 +53,56 @@ class OrderController extends Controller
         ]);
     }
 
-// show  
+    // show
     public function show(int $id)
     {
         // Eager-load quan hệ cần thiết
         $order = Order::with([
             'user:id,name,email',
-            'user.addresses', // địa chỉ của user
+            'user.addresses',
             'orderItems.productVariant.product.images',
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod:id,name',
             'coupon'
         ])->findOrFail($id);
+
         $shippingMethods = ShippingMethod::all();
-        // Lấy địa chỉ mặc định của user (is_default = true)
+
+        // Lấy địa chỉ mặc định của user
         $defaultAddress = $order->user->addresses
             ->firstWhere('is_default', true)
             ?? $order->user->addresses->first();
 
-        // Nếu không có địa chỉ, giả định thành phố Hà Nội
+        // Xác định địa chỉ
         $city = $defaultAddress->city ?? 'Hà Nội';
         $district = $defaultAddress->district ?? '';
         $ward = $defaultAddress->ward ?? '';
         $address = $defaultAddress->address_line ?? '';
 
-        // Tính tổng giá sản phẩm
+        // Tính subtotal
         $subtotal = $order->orderItems->sum(function ($item) {
             $variant = $item->productVariant;
             $price = $variant->sale_price ?? $variant->price ?? 0;
             return ($item->quantity ?? 0) * $price;
         });
 
-        // Tính phí vận chuyển (Hà Nội miễn phí nếu >=3 triệu)
+        // Tính phí vận chuyển
         if ($order->shipping_method_id === 1) {
             $shippingFee = 0;
         } else {
-            // Giao tận nơi: Hà Nội miễn phí nếu >=3 triệu, ngược lại 60k
             $shippingFee = ($city === 'Hà Nội' && $subtotal < 3000000) ? 60000 : 0;
         }
 
-        // Tính giảm giá từ coupon
-        // $couponDiscount = 0;
-        // if ($order->coupon) {
-            // $type = $order->coupon->type ?? null;
-            // $value = $order->coupon->value ?? 0;
-            // if ($type === 'percent') {
-                // $couponDiscount = ($subtotal + $shippingFee) * ($value / 100);
-            // } elseif ($type === 'fixed') {
-                // $couponDiscount = $value;
-            // }
-        // }
+        // Tính giảm giá
         $couponDiscount = $this->calculateCouponDiscount(
             $order->coupon,
             $subtotal + $shippingFee
         );
-        // Tổng cuối cùng
+
+        // Tổng cuối
         $finalTotal = $subtotal + $shippingFee - $couponDiscount;
-        // $shippingMethodName = $order->shippingMethod->name ?? 'Chưa chọn';
-        // Ánh xạ trạng thái và phương thức thanh toán
+
+        // Ánh xạ trạng thái & phương thức thanh toán
         $statusMap = [
             'pending' => 'Đang chờ xử lý',
             'processing' => 'Đang xử lý',
@@ -153,8 +145,21 @@ class OrderController extends Controller
                 $variant = $item->productVariant;
                 $prod = $variant->product;
                 $price = $variant->sale_price ?? $variant->price;
+                if (!empty($item->image_product)) {
+                    $path = $item->image_product;
+                } elseif (!empty($variant->image)) {
+                    $path = $variant->image;
+                } else {
+                    $path = null;
+                }
+                $imageUrl = $path
+                    ? asset('storage/' . ltrim($path, '/'))
+                    : null;
+
+
+
                 return [
-                    'image_product' => optional($prod->images->first())->image_path,
+                    'image_product_url' => $imageUrl,
                     'brand_name' => $prod->brand?->name ?? '',
                     'category_name' => $prod->category?->name ?? '',
                     'stock' => $variant->stock ?? 0,
@@ -175,7 +180,12 @@ class OrderController extends Controller
         return view('admin.orders.show', compact('orderData'));
     }
 
-//Update 
+
+
+
+
+
+    //Update
 // app/Http/Controllers/Admin/Orders/OrderController.php
 
     public function edit(int $id)
@@ -363,7 +373,7 @@ class OrderController extends Controller
         // $order->total_amount = $totalAmount;
         // $order->final_total = $totalAmount + $shippingFee - $discount;
         // if (!empty($data['shipped_at'])) {
-            // $order->shipped_at = Carbon::parse($data['shipped_at']);
+        // $order->shipped_at = Carbon::parse($data['shipped_at']);
         // }
         // $order->save();
         $order->shipping_fee = $shippingFee;
@@ -384,7 +394,7 @@ class OrderController extends Controller
         }
 
         return redirect()
-            ->route('admin.order.show', $order->id)
+            ->route('admin.orders.show', $order->id)
             ->with('success', 'Đơn hàng đã được cập nhật.');
     }
 
@@ -396,7 +406,7 @@ class OrderController extends Controller
             return back()->with('error', 'Chỉ có thể xóa khi trạng thái đã hủy, đã trả hoặc đã nhận.');
         }
         $order->delete(); // xóa mềm
-        return redirect()->route('admin.order.index')
+        return redirect()->route('admin.orders.index')
             ->with('success', 'Đơn hàng đã được chuyển vào thùng rác.');
     }
 
@@ -462,7 +472,7 @@ class OrderController extends Controller
             $order->orderItems()->forceDelete();
             $order->forceDelete();
         });
-        return redirect()->route('admin.order.trashed')
+        return redirect()->route('admin.orders.trashed')
             ->with('success', 'Đơn hàng đã bị xóa vĩnh viễn.');
     }
 

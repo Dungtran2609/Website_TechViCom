@@ -4,7 +4,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Thùng rác đơn hàng</h1>
-            <a href="{{ route('admin.order.index') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Quay lại danh sách
             </a>
         </div>

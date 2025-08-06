@@ -22,7 +22,7 @@
         <div class="card">
             <div class="card-body">
                 <a href="{{ route('admin.permissions.list') }}" class="btn btn-success mb-3">
-                    <i class="fas fa-list"></i> Danh sách vai trò
+                    <i class="fas fa-list"></i> Danh sách phân quyền
                 </a>
 
                 <div class="table-responsive">

@@ -5,7 +5,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Quản lý Hủy/Đổi trả</h1>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.order.index') }}" class="btn btn-secondary">
+                <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Quay lại Quản lý đơn hàng
                 </a>
             </div>

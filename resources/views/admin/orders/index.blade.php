@@ -5,14 +5,14 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="fw-bold text-primary">Quản lý đơn hàng</h1>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.order.trashed') }}" class="btn btn-danger shadow-sm">
+                <a href="{{ route('admin.orders.trashed') }}" class="btn btn-danger shadow-sm">
                     <i class="fas fa-trash me-2"></i> Thùng rác
                 </a>
             </div>
         </div>
 
         <!-- Form tìm kiếm -->
-        <form method="GET" action="{{ route('admin.order.index') }}" class="mb-4">
+        <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-4">
             <div class="input-group shadow-sm rounded">
                 <input type="text" name="search" class="form-control border-0 py-2"
                     placeholder="Tìm theo mã đơn hoặc tên khách hàng" value="{{ request('search') }}">
@@ -33,8 +33,10 @@
                     <div class="col">
                         <div class="card h-100 shadow-sm border-0 transition-all hover:shadow-lg">
                             @if ($order['image'])
-                                <img src="{{ asset($order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;"
-                                    alt="Ảnh đơn {{ $order['id'] }}">
+                                <!-- <img src="{{ asset($order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;" -->
+                                    <!-- alt="Ảnh đơn {{ $order['id'] }}"> -->
+                                    <img src="{{ asset('storage/' . $order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;"
+                                        alt="Ảnh đơn {{ $order['id'] }}">
                             @else
                                 <div class="card-img-top text-center py-5 bg-light text-muted"
                                     style="height: 180px; display: flex; align-items: center; justify-content: center;">
@@ -46,7 +48,7 @@
                                 <p class="card-text">Khách: {{ $order['user_name'] }}</p>
                             </div>
                             <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
-                                <a href="{{ route('admin.order.show', $order['id']) }}" class="btn btn-warning btn-sm px-3">
+                                <a href="{{ route('admin.orders.show', $order['id']) }}" class="btn btn-warning btn-sm px-3">
                                     <i class="fas fa-edit me-2"></i>Xem
                                 </a>
                             </div>

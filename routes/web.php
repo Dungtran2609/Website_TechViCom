@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\Users\AdminUserController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\CheckRole;
 
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\Products\ProductCommentAdminController;
 // Trang chủ client
 Route::get('/', fn() => view('client.home'))->name('home');
 
@@ -34,7 +36,21 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::delete('{id}/force-delete', [AdminCategoryController::class, 'forceDelete'])->name('force-delete');
         Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
     });
+     // Product Comments
+    Route::prefix('product-comments')->name('products.comments.')->group(function () {
+        Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
+        Route::get('/', [ProductCommentAdminController::class, 'index'])->name('index');
+        Route::get('/{id}', [ProductCommentAdminController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ProductCommentAdminController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ProductCommentAdminController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ProductCommentAdminController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
+        Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
+    });
 
+
+    // Banners
+    Route::resource('banner', BannerController::class);
     // Quản lý thương hiệu sản phẩm
     Route::prefix('products/brands')->name('products.brands.')->group(function () {
         Route::get('trashed', [AdminBrandController::class, 'trashed'])->name('trashed');
@@ -180,5 +196,5 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 });
 
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
-
+Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
 require __DIR__ . '/auth.php';

@@ -108,7 +108,7 @@
                 </a>
                 <div class="collapse" id="5">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bình luận</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.products.comments.products-with-comments') }}">Bình luận</a></li>
                     </ul>
                 </div>
             </li>
@@ -149,7 +149,7 @@
                 </a>
                 <div class="collapse" id="7">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Quản lý banner</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.banner.index') }}">Quản lý banner</a></li>
                     </ul>
                 </div>
             </li>

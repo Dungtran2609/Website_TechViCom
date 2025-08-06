@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
 use App\Http\Controllers\Admin\Orders\OrderController;
 use App\Http\Controllers\Admin\Users\AdminPermissionController;
+use App\Http\Controllers\Admin\Users\AdminProfileController;
 use App\Http\Controllers\Admin\Users\AdminRoleController;
 use App\Http\Controllers\Admin\Users\AdminUserController;
 use App\Http\Middleware\IsAdmin;
@@ -66,10 +67,13 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 
     // ==== Users ====
     Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
+        // !!! LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
+        // Thêm route cho profile cá nhân, đặt trước resource để không bị xung đột
+        Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
+
         Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [AdminUserController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('force-delete');
-
         Route::resource('', AdminUserController::class)
             ->parameters(['' => 'user'])
             ->names([
@@ -131,8 +135,9 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::post('{id}/update-status', [OrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [OrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [OrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminPermissionController::class)
-            ->parameters(['' => 'permission'])
+        // !!! LỖI COPY-PASTE ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
+        Route::resource('', OrderController::class) // <-- Sửa từ AdminPermissionController thành OrderController
+            ->parameters(['' => 'order']) // <-- Sửa từ 'permission' thành 'order' cho đúng
             ->names([
                 'index' => 'index',
                 'create' => 'create',

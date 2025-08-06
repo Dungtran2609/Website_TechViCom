@@ -81,7 +81,7 @@
                         </div>
 
                         <div class="text-center py-3">
-                            <a href="# class="btn btn-primary btn-sm">Xem tất cả liên
+                            <a href="#" class="btn btn-primary btn-sm">Xem tất cả liên
                                 hệ</a>
                         </div>
                     </div>
@@ -102,23 +102,75 @@
                     <a type="button" class="topbar-button" data-bs-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle" width="32"
-                                src="#"
-                                alt="avatar">
+                            {{-- Sửa: Hiển thị ảnh đại diện động, có ảnh mặc định nếu không tồn tại --}}
+                            <img class="rounded-circle" width="32" height="32" style="object-fit: cover;"
+                                 src="{{ Auth::user()->image_profile ? asset('storage/' . Auth::user()->image_profile) : 'https://via.placeholder.com/32' }}"
+                                 alt="{{ Auth::user()->name }}">
                         </span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <h6 class="dropdown-header">Welcome, Admin!</h6>
-                        <a class="dropdown-item" href="#">
+                        {{-- Sửa: Hiển thị tên người dùng động --}}
+                        <h6 class="dropdown-header">Welcome, {{ Auth::user()->name }}!</h6>
+
+                        {{-- Sửa: Thêm link tới trang profile --}}
+                        <a class="dropdown-item" href="{{ route('admin.users.profile') }}">
                             <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i> Profile
                         </a>
                         <a class="dropdown-item" href="#">
+<style>
+    .custom-dropdown { position: relative; }
+    .custom-dropdown-toggle { cursor: pointer; }
+    .custom-dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        min-width: 200px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        z-index: 1000;
+        padding: 0.5rem 0;
+        transition: all 0.2s;
+    }
+    .custom-dropdown-menu.show {
+        display: block;
+        animation: fadeIn 0.2s;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var dropdown = document.querySelector('.custom-dropdown');
+        var toggle = dropdown.querySelector('.custom-dropdown-toggle');
+        var menu = dropdown.querySelector('.custom-dropdown-menu');
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            menu.classList.toggle('show');
+        });
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
+    });
+</script>
                             <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i> Messages
                         </a>
                         <div class="dropdown-divider my-1"></div>
-                        <a class="dropdown-item text-danger" href="#">
+
+                        {{-- Sửa: Tạo chức năng Logout đúng cách và bảo mật --}}
+                        <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                           onclick="event.preventDefault();
+                                     document.getElementById('logout-form').submit();">
                             <i class="bx bx-log-out fs-18 align-middle me-1"></i> Logout
                         </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
                     </div>
                 </div>
 

@@ -31,32 +31,11 @@ class AdminUserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    // public function admins()
-    // {
-    //     $users = User::whereHas('roles', fn($q) => $q->where('name', 'admin'))
-    //                  ->with('roles')->paginate(10);
-    //     return view('admin.users.index', compact('users'));
-    // }
-
-    // public function staffs()
-    // {
-    //     $users = User::whereHas('roles', fn($q) => $q->where('name', 'staff'))
-    //                  ->with('roles')->paginate(10);
-    //     return view('admin.users.index', compact('users'));
-    // }
-
-    // public function customers()
-    // {
-    //     $users = User::whereHas('roles', fn($q) => $q->where('name', 'user'))
-    //                  ->with('roles')->paginate(10);
-    //     return view('admin.users.index', compact('users'));
-    // }
-
     public function create()
     {
         $roles = Role::all();
         return view('admin.users.create', compact('roles'));
-    }
+    }   
 
     public function store(UserRequest $request)
     {

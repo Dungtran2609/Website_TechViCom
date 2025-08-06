@@ -65,7 +65,15 @@ class Product extends Model
         return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
     }
 
-
+    public function images()
+    {
+        return $this->hasMany(
+            \App\Models\ProductAllImage::class,
+            'product_id', // FK trên product_all_images
+            'id'          // PK của product
+        )
+            ->orderBy('sort_order');
+    }
     public function getPriceRangeAttribute(): string
     {
         if ($this->variants->isEmpty()) {
@@ -102,5 +110,21 @@ class Product extends Model
         return $this->hasMany(ProductComment::class);
     }
 
-
+    public function getDisplayPriceAttribute()
+    {
+        if ($this->type === 'simple') {
+            return $this->sale_price && $this->sale_price < $this->price
+                ? $this->sale_price
+                : $this->price;
+        }
+        if ($this->variants->count()) {
+            $min = $this->variants->min('price');
+            $max = $this->variants->max('price');
+            return ($min && $max && $min != $max)
+                ? ['min' => $min, 'max' => $max]
+                : $min;
+        }
+        return null;
+    }
+    
 }

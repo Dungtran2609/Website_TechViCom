@@ -26,7 +26,7 @@
                 </div>
 
 
-                <!-- Notification -->
+                <!-- Thông báo -->
                 <div class="dropdown topbar-item">
                     <!-- Button Thông báo -->
                     <button type="button"
@@ -36,13 +36,13 @@
 
                         <i class="bx bx-bell fs-22"></i>
 
-                        {{-- @if ($newContacts->count() > 0)
+                        @if ($Contacts->count() > 0)
                             <span
                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger fs-10 px-2 notification-badge"
                                 style="z-index: 1;">
-                                {{ $newContacts->count() }}
+                                {{ $Contacts->count() }}
                             </span>
-                        @endif --}}
+                        @endif
                     </button>
 
                     <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
@@ -53,14 +53,14 @@
                                     <h6 class="m-0 fs-16 fw-semibold">Thông báo liên hệ mới</h6>
                                 </div>
                                 <div class="col-auto">
-                                    <a href="#"
+                                    <a href="{{ route('admin.contacts.index') }}"
                                         class="text-dark text-decoration-underline"><small>Xem tất cả</small></a>
                                 </div>
                             </div>
                         </div>
 
                         <div data-simplebar style="max-height: 280px;">
-                            {{-- @forelse($newContacts as $contact)
+                            @forelse($Contacts as $contact)
                                 <a href="{{ route('admin.contacts.show', $contact->id) }}"
                                     class="dropdown-item py-3 border-bottom text-wrap">
                                     <div class="d-flex">
@@ -77,11 +77,11 @@
                                 </a>
                             @empty
                                 <p class="text-center text-muted p-3">Không có liên hệ mới.</p>
-                            @endforelse --}}
+                            @endforelse
                         </div>
 
                         <div class="text-center py-3">
-                            <a href="# class="btn btn-primary btn-sm">Xem tất cả liên
+                            <a href="{{ route('admin.contacts.index') }}" class="btn btn-primary btn-sm">Xem tất cả liên
                                 hệ</a>
                         </div>
                     </div>

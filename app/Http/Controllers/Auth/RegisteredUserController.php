@@ -43,8 +43,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return redirect(route('dashboard', absolute: false));
+        // Bỏ qua việc tự động đăng nhập và chuyển hướng về trang login với một thông báo
+        return redirect()->route('login')->with('status', 'Đăng ký tài khoản thành công! Vui lòng đăng nhập để tiếp tục.');
     }
 }

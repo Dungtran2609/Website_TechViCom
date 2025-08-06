@@ -86,6 +86,16 @@ class User extends Authenticatable
         // Giả sử slug của admin là 'admin'
         return $this->roles()->where('name', 'admin')->exists();
     }
+    public function hasPermission(string $permissionName): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->permissions->contains('name', $permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 

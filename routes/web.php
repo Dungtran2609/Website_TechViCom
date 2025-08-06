@@ -61,7 +61,7 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
 });
     //Quản lí đơn hàng
-    Route::prefix('order')->name('order.')->group(function () {
+    Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('trashed', [OrderController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [OrderController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [OrderController::class, 'forceDelete'])->name('forceDelete');

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Contact;
 use Illuminate\Database\Seeder;
 use App\Models\Coupon;
 use App\Models\User;
@@ -17,6 +18,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySeeder::class,
             NewsCategorySeeder::class,
+            NewsSeeder::class,
+            NewsCommentSeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             PermissionRoleSeeder::class,
@@ -26,6 +29,7 @@ class DatabaseSeeder extends Seeder
             AttributeSeeder::class,
             AttributeValueSeeder::class,
             ProductSeeder::class,
+            ContactSeeder::class,
         ]);
     }
 }

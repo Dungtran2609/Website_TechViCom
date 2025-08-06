@@ -80,9 +80,9 @@
                 </a>
                 <div class="collapse" id="4">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Danh mục bài viết</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bài viết</a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Bình luận bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news-categories.index') }}">Danh mục bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news.index') }}">Bài viết</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.news-comments.index') }}">Bình luận bài viết</a></li>
                     </ul>
                 </div>
             </li>
@@ -95,7 +95,7 @@
                 </a>
                 <div class="collapse" id="9">
                     <ul class="nav sub-navbar-nav">
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Người dùng</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.contacts.index') }}">Người dùng</a></li>
                     </ul>
                 </div>
             </li>

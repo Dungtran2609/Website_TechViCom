@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
-use App\Http\Controllers\Admin\Orders\OrderController;
+use App\Http\Controllers\Admin\Orders\AdminOrderController;
 // Trang chủ client
 Route::get('/', function () {
     return view('client.home');
@@ -62,13 +62,13 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 });
     //Quản lí đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('trashed', [OrderController::class, 'trashed'])->name('trashed');
-        Route::post('{id}/restore', [OrderController::class, 'restore'])->name('restore');
-        Route::delete('{id}/force-delete', [OrderController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('{id}/update-status', [OrderController::class, 'updateOrders'])->name('updateOrders');
-        Route::get('returns', [OrderController::class, 'returnsIndex'])->name('returns');
-        Route::post('returns/{id}/process', [OrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', OrderController::class)->parameters(['' => 'order'])->names('');
+        Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
+        Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+        Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->names('');
     });
 });
 

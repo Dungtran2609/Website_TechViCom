@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\IsAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\Contacts\AdminContactsController;
@@ -12,16 +11,20 @@ use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
+use App\Http\Controllers\Admin\Orders\OrderController;
+use App\Http\Controllers\Admin\Users\AdminPermissionController;
+use App\Http\Controllers\Admin\Users\AdminRoleController;
+use App\Http\Controllers\Admin\Users\AdminUserController;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\CheckRole;
 
 // Trang chủ client
-Route::get('/', function () {
-    return view('client.home');
-})->name('home');
+Route::get('/', fn() => view('client.home'))->name('home');
 
-// Trang dashboard admin (chỉ cho admin hoặc staff)
+// Admin routes (phải đăng nhập và là admin/staff)
 Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
 
-    // Trang dashboard admin
+    // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
     // Quản lý danh mục sản phẩm
@@ -65,6 +68,87 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
     });
 
+    // ==== Users ====
+    Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
+        Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminUserController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('force-delete');
+
+        Route::resource('', AdminUserController::class)
+            ->parameters(['' => 'user'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
+
+    // ==== Roles ====
+    Route::prefix('roles')->middleware(CheckRole::class . ':admin')->name('roles.')->group(function () {
+        Route::get('trashed', [AdminRoleController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminRoleController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminRoleController::class, 'forceDelete'])->name('force-delete');
+        Route::post('update-users', [AdminRoleController::class, 'updateUsers'])->name('updateUsers');
+        Route::get('list', [AdminRoleController::class, 'list'])->name('list');
+        Route::resource('/', AdminRoleController::class)
+            ->parameters(['' => 'role'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
+
+    // ==== Permissions ====
+    Route::prefix('permissions')->middleware(CheckRole::class . ':admin')->name('permissions.')->group(function () {
+        Route::post('update-roles', [AdminPermissionController::class, 'updateRoles'])->name('updateRoles');
+        Route::get('list', [AdminPermissionController::class, 'list'])->name('list');
+        Route::get('trashed', [AdminPermissionController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminPermissionController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminPermissionController::class, 'forceDelete'])->name('force-delete');
+        Route::resource('', AdminPermissionController::class)
+            ->parameters(['' => 'permission'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
+
+    // ==== Orders ====
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('trashed', [OrderController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [OrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [OrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [OrderController::class, 'updateOrders'])->name('updateOrders');
+        Route::get('returns', [OrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [OrderController::class, 'processReturn'])->name('process-return');
+        Route::resource('', AdminPermissionController::class)
+            ->parameters(['' => 'permission'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
+
+    // Liên hệ (Contacts)
     Route::prefix('contacts')->name('contacts.')->group(function () {
         // Quản lý liên hệ
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');
@@ -94,8 +178,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     });
     
 });
-
-
 
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
 

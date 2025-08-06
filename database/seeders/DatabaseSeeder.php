@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Contact;
+use App\Models\OrderItem;
 use Illuminate\Database\Seeder;
 use App\Models\Coupon;
 use App\Models\User;
@@ -16,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            UserAddressSeeder::class,
             CategorySeeder::class,
             NewsCategorySeeder::class,
             NewsSeeder::class,
@@ -29,7 +31,6 @@ class DatabaseSeeder extends Seeder
             AttributeSeeder::class,
             AttributeValueSeeder::class,
             ProductSeeder::class,
-            ContactSeeder::class,
         ]);
     }
 }

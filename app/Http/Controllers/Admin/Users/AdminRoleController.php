@@ -8,45 +8,60 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Http\Requests\Admin\RoleRequest;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Exception;
 
 class AdminRoleController extends Controller
 {
-
     /**
      * Hiển thị danh sách vai trò + gán vai trò cho người dùng (bảng user - role).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $query = Role::query();
+        try {
+            $query = Role::query();
 
-        if (request()->has('search')) {
-            $search = request('search');
-            $query->where('name', 'like', '%' . $search . '%');
+            if ($request->has('search') && !empty($request->input('search'))) {
+                $search = $request->input('search');
+                $query->where('name', 'like', '%' . $search . '%')
+                      ->orWhere('slug', 'like', '%' . $search . '%');
+            }
+
+            $roles = $query->with(['permissions:id,name'])
+                          ->withCount('permissions')
+                          ->orderBy('id', 'desc')
+                          ->get();
+
+            $permissions = Permission::select('id', 'name')->orderBy('name')->get();
+            $users = User::with(['roles:id,name'])->select('id', 'name', 'email')->get();
+
+            return view('admin.roles.index', compact('roles', 'permissions', 'users'));
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi tải danh sách vai trò.');
         }
-
-        $roles = $query->with('permissions')->orderBy('id', 'desc')->get();
-        $permissions = Permission::all();
-        $users = User::with('roles')->get();
-
-        return view('admin.roles.index', compact('roles', 'permissions', 'users'));
     }
 
     public function list(Request $request)
     {
-        $query = Role::query();
+        try {
+            $query = Role::query();
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', '%' . $search . '%');
+            if ($request->has('search') && !empty($request->input('search'))) {
+                $search = $request->input('search');
+                $query->where('name', 'like', '%' . $search . '%')
+                      ->orWhere('slug', 'like', '%' . $search . '%');
+            }
+
+            $roles = $query->withCount('permissions')
+                          ->orderBy('id', 'desc')
+                          ->paginate(10);
+
+            return view('admin.roles.list', compact('roles'));
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi tải danh sách vai trò.');
         }
-
-        $roles = $query->withCount('permissions')
-                    ->orderBy('id', 'desc')
-                    ->paginate(10); // có thể điều chỉnh số dòng mỗi trang
-
-        return view('admin.roles.list', compact('roles'));
     }
 
     /**
@@ -54,8 +69,12 @@ class AdminRoleController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::all();
-        return view('admin.roles.create', compact('permissions'));
+        try {
+            $permissions = Permission::select('id', 'name')->orderBy('name')->get();
+            return view('admin.roles.create', compact('permissions'));
+        } catch (Exception $e) {
+            return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải form tạo vai trò.');
+        }
     }
 
     /**
@@ -63,17 +82,30 @@ class AdminRoleController extends Controller
      */
     public function store(RoleRequest $request)
     {
+        try {
+            DB::beginTransaction();
 
-        $role = Role::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'status' => $request->status,
-        ]);
+            $role = Role::create([
+                'name' => $request->input('name'),
+                'slug' => Str::slug($request->input('name')),
+                'status' => $request->input('status', 'active'),
+            ]);
 
-        $role->permissions()->sync($request->permissions ?? []);
+            // Gán quyền cho vai trò
+            if ($request->has('permissions')) {
+                $role->permissions()->sync($request->input('permissions'));
+            }
 
-        return redirect()->route('admin.roles.index')
-            ->with('success', 'Vai trò đã được tạo thành công.');
+            DB::commit();
+
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'Vai trò đã được tạo thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Có lỗi xảy ra khi tạo vai trò. Vui lòng thử lại.');
+        }
     }
 
     /**
@@ -81,10 +113,14 @@ class AdminRoleController extends Controller
      */
     public function edit(Role $role)
     {
-        $permissions = Permission::all();
-        $rolePermissions = $role->permissions->pluck('id')->toArray();
+        try {
+            $permissions = Permission::select('id', 'name')->orderBy('name')->get();
+            $rolePermissions = $role->permissions->pluck('id')->toArray();
 
-        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+            return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        } catch (Exception $e) {
+            return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải form chỉnh sửa.');
+        }
     }
 
     /**
@@ -92,18 +128,32 @@ class AdminRoleController extends Controller
      */
     public function update(RoleRequest $request, Role $role)
     {
+        try {
+            DB::beginTransaction();
 
-        $role->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
+            $role->update([
+                'name' => $request->input('name'),
+                'slug' => Str::slug($request->input('name')),
+                'status' => $request->input('status', 'active'),
+            ]);
 
-            'status' => $request->status,
-        ]);
+            // Cập nhật quyền cho vai trò
+            if ($request->has('permissions')) {
+                $role->permissions()->sync($request->input('permissions'));
+            } else {
+                $role->permissions()->detach();
+            }
 
-        $role->permissions()->sync($request->permissions ?? []);
+            DB::commit();
 
-        return redirect()->route('admin.roles.index')
-            ->with('success', 'Vai trò đã được cập nhật.');
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'Vai trò đã được cập nhật thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Có lỗi xảy ra khi cập nhật vai trò. Vui lòng thử lại.');
+        }
     }
 
     /**
@@ -111,8 +161,14 @@ class AdminRoleController extends Controller
      */
     public function show(Role $role)
     {
-        // $permissions = $role->permissions;
-        return view('admin.roles.show', compact('role', 'permissions'));
+        try {
+            $role->load(['permissions:id,name']);
+            $permissions = $role->permissions;
+            
+            return view('admin.roles.show', compact('role', 'permissions'));
+        } catch (Exception $e) {
+            return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải chi tiết vai trò.');
+        }
     }
 
     /**
@@ -120,10 +176,19 @@ class AdminRoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        $role->delete();
+        try {
+            // Kiểm tra xem vai trò có đang được sử dụng không
+            if ($role->users()->count() > 0) {
+                return redirect()->back()->with('error', 'Không thể xóa vai trò đang được sử dụng bởi người dùng.');
+            }
 
-        return redirect()->route('admin.roles.list')
-            ->with('success', 'Vai trò đã được ẩn (soft delete).');
+            $role->delete();
+
+            return redirect()->route('admin.roles.list')
+                ->with('success', 'Vai trò đã được ẩn (soft delete) thành công.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi xóa vai trò.');
+        }
     }
 
     /**
@@ -131,8 +196,16 @@ class AdminRoleController extends Controller
      */
     public function trashed()
     {
-        $roles = Role::onlyTrashed()->get();
-        return view('admin.roles.trashed', compact('roles'));
+        try {
+            $roles = Role::onlyTrashed()
+                        ->withCount('permissions')
+                        ->orderBy('deleted_at', 'desc')
+                        ->get();
+                        
+            return view('admin.roles.trashed', compact('roles'));
+        } catch (Exception $e) {
+            return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải danh sách vai trò đã xóa.');
+        }
     }
 
     /**
@@ -140,10 +213,15 @@ class AdminRoleController extends Controller
      */
     public function restore($id)
     {
-        Role::onlyTrashed()->findOrFail($id)->restore();
+        try {
+            $role = Role::onlyTrashed()->findOrFail($id);
+            $role->restore();
 
-        return redirect()->route('admin.roles.trashed')
-            ->with('success', 'Vai trò đã được khôi phục.');
+            return redirect()->route('admin.roles.trashed')
+                ->with('success', 'Vai trò đã được khôi phục thành công.');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi khôi phục vai trò.');
+        }
     }
 
     /**
@@ -151,16 +229,30 @@ class AdminRoleController extends Controller
      */
     public function forceDelete($id)
     {
-        $role = Role::onlyTrashed()->findOrFail($id);
+        try {
+            DB::beginTransaction();
 
-        if ($role->image) {
-            Storage::disk('public')->delete($role->image);
+            $role = Role::onlyTrashed()->findOrFail($id);
+
+            // Xóa hình ảnh nếu có
+            if ($role->image && Storage::disk('public')->exists($role->image)) {
+                Storage::disk('public')->delete($role->image);
+            }
+
+            // Xóa quan hệ với permissions
+            $role->permissions()->detach();
+            
+            // Xóa vĩnh viễn
+            $role->forceDelete();
+
+            DB::commit();
+
+            return redirect()->route('admin.roles.trashed')
+                ->with('success', 'Vai trò đã được xóa vĩnh viễn thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi xóa vĩnh viễn vai trò.');
         }
-
-        $role->forceDelete();
-
-        return redirect()->route('admin.roles.trashed')
-            ->with('success', 'Vai trò đã được xoá vĩnh viễn.');
     }
 
     /**
@@ -168,15 +260,33 @@ class AdminRoleController extends Controller
      */
     public function updateUsers(Request $request)
     {
-        $data = $request->input('roles', []);
+        try {
+            $request->validate([
+                'roles' => 'array',
+                'roles.*' => 'array',
+                'roles.*.*' => 'exists:roles,id'
+            ]);
 
-        foreach ($data as $userId => $roleIds) {
-            $user = User::find($userId);
-            if ($user) {
-                $user->roles()->sync($roleIds);
+            DB::beginTransaction();
+
+            $data = $request->input('roles', []);
+            $updatedCount = 0;
+
+            foreach ($data as $userId => $roleIds) {
+                $user = User::find($userId);
+                if ($user) {
+                    $user->roles()->sync($roleIds);
+                    $updatedCount++;
+                }
             }
-        }
 
-        return redirect()->route('admin.roles.index')->with('success', 'Phân vai trò cho người dùng thành công.');
+            DB::commit();
+
+            return redirect()->route('admin.roles.index')
+                ->with('success', "Đã phân vai trò cho {$updatedCount} người dùng thành công.");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Có lỗi xảy ra khi phân vai trò cho người dùng.');
+        }
     }
 }

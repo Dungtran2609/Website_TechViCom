@@ -1,8 +1,10 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminBannerController;
 use Illuminate\Support\Facades\Route;
+
+// --- Controllers cho ADMIN ---
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\Contacts\AdminContactsController;
 use App\Http\Controllers\Admin\Coupons\AdminCouponController;
 use App\Http\Controllers\Admin\News\AdminNewsCategoryController;
@@ -13,22 +15,48 @@ use App\Http\Controllers\Admin\Products\AdminProductController;
 use App\Http\Controllers\Admin\Products\AdminCategoryController;
 use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
-
 use App\Http\Controllers\Admin\Users\AdminPermissionController;
 use App\Http\Controllers\Admin\Users\AdminProfileController;
 use App\Http\Controllers\Admin\Users\AdminRoleController;
 use App\Http\Controllers\Admin\Users\AdminUserController;
-use App\Http\Middleware\IsAdmin;
-use App\Http\Middleware\CheckRole;
-
 use App\Http\Controllers\Admin\Orders\AdminOrderController;
 use App\Http\Controllers\Admin\Products\ProductCommentAdminController;
+use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
+use App\Http\Controllers\Client\PaymentController;
+use App\Http\Controllers\WebhookController;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckPermission;
 
 // Trang chủ client
 Route::get('/', fn() => view('client.home'))->name('home');
+// ... các route công khai khác của bạn (sản phẩm, tin tức, liên hệ...)
 
-// Admin routes (phải đăng nhập và là admin/staff)
+// CLIENT ROUTES (Cần đăng nhập)
+Route::middleware(['auth'])->group(function () {
+
+    // --- LUỒNG THANH TOÁN CỦA KHÁCH HÀNG ---
+    Route::prefix('payment')->name('client.payment.')->group(function () {
+        // Route POST để tạo đơn hàng và link thanh toán từ giỏ hàng
+        Route::post('/create', [PaymentController::class, 'create'])->name('create');
+
+        // Route GET cho JS gọi đến để kiểm tra trạng thái (Polling)
+        Route::get('/check-status/{order}', [PaymentController::class, 'checkPaymentStatus'])->name('check_status');
+
+        // Route PayOS trả về khi thanh toán thành công
+        Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
+
+        // Route PayOS trả về khi khách hàng hủy
+        Route::get('/failed', [PaymentController::class, 'paymentFailed'])->name('failed');
+    });
+
+    // ... các route client cần đăng nhập khác (profile, lịch sử đơn hàng)...
+});
+
+
+// =========================================================================
+// === ADMIN ROUTES ===
+// =========================================================================
 Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
     // Đăng xuất admin
     Route::post('logout', [AdminController::class, 'logout'])->name('logout');
@@ -36,6 +64,49 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
+    // ... (Toàn bộ các route admin hiện tại của bạn được giữ nguyên)
+    // ... (Products, Brands, Attributes, Banners, Comments...)
+
+    // ==== Users ====
+    Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
+        Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
+        Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminUserController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('force-delete');
+
+        // Địa chỉ người dùng (addresses)
+        Route::get('{user}/addresses', [AdminUserController::class, 'addresses'])->name('addresses.index');
+        Route::post('{user}/addresses', [AdminUserController::class, 'addAddress'])->name('addresses.store');
+        Route::put('addresses/{address}', [AdminUserController::class, 'updateAddress'])->name('addresses.update');
+        Route::delete('addresses/{address}', [AdminUserController::class, 'deleteAddress'])->name('addresses.destroy');
+
+        // Resource chính cho user
+        Route::resource('', AdminUserController::class)
+            ->parameters(['' => 'user'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
+
+    // ==== Orders ====
+    // Sửa lại để sử dụng resource controller cho gọn gàng và chuẩn RESTful
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+        Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+        Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+        Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+    });
+
+    // ... (Thêm lại các khối route admin khác của bạn vào đây)
     // Quản lý danh mục sản phẩm
     Route::prefix('products/categories')->name('products.categories.')->group(function () {
         Route::get('trashed', [AdminCategoryController::class, 'trashed'])->name('trashed');
@@ -43,7 +114,7 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::delete('{id}/force-delete', [AdminCategoryController::class, 'forceDelete'])->name('force-delete');
         Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
     });
-     // Product Comments
+    // Product Comments
     Route::prefix('product-comments')->name('products.comments.')->group(function () {
         Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
         Route::get('/', [ProductCommentAdminController::class, 'index'])->name('index');
@@ -90,29 +161,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::delete('{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
         Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
     });
-
-    // ==== Users ====
-    Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
-        // !!! LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
-        // Thêm route cho profile cá nhân, đặt trước resource để không bị xung đột
-        Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
-
-        Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');
-        Route::post('{id}/restore', [AdminUserController::class, 'restore'])->name('restore');
-        Route::delete('{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('force-delete');
-        Route::resource('', AdminUserController::class)
-            ->parameters(['' => 'user'])
-            ->names([
-                'index' => 'index',
-                'create' => 'create',
-                'store' => 'store',
-                'show' => 'show',
-                'edit' => 'edit',
-                'update' => 'update',
-                'destroy' => 'destroy',
-            ]);
-    });
-
     // ==== Roles ====
     Route::prefix('roles')->middleware(CheckRole::class . ':admin')->name('roles.')->group(function () {
         Route::get('trashed', [AdminRoleController::class, 'trashed'])->name('trashed');
@@ -153,6 +201,7 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
             ]);
     });
 
+<<<<<<< HEAD
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
@@ -175,6 +224,9 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
             ]);
     });
             // Liên hệ (Contacts)
+=======
+    // Liên hệ (Contacts)
+>>>>>>> origin/Nguyen
     Route::prefix('contacts')->name('contacts.')->group(function () {
         // Quản lý liên hệ
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');
@@ -209,10 +261,20 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::put('{id}/restore', [AdminCouponController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('forceDelete');
     });
-
-    
 });
 
+
+// =========================================================================
+// === WEBHOOK & OTHER ROUTES (Ngoài các middleware chính) ===
+// =========================================================================
+
+// Webhook từ PayOS để xác nhận thanh toán tự động
+// Route này PHẢI nằm ngoài các group middleware như auth, csrf...
+Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->name('webhook.payos');
+
+// Các route upload hoặc route đặc biệt khác có thể đặt ở đây
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
 Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
+
+// Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';

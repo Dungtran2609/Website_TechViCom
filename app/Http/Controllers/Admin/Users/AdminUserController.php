@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Admin\UserRequest;
 use App\Http\Requests\StoreUserAddressRequest;
 use App\Http\Requests\UpdateUserAddressRequest;
+use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
 {
@@ -22,7 +23,7 @@ class AdminUserController extends Controller
         if ($search = request('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -35,7 +36,7 @@ class AdminUserController extends Controller
     {
         $roles = Role::all();
         return view('admin.users.create', compact('roles'));
-    }   
+    }
 
     public function store(UserRequest $request)
     {
@@ -126,13 +127,19 @@ class AdminUserController extends Controller
 
     public function destroy(User $user)
     {
+        if (Auth::id() === $user->id) {
+            return redirect()->route('admin.users.index')->with('error', 'Bạn không thể xóa chính mình.');
+        }
+
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
             Storage::disk('public')->delete($user->image_profile);
         }
 
         $user->delete();
+
         return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được ẩn (soft delete).');
     }
+
 
     public function trashed()
     {
@@ -149,17 +156,19 @@ class AdminUserController extends Controller
 
     public function forceDelete($id)
     {
-        $user = User::onlyTrashed()->whereKey($id)->firstOrFail();
+        $user = User::withTrashed()->findOrFail($id);
+
+        if (Auth::id() === $user->id) {
+            return redirect()->route('admin.users.trashed')->with('error', 'Bạn không thể xóa chính mình vĩnh viễn.');
+        }
 
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
             Storage::disk('public')->delete($user->image_profile);
         }
 
-        $user->addresses()->exists() && $user->addresses()->forceDelete();
-        $user->roles()->exists() && $user->roles()->detach();
-
         $user->forceDelete();
-        return redirect()->route('admin.users.trashed')->with('success', 'Tài khoản đã bị xóa vĩnh viễn.');
+
+        return redirect()->route('admin.users.trashed')->with('success', 'Tài khoản đã được xóa vĩnh viễn.');
     }
 
     public function addresses(User $user)

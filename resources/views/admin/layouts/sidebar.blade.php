@@ -52,7 +52,7 @@
                 <div class="collapse" id="user-management">
                     <ul class="nav sub-navbar-nav">
                         <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.users.index') }}">Danh sách tài khoản </a></li>
-                        <li class="sub-nav-item"><a class="sub-nav-link" href="#">Thùng rác</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.users.trashed') }}">Thùng rác</a></li>
                     </ul>
                 </div>
             </li>

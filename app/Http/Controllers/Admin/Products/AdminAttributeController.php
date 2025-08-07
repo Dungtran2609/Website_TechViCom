@@ -60,14 +60,20 @@ class AdminAttributeController extends Controller
 
     public function destroy(Attribute $attribute)
     {
+        // Kiểm tra xem thuộc tính có còn giá trị con không
+        if ($attribute->values()->exists()) {
+            return redirect()->route('admin.products.attributes.index')
+                ->with('error', 'Không thể xóa vì đang có giá trị thuộc tính.');
+        }
+
         $attribute->delete();
         return redirect()->route('admin.products.attributes.index')
-            ->with('success', 'Đã xoá (ẩn tạm thời) thuộc tính.');
+            ->with('success', 'Đã chuyển thuộc tính vào thùng rác.');
     }
 
     public function trashed()
     {
-        $attributes = Attribute::onlyTrashed()->orderByDesc('id')->get();
+        $attributes = Attribute::onlyTrashed()->orderByDesc('deleted_at')->paginate(10);
         return view('admin.products.attributes.trashed', compact('attributes'));
     }
 
@@ -83,9 +89,15 @@ class AdminAttributeController extends Controller
     public function forceDelete($id)
     {
         $attribute = Attribute::onlyTrashed()->findOrFail($id);
+
+        if ($attribute->values()->withTrashed()->exists()) {
+            return redirect()->route('admin.products.attributes.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn. Thuộc tính vẫn còn chứa giá trị (kể cả trong thùng rác).');
+        }
+
         $attribute->forceDelete();
 
         return redirect()->route('admin.products.attributes.trashed')
-            ->with('success', 'Đã xoá vĩnh viễn.');
+            ->with('success', 'Đã xoá vĩnh viễn thuộc tính.');
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 class AdminOrderController extends Controller
 {
+
     public function index(Request $request)
     {
         $orders = Order::with([
@@ -34,7 +35,7 @@ class AdminOrderController extends Controller
 
         $orderData = $orders->map(fn($order) => [
             'id' => $order->id,
-            'user_name' => $order->user->name ?? 'Khách vãng lai',
+            'user_name' => $order->customer_name, // Sử dụng accessor mới
 
             // lấy orderItem đầu tiên
             'image' => optional($order->orderItems->first(), function ($item) {
@@ -73,8 +74,9 @@ class AdminOrderController extends Controller
     {
         // Eager-load quan hệ cần thiết
         $order = Order::with([
-            'user:id,name,email',
+            'user:id,name,email,phone_number',
             'user.addresses',
+            'address',
             'orderItems.productVariant.product.images',
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod:id,name',
@@ -83,16 +85,40 @@ class AdminOrderController extends Controller
 
         $shippingMethods = ShippingMethod::all();
 
-        // Lấy địa chỉ mặc định của user
-        $defaultAddress = $order->user->addresses
-            ->firstWhere('is_default', true)
-            ?? $order->user->addresses->first();
-
-        // Xác định địa chỉ
-        $city = $defaultAddress->city ?? 'Hà Nội';
-        $district = $defaultAddress->district ?? '';
-        $ward = $defaultAddress->ward ?? '';
-        $address = $defaultAddress->address_line ?? '';
+        // Lấy địa chỉ giao hàng theo thứ tự ưu tiên:
+        // 1. recipient_address trong order (địa chỉ thực tế giao hàng)
+        // 2. address relationship (UserAddress) - chỉ cho user đăng nhập
+        // 3. địa chỉ mặc định của user - chỉ cho user đăng nhập
+        
+        if (!empty($order->recipient_address)) {
+            // Nếu có địa chỉ text trực tiếp trong order (ưu tiên cao nhất)
+            $address = $order->recipient_address;
+            $city = ''; // Không phân tích chi tiết từ text
+            $district = '';
+            $ward = '';
+        } elseif ($order->address) {
+            // Địa chỉ từ UserAddress relationship (chỉ có khi user đăng nhập)
+            $city = $order->address->city ?? '';
+            $district = $order->address->district ?? '';
+            $ward = $order->address->ward ?? '';
+            $address = $order->address->address_line ?? '';
+        } elseif (!$order->isGuestOrder() && $order->user && $order->user->addresses) {
+            // Fallback: lấy địa chỉ mặc định của user (chỉ khi có user)
+            $defaultAddress = $order->user->addresses
+                ->firstWhere('is_default', true)
+                ?? $order->user->addresses->first();
+            
+            $city = $defaultAddress->city ?? '';
+            $district = $defaultAddress->district ?? '';
+            $ward = $defaultAddress->ward ?? '';
+            $address = $defaultAddress->address_line ?? '';
+        } else {
+            // Khách vãng lai hoặc không có địa chỉ
+            $city = '';
+            $district = '';
+            $ward = '';
+            $address = '';
+        }
 
         // Tính subtotal
         $subtotal = $order->orderItems->sum(function ($item) {
@@ -103,9 +129,11 @@ class AdminOrderController extends Controller
 
         // Tính phí vận chuyển
         if ($order->shipping_method_id === 1) {
-            $shippingFee = 0;
+            $shippingFee = 0; // Lấy tại cửa hàng
         } else {
-            $shippingFee = ($city === 'Hà Nội' && $subtotal < 3000000) ? 60000 : 0;
+            // Kiểm tra điều kiện miễn phí ship: Hà Nội + >= 3tr
+            $isHanoi = (stripos($city, 'hà nội') !== false) || (stripos($city, 'hanoi') !== false);
+            $shippingFee = ($isHanoi && $subtotal >= 3000000) ? 0 : 60000;
         }
 
         // Tính giảm giá
@@ -135,8 +163,10 @@ class AdminOrderController extends Controller
         // Chuẩn bị data cho view
         $orderData = [
             'id' => $order->id,
-            'user_name' => $order->user->name,
-            'user_email' => $order->user->email,
+            'user_name' => $order->customer_name,
+            'user_email' => $order->customer_email,
+            'user_phone' => $order->customer_phone,
+            'is_guest' => $order->isGuestOrder(),
             'recipient_name' => $order->recipient_name,
             'recipient_phone' => $order->recipient_phone,
             'address' => $address,
@@ -213,6 +243,7 @@ class AdminOrderController extends Controller
         $order = Order::with([
             'user',
             'user.addresses',
+            'address',
             'orderItems.productVariant.product.images',
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod',
@@ -250,10 +281,17 @@ class AdminOrderController extends Controller
 
         // Tính phí ship (Hà Nội >=3tr miễn, else 60k)
         // Giả sử phương thức lấy tại cửa hàng có ID = 1
+        $isHanoi = false;
+        if (!$order->isGuestOrder() && $order->user && $order->user->addresses) {
+            $defaultUserAddress = $order->user->addresses->firstWhere('is_default');
+            $isHanoi = $defaultUserAddress && (stripos($defaultUserAddress->city, 'hà nội') !== false);
+        } elseif ($order->address) {
+            $isHanoi = stripos($order->address->city, 'hà nội') !== false;
+        }
+        
         $shippingFee = ($order->shipping_method_id === 1)
             ? 0
-            : (($subtotal >= 3000000 && $order->user->addresses->firstWhere('is_default')->city === 'Hà Nội')
-                ? 0 : 60000);
+            : (($subtotal >= 3000000 && $isHanoi) ? 0 : 60000);
 
         // Tính giảm giá coupon
         $couponDiscount = $order->coupon_discount
@@ -327,6 +365,9 @@ class AdminOrderController extends Controller
             'coupon_id',
             'to_district_id',
             'to_ward_code',
+            'guest_name',
+            'guest_email', 
+            'guest_phone',
         ]);
 
         // Validate
@@ -493,7 +534,7 @@ class AdminOrderController extends Controller
     {
         $order = Order::withTrashed()->findOrFail($id);
         $order->restore();
-        return redirect()->route('admin.orders.trashed')
+        return redirect()->route('admin.order.trashed')
             ->with('success', 'Đơn hàng đã được phục hồi.');
     }
 
@@ -597,7 +638,7 @@ class AdminOrderController extends Controller
 
         $ret->save();
         $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
-        return redirect()->route('admin.orders.returns')
+        return redirect()->route('admin.order.returns')
             ->with('success', "Yêu cầu $msg");
     }
 

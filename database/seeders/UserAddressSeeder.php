@@ -13,40 +13,16 @@ class UserAddressSeeder extends Seeder
         $faker = Faker::create();
 
         $districts = [
-            'Ba Đình',
-            'Hoàn Kiếm',
-            'Tây Hồ',
-            'Long Biên',
-            'Cầu Giấy',
-            'Đống Đa',
-            'Hai Bà Trưng',
-            'Hoàng Mai',
-            'Thanh Xuân'
+            'Ba Đình', 'Hoàn Kiếm', 'Tây Hồ', 'Long Biên', 'Cầu Giấy',
+            'Đống Đa', 'Hai Bà Trưng', 'Hoàng Mai', 'Thanh Xuân'
         ];
 
-        // Mỗi district có 1 số ward mẫu, bạn có thể mở rộng thêm
         $wards = [
-            'Phúc Xá',
-            'Trúc Bạch',
-            'Vĩnh Phúc',
-            'Điện Biên',
-            'Đội Cấn',
-            'Hàng Bài',
-            'Hàng Trống',
-            'Phúc Tân',
-            'Chương Dương',
-            'Dịch Vọng',
-            'Nghĩa Tân',
-            'Quan Hoa',
-            'Yên Hòa',
-            'Ô Chợ Dừa',
-            'Láng Hạ',
-            'Kim Liên',
-            'Thổ Quan',
-            'Tân Mai',
-            'Yên Sở',
-            'Hoàng Văn Thụ',
-            'Giáp Bát'
+            'Phúc Xá', 'Trúc Bạch', 'Vĩnh Phúc', 'Điện Biên', 'Đội Cấn',
+            'Hàng Bài', 'Hàng Trống', 'Phúc Tân', 'Chương Dương',
+            'Dịch Vọng', 'Nghĩa Tân', 'Quan Hoa', 'Yên Hòa',
+            'Ô Chợ Dừa', 'Láng Hạ', 'Kim Liên', 'Thổ Quan',
+            'Tân Mai', 'Yên Sở', 'Hoàng Văn Thụ', 'Giáp Bát'
         ];
 
         $users = DB::table('users')->pluck('id')->toArray();

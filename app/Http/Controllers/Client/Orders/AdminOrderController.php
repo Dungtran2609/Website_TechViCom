@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class OrderController extends Controller
+class AdminOrderController extends Controller
 {
     /**
      * Hiển thị danh sách đơn hàng của user

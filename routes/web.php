@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\Products\AdminAttributeController;
 use App\Http\Controllers\Admin\Products\AdminAttributeValueController;
 
 use App\Http\Controllers\Admin\Users\AdminPermissionController;
+use App\Http\Controllers\Admin\Users\AdminProfileController;
 use App\Http\Controllers\Admin\Users\AdminRoleController;
 use App\Http\Controllers\Admin\Users\AdminUserController;
 use App\Http\Middleware\IsAdmin;
@@ -92,10 +93,13 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 
     // ==== Users ====
     Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
+        // !!! LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
+        // Thêm route cho profile cá nhân, đặt trước resource để không bị xung đột
+        Route::get('profile', [AdminUserController::class, 'profile'])->name('profile');
+
         Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [AdminUserController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminUserController::class, 'forceDelete'])->name('force-delete');
-
         Route::resource('', AdminUserController::class)
             ->parameters(['' => 'user'])
             ->names([
@@ -151,20 +155,26 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
 
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
         Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
-        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
-        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
-        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        // !!! LỖI COPY-PASTE ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
+        Route::resource('', AdminOrderController::class) // <-- Sửa từ AdminPermissionController thành OrderController
+            ->parameters(['' => 'order']) // <-- Sửa từ 'permission' thành 'order' cho đúng
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
     });
-
-    // Liên hệ (Contacts)
+            // Liên hệ (Contacts)
     Route::prefix('contacts')->name('contacts.')->group(function () {
         // Quản lý liên hệ
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');

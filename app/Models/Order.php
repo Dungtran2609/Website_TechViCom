@@ -16,6 +16,9 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'address_id',
+        'guest_name',
+        'guest_email', 
+        'guest_phone',
         'shipping_method_id',
         'payment_method',
         'coupon_id',
@@ -134,6 +137,44 @@ class Order extends Model
     {
         return self::PAYMENT_STATUSES[$this->payment_status]
             ?? $this->payment_status;
+    }
+
+    /**
+     * Kiểm tra xem đơn hàng có phải của khách vãng lai không
+     */
+    public function isGuestOrder()
+    {
+        return $this->user_id === null;
+    }
+
+    /**
+     * Lấy tên khách hàng (user hoặc guest)
+     */
+    public function getCustomerNameAttribute()
+    {
+        return $this->isGuestOrder() 
+            ? ($this->guest_name ?? 'Khách vãng lai')
+            : ($this->user->name ?? 'Khách vãng lai');
+    }
+
+    /**
+     * Lấy email khách hàng (user hoặc guest)
+     */
+    public function getCustomerEmailAttribute()
+    {
+        return $this->isGuestOrder() 
+            ? ($this->guest_email ?? 'N/A')
+            : ($this->user->email ?? 'N/A');
+    }
+
+    /**
+     * Lấy số điện thoại khách hàng (user hoặc guest)
+     */
+    public function getCustomerPhoneAttribute()
+    {
+        return $this->isGuestOrder() 
+            ? ($this->guest_phone ?? 'N/A')
+            : ($this->user->phone_number ?? 'N/A');
     }
     // ...
     

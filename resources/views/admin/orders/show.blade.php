@@ -2,7 +2,18 @@
 
 @section('content')
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-                        {{-- Xác nhận thanh toán - CHỈ cho chuyển khoản khi pending --}}
+                        @if($orderData['payment_method'] === 'bank_transfer' && $orderData['payment_status'] === 'pending')
+                            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST"
+                                class="d-inline ms-2"
+                                onsubmit="return confirm('Bạn đã nhận thanh toán chưa? Chuyển trạng thái sang Đã thanh toán?');">
+                                @csrf
+                                <input type="hidden" name="payment_status" value="paid">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-credit-card"></i> Xác nhận thanh toán
+                                </button>
+                            </form>
+                        @endif>
             <h1>Chi tiết đơn hàng #{{ $orderData['id'] }}</h1>
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.orders.index') }}" class="btn btn-secondary">
@@ -140,15 +151,15 @@
                             <button type="submit" class="btn btn-success">Xác nhận đơn</button>
                         </form>
 
-                        {{-- Xác nhận thanh toán --}}
-                        @if($orderData['payment_status'] === 'pending')
+                        {{-- Xác nhận thanh toán - CHỈ cho chuyển khoản khi pending --}}
+                        @if($orderData['payment_method'] === 'bank_transfer' && $orderData['payment_status'] === 'pending')
                             <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST"
                                 class="d-inline ms-2"
                                 onsubmit="return confirm('Bạn đã nhận thanh toán chưa? Chuyển trạng thái sang “Đã thanh toán”?');">
                                 @csrf
                                 <input type="hidden" name="payment_status" value="paid">
                                 <button type="submit" class="btn btn-warning">
-                                    Xác nhận thanh toán
+                                    <i class="fas fa-credit-card"></i> Xác nhận thanh toán
                                 </button>
                             </form>
                         @endif
@@ -161,6 +172,45 @@
                             <input type="hidden" name="status" value="shipped">
                             <button type="submit" class="btn btn-success">Xác nhận giao hàng</button>
                         </form>
+
+                    @elseif($orderData['status'] === 'shipped')
+                        {{-- Xác nhận đã giao hàng --}}
+                        <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
+                            onsubmit="return confirm('Xác nhận đã giao hàng thành công?');">
+                            @csrf
+                            <input type="hidden" name="status" value="delivered">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check-circle"></i> Đã giao hàng
+                            </button>
+                        </form>
+
+                    @elseif($orderData['status'] === 'delivered')
+                        {{-- Nút cho COD: Xác nhận thanh toán thành công/thất bại --}}
+                        @if($orderData['payment_method'] === 'cod' && $orderData['payment_status'] === 'pending')
+                            <div class="d-inline-block">
+                                <span class="text-muted me-2">Thanh toán COD:</span>
+                                {{-- Thanh toán thành công --}}
+                                <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Xác nhận khách hàng đã thanh toán thành công?');">
+                                    @csrf
+                                    <input type="hidden" name="payment_status" value="paid">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i> Nhận thành công
+                                    </button>
+                                </form>
+                                
+                                {{-- Thanh toán thất bại --}}
+                                <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline ms-1"
+                                    onsubmit="return confirm('Xác nhận khách hàng không thanh toán?');">
+                                    @csrf
+                                    <input type="hidden" name="payment_status" value="failed">
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times"></i> Thất bại
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     @endif
 
                     <a href="{{ route('admin.orders.edit', $orderData['id']) }}" class="btn btn-primary ms-2">Sửa</a>

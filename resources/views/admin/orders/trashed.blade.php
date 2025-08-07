@@ -57,7 +57,7 @@
                                 <td>{{ $order['created_at'] }}</td>
                                 <td>{{ $order['deleted_at'] }}</td>
                                 <td>
-                                    <form action="{{ route('admin.order.restore', $order['id']) }}" method="POST"
+                                    <form action="{{ route('admin.orders.restore', $order['id']) }}" method="POST"
                                         style="display:inline;">
                                         @csrf
                                         <button type="submit" class="btn btn-success btn-sm"
@@ -65,7 +65,7 @@
                                             <i class="fas fa-undo"></i> Phục hồi
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.order.forceDelete', $order['id']) }}" method="POST"
+                                    <form action="{{ route('admin.orders.forceDelete', $order['id']) }}" method="POST"
                                         style="display:inline;">
                                         @csrf
                                         @method('DELETE')

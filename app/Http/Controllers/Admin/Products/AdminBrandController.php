@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\Products;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\AdminBrandRequest; 
+use App\Http\Requests\Admin\AdminBrandRequest;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +13,7 @@ class AdminBrandController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Brand::query();
+        $query = Brand::withCount('products');
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -89,14 +89,19 @@ class AdminBrandController extends Controller
 
     public function destroy(Brand $brand)
     {
+        if ($brand->products()->exists()) {
+            return redirect()->route('admin.products.brands.index')
+                ->with('error', 'Không thể xóa thương hiệu này vì vẫn còn sản phẩm.');
+        }
+
         $brand->delete(); // Soft delete
         return redirect()->route('admin.products.brands.index')
-            ->with('success', 'Thương hiệu đã được ẩn (soft delete).');
+            ->with('success', 'Thương hiệu đã được chuyển vào thùng rác.');
     }
 
     public function trashed()
     {
-        $brands = Brand::onlyTrashed()->get();
+        $brands = Brand::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(5);
         return view('admin.products.brands.trashed', compact('brands'));
     }
 
@@ -121,6 +126,11 @@ class AdminBrandController extends Controller
             return redirect()->route('admin.products.brands.trashed')->with('error', 'Không tìm thấy thương hiệu.');
         }
 
+        if ($brand->products()->exists()) {
+            return redirect()->route('admin.products.brands.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn thương hiệu vì vẫn còn sản phẩm.');
+        }
+
         if ($brand->image) {
             Storage::disk('public')->delete($brand->image);
         }
@@ -129,5 +139,5 @@ class AdminBrandController extends Controller
 
         return redirect()->route('admin.products.brands.trashed')->with('success', 'Đã xoá vĩnh viễn thương hiệu.');
     }
-   
+
 }

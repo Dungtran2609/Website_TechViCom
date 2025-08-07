@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
 use App\Http\Requests\Admin\AdminAttributeValueRequest;
-use Illuminate\Http\Request;
 
 class AdminAttributeValueController extends Controller
 {
@@ -19,7 +18,7 @@ class AdminAttributeValueController extends Controller
                 $query->where('value', 'like', '%' . request('search') . '%');
             })
             ->orderByDesc('id')
-            ->paginate(5);
+            ->paginate(10);
 
         return view('admin.products.attributes.values.index', compact('attribute', 'values'));
     }
@@ -44,8 +43,8 @@ class AdminAttributeValueController extends Controller
         $attribute = $value->attribute;
 
         return view('admin.products.attributes.values.edit', compact('value', 'attribute'));
-    
     }
+
     public function update(AdminAttributeValueRequest $request, $id)
     {
         $value = AttributeValue::findOrFail($id);
@@ -64,8 +63,13 @@ class AdminAttributeValueController extends Controller
     {
         $value = AttributeValue::findOrFail($id);
         $attributeId = $value->attribute_id;
-        $value->delete();
 
+        // Kiểm tra xem giá trị có đang được sản phẩm nào sử dụng không
+        if ($value->productVariants()->exists()) {
+            return back()->with('error', 'Không thể xóa giá trị này vì đang được sản phẩm sử dụng.');
+        }
+
+        $value->delete();
         return redirect()->route('admin.products.attributes.values.index', $attributeId)
                         ->with('success', 'Đã chuyển giá trị vào thùng rác.');
     }
@@ -75,13 +79,13 @@ class AdminAttributeValueController extends Controller
         $attribute = Attribute::findOrFail($attributeId);
         $values = AttributeValue::onlyTrashed()
             ->where('attribute_id', $attributeId)
-            ->latest()
+            ->latest('deleted_at')
             ->paginate(10);
 
         return view('admin.products.attributes.values.trashed', compact('attribute', 'values'));
     }
 
-        public function restore($id)
+    public function restore($id)
     {
         $value = AttributeValue::onlyTrashed()->findOrFail($id);
         $value->restore();
@@ -92,9 +96,13 @@ class AdminAttributeValueController extends Controller
     public function forceDelete($id)
     {
         $value = AttributeValue::onlyTrashed()->findOrFail($id);
-        $value->forceDelete();
 
+        // Kiểm tra lại lần cuối
+        if ($value->productVariants()->exists()) {
+            return back()->with('error', 'Không thể xóa vĩnh viễn. Giá trị này vẫn đang được sản phẩm sử dụng.');
+        }
+        
+        $value->forceDelete();
         return back()->with('success', 'Đã xoá vĩnh viễn giá trị.');
     }
-
 }

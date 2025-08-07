@@ -1,55 +1,99 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 fw-bold text-primary">Sửa giá trị: {{ $value->value }}</h1>
-        <a href="{{ route('admin.products.attributes.values.index', $attribute->id) }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Quay lại danh sách
-        </a>
-    </div>
+    <div class="container-fluid">
+        <form action="{{ route('admin.products.attributes.values.update', $value->id) }}" method="POST">
+            @csrf
+            @method('PUT')
 
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-light fw-semibold">
-            <i class="fas fa-edit"></i> Chỉnh sửa giá trị
-        </div>
-        <div class="card-body">
-            <form action="{{ route('admin.products.attributes.values.update', $value->id) }}" method="POST" class="row g-3">
-                @csrf
-                @method('PUT')
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">Chỉnh sửa giá trị</h1>
+                    <p class="mb-0 text-muted">
+                        Chỉnh sửa chi tiết cho giá trị <span class="fw-bold text-primary">{{ $value->value }}</span>
+                        của thuộc tính <span class="fw-bold text-primary">{{ $attribute->name }}</span>.
+                    </p>
+                </div>
+                <a href="{{ route('admin.products.attributes.values.index', $attribute->id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Quay lại
+                </a>
+            </div>
 
-                <div class="col-md-6">
-                    <label for="value" class="form-label">Tên giá trị</label>
-                    <input type="text" name="value" id="value" class="form-control @error('value') is-invalid @enderror"
-                           value="{{ old('value', $value->value) }}" placeholder="Ví dụ: Xanh, 32GB, Lớn">
-                    @error('value')
-                        <div class="invalid-feedback">
-                            {{ $message }}
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 fw-bold text-primary">Thông tin cơ bản</h6>
                         </div>
-                    @enderror
-                </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <label for="value" class="form-label fw-semibold">Tên giá trị <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="value" id="value"
+                                    class="form-control @error('value') is-invalid @enderror"
+                                    value="{{ old('value', $value->value) }}" placeholder="Ví dụ: Đỏ, L, 128GB">
+                                @error('value')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                @if ($attribute->type === 'color')
-                <div class="col-md-2">
-                    <label for="color_code" class="form-label">Mã màu</label>
-                    <input type="color" name="color_code" id="color_code"
-                           class="form-control form-control-color @error('color_code') is-invalid @enderror"
-                           value="{{ old('color_code', $value->color_code ?? '#000000') }}">
-                    @error('color_code')
-                        <div class="invalid-feedback">
-                            {{ $message }}
+                            @if ($attribute->type === 'color')
+                                <div class="mb-3">
+                                    <label for="color_code" class="form-label fw-semibold">Mã màu</label>
+                                    <div class="input-group">
+                                        <input type="color" name="color_code" id="color_code"
+                                            class="form-control form-control-color"
+                                            value="{{ old('color_code', $value->color_code ?? '#5E72E4') }}"
+                                            style="max-width: 60px;">
+                                        <input type="text" class="form-control"
+                                            value="{{ old('color_code', $value->color_code ?? '#5E72E4') }}"
+                                            onchange="document.getElementById('color_code').value = this.value">
+                                    </div>
+                                    <div class="form-text">Chọn một màu để đại diện cho giá trị này.</div>
+                                    @error('color_code')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
                         </div>
-                    @enderror
+                    </div>
                 </div>
-                @endif
 
-                <div class="col-md-4 d-flex flex-column">
-                    <button type="submit" class="btn btn-success px-4 mt-auto">
-                        <i class="fas fa-save me-1"></i> Cập nhật
-                    </button>
+                <div class="col-lg-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 fw-bold text-primary">Hành động</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="form-text">
+                                Nhấn "Lưu thay đổi" để cập nhật thông tin.
+                            </p>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
-</div>
 @endsection
+
+@push('scripts')
+    <script>
+        const colorPicker = document.getElementById('color_code');
+        if (colorPicker) {
+            const colorText = colorPicker.closest('.input-group').querySelector('input[type="text"]');
+            if (colorText) {
+                colorPicker.addEventListener('input', (event) => {
+                    colorText.value = event.target.value.toUpperCase();
+                });
+                colorText.addEventListener('input', (event) => {
+                    colorPicker.value = event.target.value;
+                });
+            }
+        }
+    </script>
+@endpush

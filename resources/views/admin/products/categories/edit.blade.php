@@ -17,7 +17,7 @@
                         <div class="mb-3">
                             <label for="name" class="form-label">Tên danh mục <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                   id="name" name="name" value="{{ old('name', $category->name) }}" required>
+                                   id="name" name="name" value="{{ old('name', $category->name) }}">
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -44,7 +44,7 @@
                         {{-- Trạng thái --}}
                         <div class="mb-3">
                             <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                            <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
+                            <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                                 <option value="1" {{ old('status', $category->status) == 1 ? 'selected' : '' }}>Hiển thị</option>
                                 <option value="0" {{ old('status', $category->status) == 0 ? 'selected' : '' }}>Ẩn</option>
                             </select>

@@ -34,7 +34,6 @@ class DatabaseSeeder extends Seeder
             NewsSeeder::class,
             NewsCommentSeeder::class,
             ContactSeeder::class,
-            BannerSeeeder::class,
         ]);
     }
 }

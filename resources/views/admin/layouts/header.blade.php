@@ -79,7 +79,7 @@
                         </span>
                     </button>
                     <div class="custom-dropdown-menu dropdown-menu-end" style="top:110%; min-width:200px;">
-                        <div class="dropdown-header"><i class="bx bx-user me-2"></i>Xin chào, Admin!</div>
+                        <div class="dropdown-header"><i class="bx bx-user me-2"></i>Xin chào</div>
                         <a class="dropdown-item" href="#">
                             <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân
                         </a>
@@ -94,13 +94,7 @@
                     </div>
                 </div>
 
-                <!-- Search -->
-                <form class="app-search d-none d-md-block ms-2">
-                    <div class="position-relative">
-                        <input type="search" class="form-control" placeholder="Search..." autocomplete="off">
-                        <iconify-icon icon="solar:magnifer-linear" class="search-widget-icon"></iconify-icon>
-                    </div>
-                </form>
+                
             </div>
         </div>
     </div>

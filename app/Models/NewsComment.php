@@ -81,4 +81,9 @@ class NewsComment extends Model
     {
         return $this->hasMany(NewsComment::class, 'parent_id')->where('is_hidden', 1)->latest();
     }
+
+    public function visibleChildren(): HasMany
+    {
+        return $this->hasMany(NewsComment::class, 'parent_id')->where('is_hidden', 0);
+    }
 }

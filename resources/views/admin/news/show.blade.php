@@ -26,7 +26,6 @@
                             <span class="badge bg-info text-dark me-2">{{ $news->category?->name ?? 'Không có' }}</span>
                             <span
                                 class="badge {{ $news->status === 'published' ? 'bg-success' : 'bg-secondary' }} me-2">{{ $news->status === 'published' ? 'Đã xuất bản' : 'Nháp' }}</span>
-                            <span class="badge bg-warning text-dark">Lượt xem: {{ $news->views ?? 0 }}</span>
                         </div>
                         <div class="mb-1 text-muted small">
                             <i class="fas fa-user-edit me-1"></i> <span
@@ -39,7 +38,7 @@
                 </div>
                 <div class="mb-4">
                     <strong class="d-block mb-2 text-dark">Nội dung bài viết</strong>
-                    <div class="border rounded-3 p-3 bg-light" style="min-height: 120px;">
+                    <div class="news-content border rounded-3 p-4 bg-light" style="min-height: 120px;">
                         {!! $news->content !!}
                     </div>
                 </div>
@@ -62,7 +61,7 @@
                             <div class="alert alert-secondary rounded-3">Chưa có bình luận nào.</div>
                         @else
                             <ul class="list-unstyled">
-                                @foreach ($news->comments as $comment)
+                                @foreach ($news->comments->where('parent_id', null)->sortByDesc('created_at') as $comment)
                                     <li class="mb-4 pb-3 border-bottom">
                                         <div class="d-flex align-items-center mb-2 gap-3">
                                             <div class="rounded-circle bg-gradient bg-primary text-white d-flex justify-content-center align-items-center shadow"
@@ -73,10 +72,10 @@
                                                 <strong
                                                     class="d-block text-dark fw-semibold">{{ $comment->user->name ?? 'Người dùng không xác định' }}</strong>
                                                 <small class="text-muted">
-                                                    {{ $comment->created_at->format('d/m/Y H:i') }}
+                                                    {{ $comment->created_at ? $comment->created_at->format('d/m/Y H:i') : '' }}
                                                     @if ($comment->updated_at && $comment->updated_at != $comment->created_at)
                                                         <span class="ms-2">(Đã sửa:
-                                                            {{ $comment->updated_at->format('d/m/Y H:i') }})</span>
+                                                            {{ $comment->updated_at ? $comment->updated_at->format('d/m/Y H:i') : '' }})</span>
                                                     @endif
                                                 </small>
                                             </div>
@@ -112,7 +111,7 @@
                                                         class="btn btn-sm btn-primary rounded-pill px-3">Gửi</button>
                                                 </form>
                                             </div>
-                                            @if ($comment->children && $comment->children->count())
+                                            @if ($comment->children->count())
                                                 @php $maxReplyShow = 3; @endphp
                                                 <ul class="list-unstyled mt-3 ps-4 border-start border-2" id="replies-list-{{ $comment->id }}">
                                                     @foreach ($comment->children as $j => $reply)
@@ -123,7 +122,7 @@
                                                                     {{ mb_substr($reply->user->name ?? 'A', 0, 1) }}
                                                                 </div>
                                                                 <strong class="text-dark">{{ $reply->user->name ?? 'Ẩn danh' }}</strong>
-                                                                <small class="text-muted ms-2">{{ $reply->created_at->format('d/m/Y H:i') }}</small>
+                                                                <small class="text-muted ms-2">{{ $reply->created_at ? $reply->created_at->format('d/m/Y H:i') : '' }}</small>
                                                                 <form method="POST" action="{{ route('admin.news-comments.like', $reply->id) }}" class="ms-2">
                                                                     @csrf
                                                                     <button type="submit" class="btn btn-xs btn-outline-info px-2 py-0" style="font-size:0.9rem;">
@@ -158,3 +157,53 @@
                 </div>
             </div>
         @endsection
+
+@push('styles')
+    <style>
+        .news-content {
+            font-size: 1.08rem;
+            line-height: 1.7;
+            color: #222;
+            word-break: break-word;
+        }
+        .news-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 16px auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .news-content h1, .news-content h2, .news-content h3 {
+            margin-top: 1.2em;
+            margin-bottom: 0.7em;
+            font-weight: bold;
+            color: #1565c0;
+        }
+        .news-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        .news-content th, .news-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .news-content blockquote {
+            border-left: 4px solid #90caf9;
+            background: #f5f5f5;
+            padding: 0.7em 1em;
+            margin: 1em 0;
+            font-style: italic;
+        }
+        .news-content ul, .news-content ol {
+            margin-left: 2em;
+        }
+        .news-content iframe {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1em auto;
+            display: block;
+        }
+    </style>
+@endpush

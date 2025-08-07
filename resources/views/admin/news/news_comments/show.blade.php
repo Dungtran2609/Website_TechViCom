@@ -1,4 +1,3 @@
-
 @extends('admin.layouts.app')
 
 @section('content')
@@ -18,12 +17,14 @@
         @else
             @php $maxShow = 5; @endphp
             <div id="comments-list">
-                @foreach ($news->comments as $i => $comment)
+                @foreach ($news->comments->where('parent_id', null)->sortByDesc('created_at') as $i => $comment)
                     <div class="card mb-4 comment-item" style="{{ $i >= $maxShow ? 'display:none;' : '' }}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong>
-                                <small>{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                                <small>
+                                    {{ $comment->created_at ? $comment->created_at->format('d/m/Y H:i') : '' }}
+                                </small>
                             </div>
                             <p class="mb-2 {{ $comment->is_hidden ? 'text-muted fst-italic' : '' }}">
                                 {!! $comment->is_hidden ? '<span class="text-warning">[Đã ẩn]</span> ' : '' !!}{{ $comment->content }}
@@ -58,7 +59,7 @@
                             </button>
                             </form>
                             {{-- Phản hồi con --}}
-                            @if ($comment->children && $comment->children->count())
+                            @if ($comment->children->count())
                                 <h5 class="mt-3 mb-2">Phản hồi</h5>
                                 @php $maxReplyShow = 3; @endphp
                                 <div id="replies-list-{{ $comment->id }}">
@@ -67,7 +68,7 @@
                                             <div class="card-body">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                                     <strong>{{ $child->user->name ?? 'Ẩn danh' }}</strong>
-                                                    <small>{{ $child->created_at->format('d/m/Y H:i') }}</small>
+                                                    <small>{{ $child->created_at ? $child->created_at->format('d/m/Y H:i') : '' }}</small>
                                                 </div>
                                                 <p class="mb-2 {{ $child->is_hidden ? 'text-muted fst-italic' : '' }}">
                                                     {!! $child->is_hidden ? '<span class="text-warning">[Đã ẩn]</span> ' : '' !!}{{ $child->content }}

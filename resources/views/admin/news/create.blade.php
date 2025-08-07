@@ -12,7 +12,7 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Tiêu đề <span class="text-danger">*</span></label>
                     <input type="text" name="title" class="form-control @error('title') is-invalid @enderror"
-                        value="{{ old('title') }}" required>
+                        value="{{ old('title') }}" >
                     @error('title')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -20,7 +20,7 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Danh mục bài viết <span class="text-danger">*</span></label>
-                    <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
+                    <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" >
                         <option value="">-- Chọn danh mục --</option>
                         @foreach ($categories as $category)
                             <option value="{{ $category->category_id }}"
@@ -44,7 +44,8 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Trạng thái</label>
-                    <select name="status" class="form-select @error('status') is-invalid @enderror" required>
+                    <select name="status" class="form-select @error('status') is-invalid @enderror" >
+                        <option value="">-- Chọn trạng thái --</option>
                         <option value="published" {{ old('status') === 'published' ? 'selected' : '' }}>Đã đăng</option>
                         <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Nháp</option>
                     </select>
@@ -142,7 +143,8 @@
                         classes: true,
                         styles: true
                     }]
-                }
+                },
+                extraPlugins: [MyCustomUploadAdapterPlugin] // Thêm dòng này để đăng ký upload adapter
             })
             .then(editor => {
                 // Optional: Lấy nội dung để lưu

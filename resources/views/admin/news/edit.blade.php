@@ -2,19 +2,7 @@
 
 @section('content')
     <div class="container mt-4">
-        <h2 class="mb-4 text-primary">✏️ Chỉnh sửa bài viết: {{ $news->title }}</h2>
-
-        {{-- Hiển thị lỗi nếu có --}}
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Lỗi!</strong> Vui lòng kiểm tra lại dữ liệu.<br>
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        <h2 class="mb-4 text-primary">Chỉnh sửa bài viết: {{ $news->title }}</h2>
 
         {{-- Form cập nhật --}}
         <form action="{{ route('admin.news.update', $news) }}" method="POST" enctype="multipart/form-data"
@@ -25,15 +13,17 @@
             <div class="row">
                 {{-- Tiêu đề --}}
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">🏷️ Tiêu đề <span class="text-danger">*</span></label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title', $news->title) }}"
-                        required>
+                    <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control" value="{{ old('title', $news->title) }}">
+                    @error('title')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 {{-- Danh mục --}}
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">📂 Danh mục <span class="text-danger">*</span></label>
-                    <select name="category_id" class="form-select" required>
+                    <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                    <select name="category_id" class="form-select">
                         <option value="">-- Chọn danh mục --</option>
                         @foreach ($categories as $cat)
                             <option value="{{ $cat->category_id }}"
@@ -42,19 +32,25 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('category_id')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
             </div>
 
             {{-- Tác giả --}}
             <div class="mb-3">
-                <label class="form-label fw-semibold">✍️ Tác giả</label>
+                <label class="form-label fw-semibold">Tác giả</label>
                 <input type="text" class="form-control" value="{{ auth()->user()->name }}" disabled>
                 <input type="hidden" name="author_id" value="{{ auth()->id() }}">
+                @error('author_id')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
 
             {{-- Ảnh hiện tại --}}
             <div class="mb-3">
-                <label class="form-label">🖼️ Ảnh hiện tại</label><br>
+                <label class="form-label">Ảnh hiện tại</label><br>
                 @if ($news->image)
                     <img src="{{ asset($news->image) }}" width="200" class="img-thumbnail" alt="Ảnh bài viết">
                 @else
@@ -64,34 +60,46 @@
 
             {{-- Ảnh mới --}}
             <div class="mb-3">
-                <label class="form-label">📷 Ảnh mới (nếu muốn thay)</label>
+                <label class="form-label">Ảnh mới (nếu muốn thay)</label>
                 <input type="file" name="image" class="form-control">
+                @error('image')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="mb-4">
-                <label for="editor" class="form-label fw-bold">Nội dung bài viết <span class="text-danger">*</span></label>
+                <label for="editor" class="form-label fw-bold">Nội dung bài viết <span
+                        class="text-danger">*</span></label>
                 <div class="editor-container">
                     <textarea name="content" id="editor">{{ old('content', $news->content) }}</textarea>
                 </div>
-                @error('content')<div class="text-danger">{{ $message }}</div>@enderror
+                @error('content')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
 
             {{-- Trạng thái & Ngày đăng --}}
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">📢 Trạng thái</label>
-                    <select name="status" class="form-select" required>
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select">
                         <option value="published" {{ old('status', $news->status) === 'published' ? 'selected' : '' }}>Đã
                             đăng</option>
                         <option value="draft" {{ old('status', $news->status) === 'draft' ? 'selected' : '' }}>Nháp
                         </option>
                     </select>
+                    @error('status')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">📅 Ngày đăng</label>
+                    <label class="form-label fw-semibold">Ngày đăng</label>
                     <input type="text" class="form-control"
                         value="{{ optional($news->published_at)->format('d/m/Y H:i') }}" readonly>
+                    @error('published_at')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
                 </div>
 
             </div>
@@ -99,7 +107,7 @@
             {{-- Nút hành động --}}
             <div class="d-flex justify-content-between">
                 <a href="{{ route('admin.news.index') }}" class="btn btn-secondary">← Quay lại</a>
-                <button type="submit" class="btn btn-success">💾 Cập nhật</button>
+                <button type="submit" class="btn btn-success">Cập nhật</button>
             </div>
         </form>
     </div>

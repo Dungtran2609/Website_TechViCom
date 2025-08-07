@@ -8,150 +8,153 @@
         </div>
 
         {{-- Nội dung bài viết --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                {{-- Tiêu đề --}}
-                <h2 class="card-title mb-3 text-dark">{{ $news->title }}</h2>
-
-                {{-- Danh mục --}}
-                <p class="mb-3">
-                    <strong>Danh mục:</strong>
-                    <span class="badge bg-info text-dark">
-                        {{ $news->category?->name ?? 'Không có' }}
-                    </span>
-                </p>
-
-                {{-- Ảnh đại diện --}}
-                <div class="mb-4">
-                    <strong>Ảnh đại diện:</strong><br>
+        <div class="card shadow-lg rounded-4 border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center mb-3 gap-3">
                     @if ($news->image)
-                        <img src="{{ asset($news->image) }}" alt="Ảnh bài viết" class="img-fluid rounded shadow-sm mt-2"
-                            style="max-width: 400px;">
+                        <img src="{{ asset($news->image) }}" alt="Ảnh đại diện" class="img-fluid rounded-3 shadow"
+                            style="width: 120px; height: 120px; object-fit: cover;">
                     @else
-                        <p class="text-muted fst-italic mt-2">Chưa có ảnh</p>
+                        <div class="bg-light rounded-3 d-flex align-items-center justify-content-center"
+                            style="width: 120px; height: 120px;">
+                            <i class="fas fa-image fa-2x text-secondary"></i>
+                        </div>
                     @endif
+                    <div class="flex-grow-1">
+                        <h2 class="card-title mb-2 text-dark fw-bold" style="font-size: 1.6rem;">{{ $news->title }}</h2>
+                        <div class="mb-2">
+                            <span class="badge bg-info text-dark me-2">{{ $news->category?->name ?? 'Không có' }}</span>
+                            <span
+                                class="badge {{ $news->status === 'published' ? 'bg-success' : 'bg-secondary' }} me-2">{{ $news->status === 'published' ? 'Đã xuất bản' : 'Nháp' }}</span>
+                            <span class="badge bg-warning text-dark">Lượt xem: {{ $news->views ?? 0 }}</span>
+                        </div>
+                        <div class="mb-1 text-muted small">
+                            <i class="fas fa-user-edit me-1"></i> <span
+                                class="text-primary">{{ $news->author?->name ?? 'Không xác định' }}</span>
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ $news->published_at ? $news->published_at->format('d/m/Y H:i') : 'Chưa xuất bản' }}
+                        </div>
+                    </div>
                 </div>
-
-                {{-- Nội dung --}}
                 <div class="mb-4">
-                    <strong>Nội dung:</strong>
-                    <div class="border p-3 rounded mt-2 bg-light">
+                    <strong class="d-block mb-2 text-dark">Nội dung bài viết</strong>
+                    <div class="border rounded-3 p-3 bg-light" style="min-height: 120px;">
                         {!! $news->content !!}
                     </div>
                 </div>
 
-                {{-- Trạng thái + Ngày đăng --}}
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <strong>Trạng thái:</strong>
-                        <span class="badge {{ $news->status === 'published' ? 'bg-success' : 'bg-secondary' }}">
-                            {{ $news->status === 'published' ? 'Đã đăng' : 'Nháp' }}
-                        </span>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Ngày đăng:</strong>
-                        <span class="text-muted">
-                            {{ $news->published_at ? $news->published_at->format('d/m/Y H:i') : 'Chưa đăng' }}
-                        </span>
-                    </div>
+                {{-- quay lại trang danh sách bài viết--}}
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách bài viết
+                    </a>
                 </div>
 
-                {{-- Nút quay lại --}}
-                <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                </a>
-            </div>
-        </div>
-
-        {{-- Khu vực bình luận --}}
-        <div class="card shadow-sm rounded-4 border-0 mt-4">
-            <div class="card-header bg-white border-bottom">
-                <h5 class="mb-0">Bình luận</h5>
-            </div>
-            <div class="card-body">
-                @if ($news->visibleComments->isEmpty())
-                    <p class="text-muted">Chưa có bình luận nào.</p>
-                @else
-                    <ul class="list-unstyled">
-                        @foreach ($news->visibleComments as $comment)
-                            <li class="mb-4 pb-3 border-bottom">
-                                {{-- Phần thông tin người dùng --}}
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center me-3"
-                                        style="width: 44px; height: 44px; font-weight: bold; font-size: 1.2rem;">
-                                        {{ mb_substr($comment->user->name ?? 'U', 0, 1) }}
-                                    </div>
-                                    <div>
-                                        <strong
-                                            class="d-block text-dark">{{ $comment->user->name ?? 'Người dùng không xác định' }}</strong>
-                                        <small class="text-muted">
-                                            {{ $comment->created_at->format('d/m/Y H:i') }}
-                                            @if ($comment->updated_at && $comment->updated_at != $comment->created_at)
-                                                (Đã sửa: {{ $comment->updated_at->format('d/m/Y H:i') }})
-                                            @endif
-                                        </small>
-                                    </div>
-                                </div>
-
-                                {{-- Nội dung bình luận --}}
-                                <div class="ms-5">
-                                    <p class="mb-2">{{ $comment->content }}</p>
-
-                                    {{-- Nút like--}}
-                                    <div class="d-flex gap-3 align-items-center small text-muted">
-                                        @php
-                                            $sessionKey = 'liked_comment_' . $comment->id;
-                                            $hasLiked = session()->has($sessionKey);
-                                        @endphp
-
-                                        <form method="POST"
-                                            action="{{ route('admin.news-comments.like', $comment->id) }}">
-                                            @csrf
-                                            <button type="submit"
-                                                class="btn btn-sm d-flex align-items-center gap-1 {{ $hasLiked ? 'btn-secondary' : 'btn-outline-primary' }}"
-                                                {{ $hasLiked ? 'disabled' : '' }} style="transition: 0.3s;"
-                                                onmouseover="this.classList.remove('btn-outline-primary'); this.classList.add('btn-primary');"
-                                                onmouseout="if(!{{ $hasLiked ? 'true' : 'false' }}){this.classList.remove('btn-primary'); this.classList.add('btn-outline-primary');}">
-                                                👍 <span>{{ $comment->likes_count }}</span>
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                    {{-- Form trả lời (ẩn/hiện) --}}
-                                    <div class="collapse mt-3" id="replyForm{{ $comment->id }}">
-                                        <form method="POST"
-                                            action="{{ route('admin.news-comments.reply', $comment->id) }}">
-                                            @csrf
-                                            <div class="mb-2">
-                                                <textarea name="content" class="form-control rounded-3" rows="2" placeholder="Nhập phản hồi..."></textarea>
+                {{-- Khu vực bình luận --}}
+                <div class="card shadow-lg rounded-4 border-0 mt-4">
+                    <div class="card-header bg-white border-bottom-0 py-3">
+                        <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-comments me-2 text-primary"></i>Bình luận bài
+                            viết</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if ($news->comments->isEmpty())
+                            <div class="alert alert-secondary rounded-3">Chưa có bình luận nào.</div>
+                        @else
+                            <ul class="list-unstyled">
+                                @foreach ($news->comments as $comment)
+                                    <li class="mb-4 pb-3 border-bottom">
+                                        <div class="d-flex align-items-center mb-2 gap-3">
+                                            <div class="rounded-circle bg-gradient bg-primary text-white d-flex justify-content-center align-items-center shadow"
+                                                style="width: 48px; height: 48px; font-weight: bold; font-size: 1.3rem;">
+                                                {{ mb_substr($comment->user->name ?? 'U', 0, 1) }}
                                             </div>
-                                            <button type="submit" class="btn btn-sm btn-primary">Gửi</button>
-                                        </form>
-                                    </div>
-
-                                    {{-- Bình luận con (nếu có) --}}
-                                    @if ($comment->replies && $comment->replies->count())
-                                        <ul class="list-unstyled mt-3 ps-4 border-start border-2">
-                                            @foreach ($comment->replies as $reply)
-                                                <li class="mb-3">
-                                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                                        <strong
-                                                            class="text-dark">{{ $reply->user->name ?? 'Ẩn danh' }}</strong>
-                                                        <small
-                                                            class="text-muted">{{ $reply->created_at->format('d/m/Y H:i') }}</small>
+                                            <div class="flex-grow-1">
+                                                <strong
+                                                    class="d-block text-dark fw-semibold">{{ $comment->user->name ?? 'Người dùng không xác định' }}</strong>
+                                                <small class="text-muted">
+                                                    {{ $comment->created_at->format('d/m/Y H:i') }}
+                                                    @if ($comment->updated_at && $comment->updated_at != $comment->created_at)
+                                                        <span class="ms-2">(Đã sửa:
+                                                            {{ $comment->updated_at->format('d/m/Y H:i') }})</span>
+                                                    @endif
+                                                </small>
+                                            </div>
+                                            <span
+                                                class="badge bg-light text-dark border border-1 px-2">#{{ $comment->id }}</span>
+                                        </div>
+                                        <div class="ms-5">
+                                            <p class="mb-2 fs-6 text-dark">{{ $comment->content }}</p>
+                                            <div class="d-flex gap-2 align-items-center small">
+                                                <form method="POST"
+                                                    action="{{ route('admin.news-comments.like', $comment->id) }}">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                        Like ({{ $comment->likes_count }})
+                                                    </button>
+                                                </form>
+                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                                    type="button" data-bs-toggle="collapse"
+                                                    data-bs-target="#replyForm{{ $comment->id }}">
+                                                    <i class="fas fa-reply"></i> Trả lời
+                                                </button>
+                                            </div>
+                                            <div class="collapse mt-3" id="replyForm{{ $comment->id }}">
+                                                <form method="POST"
+                                                    action="{{ route('admin.news-comments.reply', $comment->id) }}">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <textarea name="content" class="form-control rounded-3" rows="2" placeholder="Nhập phản hồi..."
+                                                            style="resize:vertical;"></textarea>
                                                     </div>
-                                                    <p class="mb-0 ms-2">{{ $reply->content }}</p>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+                                                    <button type="submit"
+                                                        class="btn btn-sm btn-primary rounded-pill px-3">Gửi</button>
+                                                </form>
+                                            </div>
+                                            @if ($comment->children && $comment->children->count())
+                                                @php $maxReplyShow = 3; @endphp
+                                                <ul class="list-unstyled mt-3 ps-4 border-start border-2" id="replies-list-{{ $comment->id }}">
+                                                    @foreach ($comment->children as $j => $reply)
+                                                        <li class="mb-3 reply-item-{{ $comment->id }}" style="{{ $j >= $maxReplyShow ? 'display:none;' : '' }}">
+                                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                                <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center"
+                                                                    style="width: 32px; height: 32px; font-weight: bold; font-size: 1rem;">
+                                                                    {{ mb_substr($reply->user->name ?? 'A', 0, 1) }}
+                                                                </div>
+                                                                <strong class="text-dark">{{ $reply->user->name ?? 'Ẩn danh' }}</strong>
+                                                                <small class="text-muted ms-2">{{ $reply->created_at->format('d/m/Y H:i') }}</small>
+                                                                <form method="POST" action="{{ route('admin.news-comments.like', $reply->id) }}" class="ms-2">
+                                                                    @csrf
+                                                                    <button type="submit" class="btn btn-xs btn-outline-info px-2 py-0" style="font-size:0.9rem;">
+                                                                        Like ({{ $reply->likes_count ?? 0 }})
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                            <p class="mb-0 ms-2 text-dark">{{ $reply->content }}</p>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                                @if ($comment->children->count() > $maxReplyShow)
+                                                    <div class="text-center my-2">
+                                                        <button id="btn-expand-replies-{{ $comment->id }}" class="btn btn-outline-secondary btn-sm px-4">Xem thêm phản hồi</button>
+                                                    </div>
+                                                    <script>
+                                                        document.getElementById('btn-expand-replies-{{ $comment->id }}').onclick = function() {
+                                                            document.querySelectorAll('.reply-item-{{ $comment->id }}').forEach(function(el) {
+                                                                el.style.display = '';
+                                                            });
+                                                            this.style.display = 'none';
+                                                        };
+                                                    </script>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
             </div>
-        </div>
-
-    </div>
-@endsection
+        @endsection

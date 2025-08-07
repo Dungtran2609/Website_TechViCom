@@ -24,7 +24,9 @@ class DatabaseSeeder extends Seeder
             AttributeSeeder::class,
             AttributeValueSeeder::class,
             ProductSeeder::class,
+            ProductCommentSeeder::class,
             CouponSeeder::class,
+            BannerSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
             OrderReturnSeeder::class,
@@ -32,6 +34,7 @@ class DatabaseSeeder extends Seeder
             NewsSeeder::class,
             NewsCommentSeeder::class,
             ContactSeeder::class,
+
         ]);
     }
 }

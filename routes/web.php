@@ -29,6 +29,8 @@ Route::get('/', fn() => view('client.home'))->name('home');
 
 // Admin routes (phải đăng nhập và là admin/staff)
 Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    // Đăng xuất admin
+    Route::post('logout', [AdminController::class, 'logout'])->name('logout');
 
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -185,6 +187,7 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     // Bình luận tin tức
     Route::prefix('news-comments')->name('news-comments.')->group(function () {
         Route::get('/', [AdminNewsCommentController::class, 'index'])->name('index');
+        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show');
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/toggle', [AdminNewsCommentController::class, 'toggleVisibility'])->name('toggle');
         Route::post('/{id}/reply', [AdminNewsCommentController::class, 'storeReply'])->name('reply');

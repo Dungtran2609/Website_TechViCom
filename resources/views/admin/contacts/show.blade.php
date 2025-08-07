@@ -9,7 +9,7 @@
                 <div class="card shadow">
                     <div class="card-body">
                         {{-- Thông tin người liên hệ --}}
-                        <h4 class="mb-3">🧑‍💼 Thông tin người liên hệ</h4>
+                        <h4 class="mb-3">Thông tin người liên hệ</h4>
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 <strong>Họ tên:</strong> {{ $contact->name }}
@@ -28,7 +28,7 @@
                         <hr>
 
                         {{-- Nội dung liên hệ --}}
-                        <h4 class="mb-3">📝 Nội dung liên hệ</h4>
+                        <h4 class="mb-3">Nội dung liên hệ</h4>
                         <p><strong>Tiêu đề:</strong> {{ $contact->subject }}</p>
                         <div class="border p-3 bg-light rounded mb-3">
                             {{ $contact->message }}
@@ -36,7 +36,7 @@
 
                         <hr>
 
-                        <h4 class="mb-3">⚙️ Trạng thái & Xử lý</h4>
+                        <h4 class="mb-3">Trạng thái & Xử lý</h4>
 
                         {{-- Trạng thái hiện tại --}}
                         <p>
@@ -71,11 +71,7 @@
                             <div class="input-group w-auto">
                                 <select name="status" class="form-select" required>
                                     @php
-                                        $allowedStatuses = ['pending', 'in_progress', 'responded'];
-
-                                        if (!in_array($contact->status, $allowedStatuses)) {
-                                            $allowedStatuses[] = $contact->status;
-                                        }
+                                        $allStatuses = ['pending', 'in_progress', 'responded', 'rejected'];
                                         $labels = [
                                             'pending' => 'Chờ xử lý',
                                             'in_progress' => 'Đang phản hồi',
@@ -83,10 +79,8 @@
                                             'rejected' => 'Phản hồi thất bại',
                                         ];
                                     @endphp
-
-                                    @foreach ($allowedStatuses as $status)
-                                        <option value="{{ $status }}"
-                                            {{ $contact->status === $status ? 'selected' : '' }}>
+                                    @foreach ($allStatuses as $status)
+                                        <option value="{{ $status }}" {{ $contact->status === $status ? 'selected' : '' }}>
                                             {{ $labels[$status] }}
                                         </option>
                                     @endforeach
@@ -116,7 +110,7 @@
 
                         {{-- Nút quay lại --}}
                         <a href="{{ route('admin.contacts.index') }}" class="btn btn-secondary mt-3 ms-2">
-                            ← Quay lại danh sách
+                            Quay lại danh sách
                         </a>
                     </div>
                 </div>

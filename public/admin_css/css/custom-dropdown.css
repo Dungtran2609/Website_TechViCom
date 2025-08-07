@@ -1,0 +1,106 @@
+/* Custom Dropdown Styles for Admin Header */
+label.form-label {
+    font-weight: 500;
+}
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.custom-dropdown-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+    transition: background 0.2s;
+    padding: 6px 10px;
+    border-radius: 50%;
+}
+.custom-dropdown-toggle:focus,
+.custom-dropdown-toggle:hover {
+    background: #f2f4f8;
+}
+.custom-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: linear-gradient(90deg, #ff5858 0%, #f857a6 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 2px 7px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(248,87,166,0.15);
+    border: 2px solid #fff;
+    z-index: 2;
+}
+.custom-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 120%;
+    min-width: 270px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 32px rgba(60,72,88,0.18);
+    z-index: 100;
+    padding: 0.5rem 0;
+    animation: dropdownFadeIn 0.25s;
+}
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.custom-dropdown.open .custom-dropdown-menu {
+    display: block;
+}
+.custom-dropdown-menu .dropdown-header {
+    font-size: 15px;
+    font-weight: 700;
+    color: #333;
+    padding: 12px 20px 8px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafbfc;
+    border-radius: 12px 12px 0 0;
+}
+.custom-dropdown-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    color: #222;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.18s;
+}
+.custom-dropdown-menu .dropdown-item:hover {
+    background: #f2f4f8;
+    color: #1a73e8;
+}
+.custom-dropdown-menu .dropdown-divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin: 6px 0;
+}
+.custom-dropdown-menu .text-danger {
+    color: #e74c3c !important;
+}
+.custom-dropdown-menu .text-danger:hover {
+    color: #fff !important;
+    background: #e74c3c;
+}
+.custom-dropdown-menu .text-center {
+    padding: 10px 0 0 0;
+}
+.custom-dropdown-menu .dropdown-item .bx {
+    font-size: 18px;
+}
+.custom-dropdown-menu .notification-contact {
+    font-weight: 600;
+    color: #1a73e8;
+}
+.custom-dropdown-menu .notification-time {
+    font-size: 12px;
+    color: #888;
+}

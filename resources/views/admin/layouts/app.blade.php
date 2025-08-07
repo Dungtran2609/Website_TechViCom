@@ -16,34 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         integrity="sha512-PvNcazjx3bDAzjlfKEXAMPLEKEY..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     @stack('styles')
-    <style>
-        label.form-label {
-            font-weight: 500;
-        }
-
-        /* Badge notification hiệu ứng rung nhẹ */
-        .notification-badge {
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .btn-notification:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('admin_css/css/custom-dropdown.css') }}">
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://unpkg.com/simplebar@latest/dist/simplebar.min.css" />
@@ -79,10 +52,8 @@
     <!-- Vendor Javascript (Require in all Page) -->
     <script src="{{ asset('admin_css/js/vendor.js') }}"></script>
 
-
-    <!-- App Javascript (Require in all Page) -->
     <script src="{{ asset('admin_css/js/app.js') }}"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ asset('admin_css/js/custom-dropdown.js') }}"></script>
 
 
     <!-- Vector Map Js -->

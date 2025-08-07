@@ -35,116 +35,21 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        @if ($comments->isEmpty())
-            <div class="alert alert-warning">Không có bình luận nào.</div>
+        @if ($allNews->isEmpty())
+            <div class="alert alert-warning">Không có bài viết nào có bình luận.</div>
         @else
-            <div class="accordion" id="commentAccordion">
-                @foreach ($comments as $comment)
-                    <div class="accordion-item mb-3">
-                        <h2 class="accordion-header" id="heading{{ $comment->id }}">
-                            <button class="accordion-button collapsed fs-5 w-100 text-start" type="button"
-                                data-bs-toggle="collapse" data-bs-target="#collapse{{ $comment->id }}"
-                                aria-expanded="false" aria-controls="collapse{{ $comment->id }}">
-                                <strong>{{ $comment->user->name ?? 'Ẩn danh' }}</strong> -
-                                {{ Str::limit($comment->content, 60) }}
-                            </button>
-                        </h2>
-                        <div id="collapse{{ $comment->id }}" class="accordion-collapse collapse"
-                            aria-labelledby="heading{{ $comment->id }}" data-bs-parent="#commentAccordion">
-                            <div class="accordion-body">
-                                {{-- Thông tin bài viết --}}
-                                <div class="mb-2">
-                                    <strong>Bài viết:</strong>
-                                    <a href="{{ route('admin.news.show', $comment->news->id) }}" target="_blank">
-                                        {{ $comment->news->title }}
-                                    </a>
-                                    <span class="text-muted">-
-                                        {{ \Carbon\Carbon::parse($comment->created_at)->format('d/m/Y') }}</span>
+            <div class="row">
+                @foreach ($allNews as $news)
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div>
+                                    <h5 class="card-title">{{ $news->title }}</h5>
+                                    <p class="card-text text-muted mb-2">ID: {{ $news->id }}</p>
                                 </div>
-
-                                {{-- Nội dung comment --}}
-                                <p class="{{ $comment->is_hidden ? 'text-muted fst-italic' : '' }}">
-                                    {{ $comment->is_hidden ? '[Đã ẩn] ' : '' }}{{ $comment->content }}
-                                </p>
-
-                                {{-- Hành động --}}
-                                <div class="mt-3 d-flex flex-wrap gap-2">
-                                    <form action="{{ route('admin.news-comments.toggle', $comment->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button
-                                            class="btn btn-sm {{ $comment->is_hidden ? 'btn-success' : 'btn-warning' }}">
-                                            <i class="fas fa-eye{{ $comment->is_hidden ? '' : '-slash' }}"></i>
-                                            {{ $comment->is_hidden ? 'Hiện' : 'Ẩn' }}
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ route('admin.news-comments.destroy', $comment->id) }}" method="POST"
-                                        onsubmit="return confirm('Xoá bình luận này và các phản hồi?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash-alt"></i> Xoá
-                                        </button>
-                                    </form>
-
-                                    <form action="{{ route('admin.news-comments.like', $comment->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-thumbs-up"></i> Like ({{ $comment->likes_count ?? 0 }})
-                                        </button>
-                                    </form>
-                                </div>
-
-                                {{-- Form trả lời --}}
-                                <form action="{{ route('admin.news-comments.reply', $comment->id) }}" method="POST"
-                                    class="mt-3 d-flex gap-2">
-                                    @csrf
-                                    <input type="text" name="content" class="form-control"
-                                        placeholder="Nhập phản hồi...">
-                                    <button class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-reply"></i> Trả lời
-                                    </button>
-                                </form>
-
-                                {{-- Phản hồi con --}}
-                                @foreach ($comment->children as $child)
-                                    <div class="mt-3 ps-3 border-start border-primary">
-                                        <div class="d-flex justify-content-between">
-                                            <strong>{{ $child->user->name ?? 'Ẩn danh' }}</strong>
-                                            <small>{{ $child->created_at->format('d/m/Y H:i') }}</small>
-                                        </div>
-                                        <p class="{{ $child->is_hidden ? 'text-muted fst-italic' : '' }}">
-                                            {!! $child->is_hidden ? '<span class="text-warning">[Đã ẩn]</span> ' : '' !!}{{ $child->content }}
-                                        </p>
-                                        <div class="d-flex gap-2">
-                                            <form action="{{ route('admin.news-comments.toggle', $child->id) }}"
-                                                method="POST">
-                                                @csrf @method('PATCH')
-                                                <button class="btn btn-sm btn-outline-warning">
-                                                    <i class="fas fa-eye{{ $child->is_hidden ? '' : '-slash' }}"></i>
-                                                </button>
-                                            </form>
-
-                                            <form action="{{ route('admin.news-comments.destroy', $child->id) }}"
-                                                method="POST" onsubmit="return confirm('Xoá phản hồi này?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-
-                                            {{-- 👍 Nút Like cho bình luận con --}}
-                                            <form action="{{ route('admin.news-comments.like', $child->id) }}"
-                                                method="POST">
-                                                @csrf
-                                                <button class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-thumbs-up"></i> Like ({{ $child->likes_count ?? 0 }})
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endforeach
-
+                                <a href="{{ route('admin.news-comments.show', $news->id) }}" class="btn btn-primary mt-auto w-100">
+                                    Xem tất cả bình luận
+                                </a>
                             </div>
                         </div>
                     </div>

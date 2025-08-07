@@ -107,9 +107,9 @@ class AdminNewsCommentController extends Controller
         return back()->with('success', 'Đã thích bình luận.');
     }
 
-    public function show($id)
+    public function show($news_id)
     {
-        $comment = NewsComment::with(['user', 'news', 'children.user'])->findOrFail($id);
-        return view('admin.news.news_comments.show', compact('comment'));
+        $news = News::with(['comments.user', 'comments.children.user', 'category', 'author'])->findOrFail($news_id);
+        return view('admin.news.news_comments.show', compact('news'));
     }
 }

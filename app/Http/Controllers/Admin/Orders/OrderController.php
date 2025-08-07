@@ -493,7 +493,7 @@ class OrderController extends Controller
     {
         $order = Order::withTrashed()->findOrFail($id);
         $order->restore();
-        return redirect()->route('admin.order.trashed')
+        return redirect()->route('admin.orders.trashed')
             ->with('success', 'Đơn hàng đã được phục hồi.');
     }
 
@@ -597,7 +597,7 @@ class OrderController extends Controller
 
         $ret->save();
         $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
-        return redirect()->route('admin.order.returns')
+        return redirect()->route('admin.orders.returns')
             ->with('success', "Yêu cầu $msg");
     }
 

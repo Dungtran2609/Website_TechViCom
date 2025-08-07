@@ -64,8 +64,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     // Dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // ... (Toàn bộ các route admin hiện tại của bạn được giữ nguyên)
-    // ... (Products, Brands, Attributes, Banners, Comments...)
 
     // ==== Users ====
     Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
@@ -201,7 +199,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
             ]);
     });
 
-<<<<<<< HEAD
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
@@ -210,9 +207,8 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        // !!! LỖI COPY-PASTE ĐÃ ĐƯỢC SỬA Ở ĐÂY !!!
-        Route::resource('', AdminOrderController::class) // <-- Sửa từ AdminPermissionController thành OrderController
-            ->parameters(['' => 'order']) // <-- Sửa từ 'permission' thành 'order' cho đúng
+        Route::resource('', AdminOrderController::class) 
+            ->parameters(['' => 'order']) 
             ->names([
                 'index' => 'index',
                 'create' => 'create',
@@ -224,9 +220,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
             ]);
     });
             // Liên hệ (Contacts)
-=======
-    // Liên hệ (Contacts)
->>>>>>> origin/Nguyen
     Route::prefix('contacts')->name('contacts.')->group(function () {
         // Quản lý liên hệ
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');

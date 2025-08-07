@@ -87,10 +87,17 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="col-md-12 mb-3">
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label">Tồn kho <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control @error('stock') is-invalid @enderror" name="stock" value="{{ old('stock') }}">
                                         @error('stock')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Ngưỡng tồn kho thấp</label>
+                                        <input type="number" class="form-control @error('low_stock_amount') is-invalid @enderror" name="low_stock_amount" value="{{ old('low_stock_amount') }}">
+                                        @error('low_stock_amount')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -268,9 +275,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <label class="form-label">Giá khuyến mãi</label>
                                 <input type="number" class="form-control" name="variants[${index}][sale_price]">
                             </div>
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Tồn kho <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" name="variants[${index}][stock]">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ngưỡng tồn kho thấp</label>
+                                <input type="number" class="form-control" name="variants[${index}][low_stock_amount]" value="">
                             </div>
                         </div>
                         <hr>

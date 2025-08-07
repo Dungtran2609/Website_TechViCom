@@ -8,9 +8,7 @@
                 <h2 class="mt-2 mb-0">Đăng nhập</h2>
                 <p class="text-muted small">Chào mừng bạn quay lại!</p>
             </div>
-            @if (session('status'))
-                <div class="alert alert-success mb-3">{{ session('status') }}</div>
-            @endif
+            
             @if (session('status'))
                 <div class="alert alert-success mb-3" role="alert">
                     {{ session('status') }}

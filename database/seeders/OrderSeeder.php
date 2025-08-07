@@ -15,7 +15,7 @@ class OrderSeeder extends Seeder
         $faker = Faker::create();
         $paymentMethods = ['credit_card', 'paypal', 'bank_transfer'];
         $statuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
-
+        $paymentStatuses = ['pending', 'paid', 'failed'];
         for ($i = 0; $i < 20; $i++) {
             // Sinh thời gian tạo và shipped_at, deleted_at
             $createdAt = $faker->dateTimeBetween('-6 months', 'now');
@@ -50,6 +50,7 @@ class OrderSeeder extends Seeder
                 'total_amount' => $totalAmount,
                 'final_total' => $finalTotal,
                 'status' => 'pending',
+                'payment_status' => 'pending',
                 'recipient_name' => $faker->name,
                 'recipient_phone' => $faker->phoneNumber,
                 'recipient_address' => $faker->address,

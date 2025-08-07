@@ -30,6 +30,11 @@
                 <dl class="row mb-0">
                     <dt class="col-sm-3">Trạng thái</dt>
                     <dd class="col-sm-9">{{ $orderData['status_vietnamese'] }}</dd>
+                    <!-- thêm phần hiển thị trạng thái thanh toán -->
+                    <dt class="col-sm-3">Trạng thái thanh toán</dt>
+                    <dd class="col-sm-9">
+                        {{ $orderData['payment_status_vietnamese'] ?? $orderData['payment_status'] }}
+                    </dd> <br>
                     <dt class="col-sm-3">Ngày giao hàng</dt>
                     <dd class="col-sm-9">{{ $orderData['shipped_at'] }}</dd>
                     <dt class="col-sm-3">Người đặt hàng</dt>
@@ -91,33 +96,34 @@
                         </thead>
                         <tbody>
                             @foreach($orderData['order_items'] as $item)
-                                                                <tr>
-                                <!-- {{ dump($item['image_product_url']) }} -->
+                                <tr>
+                                    <!-- {{ dump($item['image_product_url']) }} -->
 
-                                <td style="width:100px;">
-                                    @if(!empty($item['image_product_url']))
-                                        <img src="{{ $item['image_product_url'] }}" class="img-fluid" style="max-height:80px; object-fit:cover;"
-                                            alt="{{ $item['name_product'] }}">
-                                    @else
-                                        <div class="d-flex align-items-center justify-content-center bg-light text-muted" style="height:80px;">
-                                            <i class="fas fa-image fa-lg me-1"></i>Chưa có ảnh
-                                        </div>
-                                    @endif
-                                </td>
-                                                                    <td>{{ $item['name_product'] }}</td>
-                                                                    <td>{{ $item['brand_name'] }}</td>
-                                                                    <td>{{ $item['category_name'] }}</td>
-                                                                    <td>
-                                                                        @foreach($item['attributes'] as $attr)
-                                                                            <span class="badge bg-info text-dark me-1">{{ $attr['name'] }}:
-                                                                                {{ $attr['value'] }}</span>
-                                                                        @endforeach
-                                                                    </td>
-                                                                    <td>{{ $item['stock'] }}</td>
-                                                                    <td>{{ $item['quantity'] }}</td>
-                                                                    <td>{{ number_format($item['price'], 0, ',', '.') }} VND</td>
-                                                                    <td>{{ number_format($item['total'], 0, ',', '.') }} VND</td>
-                                                                </tr>
+                                    <td style="width:100px;">
+                                        @if(!empty($item['image_product_url']))
+                                            <img src="{{ $item['image_product_url'] }}" class="img-fluid"
+                                                style="max-height:80px; object-fit:cover;" alt="{{ $item['name_product'] }}">
+                                        @else
+                                            <div class="d-flex align-items-center justify-content-center bg-light text-muted"
+                                                style="height:80px;">
+                                                <i class="fas fa-image fa-lg me-1"></i>Chưa có ảnh
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>{{ $item['name_product'] }}</td>
+                                    <td>{{ $item['brand_name'] }}</td>
+                                    <td>{{ $item['category_name'] }}</td>
+                                    <td>
+                                        @foreach($item['attributes'] as $attr)
+                                            <span class="badge bg-info text-dark me-1">{{ $attr['name'] }}:
+                                                {{ $attr['value'] }}</span>
+                                        @endforeach
+                                    </td>
+                                    <td>{{ $item['stock'] }}</td>
+                                    <td>{{ $item['quantity'] }}</td>
+                                    <td>{{ number_format($item['price'], 0, ',', '.') }} VND</td>
+                                    <td>{{ number_format($item['total'], 0, ',', '.') }} VND</td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -126,13 +132,29 @@
                 <!-- Hành động -->
                 <div class="mt-4">
                     @if($orderData['status'] === 'pending')
+                        {{-- Xác nhận đơn --}}
                         <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
                             onsubmit="return confirm('Bạn có chắc muốn xác nhận đơn hàng này?');">
                             @csrf
                             <input type="hidden" name="status" value="processing">
-                            <button type="submit" class="btn btn-success">Xác nhận</button>
+                            <button type="submit" class="btn btn-success">Xác nhận đơn</button>
                         </form>
+
+                        {{-- Xác nhận thanh toán --}}
+                        @if($orderData['payment_status'] === 'pending')
+                            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST"
+                                class="d-inline ms-2"
+                                onsubmit="return confirm('Bạn đã nhận thanh toán chưa? Chuyển trạng thái sang “Đã thanh toán”?');">
+                                @csrf
+                                <input type="hidden" name="payment_status" value="paid">
+                                <button type="submit" class="btn btn-warning">
+                                    Xác nhận thanh toán
+                                </button>
+                            </form>
+                        @endif
+
                     @elseif($orderData['status'] === 'processing')
+                        {{-- Xác nhận giao hàng --}}
                         <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
                             onsubmit="return confirm('Bạn có chắc muốn xác nhận giao hàng này?');">
                             @csrf
@@ -140,7 +162,9 @@
                             <button type="submit" class="btn btn-success">Xác nhận giao hàng</button>
                         </form>
                     @endif
+
                     <a href="{{ route('admin.orders.edit', $orderData['id']) }}" class="btn btn-primary ms-2">Sửa</a>
+
                     <form action="{{ route('admin.orders.destroy', $orderData['id']) }}" method="POST" class="d-inline ms-2"
                         onsubmit="return confirm('Bạn có chắc muốn chuyển đơn hàng này vào thùng rác?');">
                         @csrf
@@ -150,6 +174,9 @@
                         </button>
                     </form>
                 </div>
+
+
+
             </div>
         </div>
     </div>

@@ -61,6 +61,7 @@
                         <div class="col-md-6"><p class="mb-2"><strong class="d-block text-muted">Tồn kho:</strong> {{ $variant->stock }}</p></div>
                         <div class="col-md-6"><p class="mb-2"><strong class="d-block text-muted">Giá bán:</strong> <span class="text-danger fw-bold">{{ number_format($variant->price) }} đ</span></p></div>
                         <div class="col-md-6"><p class="mb-2"><strong class="d-block text-muted">Giá khuyến mãi:</strong> {{ $variant->sale_price ? number_format($variant->sale_price) . ' đ' : 'Không có' }}</p></div>
+                        <div class="col-md-12"><p class="mb-2"><strong class="d-block text-muted">Ngưỡng tồn kho thấp:</strong> {{ $variant->low_stock_amount ?? 0 }}</p></div>
                     </div>
                     @if($variant->attributeValues && $variant->attributeValues->count())
                         <hr>
@@ -86,7 +87,7 @@
                                 <h2 class="accordion-header">
                                     <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}">
                                         <div class="d-flex w-100 justify-content-between align-items-center pe-3">
-                                            <span>{{ $variant->attributeValues->pluck('value')->join(' / ') }}</span>
+                                            <span>{{ $variant->attributeValues->pluck('value')->join(' / ') ?: 'Biến thể' }}</span>
                                             <span class="badge bg-primary-subtle text-primary">Giá: {{ number_format($variant->price) }} đ</span>
                                             <span class="badge bg-info-subtle text-info">Kho: {{ $variant->stock }}</span>
                                         </div>
@@ -110,6 +111,7 @@
                                                     <div class="col-sm-6 mb-2"><strong class="d-block text-muted">Trạng thái:</strong> @if($variant->is_active)<span class="badge bg-success">Hoạt động</span>@else<span class="badge bg-secondary">Ngừng</span>@endif</div>
                                                     <div class="col-sm-6 mb-2"><strong class="d-block text-muted">Giá bán:</strong> <span class="text-danger fw-bold">{{ number_format($variant->price) }} đ</span></div>
                                                     <div class="col-sm-6 mb-2"><strong class="d-block text-muted">Giá KM:</strong> {{ $variant->sale_price ? number_format($variant->sale_price) . ' đ' : 'N/A' }}</div>
+                                                    <div class="col-sm-12 mb-2"><strong class="d-block text-muted">Ngưỡng tồn kho thấp:</strong> {{ $variant->low_stock_amount ?? 0 }}</div>
                                                 </div>
                                                 <hr class="my-2">
                                                 <p class="mb-1"><strong>Vận chuyển:</strong> <small class="text-muted">{{ $variant->weight ?? 'N/A' }}kg, {{ $variant->length ?? 'N/A' }}x{{ $variant->width ?? 'N/A' }}x{{ $variant->height ?? 'N/A' }}cm</small></p>

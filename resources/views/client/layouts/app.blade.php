@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,38 +14,47 @@
         .navbar-custom {
             background: linear-gradient(90deg, #0d6efd, #6610f2);
         }
+
         .navbar-custom .nav-link {
             color: white !important;
             font-weight: 500;
             transition: all 0.3s ease;
         }
+
         .navbar-custom .nav-link:hover {
             color: #ffc107 !important;
             transform: translateY(-2px);
         }
+
         .navbar-brand img {
             border-radius: 8px;
         }
+
         .btn-link.nav-link {
             color: white !important;
             text-decoration: none;
         }
+
         .btn-link.nav-link:hover {
             color: #ffc107 !important;
         }
+
         .navbar-toggler {
             border-color: rgba(255, 255, 255, 0.3);
         }
+
         .navbar-toggler-icon {
             filter: invert(1);
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-custom shadow-lg">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center text-white fw-bold" href="{{ route('home') }}">
-                <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Logo" height="80" class="me-2">
+                <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Logo" height="80"
+                    class="me-2">
                 {{ config('app.name', 'Techvicom') }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -53,9 +63,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
                     @auth
-                        @if(auth()->user()->isAdmin())
+                        @if (auth()->user()->hasRole(['admin', 'staff']))
                             <li class="nav-item">
-                                <a class="nav-link btn btn-warning text-dark px-3 ms-lg-2" href="{{ route('admin.dashboard') }}">
+                                <a class="nav-link btn btn-warning text-dark px-3 ms-lg-2"
+                                    href="{{ route('admin.dashboard') }}">
                                     <i class="bi bi-shield-lock-fill me-1"></i> Quản trị
                                 </a>
                             </li>
@@ -96,4 +107,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

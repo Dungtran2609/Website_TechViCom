@@ -2,10 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\OrderItem;
 use Illuminate\Database\Seeder;
-use App\Models\Coupon;
-use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,21 +14,25 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             UserAddressSeeder::class,
-            CategorySeeder::class,
-            NewsCategorySeeder::class,
             RoleSeeder::class,
             PermissionSeeder::class,
             PermissionRoleSeeder::class,
             UserRoleSeeder::class,
-            CouponSeeder::class,
+            ShippingMethodSeeder::class,
             BrandSeeder::class,
+            CategorySeeder::class,
             AttributeSeeder::class,
             AttributeValueSeeder::class,
             ProductSeeder::class,
-            ShippingMethodSeeder ::class,
+            CouponSeeder::class,
             OrderSeeder::class,
             OrderItemSeeder::class,
-            OrderReturnSeeder::class
+            OrderReturnSeeder::class,
+            NewsCategorySeeder::class,
+            NewsSeeder::class,
+            NewsCommentSeeder::class,
+            ContactSeeder::class,
+            BannerSeeeder::class,
         ]);
     }
 }

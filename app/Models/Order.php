@@ -5,13 +5,47 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // --- THÊM MỚI: Định nghĩa các hằng số để quản lý tập trung ---
+
     /**
-     * Các thuộc tính có thể gán hàng loạt
+     * Các trạng thái xử lý của đơn hàng.
+     */
+    public const ORDER_STATUSES = [
+        'pending'    => 'Chờ xử lý',
+        'processing' => 'Đang xử lý',
+        'shipped'    => 'Đã giao hàng',
+        'delivered'  => 'Đã nhận hàng',
+        'cancelled'  => 'Đã hủy',
+        'returned'   => 'Đã trả hàng',
+    ];
+
+    /**
+     * Các phương thức thanh toán.
+     */
+    public const PAYMENT_METHODS = [
+        'cod'           => 'Thanh toán khi nhận hàng (COD)',
+        'bank_transfer' => 'Chuyển khoản ngân hàng (Thủ công)',
+        'vietqr'        => 'Thanh toán VietQR Online', // Thêm phương thức mới
+    ];
+
+    /**
+     * Các trạng thái thanh toán của đơn hàng.
+     */
+    public const PAYMENT_STATUSES = [
+        'unpaid'   => 'Chưa thanh toán', // Trạng thái ban đầu
+        'paid'     => 'Đã thanh toán',   // Webhook sẽ cập nhật trạng thái này
+        'failed'   => 'Thanh toán thất bại',
+        'refunded' => 'Đã hoàn tiền',
+    ];
+
+    /**
+     * Các thuộc tính có thể gán hàng loạt (mass assignable).
      */
     protected $fillable = [
         'user_id',
@@ -29,10 +63,11 @@ class Order extends Model
         'recipient_phone',
         'recipient_address',
         'shipped_at',
+        'payment_status', // Rất quan trọng cho thanh toán online
     ];
 
     /**
-     * Trường kiểu ngày cần được cast sang Carbon
+     * Các trường kiểu ngày tháng cần được cast sang đối tượng Carbon.
      */
     protected $dates = [
         'created_at',
@@ -41,87 +76,62 @@ class Order extends Model
         'shipped_at',
     ];
 
-    /**
-     * Mối quan hệ: đơn hàng thuộc về người dùng
-     */
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Mối quan hệ: địa chỉ giao hàng
-     */
     public function address()
     {
         return $this->belongsTo(UserAddress::class, 'address_id');
     }
 
-    /**
-     * Mối quan hệ: phương thức vận chuyển
-     */
     public function shippingMethod()
     {
         return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
     }
 
-    /**
-     * Mối quan hệ: mã giảm giá áp dụng
-     */
     public function coupon()
     {
         return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
-    /**
-     * Mối quan hệ: các sản phẩm trong đơn hàng
-     */
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    /**
-     * Mối quan hệ: giao dịch thanh toán (nếu có)
-     */
-
-
-    /**
-     * Mối quan hệ: các lần trả hàng liên quan
-     */
     public function returns()
     {
         return $this->hasMany(OrderReturn::class);
     }
 
-    /**
-     * Accessor: dịch phương thức thanh toán sang tiếng Việt
-     */
-    public function getPaymentMethodVietnameseAttribute()
-    {
-        $methods = [
-            'credit_card'   => 'Thẻ tín dụng/ghi nợ',
-            'bank_transfer' => 'Chuyển khoản ngân hàng',
-            'cod'           => 'Thanh toán khi nhận hàng',
-        ];
+    // =========================================================================
+    // === ACCESSORS & MUTATORS ===
+    // =========================================================================
 
-        return $methods[$this->payment_method] ?? $this->payment_method;
+    /**
+     * SỬA ĐỔI: Accessor dịch phương thức thanh toán sang tiếng Việt, sử dụng hằng số.
+     */
+    public function getPaymentMethodVietnameseAttribute(): string
+    {
+        return self::PAYMENT_METHODS[$this->payment_method] ?? ucfirst($this->payment_method);
     }
 
     /**
-     * Accessor: dịch trạng thái đơn hàng sang tiếng Việt
+     * SỬA ĐỔI: Accessor dịch trạng thái đơn hàng sang tiếng Việt, sử dụng hằng số.
      */
-    public function getStatusVietnameseAttribute()
+    public function getStatusVietnameseAttribute(): string
     {
-        $statuses = [
-            'pending'    => 'Đang chờ xử lý',
-            'processing' => 'Đang xử lý',
-            'shipped'    => 'Đã giao',
-            'delivered'  => 'Đã nhận',
-            'cancelled'  => 'Đã hủy',
-            'returned'   => 'Đã trả hàng',
-        ];
+        return self::ORDER_STATUSES[$this->status] ?? ucfirst($this->status);
+    }
 
-        return $statuses[$this->status] ?? $this->status;
+    /**
+     * SỬA ĐỔI: Accessor dịch trạng thái thanh toán sang tiếng Việt, sử dụng hằng số.
+     */
+    public function getPaymentStatusVietnameseAttribute(): string
+    {
+        return self::PAYMENT_STATUSES[$this->payment_status] ?? ucfirst($this->payment_status);
     }
 }

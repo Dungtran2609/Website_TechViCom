@@ -26,8 +26,10 @@ class NewsComment extends Model
         'news_id',
         'content',
         'is_hidden',
-        'parent_id', // ID của bình luận cha (nếu có)
+        'parent_id',
+        'like_count', // Thêm vào đây
     ];
+
 
 
     /**
@@ -73,5 +75,10 @@ class NewsComment extends Model
     public function children(): HasMany
     {
         return $this->hasMany(NewsComment::class, 'parent_id');
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(NewsComment::class, 'parent_id')->where('is_hidden', 1)->latest();
     }
 }

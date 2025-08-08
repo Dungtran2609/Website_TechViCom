@@ -15,6 +15,9 @@ class UserAddress extends Model
     // Các cột có thể điền vào
     protected $fillable = [
         'user_id',
+        'recipient_name',
+        'phone',
+        'address',
         'address_line',
         'ward',
         'district',

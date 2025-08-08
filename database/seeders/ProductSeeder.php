@@ -21,7 +21,7 @@ class ProductSeeder extends Seeder
             $ram8GB = AttributeValue::where('value', '8GB')->firstOrFail();
             $ram16GB = AttributeValue::where('value', '16GB')->firstOrFail();
 
-            $categoryDienThoaiApple = Category::where('slug', 'dien-thoai-apple')->firstOrFail();
+            $categoryiPhone = Category::where('slug', 'iphone')->firstOrFail();
             $categoryLaptopGaming = Category::where('slug', 'laptop-gaming')->firstOrFail();
 
             $brandApple = Brand::firstOrCreate(['name' => 'Apple', 'slug' => 'apple']);
@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
                 'is_featured' => true,
                 'view_count' => 1500,
                 'brand_id' => $brandApple->id,
-                'category_id' => $categoryDienThoaiApple->id,
+                'category_id' => $categoryiPhone->id,
             ]);
 
             $variant1 = ProductVariant::create(['product_id' => $dienThoai->id, 'sku' => 'DT-XYZ-DO-8G', 'price' => 25990000, 'stock' => 50, 'is_active' => true]);
@@ -75,7 +75,7 @@ class ProductSeeder extends Seeder
                 'is_featured' => false,
                 'view_count' => 12500,
                 'brand_id' => $brandApple->id,
-                'category_id' => $categoryDienThoaiApple->id,
+                'category_id' => $categoryiPhone->id,
             ]);
 
             ProductVariant::create([

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
-class ProfileController extends Controller // Đảm bảo kế thừa Controller
+class ClientProfileController extends Controller // Đảm bảo kế thừa Controller
 {
     /**
      * Display the user's profile form.

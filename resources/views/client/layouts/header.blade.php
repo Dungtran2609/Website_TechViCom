@@ -113,11 +113,93 @@
             </div>
 
             <!-- Category Menu Button -->
-            <div class="ml-2 lg:ml-6">
+            <div class="ml-2 lg:ml-6 relative">
                 <button id="categoryMenuBtn" class="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-orange-300 rounded-lg hover:bg-orange-50 transition">
                     <i class="fas fa-bars text-gray-600"></i>
                     <span class="hidden sm:inline text-gray-700 font-medium">Danh mục</span>
                 </button>
+                
+                <!-- Category Dropdown Menu -->
+                <div id="categoryDropdown" class="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-th-large text-orange-500 mr-2"></i>
+                            Danh mục sản phẩm
+                        </h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            @if(isset($categories) && $categories->count() > 0)
+                                @foreach($categories as $category)
+                                    <a href="{{ route('categories.show', $category->slug) }}" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                        @if($category->image)
+                                            <img src="{{ asset('uploads/categories/' . $category->image) }}" 
+                                                 alt="{{ $category->name }}" 
+                                                 class="w-8 h-8 object-cover rounded mr-3 group-hover:scale-110 transition-transform">
+                                        @else
+                                            <div class="w-8 h-8 bg-orange-100 rounded flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                                                <i class="fas fa-tag text-orange-500 text-sm"></i>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <span class="text-gray-700 font-medium">{{ $category->name }}</span>
+                                            <p class="text-xs text-gray-500">{{ $category->children->count() }} danh mục con</p>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            @else
+                                <!-- Fallback static categories -->
+                                <a href="{{ route('products.index') }}?category=phone" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-mobile-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Điện thoại</span>
+                                        <p class="text-xs text-gray-500">Smartphone</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('products.index') }}?category=laptop" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-laptop text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Laptop</span>
+                                        <p class="text-xs text-gray-500">Máy tính xách tay</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('products.index') }}?category=tablet" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-tablet-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Tablet</span>
+                                        <p class="text-xs text-gray-500">Máy tính bảng</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('products.index') }}?category=watch" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-watch text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Đồng hồ thông minh</span>
+                                        <p class="text-xs text-gray-500">Smart Watch</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('products.index') }}?category=accessory" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-headphones text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Phụ kiện</span>
+                                        <p class="text-xs text-gray-500">Tai nghe, sạc, bao da...</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('products.index') }}?category=gaming" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                                    <i class="fas fa-gamepad text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
+                                    <div>
+                                        <span class="text-gray-700 font-medium">Gaming</span>
+                                        <p class="text-xs text-gray-500">Thiết bị chơi game</p>
+                                    </div>
+                                </a>
+                            @endif
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-t border-gray-200">
+                            <a href="{{ route('categories.index') }}" class="flex items-center justify-center text-orange-600 hover:text-orange-700 font-medium transition">
+                                <span>Xem tất cả danh mục</span>
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Search bar -->
@@ -249,74 +331,6 @@
                         <span class="hidden lg:inline font-medium">Giỏ hàng</span>
                         <span class="absolute -top-2 -right-2 bg-[#ff6c2f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" id="cart-count">0</span>
                     </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Category Dropdown Menu -->
-    <div id="categoryDropdown" class="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
-        <div class="p-4">
-            <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
-                <i class="fas fa-th-large text-orange-500 mr-2"></i>
-                Danh mục sản phẩm
-            </h3>
-            <div class="grid grid-cols-2 gap-2">
-                <a href="{{ route('products.index') }}?category=phone" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-mobile-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Điện thoại</span>
-                        <p class="text-xs text-gray-500">iPhone, Samsung...</p>
-                    </div>
-                </a>
-                <a href="{{ route('products.index') }}?category=laptop" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-laptop text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Laptop</span>
-                        <p class="text-xs text-gray-500">MacBook, Dell...</p>
-                    </div>
-                </a>
-                <a href="{{ route('products.index') }}?category=tablet" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-tablet-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Tablet</span>
-                        <p class="text-xs text-gray-500">iPad, Galaxy Tab...</p>
-                    </div>
-                </a>
-                <a href="{{ route('products.index') }}?category=audio" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-headphones text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Âm thanh</span>
-                        <p class="text-xs text-gray-500">Tai nghe, Loa...</p>
-                    </div>
-                </a>
-                <a href="{{ route('products.index') }}?category=watch" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-clock text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Đồng hồ</span>
-                        <p class="text-xs text-gray-500">Apple Watch, Galaxy Watch...</p>
-                    </div>
-                </a>
-                <a href="{{ route('products.index') }}?category=accessory" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                    <i class="fas fa-gamepad text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
-                    <div>
-                        <span class="text-gray-700 font-medium">Gaming</span>
-                        <p class="text-xs text-gray-500">PS5, Xbox, PC...</p>
-                    </div>
-                </a>
-            </div>
-            
-            <!-- Quick Links -->
-            <div class="border-t border-gray-200 mt-4 pt-4">
-                <div class="flex justify-between text-sm">
-                    <a href="pages/deals.html" class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] flex items-center">
-                        <i class="fas fa-fire mr-1"></i>
-                        Khuyến mãi hot
-                    </a>
-                    <a href="pages/new-arrivals.html" class="text-green-600 hover:text-green-700 flex items-center">
-                        <i class="fas fa-star mr-1"></i>
-                        Hàng mới về
-                    </a>
                 </div>
             </div>
         </div>
@@ -548,11 +562,18 @@ function updateCartDisplay(items) {
         cartItemsList.innerHTML = items.map(item => {
             console.log('Rendering item:', item);
             const price = parseFloat(item.price) || 0;
+            let variantHtml = '';
+            if (item.variant && item.variant.attributes && item.variant.attributes.length > 0) {
+                variantHtml = `<div class=\"text-xs text-gray-500\">` +
+                    item.variant.attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ') +
+                    `</div>`;
+            }
             return `
             <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter">
                 <img src="${item.image || '/images/default-product.jpg'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
                 <div class="flex-1">
                     <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
+                    ${variantHtml}
                     <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
                     <div class="flex items-center space-x-2 mt-1">
                         <button onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">-</button>
@@ -672,7 +693,7 @@ function updateCartQuantity(itemId, newQuantity) {
 function removeFromCart(itemId) {
     console.log('removeFromCart called with:', itemId);
     
-    fetch(`{{ url('/carts') }}/${itemId}`, {
+    fetch(`/carts/${itemId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',

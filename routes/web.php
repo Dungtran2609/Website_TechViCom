@@ -367,12 +367,6 @@ Route::prefix('carts')->name('carts.')->group(function () {
 
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
-    // Sản phẩm
-    Route::prefix('products')->name('products.')->group(function () {
-        Route::get('/', [ClientProductController::class, 'index'])->name('index');
-        Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
-    });
-
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
         // Routes khác có thể thêm vào đây sau
@@ -381,6 +375,7 @@ Route::prefix('client')->name('client.')->group(function () {
     // Liên hệ
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::get('/', [ClientContactController::class, 'index'])->name('index');
+        Route::get('/create', [ClientContactController::class, 'index'])->name('create'); // Redirect to index for contact form
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 });

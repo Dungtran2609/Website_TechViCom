@@ -68,7 +68,7 @@
 
 
                                 @if($return['status'] === 'pending')
-                                    <form action="{{ route('admin.orders.process-return', $return['id']) }}" method="POST">
+                                    <form action="{{ route('admin.order.process-return', $return['id']) }}" method="POST">
                                         @csrf
                                         <div class="mb-3">
                                             <label class="form-label">Ghi chú của Admin:</label>

@@ -8,6 +8,8 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Http\Requests\Admin\PermissionRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 class AdminPermissionController extends Controller
 {
@@ -65,7 +67,7 @@ class AdminPermissionController extends Controller
             $adminRole->permissions()->attach($permission->id);
         }
 
-        return redirect()->route('admin.permissions.index')
+        return redirect()->route('admin.permissions.list')
             ->with('success', 'Thêm quyền mới thành công và đã gán cho vai trò admin.');
     }
 
@@ -137,16 +139,102 @@ class AdminPermissionController extends Controller
      */
     public function updateRoles(Request $request)
     {
-        $data = $request->input('permissions', []);
+        DB::beginTransaction();
+        try {
+            $data = $request->input('permissions', []);
+            $roles = Role::all();
 
-        foreach ($data as $roleId => $permissionIds) {
-            $role = Role::find($roleId);
-            if ($role) {
+            foreach ($roles as $role) {
+                // Nếu vai trò không có trong dữ liệu gửi lên, tức là nó bị bỏ check hết
+                // Ngược lại, gán các quyền được check
+                $permissionIds = $data[$role->id] ?? [];
                 $role->permissions()->sync($permissionIds);
+            }
+            DB::commit();
+
+            return redirect()->route('admin.permissions.index')
+                ->with('success', 'Cập nhật phân quyền cho vai trò thành công.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Đã xảy ra lỗi khi cập nhật phân quyền.');
+        }
+    }
+
+    /**
+     * [MỚI] Tự động quét và đồng bộ quyền từ các routes của hệ thống.
+     */
+    public function sync(Request $request)
+    {
+        $adminRole = Role::where('name', 'admin')->firstOrFail();
+        $allRoutes = Route::getRoutes();
+        $newPermissionsCount = 0;
+        $restoredPermissionsCount = 0;
+
+        // [SỬA LỖI] Sử dụng withTrashed() để lấy tất cả quyền, bao gồm cả những quyền trong thùng rác
+        // để tránh lỗi "Duplicate entry".
+        $allDbPermissions = Permission::withTrashed()->get()->keyBy('name');
+        $existingPermissionNames = $allDbPermissions->keys()->toArray();
+
+        $routePermissionNames = [];
+
+        foreach ($allRoutes as $route) {
+            $routeName = $route->getName();
+
+            if (
+                $routeName &&
+                Str::startsWith($routeName, 'admin.') &&
+                !Str::contains($routeName, ['login', 'logout', 'password', 'debugbar']) &&
+                $route->getActionName() != 'Closure'
+            ) {
+                $routePermissionNames[] = $routeName;
+
+                // Nếu quyền chưa tồn tại trong DB (kể cả trong thùng rác) thì tạo mới
+                if (!in_array($routeName, $existingPermissionNames)) {
+                    $newPermission = Permission::create([
+                        'name' => $routeName,
+                        'description' => "Auto-generated for route: {$routeName}"
+                    ]);
+                    $adminRole->permissions()->attach($newPermission->id);
+                    $newPermissionsCount++;
+                }
+                // Nếu quyền đã tồn tại nhưng nằm trong thùng rác, hãy khôi phục nó
+                elseif ($allDbPermissions->has($routeName) && $allDbPermissions[$routeName]->trashed()) {
+                    $allDbPermissions[$routeName]->restore();
+                    $restoredPermissionsCount++;
+                }
             }
         }
 
-        return redirect()->route('admin.permissions.index')
-            ->with('success', 'Cập nhật phân quyền cho vai trò thành công.');
+        $message = "Đồng bộ hoàn tất!";
+        $messages = [];
+
+        if ($newPermissionsCount > 0) {
+            $messages[] = "Đã thêm {$newPermissionsCount} quyền mới và gán cho Admin.";
+        }
+        if ($restoredPermissionsCount > 0) {
+            $messages[] = "Đã khôi phục {$restoredPermissionsCount} quyền từ thùng rác.";
+        }
+
+        // (Tùy chọn) Xóa các quyền không còn tồn tại trong routes
+        if ($request->input('prune') === 'true') {
+            // [SỬA LỖI] So sánh trực tiếp mảng tên quyền trong DB với mảng tên quyền từ route.
+            $permissionsToDelete = array_diff($existingPermissionNames, $routePermissionNames);
+
+            if (!empty($permissionsToDelete)) {
+                // Chỉ xóa những quyền được tạo tự động để tránh xóa nhầm quyền tạo tay
+                $deletedCount = Permission::whereIn('name', $permissionsToDelete)
+                    ->where('description', 'like', 'Auto-generated%')
+                    ->delete();
+                if ($deletedCount > 0) {
+                    $messages[] = "Đã xoá {$deletedCount} quyền cũ không còn sử dụng.";
+                }
+            }
+        }
+
+        if (empty($messages)) {
+            return redirect()->route('admin.permissions.list')->with('info', 'Không có thay đổi nào về quyền.');
+        }
+
+        return redirect()->route('admin.permissions.list')->with('success', $message . ' ' . implode(' ', $messages));
     }
 }

@@ -63,4 +63,9 @@ class News extends Model
     {
         return $this->hasMany(NewsComment::class)->where('is_hidden', false);
     }
+
+    public function likes()
+    {
+        return $this->hasMany(NewsComment::class, 'news_id')->where('is_like', true);
+    }
 }

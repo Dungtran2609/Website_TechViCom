@@ -81,10 +81,12 @@
                     </button>
                     <div class="custom-dropdown-menu dropdown-menu-end" style="top:110%; min-width:200px;">
                         <div class="dropdown-header"><i class="bx bx-user me-2"></i>Xin chào</div>
-                        <a class="dropdown-item" href="{{ route('admin.users.show', $user->id) }}">
-                            <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân<br>
-                            <span class="fw-bold">{{ $user ? $user->name : '' }}</span><br>
-                        </a>
+                        @if($user)
+                            <a class="dropdown-item" href="{{ route('admin.users.show', $user->id) }}">
+                                <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân<br>
+                                <span class="fw-bold">{{ $user->name }}</span><br>
+                            </a>
+                        @endif
                         <div class="dropdown-divider"></div>
                         <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                             @csrf

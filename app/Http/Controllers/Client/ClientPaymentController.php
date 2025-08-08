@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use PayOS\PayOS; // Import thư viện PayOS
 
-class PaymentController extends Controller
+class ClientPaymentController extends Controller
 {
     /**
      * Tạo đơn hàng và chuyển hướng đến trang thanh toán QR.

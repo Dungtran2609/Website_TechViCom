@@ -71,7 +71,7 @@
                     <button type="button" class="custom-dropdown-toggle topbar-button" aria-label="Tài khoản">
                         <span class="d-flex align-items-center">
                             @php
-                                $avatar = Auth::user()->image_profile
+                                $avatar = Auth::check() && Auth::user() && Auth::user()->image_profile
                                     ? asset(Auth::user()->image_profile)
                                     : asset('admin_assets/images/default-avatar.png');
                             @endphp

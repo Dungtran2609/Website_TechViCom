@@ -20,41 +20,61 @@ class AdminOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $orders = Order::with(['user:id,name'])
+        $orders = Order::with(['user:id,name', 'orderItems.productVariant.product'])
             ->when($request->search, function ($query, $search) {
                 $query->where('id', 'like', "%{$search}%")
                       ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
             })
+            ->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })
             ->latest()
             ->paginate(15);
 
-        $orderData = $orders->map(fn($order) => [
-            'id' => $order->id,
-            'user_name' => $order->customer_name, // Sử dụng accessor mới
+        // Payment method mapping
+        $paymentMap = [
+            'credit_card' => 'Thẻ tín dụng',
+            'bank_transfer' => 'Chuyển khoản',
+            'cod' => 'COD (Thanh toán khi nhận hàng)',
+            'vietqr' => 'VietQR'
+        ];
 
-            // lấy orderItem đầu tiên
-            'image' => optional($order->orderItems->first(), function ($item) {
-                $variant = $item->productVariant;
-                $prod = $variant->product;
+        $orderData = $orders->map(function($order) use ($paymentMap) {
+            // Lấy ảnh đầu tiên
+            $image = null;
+            if ($order->orderItems->isNotEmpty()) {
+                $firstItem = $order->orderItems->first();
+                if (!empty($firstItem->image_product)) {
+                    $image = $firstItem->image_product;
+                } elseif ($firstItem->productVariant && $firstItem->productVariant->product) {
+                    $product = $firstItem->productVariant->product;
+                    if ($product->images->isNotEmpty()) {
+                        $image = $product->images->first()->image_path;
+                    }
+                }
+            }
 
-                // 1. Ảnh lưu tạm trên order_item
-                if (!empty($item->image_product)) {
-                    $path = $item->image_product;
-                }
-                // 2. Ảnh đầu tiên của product
-                elseif ($prod->images->isNotEmpty()) {
-                    $path = $prod->images->first()->image_path;
-                }
-                // 3. Ảnh của variant
-                elseif (!empty($variant->image)) {
-                    $path = $variant->image;
-                } else {
-                    return null;
-                }
+            // Lấy tên tất cả sản phẩm
+            $productNames = $order->orderItems->map(function($item) {
+                return $item->productVariant->product->name ?? 'N/A';
+            })->implode(', ');
 
-                return asset('storage/' . ltrim($path, '/'));
-            }),
-        ]);
+            // Tính tổng số lượng
+            $totalQuantity = $order->orderItems->sum('quantity');
+
+            return [
+                'id' => $order->id,
+                'user_name' => $order->customer_name,
+                'image' => $image ? asset('storage/' . ltrim($image, '/')) : null,
+                'product_names' => $productNames,
+                'total_quantity' => $totalQuantity,
+                'final_total' => $order->final_total,
+                'status' => $order->status,
+                'payment_method' => $order->payment_method,
+                'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
+                'created_at' => $order->created_at->format('d/m/Y H:i'),
+            ];
+        });
 
         return view('admin.orders.index', [
             'orders' => $orderData,
@@ -76,7 +96,7 @@ class AdminOrderController extends Controller
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod:id,name',
             'coupon'
-        ])->findOrFail($id);
+        ])->findOrFail($order->id);
 
         $shippingMethods = ShippingMethod::all();
 
@@ -238,7 +258,7 @@ class AdminOrderController extends Controller
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod',
             'coupon',
-        ])->findOrFail($id);
+        ])->findOrFail($order->id);
 
         // Lấy dữ liệu phụ trợ cho form
         $shippingMethods = ShippingMethod::all();
@@ -281,8 +301,8 @@ class AdminOrderController extends Controller
         // Chuẩn bị dữ liệu cho view
         $orderData = [
             'id' => $order->id,
-            'user_name' => $order->user->name,
-            'user_email' => $order->user->email,
+            'user_name' => $order->user->name ?? $order->customer_name ?? 'Guest',
+            'user_email' => $order->user->email ?? $order->customer_email ?? 'N/A',
             'status' => $order->status,
             'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
@@ -326,7 +346,7 @@ class AdminOrderController extends Controller
      */
     public function update(Request $request, Order $order) // Sử dụng Route Model Binding
     {
-        $order = Order::findOrFail($id);
+        $order = Order::findOrFail($order->id);
         $oldStatus = $order->status;
 
         // Các giá trị hợp lệ
@@ -351,6 +371,16 @@ class AdminOrderController extends Controller
             'guest_name',
             'guest_email', 
             'guest_phone',
+        ]);
+
+        // Validation
+        $validator = Validator::make($data, [
+            'status' => 'required|in:' . implode(',', $validStatuses),
+            'payment_status' => 'nullable|in:' . implode(',', $validPaymentStatus),
+            'recipient_name' => 'nullable|string|max:255',
+            'recipient_phone' => 'nullable|string|max:20',
+            'recipient_address' => 'nullable|string|max:500',
+            'payment_method' => 'nullable|in:' . implode(',', $validPayments),
         ]);
 
         if ($validator->fails()) {
@@ -421,11 +451,58 @@ class AdminOrderController extends Controller
     public function trashed()
     {
         $trashedOrders = Order::onlyTrashed()
-            ->with(['user:id,name'])
+            ->with(['user:id,name,email', 'orderItems.productVariant.product.images'])
             ->latest()
             ->paginate(15);
 
-        return view('admin.orders.trashed', compact('trashedOrders'));
+        // Status mapping
+        $statusMap = [
+            'pending' => 'Đang chờ xử lý',
+            'processing' => 'Đang xử lý', 
+            'shipped' => 'Đã giao',
+            'delivered' => 'Đã nhận',
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Đã trả hàng'
+        ];
+
+        // Format data như method index
+        $orders = $trashedOrders->map(function($order) use ($statusMap) {
+            // Lấy ảnh đầu tiên của sản phẩm đầu tiên
+            $firstImage = null;
+            if ($order->orderItems->isNotEmpty()) {
+                $firstProduct = $order->orderItems->first()->productVariant->product ?? null;
+                if ($firstProduct && $firstProduct->images->isNotEmpty()) {
+                    $firstImage = $firstProduct->images->first()->image_path;
+                }
+            }
+
+            // Lấy tên tất cả sản phẩm
+            $productNames = $order->orderItems->map(function($item) {
+                return $item->productVariant->product->name ?? 'N/A';
+            })->implode(', ');
+
+            // Tính tổng số lượng
+            $totalQuantity = $order->orderItems->sum('quantity');
+
+            return [
+                'id' => $order->id,
+                'user_name' => $order->user->name ?? 'Guest',
+                'user_email' => $order->user->email ?? 'N/A',
+                'image' => $firstImage,
+                'product_names' => $productNames,
+                'total_quantity' => $totalQuantity,
+                'final_total' => $order->final_total,
+                'status' => $order->status,
+                'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
+                'created_at' => $order->created_at->format('d/m/Y H:i'),
+                'deleted_at' => $order->deleted_at->format('d/m/Y H:i'),
+            ];
+        });
+
+        return view('admin.orders.trashed', [
+            'orders' => $orders,
+            'pagination' => $trashedOrders
+        ]);
     }
 
     /**

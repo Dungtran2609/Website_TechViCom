@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Product;
 
 // --- Controllers cho ADMIN ---
 use App\Http\Controllers\Admin\AdminController;
@@ -24,40 +28,396 @@ use App\Http\Controllers\Admin\Products\ProductCommentAdminController;
 use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\WebhookController;
+
+// --- Controllers cho CLIENT ---
+use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\Products\ClientProductController;
+use App\Http\Controllers\Client\Categories\ClientCategoryController;
+use App\Http\Controllers\Client\Carts\ClientCartController;
+use App\Http\Controllers\Client\Accounts\ClientAccountController;
+use App\Http\Controllers\Client\Checkouts\ClientCheckoutController;
+use App\Http\Controllers\Client\Contacts\ClientContactController;
+use App\Http\Controllers\Client\Coupon\ClientCouponController;
+use App\Http\Controllers\Client\Address\ClientAddressController;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckPermission;
 
+// =========================================================================
+// === CLIENT ROUTES ===
+// =========================================================================
+
 // Trang chủ client
-Route::get('/', fn() => view('client.home'))->name('home');
-// ... các route công khai khác của bạn (sản phẩm, tin tức, liên hệ...)
-
-// CLIENT ROUTES (Cần đăng nhập)
-Route::middleware(['auth'])->group(function () {
-
-    // --- LUỒNG THANH TOÁN CỦA KHÁCH HÀNG ---
-    Route::prefix('payment')->name('client.payment.')->group(function () {
-        // Route POST để tạo đơn hàng và link thanh toán từ giỏ hàng
-        Route::post('/create', [PaymentController::class, 'create'])->name('create');
-
-        // Route GET cho JS gọi đến để kiểm tra trạng thái (Polling)
-        Route::get('/check-status/{order}', [PaymentController::class, 'checkPaymentStatus'])->name('check_status');
-
-        // Route PayOS trả về khi thanh toán thành công
-        Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
-
-        // Route PayOS trả về khi khách hàng hủy
-        Route::get('/failed', [PaymentController::class, 'paymentFailed'])->name('failed');
-    });
-
-    // ... các route client cần đăng nhập khác (profile, lịch sử đơn hàng)...
+// Test route to add product to cart
+Route::get('/test-add-to-cart', function() {
+    $cart = session()->get('cart', []);
+    $cart[] = [
+        'product_id' => 1,
+        'quantity' => 1,
+        'variant_id' => null
+    ];
+    session(['cart' => $cart]);
+    
+    return 'Product added to cart. Cart size: ' . count($cart) . ' - <a href="/checkout">Go to checkout</a>';
 });
 
+// Test route cho checkout flow
+Route::get('/test-checkout-flow', function () {
+    // Clear session và tạo test cart
+    session()->forget('cart');
+    
+    $cart = [
+        'items' => [
+            '1' => [
+                'product_id' => 1,
+                'variant_id' => 1,
+                'quantity' => 1,
+                'price' => 100000
+            ]
+        ],
+        'total' => 100000
+    ];
+    session(['cart' => $cart]);
+    
+    return 'Test cart created. <a href="/checkout">Go to checkout</a>';
+});
+
+// Test route để kiểm tra có session cart không
+Route::get('/test-check-cart', function() {
+    $cart = session()->get('cart', []);
+    return 'Session cart: <pre>' . json_encode($cart, JSON_PRETTY_PRINT) . '</pre> - <a href="/checkout">Go to checkout</a>';
+});
+
+// Routes chính
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Test cart functionality
+Route::get('/test-cart-page', function() {
+    return view('test-cart');
+})->name('test-cart-page');
+
+// Test route for debugging cart
+Route::get('/test-cart', function() {
+    $cart = session()->get('cart', []);
+    return response()->json([
+        'session_cart' => $cart,
+        'session_id' => session()->getId(),
+        'count' => array_sum(array_column($cart, 'quantity'))
+    ]);
+});
+
+// Test add to cart (no CSRF for testing)
+Route::post('/test-add-cart', function(Request $request) {
+    error_log('TEST: Test add cart request: ' . json_encode($request->all()));
+    Log::info('Test add cart request: ', $request->all());
+    $cart = session()->get('cart', []);
+    error_log('TEST: Current cart: ' . json_encode($cart));
+    $cart['test_item'] = [
+        'product_id' => 1,
+        'quantity' => 1,
+        'variant_id' => null
+    ];
+    session()->put('cart', $cart);
+    session()->save();
+    error_log('TEST: Cart after save: ' . json_encode(session()->get('cart', [])));
+    Log::info('Test add cart session after: ', session()->get('cart', []));
+    
+    return response()->json([
+        'success' => true,
+        'session_cart' => session()->get('cart', [])
+    ]);
+})->withoutMiddleware(['csrf']);
+
+// Debug cart API
+Route::get('/debug-cart-api', function() {
+    $controller = new \App\Http\Controllers\Client\Carts\ClientCartController();
+    $request = new \Illuminate\Http\Request();
+    $request->headers->set('Accept', 'application/json');
+    
+    $response = $controller->index($request);
+    return $response;
+});
+
+// Debug cart data
+Route::get('/debug-cart-data', function() {
+    if (Auth::check()) {
+        $cartItems = \App\Models\Cart::with(['product.productAllImages', 'productVariant.attributeValues.attribute'])
+                        ->where('user_id', Auth::id())
+                        ->get();
+    } else {
+        $sessionCart = session()->get('cart', []);
+        $cartItems = [];
+        
+        foreach ($sessionCart as $key => $item) {
+            $product = \App\Models\Product::with(['productAllImages', 'variants.attributeValues.attribute'])
+                             ->find($item['product_id']);
+            
+            if ($product) {
+                $cartItem = (object) [
+                    'id' => $key,
+                    'product' => $product,
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'],
+                    'quantity' => $item['quantity'],
+                    'productVariant' => $item['variant_id'] ? \App\Models\ProductVariant::with('attributeValues.attribute')->find($item['variant_id']) : null
+                ];
+                $cartItems[] = $cartItem;
+            }
+        }
+    }
+    
+    return response()->json([
+        'type' => Auth::check() ? 'database' : 'session',
+        'user_id' => Auth::check() ? Auth::id() : null,
+        'session_id' => session()->getId(),
+        'cart_items' => $cartItems,
+        'session_cart' => session()->get('cart', [])
+    ]);
+});
+
+// Test cart operations with debug
+Route::post('/debug-cart-update', function() {
+    $id = request('id');
+    $quantity = request('quantity');
+    
+    $sessionId = session()->getId();
+    $cart = session()->get('cart', []);
+    
+    $response = [
+        'request_data' => [
+            'id' => $id,
+            'quantity' => $quantity
+        ],
+        'session_info' => [
+            'session_id' => $sessionId,
+            'session_started' => session()->isStarted(),
+            'cart_before' => $cart,
+            'available_keys' => array_keys($cart),
+            'key_exists' => isset($cart[$id])
+        ]
+    ];
+    
+    if (isset($cart[$id])) {
+        $cart[$id]['quantity'] = $quantity;
+        session()->put('cart', $cart);
+        session()->save();
+        
+        $response['update_result'] = [
+            'success' => true,
+            'cart_after' => session()->get('cart', [])
+        ];
+    } else {
+        $response['update_result'] = [
+            'success' => false,
+            'message' => 'Key not found'
+        ];
+    }
+    
+    return response()->json($response);
+})->withoutMiddleware(['csrf']);
+
+// Test session directly
+Route::get('/test-session', function() {
+    // Start session if not started
+    if (!session()->isStarted()) {
+        session()->start();
+    }
+    
+    $sessionId = session()->getId();
+    $cart = session()->get('cart', []);
+    
+    // Add or update cart
+    if (request('action') === 'add') {
+        $key = '1_default';
+        if (isset($cart[$key])) {
+            $cart[$key]['quantity'] += 1;
+        } else {
+            $cart[$key] = [
+                'product_id' => 1,
+                'variant_id' => null,
+                'quantity' => 1
+            ];
+        }
+        session()->put('cart', $cart);
+        session()->save();
+        $cart = session()->get('cart', []); // Refresh
+    }
+    
+    return response()->json([
+        'session_started' => session()->isStarted(),
+        'session_id' => $sessionId,
+        'cart_before' => request('action') ? 'modified' : $cart,
+        'cart_after' => $cart,
+        'session_driver' => config('session.driver'),
+        'urls' => [
+            'add' => url('/test-session?action=add'),
+            'view' => url('/test-session')
+        ]
+    ]);
+});
+
+// Test update cart directly
+Route::post('/test-update-cart', function() {
+    $id = request('id', '1_default');
+    $quantity = request('quantity', 2);
+    
+    $controller = new App\Http\Controllers\Client\Carts\ClientCartController();
+    $request = new Illuminate\Http\Request();
+    $request->merge(['quantity' => $quantity]);
+    $request->setMethod('PUT');
+    
+    return $controller->update($request, $id);
+});
+
+// Simple cart test
+Route::get('/simple-cart-test', function() {
+    // Add item to session cart
+    if (request('action') === 'add') {
+        $cart = session()->get('cart', []);
+        $key = '1_default';
+        
+        if (isset($cart[$key])) {
+            $cart[$key]['quantity'] += 1;
+        } else {
+            $cart[$key] = [
+                'product_id' => 1,
+                'variant_id' => null,
+                'quantity' => 1
+            ];
+        }
+        
+        session()->put('cart', $cart);
+        session()->save();
+    }
+    
+    // Display current state
+    $cart = session()->get('cart', []);
+    return response()->json([
+        'session_id' => session()->getId(),
+        'cart' => $cart,
+        'add_url' => url('/simple-cart-test?action=add'),
+        'test_update_url' => url('/client/carts/1_default'),
+        'available_keys' => array_keys($cart)
+    ]);
+});
+
+// Debug cart page
+Route::get('/debug-cart', function() {
+    return view('debug-cart');
+});
+
+// Test cart API endpoint
+Route::get('/test-cart-api', function() {
+    $controller = new App\Http\Controllers\Client\Carts\ClientCartController();
+    $request = new Illuminate\Http\Request();
+    $request->headers->set('Accept', 'application/json');
+    
+    $response = $controller->index($request);
+    return $response;
+});
+
+// Add test item to cart
+Route::get('/add-test-item', function() {
+    $sessionCart = session()->get('cart', []);
+    
+    // Add a test product (assuming product ID 1 exists)
+    $sessionCart[] = [
+        'product_id' => 1,
+        'variant_id' => null,
+        'quantity' => 2
+    ];
+    
+    session()->put('cart', $sessionCart);
+    
+    return redirect('/client/carts')->with('success', 'Test item added to cart');
+});
+
+// Trang chủ client
+Route::get('/client', [HomeController::class, 'index'])->name('client.home');
+
+// Products routes (public access)
+Route::prefix('products')->name('products.')->group(function () {
+    Route::get('/', [ClientProductController::class, 'index'])->name('index');
+    Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
+});
+
+// Categories routes (public access)
+Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [ClientCategoryController::class, 'index'])->name('index');
+    Route::get('/{slug}', [ClientCategoryController::class, 'show'])->name('show');
+});
+
+// Checkout routes (public access - không cần prefix client)
+Route::prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [ClientCheckoutController::class, 'index'])->name('index');
+    Route::post('/apply-coupon', [ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
+    Route::post('/process', [ClientCheckoutController::class, 'process'])->name('process');
+    Route::get('/success/{orderId}', [ClientCheckoutController::class, 'success'])->name('success');
+});
+
+// Carts routes (public access - không cần prefix client)
+Route::prefix('carts')->name('carts.')->group(function () {
+    Route::get('/', [ClientCartController::class, 'index'])->name('index');
+    Route::get('/count', [ClientCartController::class, 'count'])->name('count');
+    Route::post('/add', [ClientCartController::class, 'add'])->name('add');
+    Route::put('/{id}', [ClientCartController::class, 'update'])->name('update');
+    Route::delete('/{id}', [ClientCartController::class, 'remove'])->name('remove');
+    Route::delete('/', [ClientCartController::class, 'clear'])->name('clear');
+});
+
+// Routes công khai
+Route::prefix('client')->name('client.')->group(function () {
+    // Sản phẩm
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [ClientProductController::class, 'index'])->name('index');
+        Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
+    });
+
+    // Đơn hàng
+    Route::prefix('orders')->name('orders.')->group(function () {
+        // Routes khác có thể thêm vào đây sau
+    });
+
+    // Liên hệ
+    Route::prefix('contacts')->name('contacts.')->group(function () {
+        Route::get('/', [ClientContactController::class, 'index'])->name('index');
+        Route::post('/', [ClientContactController::class, 'store'])->name('store');
+    });
+});
+
+// API Routes
+Route::prefix('api')->group(function () {
+    // Address API - Using Client Controller
+    Route::get('/provinces', [ClientAddressController::class, 'getProvinces']);
+    Route::get('/districts/{provinceCode}', [ClientAddressController::class, 'getDistricts']);
+    Route::get('/wards/{districtCode}', [ClientAddressController::class, 'getWards']);
+    
+    // Coupon API - Using Client Controller
+    Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+});
+
+// ACCOUNTS ROUTES (Không có prefix /client)
+Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {
+    Route::get('/', [ClientAccountController::class, 'index'])->name('index');
+    Route::get('/edit', [ClientAccountController::class, 'edit'])->name('edit');
+    Route::get('/orders', [ClientAccountController::class, 'orders'])->name('orders');
+    Route::get('/orders/{id}', [ClientAccountController::class, 'orderDetail'])->name('order-detail');
+    Route::post('/orders/{id}/cancel', [ClientAccountController::class, 'cancelOrder'])->name('cancel-order');
+    Route::get('/profile', [ClientAccountController::class, 'profile'])->name('profile');
+    Route::put('/profile', [ClientAccountController::class, 'updateProfile'])->name('update-profile');
+    Route::get('/change-password', [ClientAccountController::class, 'changePassword'])->name('change-password');
+    Route::put('/change-password', [ClientAccountController::class, 'updatePassword'])->name('update-password');
+    Route::get('/addresses', [ClientAccountController::class, 'addresses'])->name('addresses');
+    Route::post('/addresses', [ClientAccountController::class, 'storeAddress'])->name('store-address');
+    Route::get('/addresses/{id}/edit', [ClientAccountController::class, 'editAddress'])->name('edit-address');
+    Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
+    Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
+});
 
 // =========================================================================
 // === ADMIN ROUTES ===
 // =========================================================================
-Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     // Đăng xuất admin
     Route::post('logout', [AdminController::class, 'logout'])->name('logout');
 
@@ -255,7 +615,6 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
         Route::delete('{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('forceDelete');
     });
 });
-
 
 // =========================================================================
 // === WEBHOOK & OTHER ROUTES (Ngoài các middleware chính) ===

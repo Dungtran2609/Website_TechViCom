@@ -22,12 +22,16 @@ class Product extends Model
         'type',
         'short_description',
         'long_description',
+        'description',
         'thumbnail',
         'status',
         'brand_id',
         'category_id',
         'is_featured',
         'view_count',
+        'price',
+        'compare_price',
+        'sku',
     ];
 
 
@@ -63,6 +67,21 @@ class Product extends Model
     public function allImages()
     {
         return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+    }
+
+    public function productAllImages()
+    {
+        return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+    }
+
+    public function productVariants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function productComments()
+    {
+        return $this->hasMany(ProductComment::class);
     }
 
     public function images()

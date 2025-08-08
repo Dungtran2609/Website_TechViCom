@@ -45,13 +45,13 @@ class AdminNewsCategoryController extends Controller
 
     public function edit(NewsCategory $newsCategory)
     {
-        return view('admin.news.news_categories.edit', compact('newsCategory'));
+    return view('admin.news.news_categories.edit', compact('newsCategory'));
     }
 
     public function update(Request $request, NewsCategory $newsCategory)
     {
         $request->validate([
-            'name' => 'required|string|max:100|unique:news_categories,name,' . $newsCategory->category_id . ',category_id',
+            'name' => 'required|string|max:100|unique:news_categories,name,' . $newsCategory->id . ',id',
         ], [
             'name.required' => 'Tên danh mục là bắt buộc.',
             'name.unique' => 'Tên danh mục đã tồn tại.',

@@ -39,17 +39,17 @@
                         @foreach ($categories as $category)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $category->category_id }}</td>
+                                <td>{{ $category->id }}</td>
                                 <td class="text-dark fw-medium fs-15 mb-0">{{ $category->name }}</td>
                                 <td>{{ $category->created_at->format('d/m/Y H:i') }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('admin.news-categories.edit', $category) }}"
+                                        <a href="{{ route('admin.news-categories.edit', $category->id) }}"
                                             class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
                                             <iconify-icon icon="solar:pen-2-broken"
                                                 class="align-middle fs-18"></iconify-icon>
                                         </a>
-                                        <form action="{{ route('admin.news-categories.destroy', $category) }}"
+                                        <form action="{{ route('admin.news-categories.destroy', $category->id) }}"
                                             method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')

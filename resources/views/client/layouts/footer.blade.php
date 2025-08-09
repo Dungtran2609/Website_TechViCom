@@ -53,7 +53,7 @@
                     <li><a href="#" class="hover:text-orange-400 transition">Giới thiệu công ty</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tin tức & sự kiện</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tuyển dụng</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Liên hệ</a></li>
+                    <li><a href="{{ route('client.contacts.index') }}" class="hover:text-orange-400 transition">Liên hệ</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Hệ thống cửa hàng</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Đại lý ủy quyền</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Dự án doanh nghiệp</a></li>
@@ -87,7 +87,7 @@
                 <div class="text-sm space-y-1">
                     <p><i class="fas fa-map-marker-alt text-orange-400 mr-2"></i>Trường Cao đẳng FPT Polytechnic, Hà Nội</p>
                     <p><i class="fas fa-phone text-orange-400 mr-2"></i>1800.6601</p>
-                    <p><i class="fas fa-envelope text-orange-400 mr-2"></i>support@techvicom.vn</p>
+                    <p><i class="fas fa-envelope text-orange-400 mr-2"></i>techvicom@gmail.com</p>
                     <p><i class="fas fa-clock text-orange-400 mr-2"></i>8:00 - 22:00 (T2-CN)</p>
                     <p class="text-xs text-gray-400 mt-3 italic">
                         <i class="fas fa-info-circle text-orange-400 mr-1"></i>

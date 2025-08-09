@@ -32,10 +32,24 @@
             <!-- Main content -->
             <div class="lg:col-span-9">
                 <div class="bg-white rounded-xl shadow-lg p-8">
-                    <div class="mb-0 -mx-8">
-                        <img src="{{ asset($news->image ?? 'client_css/images/placeholder.svg') }}"
-                            alt="{{ $news->title }}" class="w-full h-80 object-cover mb-0"
-                            style="border-radius:0;box-shadow:none;margin-top:0;">
+                    <div class="-mx-8">
+                        @if(!empty($news->images) && count($news->images))
+                            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                @foreach($news->images as $img)
+                                        <div class="overflow-hidden shadow-lg bg-white flex items-center justify-center">
+                                        <img src="{{ asset($img) }}" alt="{{ $news->title }}" class="w-full h-96 object-cover transition-transform duration-300 hover:scale-105">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @elseif(!empty($news->image))
+                            <div class="mb-6 overflow-hidden shadow-lg bg-white flex items-center justify-center">
+                                <img src="{{ asset($news->image) }}" alt="{{ $news->title }}" class="w-full h-96 object-cover transition-transform duration-300 hover:scale-105">
+                            </div>
+                        @else
+                            <div class="mb-6 overflow-hidden shadow-lg bg-white flex items-center justify-center">
+                                <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="{{ $news->title }}" class="w-full h-96 object-cover">
+                            </div>
+                        @endif
                     </div>
                     <div></div>
                     <div class="flex items-center gap-4 mb-6">

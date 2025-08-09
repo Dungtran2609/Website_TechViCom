@@ -232,7 +232,19 @@
                 <!-- Account Button with Dropdown -->
                 <div class="relative">
                     <button id="accountMenuBtn" class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
-                        <i class="fas fa-user"></i>
+                        @auth
+                            @if(Auth::user()->image_profile && file_exists(public_path('uploads/users/' . Auth::user()->image_profile)))
+                                <img src="{{ asset('uploads/users/' . Auth::user()->image_profile) }}" 
+                                     alt="{{ Auth::user()->name }}" 
+                                     class="w-6 h-6 rounded-full object-cover border border-white"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                <i class="fas fa-user" style="display: none;"></i>
+                            @else
+                                <i class="fas fa-user"></i>
+                            @endif
+                        @else
+                            <i class="fas fa-user"></i>
+                        @endauth
                         <span class="hidden lg:inline font-medium">
                             @auth
                                 {{ Str::limit(Auth::user()->name, 15) }}
@@ -268,9 +280,19 @@
                         <div>
                             <div class="p-4 border-b border-gray-200">
                                 <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                        <i class="fas fa-user text-orange-500"></i>
-                                    </div>
+                                    @if(Auth::user()->image_profile && file_exists(public_path('uploads/users/' . Auth::user()->image_profile)))
+                                        <img src="{{ asset('uploads/users/' . Auth::user()->image_profile) }}" 
+                                             alt="{{ Auth::user()->name }}" 
+                                             class="w-12 h-12 rounded-full object-cover mr-3 border-2 border-orange-200"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-3" style="display: none;">
+                                            <i class="fas fa-user text-orange-500"></i>
+                                        </div>
+                                    @else
+                                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-user text-orange-500"></i>
+                                        </div>
+                                    @endif
                                     <div>
                                         <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                                         <p class="text-sm text-gray-500">

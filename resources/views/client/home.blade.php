@@ -157,7 +157,8 @@
             @foreach ($banners as $key => $banner)
                 <div class="slide {{ $key === 0 ? 'active' : '' }}">
                     <a href="{{ $banner->link ?? '#' }}">
-                        <img src="{{ asset('uploads/banners/' . $banner->image) }}" alt="{{ $banner->title }}" class="w-full h-full object-cover">
+                        <img src="{{ asset('uploads/banners/' . $banner->image) }}" alt="{{ $banner->title }}"
+                            class="w-full h-full object-cover">
                     </a>
                     @if ($banner->title)
                         <div class="absolute left-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent w-full">
@@ -179,7 +180,8 @@
             <!-- Slide indicators -->
             <div class="slide-indicators">
                 @foreach ($banners as $key => $banner)
-                    <span class="indicator {{ $key === 0 ? 'active' : '' }}" onclick="currentSlide({{ $key + 1 }})"></span>
+                    <span class="indicator {{ $key === 0 ? 'active' : '' }}"
+                        onclick="currentSlide({{ $key + 1 }})"></span>
                 @endforeach
             </div>
         </div>
@@ -684,40 +686,37 @@
         </div>
     </section>
     <!-- Brand Section -->
-<section class="py-12">
-    <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            @foreach ($brands as $brand)
-                <div class="text-center group">
-                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
-                        
-                        @if ($brand->image)
-                            <img 
-                                src="{{ asset('storage/' . $brand->image) }}" 
-                                alt="{{ $brand->name }}" 
-                                class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
-                                onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
-                        @else
-                            <img 
-                                src="{{ asset('client_css/images/brand-default.jpg') }}" 
-                                alt="Brand default"
-                                class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
-                                onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
-                        @endif
-                        
-                        <h3 class="font-semibold mb-2">{{ $brand->name }}</h3>
-                        <p class="text-sm text-gray-500 mb-2">{{ $brand->description }}</p>
-                        <a href="{{ route('brands.show', $brand->slug) }}" 
-                           class="block mt-2 text-[#ff6c2f] font-semibold hover:underline">
-                           Xem thương hiệu
-                        </a>
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @foreach ($brands as $brand)
+                    <div class="text-center group">
+                        <div
+                            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
+
+                            @if ($brand->image)
+                                <img src="{{ asset('storage/' . $brand->image) }}" alt="{{ $brand->name }}"
+                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                            @else
+                                <img src="{{ asset('client_css/images/brand-default.jpg') }}" alt="Brand default"
+                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                            @endif
+
+                            <h3 class="font-semibold mb-2">{{ $brand->name }}</h3>
+                            <p class="text-sm text-gray-500 mb-2">{{ $brand->description }}</p>
+                            <a href="{{ route('brands.show', $brand->slug) }}"
+                                class="block mt-2 text-[#ff6c2f] font-semibold hover:underline">
+                                Xem thương hiệu
+                            </a>
+                        </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <!-- Bài viết mới Section -->
     <section class="py-10 bg-gradient-to-b from-gray-50 to-white">
@@ -725,21 +724,30 @@
             <h2 class="text-3xl font-bold text-center mb-8 text-[#ff6c2f]">Bài viết mới</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center items-stretch">
                 @foreach ($latestNews as $item)
-                    <div class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group mx-auto relative h-[320px] min-w-[260px] max-w-[320px] w-full">
-                        <button onclick="window.location.href='{{ route('client.news.show', $item->id) }}'" class="absolute inset-0 w-full h-full z-10 cursor-pointer opacity-0" aria-label="Xem bài viết"></button>
+                    <div
+                        class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group mx-auto relative h-[320px] min-w-[260px] max-w-[320px] w-full">
+                        <button onclick="window.location.href='{{ route('client.news.show', $item->id) }}'"
+                            class="absolute inset-0 w-full h-full z-10 cursor-pointer opacity-0"
+                            aria-label="Xem bài viết"></button>
                         <div class="w-full h-[180px] relative flex items-center justify-center bg-gray-100">
-                            <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}" alt="{{ $item->title }}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
+                                alt="{{ $item->title }}"
+                                class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">{{ $item->title }}</h3>
+                            <h3
+                                class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">
+                                {{ $item->title }}</h3>
                         </div>
                     </div>
                 @endforeach
             </div>
             <div class="flex justify-center mt-6">
-                <a href="{{ route('client.news.index') }}" class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">Xem tất cả bài viết</a>
+                <a href="{{ route('client.news.index') }}"
+                    class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">Xem
+                    tất cả bài viết</a>
             </div>
-            </div>
+        </div>
         </div>
     </section>
 @endsection
@@ -774,73 +782,7 @@
                 const dropdown = document.createElement('div');
                 dropdown.className =
                     'absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden account-dropdown';
-                dropdown.innerHTML = `
-                <div class="p-6">
-                    <!-- User Status Check -->
-                    <div id="account-status">
-                        <!-- Not logged in state -->
-                        <div id="not-logged-in" class="text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-user-circle text-6xl text-gray-300 mb-2"></i>
-                                <p class="text-gray-600">Chưa đăng nhập</p>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <button onclick="window.location.href='pages/login.html'" class="w-full bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
-                                </button>
-                                
-                                <button onclick="window.location.href='pages/register.html'" class="w-full border border-orange-500 text-orange-500 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
-                                    <i class="fas fa-user-plus mr-2"></i>Đăng ký tài khoản
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Logged in state (hidden by default) -->
-                        <div id="logged-in" class="hidden">
-                            <div class="flex items-center space-x-3 mb-4 pb-4 border-b">
-                                <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-white text-lg"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900" id="user-name">Nguyễn Văn A</h3>
-                                    <p class="text-sm text-gray-500" id="user-email">user@example.com</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Links -->
-                    <div class="border-t pt-4 mt-4">
-                        <div class="space-y-2">
-                            <a href="pages/account.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-user text-gray-500 w-5"></i>
-                                <span>Thông tin tài khoản</span>
-                            </a>
-                            <a href="pages/orders.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-shopping-bag text-gray-500 w-5"></i>
-                                <span>Đơn hàng của tôi</span>
-                            </a>
-                            <a href="pages/wishlist.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-heart text-gray-500 w-5"></i>
-                                <span>Sản phẩm yêu thích</span>
-                            </a>
-                            <a href="pages/contact.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-headset text-gray-500 w-5"></i>
-                                <span>Hỗ trợ khách hàng</span>
-                            </a>
-                            
-                            <!-- Logout button (only show when logged in) -->
-                            <div id="logout-section" class="hidden border-t pt-2 mt-2">
-                                <button onclick="logoutUser()" class="flex items-center space-x-3 p-3 hover:bg-orange-50 rounded-lg transition text-[#ff6c2f] w-full text-left">
-                                    <i class="fas fa-sign-out-alt text-[#ff6c2f] w-5"></i>
-                                    <span>Đăng xuất</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                dropdown.innerHTML = ``;
 
                 // Add dropdown to button's parent
                 accountButton.parentElement.appendChild(dropdown);
@@ -905,7 +847,7 @@
 
             function closeAllDropdowns() {
                 const dropdowns = document.querySelectorAll(
-                '.account-dropdown, .category-dropdown, .cart-dropdown');
+                    '.account-dropdown, .category-dropdown, .cart-dropdown');
                 dropdowns.forEach(dropdown => {
                     dropdown.classList.add('hidden');
                 });
@@ -1013,39 +955,39 @@
                 itemsContainer.innerHTML = `
                 <div class="space-y-4">
                     ${cart.map(item => `
-                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cart-item" data-id="${item.id}">
-                                <div class="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="${item.image || 'assets/images/placeholder.svg'}" 
-                                         alt="${item.name}" 
-                                         class="w-full h-full object-cover"
-                                         onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-medium text-gray-900 truncate">${item.name}</h4>
-                                    <p class="text-sm text-gray-500">${item.color || ''} ${item.storage || ''}</p>
-                                    <div class="flex items-center justify-between mt-2">
-                                        <div class="text-orange-600 font-semibold">
-                                            ${window.PRODUCT_UTILS.formatCurrency(item.price)}
-                                        </div>
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity - 1})" 
-                                                    class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                <i class="fas fa-minus text-xs"></i>
-                                            </button>
-                                            <span class="w-8 text-center font-medium">${item.quantity}</span>
-                                            <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity + 1})" 
-                                                    class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                <i class="fas fa-plus text-xs"></i>
-                                            </button>
-                                            <button onclick="removeFromCartInline(${item.id})" 
-                                                    class="w-8 h-8 flex items-center justify-center text-[#ff6c2f] hover:bg-orange-50 rounded">
-                                                <i class="fas fa-trash text-xs"></i>
-                                            </button>
+                                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cart-item" data-id="${item.id}">
+                                    <div class="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                                        <img src="${item.image || 'assets/images/placeholder.svg'}" 
+                                             alt="${item.name}" 
+                                             class="w-full h-full object-cover"
+                                             onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-medium text-gray-900 truncate">${item.name}</h4>
+                                        <p class="text-sm text-gray-500">${item.color || ''} ${item.storage || ''}</p>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <div class="text-orange-600 font-semibold">
+                                                ${window.PRODUCT_UTILS.formatCurrency(item.price)}
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity - 1})" 
+                                                        class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
+                                                    <i class="fas fa-minus text-xs"></i>
+                                                </button>
+                                                <span class="w-8 text-center font-medium">${item.quantity}</span>
+                                                <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity + 1})" 
+                                                        class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
+                                                    <i class="fas fa-plus text-xs"></i>
+                                                </button>
+                                                <button onclick="removeFromCartInline(${item.id})" 
+                                                        class="w-8 h-8 flex items-center justify-center text-[#ff6c2f] hover:bg-orange-50 rounded">
+                                                    <i class="fas fa-trash text-xs"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        `).join('')}
+                            `).join('')}
                 </div>
             `;
 

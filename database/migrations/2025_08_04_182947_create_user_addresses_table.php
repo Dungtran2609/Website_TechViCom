@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->string('district')->nullable(); // Quận
             $table->string('city')->nullable(); // Thành phố
             $table->boolean('is_default')->default(false); // Địa chỉ mặc định
-            $table->timestamps(); 
+            $table->timestamps();
             $table->softDeletes(); 
             // Ràng buộc khóa ngoại
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

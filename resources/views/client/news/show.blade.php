@@ -10,7 +10,11 @@
             <span class="text-gray-400">/</span>
             <a href="{{ route('client.news.index') }}" class="text-[#0052cc] hover:underline">Tin tức</a>
             <span class="text-gray-400">/</span>
-            <span class="text-gray-700">{{ $news->category->name ?? 'Bài viết' }}</span>
+            @if (!empty($news->category))
+                <a href="{{ route('client.news.index', ['category' => $news->category->id]) }}" class="text-gray-700 hover:text-[#ff6c2f] font-semibold">{{ $news->category->name }}</a>
+            @else
+                <span class="text-gray-700">Bài viết</span>
+            @endif
             <span class="text-gray-400">/</span>
             <span class="text-gray-900 font-semibold">{{ $news->title }}</span>
         </nav>
@@ -132,15 +136,17 @@
                             @else
                                 <ul class="space-y-6" id="comments-list">
                                     @php $maxCommentShow = 3; @endphp
-                                    @foreach ($news->comments->where('parent_id', null)->sortByDesc('created_at') as $i => $comment)
-                                        <li class="comment-item"
-                                            style="{{ $i >= $maxCommentShow ? 'display:none;' : '' }}">
+                                    @php $sortedComments = $news->comments->where('parent_id', null)->sortByDesc('created_at')->values(); @endphp
+                                    @foreach ($sortedComments as $i => $comment)
+                                        <li class="comment-item" style="{{ $i >= $maxCommentShow ? 'display:none;' : '' }}">
                                             <div class="flex gap-3 items-center mb-1">
-                                                <span
-                                                    class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0052cc] to-[#ff6c2f] flex items-center justify-center font-bold text-white">{{ mb_substr($comment->user->name ?? 'U', 0, 1) }}</span>
+                                                @if (!empty($comment->user->avatar))
+                                                    <img src="{{ asset($comment->user->avatar) }}" alt="Avatar" class="w-8 h-8 rounded-full object-cover shadow">
+                                                @else
+                                                    <span class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0052cc] to-[#ff6c2f] flex items-center justify-center font-bold text-white">{{ mb_substr($comment->user->name ?? 'U', 0, 1) }}</span>
+                                                @endif
                                                 <span class="font-semibold">{{ $comment->user->name ?? 'Ẩn danh' }}</span>
-                                                <span
-                                                    class="text-xs text-gray-500">{{ $comment->created_at ? $comment->created_at->diffForHumans() : '' }}</span>
+                                                <span class="text-xs text-gray-500">{{ $comment->created_at ? $comment->created_at->locale('vi')->diffForHumans() : '' }}</span>
                                             </div>
                                             <div class="ml-11 bg-gray-100 rounded-lg p-3">{{ $comment->content }}</div>
                                             <div class="ml-11 flex gap-4 mt-2 text-xs">
@@ -191,19 +197,21 @@
                                             @endpush
 
                                             @if ($comment->children->count())
-                                                @php $maxReplyShow = 3; @endphp
-                                                <ul class="mt-3 ml-16 space-y-4 border-l-2 border-[#0052cc] pl-4"
-                                                    id="replies-list-{{ $comment->id }}">
-                                                    @foreach ($comment->children as $j => $reply)
-                                                        <li class="reply-item-{{ $comment->id }}"
-                                                            style="{{ $j >= $maxReplyShow ? 'display:none;' : '' }}">
+                                                @php 
+                                                    $maxReplyShow = 3; 
+                                                    $visibleReplies = $comment->children->take($maxReplyShow);
+                                                @endphp
+                                                <ul class="mt-3 ml-16 space-y-4 border-l-2 border-[#0052cc] pl-4" id="replies-list-{{ $comment->id }}">
+                                                    @foreach ($visibleReplies as $j => $reply)
+                                                        <li class="reply-item-{{ $comment->id }}">
                                                             <div class="flex gap-2 items-center mb-1">
-                                                                <span
-                                                                    class="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center font-bold text-white">{{ mb_substr($reply->user->name ?? 'A', 0, 1) }}</span>
-                                                                <span
-                                                                    class="font-semibold">{{ $reply->user->name ?? 'Ẩn danh' }}</span>
-                                                                <span
-                                                                    class="text-xs text-gray-500">{{ $reply->created_at ? $reply->created_at->diffForHumans() : '' }}</span>
+                                                                @if (!empty($reply->user->avatar))
+                                                                    <img src="{{ asset($reply->user->avatar) }}" alt="Avatar" class="w-7 h-7 rounded-full object-cover shadow">
+                                                                @else
+                                                                    <span class="w-7 h-7 rounded-full bg-gray-400 flex items-center justify-center font-bold text-white">{{ mb_substr($reply->user->name ?? 'A', 0, 1) }}</span>
+                                                                @endif
+                                                                <span class="font-semibold">{{ $reply->user->name ?? 'Ẩn danh' }}</span>
+                                                                <span class="text-xs text-gray-500">{{ $reply->created_at ? $reply->created_at->locale('vi')->diffForHumans() : '' }}</span>
                                                                 <form method="POST"
                                                                     action="{{ route('client.news-comments.like', $reply->id) }}"
                                                                     class="ml-2">
@@ -226,13 +234,9 @@
                                                     @endforeach
                                                 </ul>
                                                 @if ($comment->children->count() > $maxReplyShow)
-                                                    <div class="text-center my-2">
-                                                        <button id="btn-expand-replies-{{ $comment->id }}"
-                                                            class="btn btn-outline-secondary btn-sm px-4">Xem thêm phản
-                                                            hồi</button>
-                                                        <button id="btn-collapse-replies-{{ $comment->id }}"
-                                                            class="btn btn-outline-secondary btn-sm px-4"
-                                                            style="display:none;">Ẩn bớt phản hồi</button>
+                                                        <div class="text-center my-2">
+                                                            <button id="btn-expand-replies-{{ $comment->id }}" class="btn btn-outline-secondary btn-sm px-4">Xem thêm phản hồi</button>
+                                                            <button id="btn-collapse-replies-{{ $comment->id }}" class="btn btn-outline-secondary btn-sm px-4" style="display:none;">Ẩn bớt phản hồi</button>
                                                     </div>
                                                     <script>
                                                         document.getElementById('btn-expand-replies-{{ $comment->id }}').onclick = function() {
@@ -256,28 +260,29 @@
                                     @endforeach
                                 </ul>
                                 @if ($news->comments->where('parent_id', null)->count() > $maxCommentShow)
-                                    <div class="text-center my-2">
-                                        <button id="btn-expand-comments" class="btn btn-outline-secondary btn-sm px-4">Xem
-                                            thêm bình luận</button>
-                                        <button id="btn-collapse-comments" class="btn btn-outline-secondary btn-sm px-4"
-                                            style="display:none;">Ẩn bớt bình luận</button>
-                                    </div>
-                                    <script>
-                                        document.getElementById('btn-expand-comments').onclick = function() {
-                                            document.querySelectorAll('.comment-item').forEach(function(el) {
-                                                el.style.display = '';
-                                            });
-                                            this.style.display = 'none';
-                                            document.getElementById('btn-collapse-comments').style.display = '';
-                                        };
-                                        document.getElementById('btn-collapse-comments').onclick = function() {
-                                            document.querySelectorAll('.comment-item').forEach(function(el, idx) {
-                                                if (idx >= {{ $maxCommentShow }}) el.style.display = 'none';
-                                            });
-                                            this.style.display = 'none';
-                                            document.getElementById('btn-expand-comments').style.display = '';
-                                        };
-                                    </script>
+                                        <div class="text-center my-2">
+                                            <button id="btn-expand-comments" class="btn btn-outline-secondary btn-sm px-4">Xem thêm bình luận</button>
+                                            <button id="btn-collapse-comments" class="btn btn-outline-secondary btn-sm px-4" style="display:none;">Ẩn bớt bình luận</button>
+                                        </div>
+                                        <script>
+                                            const maxCommentShow = {{ $maxCommentShow }};
+                                            const expandBtn = document.getElementById('btn-expand-comments');
+                                            const collapseBtn = document.getElementById('btn-collapse-comments');
+                                            expandBtn.onclick = function() {
+                                                document.querySelectorAll('.comment-item').forEach(function(el, idx) {
+                                                    el.style.display = '';
+                                                });
+                                                expandBtn.style.display = 'none';
+                                                collapseBtn.style.display = '';
+                                            };
+                                            collapseBtn.onclick = function() {
+                                                document.querySelectorAll('.comment-item').forEach(function(el, idx) {
+                                                    el.style.display = idx < maxCommentShow ? '' : 'none';
+                                                });
+                                                expandBtn.style.display = '';
+                                                collapseBtn.style.display = 'none';
+                                            };
+                                        </script>
                                 @endif
                             @endif
                         </div>

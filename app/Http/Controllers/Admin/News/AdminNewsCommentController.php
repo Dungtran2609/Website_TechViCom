@@ -19,8 +19,14 @@ class AdminNewsCommentController extends Controller
             ->distinct()
             ->pluck('news_id');
 
-        // Lấy bài viết có bình luận để hiển thị trong dropdown
-        $allNews = News::whereIn('id', $newsWithCommentsIds)->select('id', 'title')->get();
+        // Lấy bài viết có bình luận, sắp xếp theo bình luận mới nhất, có phân trang
+        $allNews = News::whereIn('id', $newsWithCommentsIds)
+            ->select('id', 'title', 'image')
+            ->withMax(['comments as latest_comment_created_at' => function ($q) {
+                $q->whereNull('parent_id');
+            }], 'created_at')
+            ->orderByDesc('latest_comment_created_at')
+            ->paginate(12);
 
         $query = NewsComment::with(['user', 'news', 'children'])
             ->withCount('replies')
@@ -49,7 +55,7 @@ class AdminNewsCommentController extends Controller
             ->orderByDesc('replies_count')
             ->orderBy('is_hidden')
             ->orderByDesc('created_at')
-            ->paginate(10);
+            ->paginate(15);
 
         return view('admin.news.news_comments.index', compact('comments', 'allNews'));
     }

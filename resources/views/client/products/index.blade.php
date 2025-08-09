@@ -836,7 +836,7 @@
     
     // Navigate to product detail page
     function goToProductDetail(productId) {
-        window.location.href = `{{ route('products.show', '') }}/${productId}`;
+        window.location.href = `/products/${productId}`;
     }
 </script>
 @endpush

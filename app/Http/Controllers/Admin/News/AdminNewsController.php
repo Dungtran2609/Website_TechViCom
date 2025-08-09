@@ -19,7 +19,7 @@ class AdminNewsController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $news = $query->orderBy('published_at', 'desc')->paginate();
+    $news = $query->orderByDesc('published_at')->paginate(12);
 
         return view('admin.news.index', compact('news'));
     }
@@ -69,7 +69,7 @@ class AdminNewsController extends Controller
             $data['image'] = 'uploads/news/' . $filename;
         }
 
-        if ($news->status !== 'published' && $data['status'] === 'published') {
+        if ($data['status'] === 'published') {
             $data['published_at'] = now();
         }
 
@@ -80,7 +80,18 @@ class AdminNewsController extends Controller
 
     public function show(News $news)
     {
-        $news->load(['comments.user']);
+        $news->load([
+            'comments' => function ($q) {
+                $q->where('is_hidden', false)->with([
+                    'user',
+                    'children' => function ($q2) {
+                        $q2->where('is_hidden', false)->with('user');
+                    }
+                ]);
+            },
+            'category',
+            'author'
+        ]);
         return view('admin.news.show', compact('news'));
     }
 

@@ -216,7 +216,7 @@
             return;
         }
         
-        fetch(`/client/carts/${itemId}`, {
+    fetch(`/carts/${itemId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -241,7 +241,7 @@
     function removeFromCart(itemId) {
         if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
         
-        fetch(`/client/carts/${itemId}`, {
+    fetch(`/carts/${itemId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -405,7 +405,7 @@
     }
 
     function updateCartCount() {
-        fetch('/client/carts/count')
+    fetch('/carts/count')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

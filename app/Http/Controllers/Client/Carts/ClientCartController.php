@@ -15,18 +15,16 @@ class ClientCartController extends Controller
     public function index(Request $request)
     {
         if (Auth::check()) {
-            $cartItems = Cart::with(['product.productAllImages', 'productVariant.attributeValues.attribute'])
+            $cartItems = Cart::with(['product.productAllImages', 'product.variants', 'productVariant.attributeValues.attribute'])
                             ->where('user_id', Auth::id())
                             ->get();
         } else {
             // Giỏ hàng session cho guest
             $sessionCart = session()->get('cart', []);
             $cartItems = [];
-            
             foreach ($sessionCart as $key => $item) {
                 $product = Product::with(['productAllImages', 'variants.attributeValues.attribute'])
                                  ->find($item['product_id']);
-                
                 if ($product) {
                     $cartItem = (object) [
                         'id' => $key,
@@ -45,45 +43,52 @@ class ClientCartController extends Controller
         if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
             $items = [];
             $total = 0;
-            
             foreach ($cartItems as $cartItem) {
                 $product = is_object($cartItem) ? $cartItem->product : $cartItem['product'];
                 $quantity = is_object($cartItem) ? $cartItem->quantity : $cartItem['quantity'];
-                
-                // Get price from variant or product
+                $variant = is_object($cartItem) ? $cartItem->productVariant : (isset($cartItem['productVariant']) ? $cartItem['productVariant'] : null);
+                // Lấy giá cho sản phẩm đơn hoặc biến thể
                 $price = 0;
-                
-                // If cart item has specific variant
-                if (is_object($cartItem) && isset($cartItem->productVariant) && $cartItem->productVariant) {
-                    $price = $cartItem->productVariant->price ?? 0;
+                if ($variant) {
+                    $price = $variant->price ?? 0;
+                } else {
+                    // Nếu là sản phẩm đơn, lấy giá sale hoặc regular
+                    if (isset($product->sale_price) && $product->sale_price > 0) {
+                        $price = $product->sale_price;
+                    } elseif (isset($product->regular_price) && $product->regular_price > 0) {
+                        $price = $product->regular_price;
+                    } elseif ($product->variants && $product->variants->count() > 0) {
+                        $price = $product->variants->first()->price ?? 0;
+                    }
                 }
-                // If session cart item has variant_id
-                elseif (!is_object($cartItem) && isset($cartItem['variant_id']) && $cartItem['variant_id']) {
-                    $variant = \App\Models\ProductVariant::find($cartItem['variant_id']);
-                    $price = $variant ? $variant->price : 0;
-                }
-                // Default to first variant of product
-                elseif ($product->variants && $product->variants->count() > 0) {
-                    $price = $product->variants->first()->price ?? 0;
-                }
-                
                 $total += $price * $quantity;
-                
-                $image = $product->productAllImages->first() ? 
-                        asset('uploads/products/' . $product->productAllImages->first()->image) : 
-                        asset('images/default-product.jpg');
-                
+                // Lấy ảnh đúng cho cả sản phẩm đơn và biến thể
+                $image = null;
+                if ($variant && isset($variant->image) && $variant->image) {
+                    $image = asset('uploads/products/' . $variant->image);
+                } elseif ($product->productAllImages && $product->productAllImages->first()) {
+                    $image = asset('uploads/products/' . $product->productAllImages->first()->image);
+                } else {
+                    $image = asset('images/default-product.jpg');
+                }
                 $items[] = [
-                    'id' => is_object($cartItem) ? $cartItem->id : $key, // Use key for session cart
+                    'id' => is_object($cartItem) ? $cartItem->id : (isset($cartItem['id']) ? $cartItem['id'] : null),
                     'product_id' => $product->id,
                     'name' => $product->name,
                     'price' => $price,
                     'quantity' => $quantity,
                     'image' => $image,
-                    'variant' => is_object($cartItem) ? $cartItem->productVariant : null
+                    'variant' => $variant ? [
+                        'id' => $variant->id,
+                        'attributes' => method_exists($variant, 'attributeValues') ? $variant->attributeValues->map(function($attr) {
+                            return [
+                                'name' => $attr->attribute->name,
+                                'value' => $attr->value
+                            ];
+                        }) : [],
+                    ] : null
                 ];
             }
-            
             return response()->json([
                 'success' => true,
                 'items' => $items,

@@ -44,99 +44,85 @@
                 </div>
 
                 {{-- quay lại trang danh sách bài viết--}}
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center gap-2">
                     <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Quay lại danh sách bài viết
+                    </a>
+                    <a href="{{ route('admin.news.edit', $news->id) }}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Sửa bài viết
                     </a>
                 </div>
 
                 {{-- Khu vực bình luận --}}
                 <div class="card shadow-lg rounded-4 border-0 mt-4">
                     <div class="card-header bg-white border-bottom-0 py-3">
-                        <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-comments me-2 text-primary"></i>Bình luận bài
-                            viết</h5>
+                        <h5 class="mb-0 fw-bold text-dark"><i class="fas fa-comments me-2 text-primary"></i>Bình luận bài viết</h5>
                     </div>
                     <div class="card-body p-4">
                         @if ($news->comments->isEmpty())
                             <div class="alert alert-secondary rounded-3">Chưa có bình luận nào.</div>
                         @else
-                            <ul class="list-unstyled">
-                                @foreach ($news->comments->where('parent_id', null)->sortByDesc('created_at') as $comment)
-                                    <li class="mb-4 pb-3 border-bottom">
-                                        <div class="d-flex align-items-center mb-2 gap-3">
-                                            <div class="rounded-circle bg-gradient bg-primary text-white d-flex justify-content-center align-items-center shadow"
-                                                style="width: 48px; height: 48px; font-weight: bold; font-size: 1.3rem;">
+                            @php $maxShow = 5; $sortedComments = $news->comments->where('parent_id', null)->sortByDesc('created_at')->values(); @endphp
+                            <ul class="list-unstyled" id="comments-list">
+                                @foreach ($sortedComments as $i => $comment)
+                                    <li class="mb-4 pb-3 comment-item" style="{{ $i >= $maxShow ? 'display:none;' : '' }}">
+                                        <div class="d-flex align-items-center gap-3 mb-2">
+                                            <span class="rounded-circle bg-gradient bg-primary text-white d-flex justify-content-center align-items-center shadow" style="width:44px;height:44px;font-weight:bold;font-size:1.2rem;">
                                                 {{ mb_substr($comment->user->name ?? 'U', 0, 1) }}
-                                            </div>
+                                            </span>
                                             <div class="flex-grow-1">
-                                                <strong
-                                                    class="d-block text-dark fw-semibold">{{ $comment->user->name ?? 'Người dùng không xác định' }}</strong>
-                                                <small class="text-muted">
-                                                    {{ $comment->created_at ? $comment->created_at->format('d/m/Y H:i') : '' }}
-                                                    @if ($comment->updated_at && $comment->updated_at != $comment->created_at)
-                                                        <span class="ms-2">(Đã sửa:
-                                                            {{ $comment->updated_at ? $comment->updated_at->format('d/m/Y H:i') : '' }})</span>
-                                                    @endif
-                                                </small>
+                                                <span class="fw-bold text-dark">{{ $comment->user->name ?? 'Ẩn danh' }}</span>
+                                                <span class="text-muted ms-2 small">{{ $comment->created_at ? $comment->created_at->locale('vi')->diffForHumans() : '' }}</span>
                                             </div>
-                                            <span
-                                                class="badge bg-light text-dark border border-1 px-2">#{{ $comment->id }}</span>
                                         </div>
                                         <div class="ms-5">
-                                            <p class="mb-2 fs-6 text-dark">{{ $comment->content }}</p>
-                                            <div class="d-flex gap-2 align-items-center small">
-                                                <form method="POST"
-                                                    action="{{ route('admin.news-comments.like', $comment->id) }}">
+                                            <div class="bg-light rounded-3 p-3 mb-2 text-dark">{{ $comment->content }}</div>
+                                            <div class="d-flex gap-3 align-items-center small mb-2">
+                                                <form method="POST" action="{{ route('admin.news-comments.like', $comment->id) }}">
                                                     @csrf
-                                                    <button type="submit"
-                                                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                                        Like ({{ $comment->likes_count }})
+                                                    @php $sessionKey = 'liked_comment_' . $comment->id; $liked = session()->has($sessionKey); @endphp
+                                                    <button type="submit" class="btn btn-link px-2 py-0 {{ $liked ? 'text-info' : 'text-secondary' }}" {{ $liked ? 'disabled' : '' }}>
+                                                        <i class="far fa-thumbs-up"></i> {{ $comment->likes_count }}
                                                     </button>
                                                 </form>
-                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3"
-                                                    type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#replyForm{{ $comment->id }}">
+                                                <button class="btn btn-link text-secondary px-2 py-0" type="button" data-bs-toggle="collapse" data-bs-target="#replyForm{{ $comment->id }}">
                                                     <i class="fas fa-reply"></i> Trả lời
                                                 </button>
                                             </div>
-                                            <div class="collapse mt-3" id="replyForm{{ $comment->id }}">
-                                                <form method="POST"
-                                                    action="{{ route('admin.news-comments.reply', $comment->id) }}">
+                                            <div class="collapse mt-2" id="replyForm{{ $comment->id }}">
+                                                <form method="POST" action="{{ route('admin.news-comments.reply', $comment->id) }}">
                                                     @csrf
-                                                    <div class="mb-2">
-                                                        <textarea name="content" class="form-control rounded-3" rows="2" placeholder="Nhập phản hồi..."
-                                                            style="resize:vertical;"></textarea>
-                                                    </div>
-                                                    <button type="submit"
-                                                        class="btn btn-sm btn-primary rounded-pill px-3">Gửi</button>
+                                                    <textarea name="content" class="form-control rounded-3 mb-2" rows="2" placeholder="Nhập phản hồi..."></textarea>
+                                                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Gửi</button>
                                                 </form>
                                             </div>
                                             @if ($comment->children->count())
                                                 @php $maxReplyShow = 3; @endphp
-                                                <ul class="list-unstyled mt-3 ps-4 border-start border-2" id="replies-list-{{ $comment->id }}">
+                                                <ul class="list-unstyled mt-3 ps-4 border-start border-primary" style="border-width:2px !important;" id="replies-list-{{ $comment->id }}">
                                                     @foreach ($comment->children as $j => $reply)
                                                         <li class="mb-3 reply-item-{{ $comment->id }}" style="{{ $j >= $maxReplyShow ? 'display:none;' : '' }}">
                                                             <div class="d-flex align-items-center gap-2 mb-1">
-                                                                <div class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center"
-                                                                    style="width: 32px; height: 32px; font-weight: bold; font-size: 1rem;">
+                                                                <span class="rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center" style="width:32px;height:32px;font-weight:bold;font-size:1rem;">
                                                                     {{ mb_substr($reply->user->name ?? 'A', 0, 1) }}
-                                                                </div>
-                                                                <strong class="text-dark">{{ $reply->user->name ?? 'Ẩn danh' }}</strong>
-                                                                <small class="text-muted ms-2">{{ $reply->created_at ? $reply->created_at->format('d/m/Y H:i') : '' }}</small>
+                                                                </span>
+                                                                <span class="fw-bold text-dark">{{ $reply->user->name ?? 'Ẩn danh' }}</span>
+                                                                <span class="text-muted ms-2 small">{{ $reply->created_at ? $reply->created_at->locale('vi')->diffForHumans() : '' }}</span>
                                                                 <form method="POST" action="{{ route('admin.news-comments.like', $reply->id) }}" class="ms-2">
                                                                     @csrf
-                                                                    <button type="submit" class="btn btn-xs btn-outline-info px-2 py-0" style="font-size:0.9rem;">
-                                                                        Like ({{ $reply->likes_count ?? 0 }})
+                                                                    @php $sessionKey = 'liked_comment_' . $reply->id; $liked = session()->has($sessionKey); @endphp
+                                                                    <button type="submit" class="btn btn-link px-2 py-0 {{ $liked ? 'text-info' : 'text-secondary' }}" {{ $liked ? 'disabled' : '' }}>
+                                                                        <i class="far fa-thumbs-up"></i> {{ $reply->likes_count ?? 0 }}
                                                                     </button>
                                                                 </form>
                                                             </div>
-                                                            <p class="mb-0 ms-2 text-dark">{{ $reply->content }}</p>
+                                                            <div class="bg-light rounded-3 p-2 ms-4 text-dark">{{ $reply->content }}</div>
                                                         </li>
                                                     @endforeach
                                                 </ul>
                                                 @if ($comment->children->count() > $maxReplyShow)
                                                     <div class="text-center my-2">
                                                         <button id="btn-expand-replies-{{ $comment->id }}" class="btn btn-outline-secondary btn-sm px-4">Xem thêm phản hồi</button>
+                                                        <button id="btn-collapse-replies-{{ $comment->id }}" class="btn btn-outline-secondary btn-sm px-4" style="display:none;">Ẩn bớt phản hồi</button>
                                                     </div>
                                                     <script>
                                                         document.getElementById('btn-expand-replies-{{ $comment->id }}').onclick = function() {
@@ -144,6 +130,14 @@
                                                                 el.style.display = '';
                                                             });
                                                             this.style.display = 'none';
+                                                            document.getElementById('btn-collapse-replies-{{ $comment->id }}').style.display = '';
+                                                        };
+                                                        document.getElementById('btn-collapse-replies-{{ $comment->id }}').onclick = function() {
+                                                            document.querySelectorAll('.reply-item-{{ $comment->id }}').forEach(function(el, idx) {
+                                                                if (idx >= {{ $maxReplyShow }}) el.style.display = 'none';
+                                                            });
+                                                            this.style.display = 'none';
+                                                            document.getElementById('btn-expand-replies-{{ $comment->id }}').style.display = '';
                                                         };
                                                     </script>
                                                 @endif
@@ -152,6 +146,32 @@
                                     </li>
                                 @endforeach
                             </ul>
+                            @if ($sortedComments->count() > $maxShow)
+                                <div class="text-center my-3">
+                                    <button id="btn-expand-comments" class="btn btn-outline-primary btn-sm px-4">Xem thêm bình luận</button>
+                                    <button id="btn-collapse-comments" class="btn btn-outline-secondary btn-sm px-4" style="display:none;">Ẩn bớt bình luận</button>
+                                </div>
+                                <script>
+                                    const maxShow = {{ $maxShow }};
+                                    const expandBtn = document.getElementById('btn-expand-comments');
+                                    const collapseBtn = document.getElementById('btn-collapse-comments');
+                                    expandBtn.onclick = function() {
+                                        document.querySelectorAll('.comment-item').forEach(function(el) {
+                                            el.style.display = '';
+                                        });
+                                        expandBtn.style.display = 'none';
+                                        collapseBtn.style.display = '';
+                                    };
+                                    collapseBtn.onclick = function() {
+                                        document.querySelectorAll('.comment-item').forEach(function(el, i) {
+                                            el.style.display = i < maxShow ? '' : 'none';
+                                        });
+                                        expandBtn.style.display = '';
+                                        collapseBtn.style.display = 'none';
+                                        window.scrollTo({ top: document.getElementById('comments-list').offsetTop - 80, behavior: 'smooth' });
+                                    };
+                                </script>
+                            @endif
                         @endif
                     </div>
                 </div>

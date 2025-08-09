@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\News;
 
 use App\Http\Controllers\Controller;
 use App\Models\NewsCategory;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 class AdminNewsCategoryController extends Controller
@@ -31,14 +32,16 @@ class AdminNewsCategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:news_categories,name',
+                // Nếu slug là unique, có thể thêm: 'slug' => 'unique:news_categories,slug',
         ], [
             'name.required' => 'Tên danh mục là bắt buộc.',
             'name.unique' => 'Tên danh mục đã tồn tại.',
         ]);
 
-        NewsCategory::create([
-            'name' => $request->name,
-        ]);
+            NewsCategory::create([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+            ]);
 
         return redirect()->route('admin.news-categories.index')->with('success', 'Thêm danh mục thành công.');
     }
@@ -52,14 +55,16 @@ class AdminNewsCategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:100|unique:news_categories,name,' . $newsCategory->id . ',id',
+                // Nếu slug là unique, có thể thêm: 'slug' => 'unique:news_categories,slug,' . $newsCategory->id . ',id',
         ], [
             'name.required' => 'Tên danh mục là bắt buộc.',
             'name.unique' => 'Tên danh mục đã tồn tại.',
         ]);
 
-        $newsCategory->update([
-            'name' => $request->name,
-        ]);
+            $newsCategory->update([
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+            ]);
 
         return redirect()->route('admin.news-categories.index')->with('success', 'Cập nhật danh mục thành công.');
     }

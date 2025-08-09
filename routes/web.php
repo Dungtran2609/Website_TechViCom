@@ -368,12 +368,6 @@ Route::prefix('carts')->name('carts.')->group(function () {
 
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
-    // Sản phẩm
-    Route::prefix('products')->name('products.')->group(function () {
-        Route::get('/', [ClientProductController::class, 'index'])->name('index');
-        Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
-    });
-
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
         // Routes khác có thể thêm vào đây sau
@@ -382,6 +376,7 @@ Route::prefix('client')->name('client.')->group(function () {
     // Liên hệ
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::get('/', [ClientContactController::class, 'index'])->name('index');
+        Route::get('/create', [ClientContactController::class, 'index'])->name('create'); // Redirect to index for contact form
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 
@@ -550,23 +545,25 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
     // ==== Permissions ====
     Route::prefix('permissions')->middleware(CheckRole::class . ':admin')->name('permissions.')->group(function () {
-        Route::post('update-roles', [AdminPermissionController::class, 'updateRoles'])->name('updateRoles');
-        Route::get('list', [AdminPermissionController::class, 'list'])->name('list');
-        Route::get('trashed', [AdminPermissionController::class, 'trashed'])->name('trashed');
-        Route::post('{id}/restore', [AdminPermissionController::class, 'restore'])->name('restore');
-        Route::delete('{id}/force-delete', [AdminPermissionController::class, 'forceDelete'])->name('force-delete');
-        Route::resource('', AdminPermissionController::class)
-            ->parameters(['' => 'permission'])
-            ->names([
-                'index' => 'index',
-                'create' => 'create',
-                'store' => 'store',
-                'show' => 'show',
-                'edit' => 'edit',
-                'update' => 'update',
-                'destroy' => 'destroy',
-            ]);
-    });
+    // Các route có đường dẫn cụ thể nên được đặt ở trên
+    Route::post('update-roles', [AdminPermissionController::class, 'updateRoles'])->name('updateRoles');
+    Route::get('list', [AdminPermissionController::class, 'list'])->name('list');
+    Route::get('trashed', [AdminPermissionController::class, 'trashed'])->name('trashed');
+    Route::post('sync', [AdminPermissionController::class, 'sync'])->name('sync');
+    Route::post('{id}/restore', [AdminPermissionController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force-delete', [AdminPermissionController::class, 'forceDelete'])->name('force-delete');
+    Route::resource('', AdminPermissionController::class)
+        ->parameters(['' => 'permission'])
+        ->names([
+            'index' => 'index',
+            'create' => 'create',
+            'store' => 'store',
+            'show' => 'show', // Route này sẽ tạo ra /permissions/{permission}
+            'edit' => 'edit',
+            'update' => 'update',
+            'destroy' => 'destroy',
+        ]);
+});
 
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {

@@ -49,13 +49,28 @@ class ClientNewsController extends Controller
 	// Trang chi tiết bài viết
 	public function show($id)
 	{
-		$news = News::where('status', 'published')->findOrFail($id);
+		$news = News::where('status', 'published')
+			->with([
+				'comments' => function ($q) {
+					$q->where('is_hidden', false)->whereNull('parent_id')->with([
+						'user',
+						'children' => function ($q2) {
+							$q2->where('is_hidden', false)->with('user');
+						}
+					]);
+				},
+				'category',
+				'author'
+			])
+			->findOrFail($id);
 		$related = News::where('status', 'published')
 			->where('id', '!=', $news->id)
 			->orderByDesc('published_at')
 			->limit(4)
 			->get();
-		return view('client.news.show', compact('news', 'related'));
+		// Đếm số bình luận hiển thị (không bị ẩn, parent_id=null)
+		$visibleCommentCount = $news->comments->count();
+		return view('client.news.show', compact('news', 'related', 'visibleCommentCount'));
 	}
 	// Lưu bình luận mới
 	public function storeComment(Request $request, $id)

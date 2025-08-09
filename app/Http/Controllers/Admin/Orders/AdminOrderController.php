@@ -13,64 +13,52 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 class AdminOrderController extends Controller
 {
-
     public function index(Request $request)
     {
-        $orders = Order::with(['user:id,name', 'orderItems.productVariant.product'])
-            ->when($request->search, function ($query, $search) {
-                $query->where('id', 'like', "%{$search}%")
-                      ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
-            })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
+        $orders = Order::with([
+            'user:id,name',
+            'orderItems.productVariant.product.images'
+        ])
+            ->when(
+                $request->search,
+                fn($q, $s) =>
+                $q->where('id', 'like', "%{$s}%")
+                    ->orWhereHas(
+                        'user',
+                        fn($q2) =>
+                        $q2->where('name', 'like', "%{$s}%")
+                    )
+            )
             ->latest()
             ->paginate(15);
 
-        // Payment method mapping
-        $paymentMap = [
-            'credit_card' => 'Thẻ tín dụng',
-            'bank_transfer' => 'Chuyển khoản',
-            'cod' => 'COD (Thanh toán khi nhận hàng)',
-            'vietqr' => 'VietQR'
-        ];
+        $orderData = $orders->map(fn($order) => [
+            'id' => $order->id,
+            'user_name' => $order->customer_name, // Sử dụng accessor mới
 
-        $orderData = $orders->map(function($order) use ($paymentMap) {
-            // Lấy ảnh đầu tiên
-            $image = null;
-            if ($order->orderItems->isNotEmpty()) {
-                $firstItem = $order->orderItems->first();
-                if (!empty($firstItem->image_product)) {
-                    $image = $firstItem->image_product;
-                } elseif ($firstItem->productVariant && $firstItem->productVariant->product) {
-                    $product = $firstItem->productVariant->product;
-                    if ($product->images->isNotEmpty()) {
-                        $image = $product->images->first()->image_path;
-                    }
+            // lấy orderItem đầu tiên
+            'image' => optional($order->orderItems->first(), function ($item) {
+                $variant = $item->productVariant;
+                $prod = $variant->product;
+
+                // 1. Ảnh lưu tạm trên order_item
+                if (!empty($item->image_product)) {
+                    $path = $item->image_product;
                 }
-            }
+                // 2. Ảnh đầu tiên của product
+                elseif ($prod->images->isNotEmpty()) {
+                    $path = $prod->images->first()->image_path;
+                }
+                // 3. Ảnh của variant
+                elseif (!empty($variant->image)) {
+                    $path = $variant->image;
+                } else {
+                    return null;
+                }
 
-            // Lấy tên tất cả sản phẩm
-            $productNames = $order->orderItems->map(function($item) {
-                return $item->productVariant->product->name ?? 'N/A';
-            })->implode(', ');
-
-            // Tính tổng số lượng
-            $totalQuantity = $order->orderItems->sum('quantity');
-
-            return [
-                'id' => $order->id,
-                'user_name' => $order->customer_name,
-                'image' => $image ? asset('storage/' . ltrim($image, '/')) : null,
-                'product_names' => $productNames,
-                'total_quantity' => $totalQuantity,
-                'final_total' => $order->final_total,
-                'status' => $order->status,
-                'payment_method' => $order->payment_method,
-                'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
-                'created_at' => $order->created_at->format('d/m/Y H:i'),
-            ];
-        });
+                return asset('storage/' . ltrim($path, '/'));
+            }),
+        ]);
 
         return view('admin.orders.index', [
             'orders' => $orderData,
@@ -78,7 +66,26 @@ class AdminOrderController extends Controller
         ]);
     }
 
-
+    /**
+     * Cập nhật trạng thái đơn hàng (AJAX hoặc form riêng)
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+        $validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
+        $status = $request->input('status');
+        if (!in_array($status, $validStatuses)) {
+            return back()->with('error', 'Trạng thái không hợp lệ.');
+        }
+        $order->status = $status;
+        // Nếu chuyển sang shipped thì cập nhật shipped_at
+        if ($status === 'shipped' && !$order->shipped_at) {
+            $order->shipped_at = now();
+        }
+        $order->save();
+        return redirect()->route('admin.orders.show', $order->id)
+            ->with('success', 'Cập nhật trạng thái thành công!');
+    }
 
     // show  
     public function show(int $id)
@@ -92,7 +99,7 @@ class AdminOrderController extends Controller
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod:id,name',
             'coupon'
-        ])->findOrFail($order->id);
+        ])->findOrFail($id);
 
         $shippingMethods = ShippingMethod::all();
 
@@ -259,7 +266,7 @@ class AdminOrderController extends Controller
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod',
             'coupon',
-        ])->findOrFail($order->id);
+        ])->findOrFail($id);
 
         // Các data phụ trợ
         $shippingMethods = ShippingMethod::all();
@@ -314,8 +321,8 @@ class AdminOrderController extends Controller
         // Chuẩn bị dữ liệu cho view
         $orderData = [
             'id' => $order->id,
-            'user_name' => $order->user->name ?? $order->customer_name ?? 'Guest',
-            'user_email' => $order->user->email ?? $order->customer_email ?? 'N/A',
+            'user_name' => $order->user->name,
+            'user_email' => $order->user->email,
             'status' => $order->status,
             'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
@@ -354,7 +361,7 @@ class AdminOrderController extends Controller
     }
     public function updateOrders(Request $request, int $id)
     {
-        $order = Order::findOrFail($order->id);
+        $order = Order::findOrFail($id);
         $oldStatus = $order->status;
 
         // Các giá trị hợp lệ
@@ -381,16 +388,21 @@ class AdminOrderController extends Controller
             'guest_phone',
         ]);
 
-        // Validation
+        // Validate
         $validator = Validator::make($data, [
-            'status' => 'required|in:' . implode(',', $validStatuses),
+            'status' => 'nullable|in:' . implode(',', $validStatuses),
             'payment_status' => 'nullable|in:' . implode(',', $validPaymentStatus),
+            'payment_method' => 'nullable|in:' . implode(',', $validPayments),
+            'shipped_at' => 'nullable|date',
             'recipient_name' => 'nullable|string|max:255',
             'recipient_phone' => 'nullable|string|max:20',
             'recipient_address' => 'nullable|string|max:500',
-            'payment_method' => 'nullable|in:' . implode(',', $validPayments),
+            'shipping_method_id' => 'nullable|exists:shipping_methods,id',
+            'coupon_id' => 'nullable|exists:coupons,id',
+            'order_items' => 'nullable|array',
+            'order_items.*.quantity' => 'nullable|integer|min:1',
+            'order_items.*.price' => 'nullable|numeric|min:0',
         ]);
-
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
@@ -491,64 +503,51 @@ class AdminOrderController extends Controller
 
     public function trashed()
     {
-        $trashedOrders = Order::onlyTrashed()
-            ->with(['user:id,name,email', 'orderItems.productVariant.product.images'])
+        $trashed = Order::onlyTrashed()
+            ->with(['user', 'orderItems.product', 'orderItems.productVariant.images'])
             ->latest()
-            ->paginate(15);
+            ->get();
 
-        // Status mapping
-        $statusMap = [
-            'pending' => 'Đang chờ xử lý',
-            'processing' => 'Đang xử lý', 
-            'shipped' => 'Đã giao',
-            'delivered' => 'Đã nhận',
-            'cancelled' => 'Đã hủy',
-            'returned' => 'Đã trả hàng'
-        ];
-
-        // Format data như method index
-        $orders = $trashedOrders->map(function($order) use ($statusMap) {
-            // Lấy ảnh đầu tiên của sản phẩm đầu tiên
-            $firstImage = null;
-            if ($order->orderItems->isNotEmpty()) {
-                $firstProduct = $order->orderItems->first()->productVariant->product ?? null;
-                if ($firstProduct && $firstProduct->images->isNotEmpty()) {
-                    $firstImage = $firstProduct->images->first()->image_path;
-                }
-            }
-
-            // Lấy tên tất cả sản phẩm
-            $productNames = $order->orderItems->map(function($item) {
-                return $item->productVariant->product->name ?? 'N/A';
-            })->implode(', ');
-
-            // Tính tổng số lượng
-            $totalQuantity = $order->orderItems->sum('quantity');
-
-            return [
-                'id' => $order->id,
-                'user_name' => $order->user->name ?? 'Guest',
-                'user_email' => $order->user->email ?? 'N/A',
-                'image' => $firstImage,
-                'product_names' => $productNames,
-                'total_quantity' => $totalQuantity,
-                'final_total' => $order->final_total,
-                'status' => $order->status,
-                'status_vietnamese' => $statusMap[$order->status] ?? $order->status,
-                'created_at' => $order->created_at->format('d/m/Y H:i'),
-                'deleted_at' => $order->deleted_at->format('d/m/Y H:i'),
-            ];
-        });
-
-        return view('admin.orders.trashed', [
-            'orders' => $orders,
-            'pagination' => $trashedOrders
+        $orderData = $trashed->map(fn($order) => [
+            'id' => $order->id,
+            'image' => optional(
+                $order->orderItems
+                    ->flatMap(fn($i) => $i->productVariant->images->where('is_primary', true))
+                    ->first()
+            )->img_url,
+            'user_name' => $order->user->name ?? 'Khách vãng lai',
+            'product_names' => $order->orderItems->pluck('product.name')->implode(', '),
+            'total_quantity' => $order->orderItems->sum('quantity'),
+            'subtotal' => $order->orderItems->sum(fn($i) => ($i->productVariant->sale_price ?? $i->productVariant->price) * $i->quantity),
+            'shipping_fee' => $order->shipping_fee,
+            'coupon_discount' => $order->coupon_discount,
+            'final_total' => $order->final_total,
+            'status' => $order->status,
+            'status_vietnamese' => [
+                'pending' => 'Đang chờ xử lý',
+                'processing' => 'Đang xử lý',
+                'shipped' => 'Đã giao',
+                'delivered' => 'Đã nhận',
+                'cancelled' => 'Đã hủy',
+                'returned' => 'Đã trả hàng'
+            ][$order->status] ?? $order->status,
+            'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
+            'payment_method' => $order->payment_method,
+            'payment_method_vietnamese' => [
+                'credit_card' => 'Thẻ tín dụng',
+                'bank_transfer' => 'Chuyển khoản',
+                'cod' => 'COD'
+            ][$order->payment_method] ?? $order->payment_method,
+            'recipient_name' => $order->recipient_name,
+            'recipient_phone' => $order->recipient_phone,
+            'recipient_address' => $order->recipient_address,
+            'shipped_at' => optional($order->shipped_at)->format('d/m/Y H:i'),
+            'deleted_at' => optional($order->deleted_at)->format('d/m/Y H:i'),
         ]);
+
+        return view('admin.orders.trashed', ['orders' => $orderData]);
     }
 
-    /**
-     * Khôi phục một đơn hàng đã bị xóa mềm.
-     */
     public function restore($id)
     {
         $order = Order::withTrashed()->findOrFail($id);
@@ -685,3 +684,4 @@ class AdminOrderController extends Controller
         return $discount;
     }
 }
+

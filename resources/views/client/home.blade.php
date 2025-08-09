@@ -154,78 +154,21 @@
     <!-- Hero Banner Slideshow -->
     <section class="relative overflow-hidden">
         <div class="slideshow-container relative w-full h-96 md:h-[500px]">
-            <!-- Slide 1 -->
-            <div class="slide active">
-                <div class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SIÊU SALE</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">iPhone 15 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Giảm đến 5 triệu - Trả góp 0%</p>
-                                <button onclick="goToFeaturedProduct()"
-                                    class="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold hover:bg-yellow-500 transition slide-in-delay-3">
-                                    MUA NGAY
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/iphone-15.png" alt="iPhone 15"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
+            @foreach ($banners as $key => $banner)
+                <div class="slide {{ $key === 0 ? 'active' : '' }}">
+                    <a href="{{ $banner->link ?? '#' }}">
+                        <img src="{{ asset('uploads/banners/' . $banner->image) }}" alt="{{ $banner->title }}" class="w-full h-full object-cover">
+                    </a>
+                    @if ($banner->title)
+                        <div class="absolute left-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent w-full">
+                            <h2 class="text-2xl md:text-4xl font-bold text-white">{{ $banner->title }}</h2>
+                            @if ($banner->description)
+                                <p class="text-white mt-2">{{ $banner->description }}</p>
+                            @endif
                         </div>
-                    </div>
+                    @endif
                 </div>
-            </div>
-
-            <!-- Slide 2 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SAMSUNG</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Galaxy S24 Ultra</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Công nghệ AI tiên tiến - Giảm 3 triệu</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'"
-                                    class="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition slide-in-delay-3">
-                                    KHÁM PHÁ
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/samsung-s24-ultra.jpg" alt="Samsung S24 Ultra"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">MACBOOK</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Pro M3 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Hiệu năng đỉnh cao - Ưu đãi học sinh sinh viên</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'"
-                                    class="bg-gray-200 text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-300 transition slide-in-delay-3">
-                                    XEM NGAY
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/macbook-pro-m3.jpg" alt="MacBook Pro M3"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            @endforeach
             <!-- Navigation arrows -->
             <button class="slide-nav prev" onclick="changeSlide(-1)">
                 <i class="fas fa-chevron-left"></i>
@@ -233,12 +176,11 @@
             <button class="slide-nav next" onclick="changeSlide(1)">
                 <i class="fas fa-chevron-right"></i>
             </button>
-
             <!-- Slide indicators -->
             <div class="slide-indicators">
-                <span class="indicator active" onclick="currentSlide(1)"></span>
-                <span class="indicator" onclick="currentSlide(2)"></span>
-                <span class="indicator" onclick="currentSlide(3)"></span>
+                @foreach ($banners as $key => $banner)
+                    <span class="indicator {{ $key === 0 ? 'active' : '' }}" onclick="currentSlide({{ $key + 1 }})"></span>
+                @endforeach
             </div>
         </div>
     </section>
@@ -741,6 +683,42 @@
             </div>
         </div>
     </section>
+    <!-- Brand Section -->
+<section class="py-12">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            @foreach ($brands as $brand)
+                <div class="text-center group">
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
+                        
+                        @if ($brand->image)
+                            <img 
+                                src="{{ asset('storage/' . $brand->image) }}" 
+                                alt="{{ $brand->name }}" 
+                                class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                        @else
+                            <img 
+                                src="{{ asset('client_css/images/brand-default.jpg') }}" 
+                                alt="Brand default"
+                                class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                        @endif
+                        
+                        <h3 class="font-semibold mb-2">{{ $brand->name }}</h3>
+                        <p class="text-sm text-gray-500 mb-2">{{ $brand->description }}</p>
+                        <a href="{{ route('brands.show', $brand->slug) }}" 
+                           class="block mt-2 text-[#ff6c2f] font-semibold hover:underline">
+                           Xem thương hiệu
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+
     <!-- Bài viết mới Section -->
     <section class="py-10 bg-gradient-to-b from-gray-50 to-white">
         <div class="container mx-auto px-4">

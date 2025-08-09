@@ -44,6 +44,7 @@ class HomeController extends Controller
 
         // Lấy thương hiệu
         $brands = Brand::where('status', 1)
+            ->orderBy('name')
             ->limit(8)
             ->get();
 

@@ -636,3 +636,9 @@ Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::clas
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
+
+// Brands routes (public access)
+Route::prefix('brands')->name('brands.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Client\Brands\ClientBrandController::class, 'index'])->name('index');
+    Route::get('/{slug}', [\App\Http\Controllers\Client\Brands\ClientBrandController::class, 'show'])->name('show');
+});

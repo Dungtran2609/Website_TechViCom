@@ -1,0 +1,26 @@
+/* Basic styles for client pages */
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+}
+
+/* Custom primary color */
+.bg-custom-primary {
+    background-color: #ff6c2f;
+}
+
+.text-custom-primary {
+    color: #ff6c2f;
+}
+
+.border-custom-primary {
+    border-color: #ff6c2f;
+}
+
+/* Basic responsive utilities */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}

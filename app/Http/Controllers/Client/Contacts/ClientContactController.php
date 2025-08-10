@@ -45,8 +45,8 @@ class ClientContactController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'phone' => 'required|string|max:20',
+            'email' => 'required|email:rfc,dns|max:255',
+            'phone' => ['required', 'string', 'max:20', 'regex:/^(0|\+84)([0-9]{9,10})$/'],
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:1000'
         ], [
@@ -57,10 +57,12 @@ class ClientContactController extends Controller
             'email.required' => 'Email là bắt buộc.',
             'email.email' => 'Email không hợp lệ.',
             'email.max' => 'Email không được vượt quá :max ký tự.',
+            'email.dns' => 'Email phải thuộc một domain hợp lệ.',
 
             'phone.required' => 'Số điện thoại là bắt buộc.',
             'phone.string' => 'Số điện thoại phải là chuỗi ký tự.',
             'phone.max' => 'Số điện thoại không được vượt quá :max ký tự.',
+            'phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (bắt đầu bằng 0 hoặc +84, 10-11 số).',
 
             'subject.required' => 'Chủ đề là bắt buộc.',
             'subject.string' => 'Chủ đề phải là chuỗi ký tự.',

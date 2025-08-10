@@ -71,6 +71,8 @@
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Số điện thoại *</label>
                                     <div class="relative">
                                         <input type="tel" name="phone" id="phone" value="{{ old('phone') }}" 
+                                            pattern="^(0|\+84)([0-9]{9,10})$"
+                                            title="Vui lòng nhập số điện thoại Việt Nam hợp lệ (bắt đầu bằng 0 hoặc +84, 10-11 số)"
                                             class="w-full px-4 py-3 border {{ $errors->has('phone') ? 'border-red-500' : 'border-gray-300' }} rounded-lg focus:outline-none focus:border-custom-primary">
                                         @if($errors->has('phone'))
                                             <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500">
@@ -88,6 +90,8 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
                                 <div class="relative">
                                     <input type="email" name="email" id="email" value="{{ old('email') }}" 
+                                        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                        title="Vui lòng nhập địa chỉ email hợp lệ (ví dụ: example@domain.com)"
                                         class="w-full px-4 py-3 border {{ $errors->has('email') ? 'border-red-500' : 'border-gray-300' }} rounded-lg focus:outline-none focus:border-custom-primary">
                                     @if($errors->has('email'))
                                         <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500">

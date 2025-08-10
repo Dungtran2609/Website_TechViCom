@@ -50,6 +50,13 @@ class AdminContactsController extends Controller
     public function destroy($id)
     {
         $contact = Contact::findOrFail($id);
+        
+        // Chỉ cho phép xóa liên hệ có trạng thái 'responded' hoặc 'rejected'
+        if (!in_array($contact->status, ['responded', 'rejected'])) {
+            return redirect()->route('admin.contacts.index')
+                ->with('error', 'Chỉ có thể xóa liên hệ đã được phản hồi hoặc bị từ chối.');
+        }
+        
         $contact->delete();
 
         return redirect()->route('admin.contacts.index')
@@ -85,7 +92,7 @@ class AdminContactsController extends Controller
         // Cập nhật
         $contact->update([
             'status' => $newStatus,
-            'handled_by' => auth()->id(),
+            'handled_by' => auth()->user()->id,
             'responded_at' => in_array($newStatus, ['responded', 'rejected']) ? now() : null,
         ]);
         // dd($contact->toArray());

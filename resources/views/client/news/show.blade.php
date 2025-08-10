@@ -132,16 +132,22 @@
                     <div class="border-t pt-6 mt-6">
                         <h2 class="text-xl font-bold mb-4 text-[#0052cc]">Bình luận bài viết</h2>
                         <div class="mb-6">
-                            <form method="POST" action="{{ route('client.news-comments.store', $news->id) }}">
-                                @csrf
-                                <textarea name="content" rows="3" maxlength="3000" class="w-full border rounded-lg p-3 mb-2"
-                                    placeholder="Nội dung bình luận"></textarea>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs text-gray-500">0/3000</span>
-                                    <button type="submit"
-                                        class="px-6 py-2 bg-[#ff6c2f] text-white rounded font-semibold shadow hover:bg-[#e55a28] transition">Gửi</button>
+                            @auth
+                                <form method="POST" action="{{ route('client.news-comments.store', $news->id) }}">
+                                    @csrf
+                                    <textarea name="content" rows="3" maxlength="3000" class="w-full border rounded-lg p-3 mb-2"
+                                        placeholder="Nội dung bình luận"></textarea>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-gray-500">0/3000</span>
+                                        <button type="submit"
+                                            class="px-6 py-2 bg-[#ff6c2f] text-white rounded font-semibold shadow hover:bg-[#e55a28] transition">Gửi</button>
+                                    </div>
+                                </form>
+                            @else
+                                <div class="bg-gray-100 rounded-lg p-4 text-center">
+                                    <p class="text-gray-600 mb-2">Vui lòng <a href="{{ route('login') }}" class="text-[#0052cc] hover:underline">đăng nhập</a> để bình luận</p>
                                 </div>
-                            </form>
+                            @endauth
                         </div>
                         <div>
                             <h3 class="text-base font-bold mb-4">{{ $news->comments->count() }} Bình luận</h3>
@@ -164,32 +170,42 @@
                                             </div>
                                             <div class="ml-11 bg-gray-100 rounded-lg p-3">{{ $comment->content }}</div>
                                             <div class="ml-11 flex gap-4 mt-2 text-xs">
-                                                <form method="POST"
-                                                    action="{{ route('client.news-comments.like', $comment->id) }}">
-                                                    @csrf
-                                                    @php
-                                                        $sessionKey = 'liked_comment_' . $comment->id;
-                                                        $liked = session()->has($sessionKey);
-                                                    @endphp
-                                                    <button type="submit"
-                                                        class="flex items-center gap-1 font-semibold {{ $liked ? 'text-blue-600 cursor-not-allowed' : 'text-gray-400' }}"
-                                                        {{ $liked ? 'disabled' : '' }}>
+                                                @auth
+                                                    <form method="POST"
+                                                        action="{{ route('client.news-comments.like', $comment->id) }}">
+                                                        @csrf
+                                                        @php
+                                                            $sessionKey = 'liked_comment_' . $comment->id;
+                                                            $liked = session()->has($sessionKey);
+                                                        @endphp
+                                                        <button type="submit"
+                                                            class="flex items-center gap-1 font-semibold {{ $liked ? 'text-blue-600 cursor-not-allowed' : 'text-gray-400' }}"
+                                                            {{ $liked ? 'disabled' : '' }}>
+                                                            <i class="far fa-thumbs-up"></i> {{ $comment->likes_count ?? 0 }}
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc]">
                                                         <i class="far fa-thumbs-up"></i> {{ $comment->likes_count ?? 0 }}
-                                                    </button>
-                                                </form>
-                                                <button class="text-[#0052cc] font-semibold reply-toggle-btn" type="button"
-                                                    data-comment-id="{{ $comment->id }}">Trả lời</button>
+                                                    </a>
+                                                @endauth
+                                                @auth
+                                                    <button class="text-[#0052cc] font-semibold reply-toggle-btn" type="button"
+                                                        data-comment-id="{{ $comment->id }}">Trả lời</button>
+                                                @endauth
                                             </div>
-                                            <div class="reply-form mt-3 ml-11" id="replyForm{{ $comment->id }}"
-                                                style="display:none;">
-                                                <form method="POST"
-                                                    action="{{ route('client.news-comments.reply', $comment->id) }}">
-                                                    @csrf
-                                                    <textarea name="content" rows="2" class="w-full border rounded-lg p-2 mb-2" placeholder="Nhập phản hồi..."></textarea>
-                                                    <button type="submit"
-                                                        class="px-4 py-1 bg-[#0052cc] text-white rounded font-semibold shadow hover:bg-[#ff6c2f] transition">Gửi</button>
-                                                </form>
-                                            </div>
+                                            @auth
+                                                <div class="reply-form mt-3 ml-11" id="replyForm{{ $comment->id }}"
+                                                    style="display:none;">
+                                                    <form method="POST"
+                                                        action="{{ route('client.news-comments.reply', $comment->id) }}">
+                                                        @csrf
+                                                        <textarea name="content" rows="2" class="w-full border rounded-lg p-2 mb-2" placeholder="Nhập phản hồi..."></textarea>
+                                                        <button type="submit"
+                                                            class="px-4 py-1 bg-[#0052cc] text-white rounded font-semibold shadow hover:bg-[#ff6c2f] transition">Gửi</button>
+                                                    </form>
+                                                </div>
+                                            @endauth
                                             @push('scripts')
                                                 <script>
                                                     // Toggle reply form: chỉ hiện 1 form tại 1 thời điểm
@@ -226,21 +242,28 @@
                                                                 @endif
                                                                 <span class="font-semibold">{{ $reply->user->name ?? 'Ẩn danh' }}</span>
                                                                 <span class="text-xs text-gray-500">{{ $reply->created_at ? $reply->created_at->locale('vi')->diffForHumans() : '' }}</span>
-                                                                <form method="POST"
-                                                                    action="{{ route('client.news-comments.like', $reply->id) }}"
-                                                                    class="ml-2">
-                                                                    @csrf
-                                                                    @php
-                                                                        $sessionKey = 'liked_comment_' . $reply->id;
-                                                                        $liked = session()->has($sessionKey);
-                                                                    @endphp
-                                                                    <button type="submit"
-                                                                        class="flex items-center gap-1 font-semibold {{ $liked ? 'text-blue-600 cursor-not-allowed' : 'text-gray-400' }}"
-                                                                        {{ $liked ? 'disabled' : '' }}>
+                                                                @auth
+                                                                    <form method="POST"
+                                                                        action="{{ route('client.news-comments.like', $reply->id) }}"
+                                                                        class="ml-2">
+                                                                        @csrf
+                                                                        @php
+                                                                            $sessionKey = 'liked_comment_' . $reply->id;
+                                                                            $liked = session()->has($sessionKey);
+                                                                        @endphp
+                                                                        <button type="submit"
+                                                                            class="flex items-center gap-1 font-semibold {{ $liked ? 'text-blue-600 cursor-not-allowed' : 'text-gray-400' }}"
+                                                                            {{ $liked ? 'disabled' : '' }}>
+                                                                            <i class="far fa-thumbs-up"></i>
+                                                                            {{ $reply->likes_count ?? 0 }}
+                                                                        </button>
+                                                                    </form>
+                                                                @else
+                                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc] ml-2">
                                                                         <i class="far fa-thumbs-up"></i>
                                                                         {{ $reply->likes_count ?? 0 }}
-                                                                    </button>
-                                                                </form>
+                                                                    </a>
+                                                                @endauth
                                                             </div>
                                                             <div class="ml-8 bg-gray-50 rounded-lg p-2">
                                                                 {{ $reply->content }}</div>

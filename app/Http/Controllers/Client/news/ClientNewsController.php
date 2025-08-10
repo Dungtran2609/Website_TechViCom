@@ -80,7 +80,7 @@ class ClientNewsController extends Controller
 		]);
 		$news = News::findOrFail($id);
 		$comment = $news->comments()->create([
-			'user_id' => auth()->id() ?? null,
+			'user_id' => auth()->id(),
 			'content' => $request->input('content'),
 			'parent_id' => null,
 		]);
@@ -108,7 +108,7 @@ class ClientNewsController extends Controller
 		]);
 		$parent = \App\Models\NewsComment::findOrFail($id);
 		$reply = $parent->news->comments()->create([
-			'user_id' => auth()->id() ?? null,
+			'user_id' => auth()->id(),
 			'content' => $request->input('content'),
 			'parent_id' => $parent->id,
 		]);

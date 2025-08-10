@@ -383,10 +383,12 @@ Route::prefix('client')->name('client.')->group(function () {
     // Tin tức
     Route::get('/tin-tuc', [ClientNewsController::class, 'index'])->name('news.index');
     Route::get('/tin-tuc/{id}', [ClientNewsController::class, 'show'])->name('news.show');
-    // Bình luận bài viết (client)
-    Route::post('/tin-tuc/{id}/comment', [ClientNewsController::class, 'storeComment'])->name('news-comments.store');
-    Route::post('/tin-tuc/comment/{id}/like', [ClientNewsController::class, 'likeComment'])->name('news-comments.like');
-    Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
+    // Bình luận bài viết (client) - yêu cầu đăng nhập
+    Route::middleware('auth')->group(function() {
+        Route::post('/tin-tuc/{id}/comment', [ClientNewsController::class, 'storeComment'])->name('news-comments.store');
+        Route::post('/tin-tuc/comment/{id}/like', [ClientNewsController::class, 'likeComment'])->name('news-comments.like');
+        Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
+    });
 });
 
 // API Routes

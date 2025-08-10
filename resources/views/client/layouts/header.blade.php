@@ -8,113 +8,111 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         #cart-items-container {
             flex: 1;
             overflow-y: auto;
         }
-        
+
         /* Category Dropdown Styles */
         #categoryDropdown {
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(10px);
         }
-        
+
         /* Account Dropdown Styles */
         #accountDropdown {
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
-        
+
         /* Animation for cart items */
         .cart-item-enter {
             animation: slideInRight 0.3s ease-out;
         }
-        
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
             }
         }
-        
+
         /* Improved hover effects */
         .category-item:hover {
             transform: translateY(-2px);
             transition: all 0.2s ease;
         }
-        
+
         /* Mobile responsive */
         @media (max-width: 768px) {
             #cart-sidebar {
                 width: 100vw;
             }
-            
+
             #categoryDropdown {
                 width: 95vw;
                 left: 2.5vw !important;
                 max-width: none;
             }
-            
+
             #accountDropdown {
                 width: 280px;
                 right: 1rem !important;
                 left: auto !important;
             }
-            
+
             .container {
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
-            
-            /* Hide text labels on mobile */
+
             .mobile-hide-text {
                 display: none;
             }
-            
-            /* Header responsive adjustments */
+
             .container {
                 padding-left: 0.5rem;
                 padding-right: 0.5rem;
             }
-            
-            /* Mobile search input */
+
             input[type="text"] {
-                font-size: 16px; /* Prevent zoom on iOS */
+                font-size: 16px;
             }
         }
-        
+
         @media (max-width: 640px) {
             #categoryDropdown .grid-cols-2 {
                 grid-template-columns: 1fr;
             }
-            
-            /* Mobile header adjustments */
+
             .container {
                 padding-left: 0.25rem;
                 padding-right: 0.25rem;
             }
         }
     </style>
-    
+
     <!-- Main header -->
     <div class="container mx-auto px-4 py-3">
-        
         <div class="flex items-center justify-between flex-wrap lg:flex-nowrap gap-4">
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
                 <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom" class="w-10 h-10 rounded-lg mr-3 object-cover">
+                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom"
+                        class="w-10 h-10 rounded-lg mr-3 object-cover">
                     <span class="text-xl font-bold text-gray-800">Techvicom</span>
                 </a>
             </div>
 
             <!-- Category Menu Button -->
             <div class="ml-2 lg:ml-6">
-                <button id="categoryMenuBtn" class="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-orange-300 rounded-lg hover:bg-orange-50 transition">
+                <button id="categoryMenuBtn"
+                    class="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-orange-300 rounded-lg hover:bg-orange-50 transition">
                     <i class="fas fa-bars text-gray-600"></i>
                     <span class="hidden sm:inline text-gray-700 font-medium">Danh mục</span>
                 </button>
@@ -123,11 +121,10 @@
             <!-- Search bar -->
             <div class="flex-1 max-w-2xl mx-2 lg:mx-6 w-full lg:w-auto">
                 <div class="relative">
-                    <input type="text" 
-                           id="header-search-input"
-                           placeholder="Nhập để tìm kiếm sản phẩm..." 
-                           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
-                    <button id="header-search-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500">
+                    <input type="text" id="header-search-input" placeholder="Nhập để tìm kiếm sản phẩm..."
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
+                    <button id="header-search-btn"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
@@ -136,20 +133,23 @@
             <!-- Right side buttons -->
             <div class="flex items-center space-x-2 lg:space-x-3">
                 @auth
-                @if(Auth::user()->hasRole(['admin', 'staff']))
-                <!-- Admin/Staff Quick Access Button -->
-                <div class="relative">
-                    <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" title="Quản trị hệ thống">
-                        <i class="fas fa-cogs"></i>
-                        <span class="hidden lg:inline font-medium">Quản trị</span>
-                    </a>
-                </div>
-                @endif
+                    @if(Auth::user()->hasRole(['admin', 'staff']))
+                        <!-- Admin/Staff Quick Access Button -->
+                        <div class="relative">
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                title="Quản trị hệ thống">
+                                <i class="fas fa-cogs"></i>
+                                <span class="hidden lg:inline font-medium">Quản trị</span>
+                            </a>
+                        </div>
+                    @endif
                 @endauth
-                
+
                 <!-- Account Button with Dropdown -->
                 <div class="relative">
-                    <button id="accountMenuBtn" class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+                    <button id="accountMenuBtn"
+                        class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
                         <i class="fas fa-user"></i>
                         <span class="hidden lg:inline font-medium">
                             @auth
@@ -160,94 +160,104 @@
                         </span>
                         <i class="fas fa-chevron-down ml-1 text-sm"></i>
                     </button>
-                    
+
                     <!-- Account Dropdown Menu -->
-                    <div id="accountDropdown" class="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+                    <div id="accountDropdown"
+                        class="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
                         @guest
-                        <!-- Logged out state -->
-                        <div class="p-4">
-                            <div class="text-center mb-4">
-                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                    <i class="fas fa-user text-gray-400 text-2xl"></i>
+                            <!-- Logged out state -->
+                            <div class="p-4">
+                                <div class="text-center mb-4">
+                                    <div
+                                        class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i class="fas fa-user text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Đăng nhập để trải nghiệm đầy đủ</p>
                                 </div>
-                                <p class="text-gray-600 text-sm">Đăng nhập để trải nghiệm đầy đủ</p>
+                                <div class="space-y-2">
+                                    <a href="{{ route('login') }}"
+                                        class="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">Đăng
+                                        nhập</a>
+                                    <a href="{{ route('register') }}"
+                                        class="block w-full text-center border border-orange-500 text-orange-500 py-2 rounded-lg hover:bg-orange-50 transition">Đăng
+                                        ký</a>
+                                </div>
                             </div>
-                            <div class="space-y-2">
-                                <a href="{{ route('login') }}" class="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">
-                                    Đăng nhập
-                                </a>
-                                <a href="{{ route('register') }}" class="block w-full text-center border border-orange-500 text-orange-500 py-2 rounded-lg hover:bg-orange-50 transition">
-                                    Đăng ký
-                                </a>
-                            </div>
-                        </div>
                         @else
-                        <!-- Logged in state -->
-                        <div>
-                            <div class="p-4 border-b border-gray-200">
-                                <div class="flex items-center">
-                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                                        <i class="fas fa-user text-orange-500"></i>
-                                    </div>
-                                    <div>
-                                        <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
-                                        <p class="text-sm text-gray-500">
-                                            @if(Auth::user()->hasRole('admin'))
-                                                Quản trị viên
-                                            @elseif(Auth::user()->hasRole('staff'))
-                                                Nhân viên
-                                            @else
-                                                Khách hàng thân thiết
-                                            @endif
-                                        </p>
+                            <!-- Logged in state -->
+                            <div>
+                                <div class="p-4 border-b border-gray-200">
+                                    <div class="flex items-center">
+                                        <div
+                                            class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-user text-orange-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
+                                            <p class="text-sm text-gray-500">
+                                                @if(Auth::user()->hasRole('admin'))
+                                                    Quản trị viên
+                                                @elseif(Auth::user()->hasRole('staff'))
+                                                    Nhân viên
+                                                @else
+                                                    Khách hàng thân thiết
+                                                @endif
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="p-2">
+                                    @if(Auth::user()->hasRole(['admin', 'staff']))
+                                        <a href="{{ route('admin.dashboard') }}"
+                                            class="flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                                            <i class="fas fa-cogs mr-3 text-blue-500"></i>
+                                            Quản trị hệ thống
+                                        </a>
+                                        <div class="border-t border-gray-200 my-2"></div>
+                                    @endif
+
+                                    <a href="{{ route('accounts.index') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-user-circle mr-3 text-gray-400"></i>
+                                        Thông tin tài khoản
+                                    </a>
+
+                                    <a href="{{ route('accounts.orders') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-shopping-bag mr-3 text-gray-400"></i>
+                                        Đơn hàng của tôi
+                                    </a>
+
+                                    <a href="{{ route('accounts.addresses') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-map-marker-alt mr-3 text-gray-400"></i>
+                                        Địa chỉ giao hàng
+                                    </a>
+
+                                    <div class="border-t border-gray-200 my-2"></div>
+                                    <form action="{{ route('logout') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <button type="submit"
+                                            class="flex items-center w-full px-3 py-2 text-[#ff6c2f] hover:bg-orange-50 rounded-lg transition">
+                                            <i class="fas fa-sign-out-alt mr-3"></i>
+                                            Đăng xuất
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="p-2">
-                                @if(Auth::user()->hasRole(['admin', 'staff']))
-                                <!-- Admin/Staff access -->
-                                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
-                                    <i class="fas fa-cogs mr-3 text-blue-500"></i>
-                                    Quản trị hệ thống
-                                </a>
-                                <div class="border-t border-gray-200 my-2"></div>
-                                @endif
-                                
-                                <a href="{{ route('accounts.index') }}" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
-                                    <i class="fas fa-user-circle mr-3 text-gray-400"></i>
-                                    Thông tin tài khoản
-                                </a>
-                                
-                                <a href="{{ route('accounts.orders') }}" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
-                                    <i class="fas fa-shopping-bag mr-3 text-gray-400"></i>
-                                    Đơn hàng của tôi
-                                </a>
-                                
-                                <a href="{{ route('accounts.addresses') }}" class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
-                                    <i class="fas fa-map-marker-alt mr-3 text-gray-400"></i>
-                                    Địa chỉ giao hàng
-                                </a>
-                                
-                                <div class="border-t border-gray-200 my-2"></div>
-                                <form action="{{ route('logout') }}" method="POST" class="w-full">
-                                    @csrf
-                                    <button type="submit" class="flex items-center w-full px-3 py-2 text-[#ff6c2f] hover:bg-orange-50 rounded-lg transition">
-                                        <i class="fas fa-sign-out-alt mr-3"></i>
-                                        Đăng xuất
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
                         @endguest
                     </div>
                 </div>
 
                 <!-- Cart -->
                 <div class="relative">
-                    <button id="cartMenuBtn" class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+                    <button id="cartMenuBtn"
+                        class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="hidden lg:inline font-medium">Giỏ hàng</span>
-                        <span class="absolute -top-2 -right-2 bg-[#ff6c2f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" id="cart-count">0</span>
+                        <span
+                            class="absolute -top-2 -right-2 bg-[#ff6c2f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                            id="cart-count">0</span>
                     </button>
                 </div>
             </div>
@@ -255,49 +265,56 @@
     </div>
 
     <!-- Category Dropdown Menu -->
-    <div id="categoryDropdown" class="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+    <div id="categoryDropdown"
+        class="absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
         <div class="p-4">
             <h3 class="font-semibold text-gray-800 mb-3 flex items-center">
                 <i class="fas fa-th-large text-orange-500 mr-2"></i>
                 Danh mục sản phẩm
             </h3>
             <div class="grid grid-cols-2 gap-2">
-                <a href="{{ route('products.index') }}?category=phone" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=phone" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-mobile-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Điện thoại</span>
                         <p class="text-xs text-gray-500">iPhone, Samsung...</p>
                     </div>
                 </a>
-                <a href="{{ route('products.index') }}?category=laptop" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=laptop" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-laptop text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Laptop</span>
                         <p class="text-xs text-gray-500">MacBook, Dell...</p>
                     </div>
                 </a>
-                <a href="{{ route('products.index') }}?category=tablet" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=tablet" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-tablet-alt text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Tablet</span>
                         <p class="text-xs text-gray-500">iPad, Galaxy Tab...</p>
                     </div>
                 </a>
-                <a href="{{ route('products.index') }}?category=audio" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=audio" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-headphones text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Âm thanh</span>
                         <p class="text-xs text-gray-500">Tai nghe, Loa...</p>
                     </div>
                 </a>
-                <a href="{{ route('products.index') }}?category=watch" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=watch" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-clock text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Đồng hồ</span>
                         <p class="text-xs text-gray-500">Apple Watch, Galaxy Watch...</p>
                     </div>
                 </a>
-                <a href="{{ route('products.index') }}?category=accessory" onclick="return true;" class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
+                <a href="{{ route('products.index') }}?category=accessory" onclick="return true;"
+                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                     <i class="fas fa-gamepad text-orange-500 mr-3 group-hover:scale-110 transition-transform"></i>
                     <div>
                         <span class="text-gray-700 font-medium">Gaming</span>
@@ -305,7 +322,7 @@
                     </div>
                 </a>
             </div>
-            
+
             <!-- Quick Links -->
             <div class="border-t border-gray-200 mt-4 pt-4">
                 <div class="flex justify-between text-sm">
@@ -324,7 +341,8 @@
 </header>
 
 <!-- Cart Sidebar -->
-<div id="cart-sidebar" class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50">
+<div id="cart-sidebar"
+    class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50">
     <!-- Sidebar Header -->
     <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-900">
@@ -338,14 +356,20 @@
 
     <!-- Cart Items -->
     <div class="flex-1 overflow-y-auto p-4" id="cart-items-container">
-        <div id="cart-bulk-bar" class="hidden mb-3 px-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm flex items-center justify-between">
+        <div id="cart-bulk-bar"
+            class="hidden mb-3 px-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm flex items-center justify-between">
             <label class="flex items-center space-x-2">
-                <input type="checkbox" id="sidebar-select-all" class="w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]">
+                <input type="checkbox" id="sidebar-select-all"
+                    class="w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]">
                 <span>Chọn tất cả</span>
             </label>
             <div class="flex items-center space-x-2">
-                <button id="sidebar-delete-selected" class="px-3 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 text-xs disabled:opacity-40" disabled>Xóa</button>
-                <button id="sidebar-buy-selected" class="px-3 py-1 rounded bg-[#ff6c2f] text-white hover:bg-[#e55a28] text-xs disabled:opacity-40" disabled>Mua</button>
+                <button id="sidebar-delete-selected"
+                    class="px-3 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 text-xs disabled:opacity-40"
+                    disabled>Xóa</button>
+                <button id="sidebar-buy-selected"
+                    class="px-3 py-1 rounded bg-[#ff6c2f] text-white hover:bg-[#e55a28] text-xs disabled:opacity-40"
+                    disabled>Mua</button>
             </div>
         </div>
         <!-- Empty cart state -->
@@ -355,15 +379,14 @@
             </div>
             <h4 class="text-gray-600 font-medium mb-2">Giỏ hàng trống</h4>
             <p class="text-gray-500 text-sm mb-4">Thêm sản phẩm vào giỏ hàng để bắt đầu mua sắm</p>
-            <button onclick="window.location.href='{{ route('home') }}'" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+            <button onclick="window.location.href='{{ route('home') }}'"
+                class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
                 Tiếp tục mua sắm
             </button>
         </div>
 
         <!-- Cart items will be loaded here -->
-        <div id="cart-items-list" class="space-y-4 hidden">
-            <!-- Items will be dynamically added here -->
-        </div>
+        <div id="cart-items-list" class="space-y-4 hidden"></div>
     </div>
 
     <!-- Cart Footer -->
@@ -372,20 +395,28 @@
         <div id="sidebar-coupon-box" class="mb-3">
             <div class="flex items-center justify-between mb-1">
                 <label class="block text-xs font-medium text-gray-600">Mã giảm giá</label>
-                <button type="button" onclick="toggleCouponList()" class="text-[10px] text-[#ff6c2f] underline" id="toggle-coupon-list-btn">Danh sách</button>
+                <button type="button" onclick="toggleCouponList()" class="text-[10px] text-[#ff6c2f] underline"
+                    id="toggle-coupon-list-btn">Danh sách</button>
             </div>
             <div class="flex space-x-2 mb-1">
-                <input type="text" id="sidebar-coupon-code" placeholder="Nhập mã" class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#ff6c2f]">
-                <button type="button" onclick="applySidebarCoupon()" class="px-3 py-1 bg-[#ff6c2f] text-white text-xs rounded hover:bg-[#e55a28]">Áp dụng</button>
-                <button type="button" onclick="clearSidebarCoupon()" class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300" title="Hủy">×</button>
+                <input type="text" id="sidebar-coupon-code" placeholder="Nhập mã"
+                    class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#ff6c2f]">
+                <button type="button" onclick="applySidebarCoupon()"
+                    class="px-3 py-1 bg-[#ff6c2f] text-white text-xs rounded hover:bg-[#e55a28]">Áp dụng</button>
+                <button type="button" onclick="clearSidebarCoupon()"
+                    class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300" title="Hủy">×</button>
             </div>
             <p id="sidebar-coupon-message" class="text-xs mt-1"></p>
-            <div id="available-coupons" class="mt-2 space-y-2 hidden max-h-40 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs"></div>
+            <div id="available-coupons"
+                class="mt-2 space-y-2 hidden max-h-40 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+            </div>
         </div>
+
         <div id="sidebar-discount-row" class="flex justify-between items-center mb-2 hidden">
             <span class="text-gray-600">Giảm giá:</span>
             <span class="text-sm font-semibold text-green-600" id="sidebar-discount-amount">-0₫</span>
         </div>
+
         <!-- Subtotal (after discount) -->
         <div class="flex justify-between items-center mb-4">
             <span class="text-gray-600">Tạm tính:</span>
@@ -394,12 +425,17 @@
 
         <!-- Action Buttons -->
         <div class="space-y-2">
-            <button onclick="window.location.href='{{ route('carts.index') }}'" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition">
+            <button onclick="window.location.href='{{ route('carts.index') }}'"
+                class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition">
                 Xem giỏ hàng
             </button>
-                <button onclick="handleSidebarCheckout()" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition">
-                    Thanh toán ngay
-                </button>
+
+            <!-- Nút đã chỉnh: disable khi chưa chọn -->
+            <button id="sidebar-checkout-now"
+                class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled>
+                Thanh toán ngay
+            </button>
         </div>
     </div>
 </div>
@@ -408,198 +444,161 @@
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Cart sidebar functionality
-    const cartBtn = document.getElementById('cartMenuBtn');
-    const cartSidebar = document.getElementById('cart-sidebar');
-    const cartOverlay = document.getElementById('cart-overlay');
-    const closeCartBtn = document.getElementById('close-cart-sidebar');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cart sidebar elements
+        const cartBtn = document.getElementById('cartMenuBtn');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const closeCartBtn = document.getElementById('close-cart-sidebar');
 
-    // Category dropdown functionality
-    const categoryBtn = document.getElementById('categoryMenuBtn');
-    const categoryDropdown = document.getElementById('categoryDropdown');
+        // Category dropdown
+        const categoryBtn = document.getElementById('categoryMenuBtn');
+        const categoryDropdown = document.getElementById('categoryDropdown');
 
-    // Account dropdown functionality
-    const accountBtn = document.getElementById('accountMenuBtn');
-    const accountDropdown = document.getElementById('accountDropdown');
+        // Account dropdown
+        const accountBtn = document.getElementById('accountMenuBtn');
+        const accountDropdown = document.getElementById('accountDropdown');
 
-    // Open cart sidebar
-    cartBtn.addEventListener('click', function() {
-        cartSidebar.classList.remove('translate-x-full');
-        cartOverlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    });
-
-    // Close cart sidebar
-    function closeCartSidebar() {
-        cartSidebar.classList.add('translate-x-full');
-        cartOverlay.classList.add('hidden');
-        document.body.style.overflow = '';
-    }
-
-    closeCartBtn.addEventListener('click', closeCartSidebar);
-    cartOverlay.addEventListener('click', closeCartSidebar);
-
-    // Category dropdown
-    categoryBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        categoryDropdown.classList.toggle('hidden');
-        accountDropdown.classList.add('hidden');
-    });
-
-    // Account dropdown
-    accountBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        accountDropdown.classList.toggle('hidden');
-        categoryDropdown.classList.add('hidden');
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
-        categoryDropdown.classList.add('hidden');
-        accountDropdown.classList.add('hidden');
-    });
-
-    // Prevent dropdown from closing when clicking inside
-    categoryDropdown.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    accountDropdown.addEventListener('click', function(e) {
-        e.stopPropagation();
-    });
-
-    // Load cart items
-    loadCartItems();
-
-    // Watch coupon input changes: if user xóa hoặc sửa khác mã đã áp dụng -> hủy giảm giá
-    const couponInput = document.getElementById('sidebar-coupon-code');
-    if (couponInput) {
-        couponInput.addEventListener('input', () => {
-            try {
-                const saved = JSON.parse(localStorage.getItem('appliedDiscount')||'null');
-                if (!couponInput.value.trim() || (saved && saved.code && couponInput.value.trim().toUpperCase() !== saved.code.toUpperCase())) {
-                    localStorage.removeItem('appliedDiscount');
-                    const msg = document.getElementById('sidebar-coupon-message');
-                    if (msg) { msg.textContent = couponInput.value.trim() ? 'Nhập mã giảm giá' : ''; msg.className='text-xs mt-1 text-gray-500'; }
-                    recalcSelectedSubtotal();
-                }
-            } catch(e){}
+        // Open cart sidebar
+        cartBtn.addEventListener('click', function () {
+            cartSidebar.classList.remove('translate-x-full');
+            cartOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         });
-    }
 
-    // Update authentication state on load
-    @auth
-    updateAuthenticationUI(true, {
-        name: '{{ Auth::user()->name }}',
-        isAdmin: {{ Auth::user()->hasRole(['admin', 'staff']) ? 'true' : 'false' }}
-    });
-    @else
-    updateAuthenticationUI(false);
-    @endauth
-
-    // Header search functionality
-    const headerSearchInput = document.getElementById('header-search-input');
-    const headerSearchBtn = document.getElementById('header-search-btn');
-
-    function performHeaderSearch() {
-        const searchTerm = headerSearchInput.value.trim();
-        if (searchTerm) {
-            window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(searchTerm)}`;
+        // Close cart sidebar
+        function closeCartSidebar() {
+            cartSidebar.classList.add('translate-x-full');
+            cartOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
         }
-    }
+        window.closeCartSidebar = closeCartSidebar; // expose
 
-    if (headerSearchBtn) {
-        headerSearchBtn.addEventListener('click', performHeaderSearch);
-    }
+        closeCartBtn.addEventListener('click', closeCartSidebar);
+        cartOverlay.addEventListener('click', closeCartSidebar);
 
-    if (headerSearchInput) {
-        headerSearchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performHeaderSearch();
-            }
+        // Category dropdown
+        categoryBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            categoryDropdown.classList.toggle('hidden');
+            accountDropdown.classList.add('hidden');
         });
-    }
-});
 
-function updateAuthenticationUI(isLoggedIn, userData = null) {
-    // This function can be used for dynamic updates if needed
-    // Currently, the UI is handled by Blade directives
-    console.log('Authentication state:', isLoggedIn ? 'logged in' : 'logged out');
-    if (userData) {
-        console.log('User data:', userData);
-    }
-}
+        // Account dropdown
+        accountBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            accountDropdown.classList.toggle('hidden');
+            categoryDropdown.classList.add('hidden');
+        });
 
-function loadCartItems() {
-    // Load cart items via AJAX for both auth and guest users
-    console.log('Loading cart items...');
-    
-    fetch('{{ route("carts.count") }}')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Cart count response:', data);
-            document.getElementById('cart-count').textContent = data.count || 0;
-            
-            // Also load cart items for sidebar
-            return fetch('{{ route("carts.index") }}', {
-                headers: {
-                    'Accept': 'application/json'
-                }
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function () {
+            categoryDropdown.classList.add('hidden');
+            accountDropdown.classList.add('hidden');
+        });
+
+        // Prevent dropdown closing on inside click
+        categoryDropdown.addEventListener('click', e => e.stopPropagation());
+        accountDropdown.addEventListener('click', e => e.stopPropagation());
+
+        // Load cart
+        loadCartItems();
+
+        // Watch coupon input: nếu sửa khác mã đã áp dụng -> hủy giảm giá
+        const couponInput = document.getElementById('sidebar-coupon-code');
+        if (couponInput) {
+            couponInput.addEventListener('input', () => {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('appliedDiscount') || 'null');
+                    if (!couponInput.value.trim() || (saved && saved.code && couponInput.value.trim().toUpperCase() !== saved.code.toUpperCase())) {
+                        localStorage.removeItem('appliedDiscount');
+                        const msg = document.getElementById('sidebar-coupon-message');
+                        if (msg) { msg.textContent = couponInput.value.trim() ? 'Nhập mã giảm giá' : ''; msg.className = 'text-xs mt-1 text-gray-500'; }
+                        recalcSelectedSubtotal();
+                    }
+                } catch (e) { }
             });
-        })
-        .then(response => {
-            console.log('Cart items response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Cart items data:', data);
-            if (data.success && data.items) {
-                updateCartDisplay(data.items);
-            } else {
-                console.error('Invalid cart data structure:', data);
-                updateCartDisplay([]);
-            }
-        })
-        .catch(error => {
-            console.error('Error loading cart:', error);
-            // Fallback - just update count
-            updateCartCount();
-        });
-}
+        }
 
-function updateCartDisplay(items) {
-    console.log('updateCartDisplay called with items:', items);
-    const emptyCart = document.getElementById('empty-cart');
-    const cartItemsList = document.getElementById('cart-items-list');
-    const cartFooter = document.getElementById('cart-footer');
+        // Bind nút "Thanh toán ngay" -> dùng handler chung, không inline
+        const checkoutNowBtn = document.getElementById('sidebar-checkout-now');
+        if (checkoutNowBtn) {
+            checkoutNowBtn.addEventListener('click', handleSidebarCheckout);
+        }
 
-    if (items.length === 0) {
-        console.log('No items in cart, showing empty state');
-        emptyCart.classList.remove('hidden');
-        cartItemsList.classList.add('hidden');
-        cartFooter.classList.add('hidden');
-    } else {
-        console.log('Cart has items, showing cart content');
+        // Search
+        const headerSearchInput = document.getElementById('header-search-input');
+        const headerSearchBtn = document.getElementById('header-search-btn');
+        function performHeaderSearch() {
+            const searchTerm = headerSearchInput.value.trim();
+            if (searchTerm) {
+                window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(searchTerm)}`;
+            }
+        }
+        if (headerSearchBtn) headerSearchBtn.addEventListener('click', performHeaderSearch);
+        if (headerSearchInput) headerSearchInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') performHeaderSearch(); });
+    });
+
+    // Auth UI (log only)
+    function updateAuthenticationUI(isLoggedIn, userData = null) {
+        console.log('Authentication state:', isLoggedIn ? 'logged in' : 'logged out');
+        if (userData) console.log('User data:', userData);
+    }
+
+    function loadCartItems() {
+        console.log('Loading cart items...');
+        fetch('{{ route("carts.count") }}')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('cart-count').textContent = data.count || 0;
+                return fetch('{{ route("carts.index") }}', { headers: { 'Accept': 'application/json' } });
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.items) {
+                    updateCartDisplay(data.items);
+                } else {
+                    console.error('Invalid cart data structure:', data);
+                    updateCartDisplay([]);
+                }
+            })
+            .catch(err => {
+                console.error('Error loading cart:', err);
+                updateCartCount();
+            });
+    }
+
+    function updateCartDisplay(items) {
+        const emptyCart = document.getElementById('empty-cart');
+        const cartItemsList = document.getElementById('cart-items-list');
+        const cartFooter = document.getElementById('cart-footer');
+
+        if (items.length === 0) {
+            emptyCart.classList.remove('hidden');
+            cartItemsList.classList.add('hidden');
+            cartFooter.classList.add('hidden');
+            return;
+        }
+
         emptyCart.classList.add('hidden');
         cartItemsList.classList.remove('hidden');
         cartFooter.classList.remove('hidden');
-    // Save items globally for coupon usage
-    window.currentCartItems = items;
-        
-        // Render cart items
+
+        // Save items globally for coupon & subtotal
+        window.currentCartItems = items;
+
         // Show bulk bar
         const bulkBar = document.getElementById('cart-bulk-bar');
         if (bulkBar) bulkBar.classList.remove('hidden');
 
-    // Keep previously selected ids before re-render
-    const previouslySelected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(cb => cb.value);
+        // Keep previously selected ids before re-render
+        const previouslySelected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(cb => cb.value);
 
-    cartItemsList.innerHTML = items.map(item => {
-            console.log('Rendering item:', item);
+        // Render items
+        cartItemsList.innerHTML = items.map(item => {
             const price = parseFloat(item.price) || 0;
             return `
             <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
@@ -626,392 +625,352 @@ function updateCartDisplay(items) {
             const cb = cartItemsList.querySelector(`.sidebar-item-checkbox[value="${id}"]`);
             if (cb) cb.checked = true;
         });
-        // Init events then recalc subtotal after restoring selection
+
+        // Init selection logic and recalc subtotal
         initSidebarSelection();
         recalcSelectedSubtotal();
     }
 
-function initSidebarSelection() {
-    const selectAll = document.getElementById('sidebar-select-all');
-    const itemCheckboxes = document.querySelectorAll('.sidebar-item-checkbox');
-    const deleteBtn = document.getElementById('sidebar-delete-selected');
-    const buyBtn = document.getElementById('sidebar-buy-selected');
-    if (!selectAll) return;
+    function initSidebarSelection() {
+        const selectAll = document.getElementById('sidebar-select-all');
+        const itemCheckboxes = document.querySelectorAll('.sidebar-item-checkbox');
+        const deleteBtn = document.getElementById('sidebar-delete-selected');
+        const buyBtn = document.getElementById('sidebar-buy-selected');
+        const checkoutNowBtn = document.getElementById('sidebar-checkout-now');
 
-    function updateState() {
-        const checked = Array.from(itemCheckboxes).filter(c => c.checked);
-        const any = checked.length > 0;
-        deleteBtn.disabled = !any;
-        buyBtn.disabled = !any;
-        if (checked.length === itemCheckboxes.length) selectAll.checked = true; else selectAll.checked = false;
-        // Recalculate subtotal based on selection
-        recalcSelectedSubtotal();
+        if (!selectAll) return;
+
+        function updateState() {
+            const checked = Array.from(itemCheckboxes).filter(c => c.checked);
+            const any = checked.length > 0;
+
+            deleteBtn.disabled = !any;
+            buyBtn.disabled = !any;
+            if (checkoutNowBtn) checkoutNowBtn.disabled = !any;
+
+            // Select all indicator
+            selectAll.checked = (itemCheckboxes.length > 0) && (checked.length === itemCheckboxes.length);
+
+            // Recalculate subtotal based on selection
+            recalcSelectedSubtotal();
+        }
+
+        selectAll.addEventListener('change', () => {
+            itemCheckboxes.forEach(c => c.checked = selectAll.checked);
+            updateState();
+        });
+        itemCheckboxes.forEach(c => c.addEventListener('change', updateState));
+
+        deleteBtn.addEventListener('click', () => {
+            const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
+            if (ids.length === 0) return;
+            if (!confirm('Xóa các sản phẩm đã chọn?')) return;
+            Promise.all(ids.map(id => fetch(`{{ url('/carts') }}/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(r => r.json()))).then(() => loadCartItems());
+        });
+
+        buyBtn.addEventListener('click', () => {
+            const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
+            if (ids.length === 0) return;
+            localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
+            window.location.href = '{{ route('checkout.index') }}?selected=1';
+        });
+
+        updateState(); // initialize state
     }
 
-    selectAll.addEventListener('change', () => {
-        itemCheckboxes.forEach(c => c.checked = selectAll.checked);
-        updateState();
-    });
-    itemCheckboxes.forEach(c => c.addEventListener('change', updateState));
+    function formatPrice(price) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    }
 
-    deleteBtn.addEventListener('click', () => {
-        const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
-        if (ids.length === 0) return;
-        if (!confirm('Xóa các sản phẩm đã chọn?')) return;
-        Promise.all(ids.map(id => fetch(`{{ url('/carts') }}/${id}`, {
+    function addToCart(productId, variantId = null, quantity = 1) {
+        const data = { product_id: productId, quantity: quantity, variant_id: variantId, _token: '{{ csrf_token() }}' };
+        fetch('{{ route("carts.add") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    loadCartItems();
+                    showNotification('Đã thêm sản phẩm vào giỏ hàng', 'success');
+                } else {
+                    showNotification(data.message || 'Có lỗi xảy ra', 'error');
+                }
+            })
+            .catch(() => showNotification('Có lỗi xảy ra', 'error'));
+    }
+
+    function updateCartQuantity(itemId, newQuantity) {
+        if (newQuantity < 1) { removeFromCart(itemId); return; }
+        fetch(`{{ url('/carts') }}/${itemId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ quantity: newQuantity })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
+                    if (qtySpan) qtySpan.textContent = newQuantity;
+                    if (Array.isArray(window.currentCartItems)) {
+                        const it = window.currentCartItems.find(i => String(i.id) === String(itemId));
+                        if (it) it.quantity = newQuantity;
+                    }
+                    recalcSelectedSubtotal();
+                } else {
+                    showNotification(data.message || 'Có lỗi xảy ra khi cập nhật', 'error');
+                }
+            })
+            .catch(() => showNotification('Có lỗi xảy ra khi cập nhật', 'error'));
+    }
+
+    function changeSidebarQuantity(itemId, delta) {
+        const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
+        if (!qtySpan) return;
+        const current = parseInt(qtySpan.textContent) || 0;
+        const next = current + delta;
+        updateCartQuantity(itemId, next);
+    }
+
+    function removeFromCart(itemId) {
+        fetch(`{{ url('/carts') }}/${itemId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
-        }).then(r => r.json()))).then(() => loadCartItems());
-    });
-
-    buyBtn.addEventListener('click', () => {
-        const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
-        if (ids.length === 0) return;
-        localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
-        window.location.href = '{{ route('checkout.index') }}?selected=1';
-    });
-
-    updateState();
-}
-}
-
-function formatPrice(price) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(price);
-}
-
-function addToCart(productId, variantId = null, quantity = 1) {
-    const data = {
-        product_id: productId,
-        quantity: quantity,
-        variant_id: variantId,
-        _token: '{{ csrf_token() }}'
-    };
-
-    fetch('{{ route("carts.add") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin', // Include cookies
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadCartItems();
-            // Show success message
-            showNotification('Đã thêm sản phẩm vào giỏ hàng', 'success');
-        } else {
-            showNotification(data.message || 'Có lỗi xảy ra', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Có lỗi xảy ra', 'error');
-    });
-}
-
-function updateCartQuantity(itemId, newQuantity) {
-    console.log('updateCartQuantity called with:', itemId, newQuantity);
-    
-    if (newQuantity < 1) {
-        removeFromCart(itemId);
-        return;
-    }
-    fetch(`{{ url('/carts') }}/${itemId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ quantity: newQuantity })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            // Inline update DOM & cached data instead of full reload
-            const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
-            if (qtySpan) qtySpan.textContent = newQuantity;
-            if (Array.isArray(window.currentCartItems)) {
-                const it = window.currentCartItems.find(i => String(i.id) === String(itemId));
-                if (it) it.quantity = newQuantity;
-            }
-            recalcSelectedSubtotal();
-        } else {
-            showNotification(data.message || 'Có lỗi xảy ra khi cập nhật', 'error');
-        }
-    })
-    .catch(err => { console.error(err); showNotification('Có lỗi xảy ra khi cập nhật', 'error'); });
-}
-
-function changeSidebarQuantity(itemId, delta) {
-    const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
-    if (!qtySpan) return;
-    const current = parseInt(qtySpan.textContent) || 0;
-    const next = current + delta;
-    updateCartQuantity(itemId, next);
-}
-
-function removeFromCart(itemId) {
-    console.log('removeFromCart called with:', itemId);
-    
-    fetch(`{{ url('/carts') }}/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin' // Include cookies
-    })
-    .then(response => {
-        console.log('Remove response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Remove response data:', data);
-        if (data.success) {
-            loadCartItems();
-            showNotification('Đã xóa sản phẩm khỏi giỏ hàng', 'success');
-        } else {
-            showNotification(data.message || 'Có lỗi xảy ra khi xóa', 'error');
-            // Show debug info if available
-            if (data.debug) {
-                console.error('Debug info:', data.debug);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error removing from cart:', error);
-        showNotification('Có lỗi xảy ra khi xóa', 'error');
-    });
-}
-
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-        type === 'success' ? 'bg-green-500' : 
-        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
-    } text-white`;
-    notification.textContent = message;
-
-    document.body.appendChild(notification);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-function updateCartCount() {
-    fetch('{{ route("carts.count") }}')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('cart-count').textContent = data.count || 0;
         })
-        .catch(error => console.error('Error updating cart count:', error));
-}
-
-// Make functions available globally
-window.loadCartItems = loadCartItems;
-window.updateCartCount = updateCartCount;
-window.closeCartSidebar = closeCartSidebar;
-window.showNotification = showNotification;
-window.applySidebarCoupon = applySidebarCoupon;
-window.toggleCouponList = toggleCouponList;
-window.clearSidebarCoupon = clearSidebarCoupon;
-window.recalcSelectedSubtotal = recalcSelectedSubtotal;
-window.handleSidebarCheckout = handleSidebarCheckout;
-// Global checkout handler (outside loadCartItems so button can call it immediately)
-function handleSidebarCheckout(){
-    const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c=>c.value);
-    if(selected.length>0){
-        localStorage.setItem('checkout_selected_items', JSON.stringify(selected));
-        window.location.href='{{ route('checkout.index') }}?selected=1';
-    } else {
-        localStorage.removeItem('checkout_selected_items');
-        window.location.href='{{ route('checkout.index') }}';
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    loadCartItems();
+                    showNotification('Đã xóa sản phẩm khỏi giỏ hàng', 'success');
+                } else {
+                    showNotification(data.message || 'Có lỗi xảy ra khi xóa', 'error');
+                    if (data.debug) console.error('Debug info:', data.debug);
+                }
+            })
+            .catch(() => showNotification('Có lỗi xảy ra khi xóa', 'error'));
     }
-}
 
-// Coupon apply function for sidebar
-function applySidebarCoupon() {
-    const codeInput = document.getElementById('sidebar-coupon-code');
-    const messageEl = document.getElementById('sidebar-coupon-message');
-    if (!codeInput) return;
-    const code = codeInput.value.trim();
-    if (!code) {
-        messageEl.textContent = 'Nhập mã giảm giá';
-        messageEl.className = 'text-xs mt-1 text-red-500';
-        return;
+    function showNotification(message, type = 'info') {
+        const el = document.createElement('div');
+        el.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } text-white`;
+        el.textContent = message;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
     }
-    // Calculate current raw subtotal from SELECTED items only
-    let subtotal = getSelectedRawSubtotal();
-    messageEl.textContent = 'Đang kiểm tra...';
-    messageEl.className = 'text-xs mt-1 text-gray-500';
-    fetch('/api/apply-coupon', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ coupon_code: code, subtotal: subtotal })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            const amount = data.discount_amount || 0;
-            localStorage.setItem('appliedDiscount', JSON.stringify({ 
-                code: code, 
-                amount: amount, 
-                details: {
-                    min_order_value: data.coupon.min_order_value || 0,
-                    max_order_value: data.coupon.max_order_value || 0,
-                    discount_type: data.coupon.discount_type,
-                    value: data.coupon.value
-                }, 
-                fromDatabase: true 
-            }));
-            messageEl.textContent = data.coupon && data.coupon.message ? data.coupon.message : 'Áp dụng thành công';
-            messageEl.className = 'text-xs mt-1 text-green-600';
-        } else {
-            localStorage.removeItem('appliedDiscount');
-            messageEl.textContent = data.message || 'Mã không hợp lệ';
+
+    function updateCartCount() {
+        fetch('{{ route("carts.count") }}')
+            .then(r => r.json())
+            .then(data => { document.getElementById('cart-count').textContent = data.count || 0; })
+            .catch(e => console.error('Error updating cart count:', e));
+    }
+
+    // ====== Coupon (sidebar) ======
+    function applySidebarCoupon() {
+        const codeInput = document.getElementById('sidebar-coupon-code');
+        const messageEl = document.getElementById('sidebar-coupon-message');
+        if (!codeInput) return;
+        const code = codeInput.value.trim();
+        if (!code) {
+            messageEl.textContent = 'Nhập mã giảm giá';
             messageEl.className = 'text-xs mt-1 text-red-500';
+            return;
         }
-        // Only recalc; don't rebuild list so selections stay
-        recalcSelectedSubtotal();
-    })
-    .catch(err => {
-        console.error('Coupon error', err);
-        messageEl.textContent = 'Lỗi áp dụng mã';
-        messageEl.className = 'text-xs mt-1 text-red-500';
-    });
-}
-
-function toggleCouponList() {
-    const box = document.getElementById('available-coupons');
-    if (!box) return;
-    if (box.classList.contains('hidden')) {
-        loadAvailableCoupons();
-        box.classList.remove('hidden');
-        document.getElementById('toggle-coupon-list-btn').textContent = 'Ẩn';
-    } else {
-        box.classList.add('hidden');
-        document.getElementById('toggle-coupon-list-btn').textContent = 'Danh sách';
+        let subtotal = getSelectedRawSubtotal();
+        messageEl.textContent = 'Đang kiểm tra...';
+        messageEl.className = 'text-xs mt-1 text-gray-500';
+        fetch('/api/apply-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ coupon_code: code, subtotal })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const amount = data.discount_amount || 0;
+                    localStorage.setItem('appliedDiscount', JSON.stringify({
+                        code,
+                        amount,
+                        details: {
+                            min_order_value: data.coupon.min_order_value || 0,
+                            max_order_value: data.coupon.max_order_value || 0,
+                            discount_type: data.coupon.discount_type,
+                            value: data.coupon.value
+                        },
+                        fromDatabase: true
+                    }));
+                    messageEl.textContent = data.coupon && data.coupon.message ? data.coupon.message : 'Áp dụng thành công';
+                    messageEl.className = 'text-xs mt-1 text-green-600';
+                } else {
+                    localStorage.removeItem('appliedDiscount');
+                    messageEl.textContent = data.message || 'Mã không hợp lệ';
+                    messageEl.className = 'text-xs mt-1 text-red-500';
+                }
+                recalcSelectedSubtotal();
+            })
+            .catch(() => {
+                messageEl.textContent = 'Lỗi áp dụng mã';
+                messageEl.className = 'text-xs mt-1 text-red-500';
+            });
     }
-}
 
-function loadAvailableCoupons() {
-    const box = document.getElementById('available-coupons');
-    if (!box) return;
-    // Calculate raw subtotal of selected items (or 0 if none)
-    let subtotal = getSelectedRawSubtotal();
-    fetch(`/api/coupons?subtotal=${subtotal}`)
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return;
-            if (!Array.isArray(data.coupons) || data.coupons.length === 0) { box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>'; return; }
-            box.innerHTML = data.coupons.map(c => {
-                const can = c.eligible;
-                const cls = can ? 'border-green-300 bg-white hover:border-[#ff6c2f] cursor-pointer' : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
-                const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` : `Giảm ${Number(c.value).toLocaleString()}₫`;
-                const cond = c.ineligible_reason ? `(<span class="text-red-500">${c.ineligible_reason}</span>)` : '';
-                return `<div class="coupon-item border rounded p-2 ${cls}" data-code="${c.code}" data-eligible="${can}">
+    function toggleCouponList() {
+        const box = document.getElementById('available-coupons');
+        if (!box) return;
+        if (box.classList.contains('hidden')) {
+            loadAvailableCoupons();
+            box.classList.remove('hidden');
+            document.getElementById('toggle-coupon-list-btn').textContent = 'Ẩn';
+        } else {
+            box.classList.add('hidden');
+            document.getElementById('toggle-coupon-list-btn').textContent = 'Danh sách';
+        }
+    }
+
+    function loadAvailableCoupons() {
+        const box = document.getElementById('available-coupons');
+        if (!box) return;
+        let subtotal = getSelectedRawSubtotal();
+        fetch(`/api/coupons?subtotal=${subtotal}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) return;
+                if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
+                    box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>';
+                    return;
+                }
+                box.innerHTML = data.coupons.map(c => {
+                    const can = c.eligible;
+                    const cls = can ? 'border-green-300 bg-white hover:border-[#ff6c2f] cursor-pointer' : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
+                    const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` : `Giảm ${Number(c.value).toLocaleString()}₫`;
+                    const cond = c.ineligible_reason ? `(<span class="text-red-500">${c.ineligible_reason}</span>)` : '';
+                    return `<div class="coupon-item border rounded p-2 ${cls}" data-code="${c.code}" data-eligible="${can}">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold">${c.code}</span>
                                 <span class="text-[#ff6c2f] font-medium">${line}</span>
                             </div>
                             <div class="text-[10px] text-gray-600 mt-1">${cond}</div>
                         </div>`;
-            }).join('');
-            box.querySelectorAll('.coupon-item').forEach(div => {
-                div.addEventListener('click', () => {
-                    if (div.dataset.eligible !== 'true') return; // not eligible
-                    // remove previous selection highlight
-                    box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el.classList.remove('coupon-selected','border-[#ff6c2f]'));
-                    div.classList.add('coupon-selected','border-[#ff6c2f]');
-                    document.getElementById('sidebar-coupon-code').value = div.dataset.code;
-                    const msg = document.getElementById('sidebar-coupon-message');
-                    if (msg) { msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận'; msg.className = 'text-xs mt-1 text-gray-600'; }
+                }).join('');
+                box.querySelectorAll('.coupon-item').forEach(div => {
+                    div.addEventListener('click', () => {
+                        if (div.dataset.eligible !== 'true') return;
+                        box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el.classList.remove('coupon-selected', 'border-[#ff6c2f]'));
+                        div.classList.add('coupon-selected', 'border-[#ff6c2f]');
+                        document.getElementById('sidebar-coupon-code').value = div.dataset.code;
+                        const msg = document.getElementById('sidebar-coupon-message');
+                        if (msg) { msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận'; msg.className = 'text-xs mt-1 text-gray-600'; }
+                    });
                 });
-            });
-        })
-        .catch(err => { console.error('Load coupons error', err); box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>'; });
-}
+            })
+            .catch(() => { box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>'; });
+    }
 
-function clearSidebarCoupon() {
-    localStorage.removeItem('appliedDiscount');
-    const input = document.getElementById('sidebar-coupon-code');
-    const msg = document.getElementById('sidebar-coupon-message');
-    if (input) input.value='';
-    if (msg) { msg.textContent=''; msg.className='text-xs mt-1'; }
-    updateCartDisplay(window.currentCartItems||[]);
-    // Subtotal might change (remove discount)
-    recalcSelectedSubtotal();
-}
+    function clearSidebarCoupon() {
+        localStorage.removeItem('appliedDiscount');
+        const input = document.getElementById('sidebar-coupon-code');
+        const msg = document.getElementById('sidebar-coupon-message');
+        if (input) input.value = '';
+        if (msg) { msg.textContent = ''; msg.className = 'text-xs mt-1'; }
+        recalcSelectedSubtotal();
+    }
 
-// ================= Subtotal & Selection Helpers =================
-function getSelectedRawSubtotal() {
-    const selectedIds = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
-    if (!selectedIds.length) return 0;
-    let sum = 0;
-    (window.currentCartItems || []).forEach(i => { if (selectedIds.includes(String(i.id))) { const p = parseFloat(i.price)||0; const q = parseInt(i.quantity)||0; sum += p*q; } });
-    return sum;
-}
+    // ================= Subtotal & Selection Helpers =================
+    function getSelectedRawSubtotal() {
+        const selectedIds = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
+        if (!selectedIds.length) return 0;
+        let sum = 0;
+        (window.currentCartItems || []).forEach(i => {
+            if (selectedIds.includes(String(i.id))) {
+                const p = parseFloat(i.price) || 0;
+                const q = parseInt(i.quantity) || 0;
+                sum += p * q;
+            }
+        });
+        return sum;
+    }
 
-function recalcSelectedSubtotal() {
-    const subtotalElement = document.getElementById('cart-subtotal');
-    if (!subtotalElement) return;
-    const discountRow = document.getElementById('sidebar-discount-row');
-    const discountAmountEl = document.getElementById('sidebar-discount-amount');
-    const codeInput = document.getElementById('sidebar-coupon-code');
-    const messageEl = document.getElementById('sidebar-coupon-message');
-    let raw = getSelectedRawSubtotal();
-    let discount = 0;
-    let hasCoupon = false;
-    try {
-        const saved = localStorage.getItem('appliedDiscount');
-        if (saved) {
-            const d = JSON.parse(saved);
-            if (d && d.code) {
-                // If user cleared or changed code input -> invalidate
-                if (codeInput && codeInput.value && codeInput.value.trim().toUpperCase() !== d.code.toUpperCase()) {
-                    localStorage.removeItem('appliedDiscount');
-                } else if (codeInput && !codeInput.value.trim()) {
-                    localStorage.removeItem('appliedDiscount');
-                } else {
-                // Check min/max constraints again with current raw subtotal; if fail -> remove coupon
-                const minReq = Number(d.details && d.details.min_order_value ? d.details.min_order_value : 0);
-                const maxReq = Number(d.details && d.details.max_order_value ? d.details.max_order_value : 0);
-                if ((minReq && raw < minReq) || (maxReq && raw > maxReq)) {
-                    // Invalidate coupon because selection no longer satisfies
-                    localStorage.removeItem('appliedDiscount');
-                        if (messageEl) { messageEl.textContent = 'Mã không còn đủ điều kiện và đã bị hủy'; messageEl.className='text-xs mt-1 text-red-500'; }
-                } else {
-                    hasCoupon = true;
-                    const storedAmount = Number(d.amount) || 0;
-                    discount = Math.min(storedAmount, raw); // cap
-                }
+    function recalcSelectedSubtotal() {
+        const subtotalElement = document.getElementById('cart-subtotal');
+        if (!subtotalElement) return;
+        const discountRow = document.getElementById('sidebar-discount-row');
+        const discountAmountEl = document.getElementById('sidebar-discount-amount');
+        const codeInput = document.getElementById('sidebar-coupon-code');
+        const messageEl = document.getElementById('sidebar-coupon-message');
+
+        let raw = getSelectedRawSubtotal();
+        let discount = 0;
+        let hasCoupon = false;
+
+        try {
+            const saved = localStorage.getItem('appliedDiscount');
+            if (saved) {
+                const d = JSON.parse(saved);
+                if (d && d.code) {
+                    if (codeInput && codeInput.value && codeInput.value.trim().toUpperCase() !== d.code.toUpperCase()) {
+                        localStorage.removeItem('appliedDiscount');
+                    } else if (codeInput && !codeInput.value.trim()) {
+                        localStorage.removeItem('appliedDiscount');
+                    } else {
+                        const minReq = Number(d.details?.min_order_value || 0);
+                        const maxReq = Number(d.details?.max_order_value || 0);
+                        if ((minReq && raw < minReq) || (maxReq && raw > maxReq)) {
+                            localStorage.removeItem('appliedDiscount');
+                            if (messageEl) { messageEl.textContent = 'Mã không còn đủ điều kiện và đã bị hủy'; messageEl.className = 'text-xs mt-1 text-red-500'; }
+                        } else {
+                            hasCoupon = true;
+                            const storedAmount = Number(d.amount) || 0;
+                            discount = Math.min(storedAmount, raw);
+                        }
+                    }
                 }
             }
-        }
-    } catch(e){ console.warn('discount parse', e); }
+        } catch (e) { }
 
-    // Show discount row if there is a coupon applied even when raw = 0 (display -0₫)
-    if (hasCoupon) {
-        discountRow.classList.remove('hidden');
-        const displayAmount = discount > 0 ? discount : 0;
-        discountAmountEl.textContent = '-' + formatPrice(displayAmount).replace('₫','') + '₫';
-    } else {
-        discountRow.classList.add('hidden');
+        if (hasCoupon) {
+            discountRow.classList.remove('hidden');
+            const displayAmount = discount > 0 ? discount : 0;
+            discountAmountEl.textContent = '-' + new Intl.NumberFormat('vi-VN').format(displayAmount) + '₫';
+        } else {
+            discountRow.classList.add('hidden');
+        }
+
+        subtotalElement.textContent = formatPrice(Math.max(0, raw - discount));
+
+        // Cập nhật trạng thái nút "Thanh toán ngay" (phòng khi gọi trực tiếp từ nơi khác)
+        const checkoutNowBtn = document.getElementById('sidebar-checkout-now');
+        if (checkoutNowBtn) checkoutNowBtn.disabled = raw <= 0;
     }
-    subtotalElement.textContent = formatPrice(Math.max(0, raw - discount));
-}
+
+    // === Checkout handler (chỉ cho phép khi đã chọn) ===
+    function handleSidebarCheckout() {
+        const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
+        if (selected.length > 0) {
+            localStorage.setItem('checkout_selected_items', JSON.stringify(selected));
+            window.location.href = '{{ route('checkout.index') }}?selected=1';
+        } else {
+            // KHÔNG cho đi checkout khi chưa chọn
+            alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán');
+        }
+    }
+
+    // Expose some functions globally if needed elsewhere
+    window.loadCartItems = loadCartItems;
+    window.updateCartCount = updateCartCount;
+    window.showNotification = showNotification;
+    window.applySidebarCoupon = applySidebarCoupon;
+    window.toggleCouponList = toggleCouponList;
+    window.clearSidebarCoupon = clearSidebarCoupon;
+    window.recalcSelectedSubtotal = recalcSelectedSubtotal;
+    window.handleSidebarCheckout = handleSidebarCheckout;
 </script>

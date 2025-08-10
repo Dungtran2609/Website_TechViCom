@@ -64,9 +64,15 @@ class ClientCartController extends Controller{
                     $price = $variant->sale_price ?? $variant->price ?? 0;
                 }
                 $total += $price * $quantity;
-                $image = $product->productAllImages->first() ? 
-                        asset('uploads/products/' . $product->productAllImages->first()->image) : 
-                        asset('images/default-product.jpg');
+                // Lấy đúng trường ảnh
+                $image = asset('images/default-product.jpg');
+                if ($product->productAllImages && $product->productAllImages->count() > 0) {
+                    $imgObj = $product->productAllImages->first();
+                    $imgField = $imgObj->image_url ?? $imgObj->image ?? null;
+                    if ($imgField) {
+                        $image = asset('uploads/products/' . ltrim($imgField, '/'));
+                    }
+                }
                 $items[] = [
                     'id' => is_object($cartItem) ? $cartItem->id : $key, // Use key for session cart
                     'product_id' => $product->id,

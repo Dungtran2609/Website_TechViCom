@@ -133,7 +133,7 @@
             <!-- Right side buttons -->
             <div class="flex items-center space-x-2 lg:space-x-3">
                 @auth
-                    @if(Auth::user()->hasRole(['admin', 'staff']))
+                    @if (Auth::user()->hasRole(['admin', 'staff']))
                         <!-- Admin/Staff Quick Access Button -->
                         <div class="relative">
                             <a href="{{ route('admin.dashboard') }}"
@@ -195,7 +195,7 @@
                                         <div>
                                             <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                                             <p class="text-sm text-gray-500">
-                                                @if(Auth::user()->hasRole('admin'))
+                                                @if (Auth::user()->hasRole('admin'))
                                                     Quản trị viên
                                                 @elseif(Auth::user()->hasRole('staff'))
                                                     Nhân viên
@@ -207,7 +207,7 @@
                                     </div>
                                 </div>
                                 <div class="p-2">
-                                    @if(Auth::user()->hasRole(['admin', 'staff']))
+                                    @if (Auth::user()->hasRole(['admin', 'staff']))
                                         <a href="{{ route('admin.dashboard') }}"
                                             class="flex items-center px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                             <i class="fas fa-cogs mr-3 text-blue-500"></i>
@@ -404,7 +404,8 @@
                 <button type="button" onclick="applySidebarCoupon()"
                     class="px-3 py-1 bg-[#ff6c2f] text-white text-xs rounded hover:bg-[#e55a28]">Áp dụng</button>
                 <button type="button" onclick="clearSidebarCoupon()"
-                    class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300" title="Hủy">×</button>
+                    class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300"
+                    title="Hủy">×</button>
             </div>
             <p id="sidebar-coupon-message" class="text-xs mt-1"></p>
             <div id="available-coupons"
@@ -444,13 +445,17 @@
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // Cart sidebar elements
         const cartBtn = document.getElementById('cartMenuBtn');
         const cartSidebar = document.getElementById('cart-sidebar');
         const cartOverlay = document.getElementById('cart-overlay');
         const closeCartBtn = document.getElementById('close-cart-sidebar');
 
+        // Lắng nghe sự kiện cart:updated để reload giỏ hàng mini
+        document.addEventListener('cart:updated', function() {
+            loadCartItems();
+        });
         // Category dropdown
         const categoryBtn = document.getElementById('categoryMenuBtn');
         const categoryDropdown = document.getElementById('categoryDropdown');
@@ -460,7 +465,7 @@
         const accountDropdown = document.getElementById('accountDropdown');
 
         // Open cart sidebar
-        cartBtn.addEventListener('click', function () {
+        cartBtn.addEventListener('click', function() {
             cartSidebar.classList.remove('translate-x-full');
             cartOverlay.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -478,21 +483,21 @@
         cartOverlay.addEventListener('click', closeCartSidebar);
 
         // Category dropdown
-        categoryBtn.addEventListener('click', function (e) {
+        categoryBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             categoryDropdown.classList.toggle('hidden');
             accountDropdown.classList.add('hidden');
         });
 
         // Account dropdown
-        accountBtn.addEventListener('click', function (e) {
+        accountBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             accountDropdown.classList.toggle('hidden');
             categoryDropdown.classList.add('hidden');
         });
 
         // Close dropdowns when clicking outside
-        document.addEventListener('click', function () {
+        document.addEventListener('click', function() {
             categoryDropdown.classList.add('hidden');
             accountDropdown.classList.add('hidden');
         });
@@ -510,13 +515,17 @@
             couponInput.addEventListener('input', () => {
                 try {
                     const saved = JSON.parse(localStorage.getItem('appliedDiscount') || 'null');
-                    if (!couponInput.value.trim() || (saved && saved.code && couponInput.value.trim().toUpperCase() !== saved.code.toUpperCase())) {
+                    if (!couponInput.value.trim() || (saved && saved.code && couponInput.value.trim()
+                            .toUpperCase() !== saved.code.toUpperCase())) {
                         localStorage.removeItem('appliedDiscount');
                         const msg = document.getElementById('sidebar-coupon-message');
-                        if (msg) { msg.textContent = couponInput.value.trim() ? 'Nhập mã giảm giá' : ''; msg.className = 'text-xs mt-1 text-gray-500'; }
+                        if (msg) {
+                            msg.textContent = couponInput.value.trim() ? 'Nhập mã giảm giá' : '';
+                            msg.className = 'text-xs mt-1 text-gray-500';
+                        }
                         recalcSelectedSubtotal();
                     }
-                } catch (e) { }
+                } catch (e) {}
             });
         }
 
@@ -529,14 +538,18 @@
         // Search
         const headerSearchInput = document.getElementById('header-search-input');
         const headerSearchBtn = document.getElementById('header-search-btn');
+
         function performHeaderSearch() {
             const searchTerm = headerSearchInput.value.trim();
             if (searchTerm) {
-                window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(searchTerm)}`;
+                window.location.href =
+                    `{{ route('products.index') }}?search=${encodeURIComponent(searchTerm)}`;
             }
         }
         if (headerSearchBtn) headerSearchBtn.addEventListener('click', performHeaderSearch);
-        if (headerSearchInput) headerSearchInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') performHeaderSearch(); });
+        if (headerSearchInput) headerSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') performHeaderSearch();
+        });
     });
 
     // Auth UI (log only)
@@ -547,11 +560,15 @@
 
     function loadCartItems() {
         console.log('Loading cart items...');
-        fetch('{{ route("carts.count") }}')
+        fetch('{{ route('carts.count') }}')
             .then(r => r.json())
             .then(data => {
                 document.getElementById('cart-count').textContent = data.count || 0;
-                return fetch('{{ route("carts.index") }}', { headers: { 'Accept': 'application/json' } });
+                return fetch('{{ route('carts.index') }}', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
             })
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -595,7 +612,8 @@
         if (bulkBar) bulkBar.classList.remove('hidden');
 
         // Keep previously selected ids before re-render
-        const previouslySelected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(cb => cb.value);
+        const previouslySelected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(cb => cb
+            .value);
 
         // Render items
         cartItemsList.innerHTML = items.map(item => {
@@ -665,11 +683,18 @@
             const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
             if (ids.length === 0) return;
             if (!confirm('Xóa các sản phẩm đã chọn?')) return;
-            Promise.all(ids.map(id => fetch(`{{ url('/carts') }}/${id}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-            }).then(r => r.json()))).then(() => loadCartItems());
+            deleteBtn.disabled = true;
+            Promise.all(ids.map(id => removeFromCartSidebar({
+                    id,
+                    silent: true
+                })))
+                .then(() => {
+                    showNotification('Đã xóa các sản phẩm khỏi giỏ hàng', 'success');
+                    loadCartItems();
+                })
+                .finally(() => {
+                    deleteBtn.disabled = false;
+                });
         });
 
         buyBtn.addEventListener('click', () => {
@@ -683,17 +708,29 @@
     }
 
     function formatPrice(price) {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(price);
     }
 
     function addToCart(productId, variantId = null, quantity = 1) {
-        const data = { product_id: productId, quantity: quantity, variant_id: variantId, _token: '{{ csrf_token() }}' };
-        fetch('{{ route("carts.add") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            body: JSON.stringify(data)
-        })
+        const data = {
+            product_id: productId,
+            quantity: quantity,
+            variant_id: variantId,
+            _token: '{{ csrf_token() }}'
+        };
+        fetch('{{ route('carts.add') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+            })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
@@ -707,13 +744,22 @@
     }
 
     function updateCartQuantity(itemId, newQuantity) {
-        if (newQuantity < 1) { removeFromCart(itemId); return; }
+        if (newQuantity < 1) {
+            removeFromCart(itemId);
+            return;
+        }
         fetch(`{{ url('/carts') }}/${itemId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ quantity: newQuantity })
-        })
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    quantity: newQuantity
+                })
+            })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
@@ -740,22 +786,38 @@
     }
 
     function removeFromCart(itemId) {
-        fetch(`{{ url('/carts') }}/${itemId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin'
-        })
+        return removeFromCartSidebar(itemId);
+    }
+
+    function removeFromCartSidebar(item) {
+        let silent = false;
+        let itemId = item;
+        if (typeof item === 'object' && item !== null) {
+            silent = item.silent;
+            itemId = item.id;
+        }
+        return fetch(`{{ url('/carts') }}/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    loadCartItems();
-                    showNotification('Đã xóa sản phẩm khỏi giỏ hàng', 'success');
+                    if (!silent) showNotification('Đã xóa sản phẩm khỏi giỏ hàng', 'success');
                 } else {
-                    showNotification(data.message || 'Có lỗi xảy ra khi xóa', 'error');
+                    if (!silent) showNotification(data.message || 'Có lỗi xảy ra khi xóa', 'error');
                     if (data.debug) console.error('Debug info:', data.debug);
                 }
+                return data;
             })
-            .catch(() => showNotification('Có lỗi xảy ra khi xóa', 'error'));
+            .catch(() => {
+                if (!silent) showNotification('Có lỗi xảy ra khi xóa', 'error');
+            });
     }
 
     function showNotification(message, type = 'info') {
@@ -769,9 +831,11 @@
     }
 
     function updateCartCount() {
-        fetch('{{ route("carts.count") }}')
+        fetch('{{ route('carts.count') }}')
             .then(r => r.json())
-            .then(data => { document.getElementById('cart-count').textContent = data.count || 0; })
+            .then(data => {
+                document.getElementById('cart-count').textContent = data.count || 0;
+            })
             .catch(e => console.error('Error updating cart count:', e));
     }
 
@@ -790,10 +854,16 @@
         messageEl.textContent = 'Đang kiểm tra...';
         messageEl.className = 'text-xs mt-1 text-gray-500';
         fetch('/api/apply-coupon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body: JSON.stringify({ coupon_code: code, subtotal })
-        })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    coupon_code: code,
+                    subtotal
+                })
+            })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
@@ -809,7 +879,8 @@
                         },
                         fromDatabase: true
                     }));
-                    messageEl.textContent = data.coupon && data.coupon.message ? data.coupon.message : 'Áp dụng thành công';
+                    messageEl.textContent = data.coupon && data.coupon.message ? data.coupon.message :
+                        'Áp dụng thành công';
                     messageEl.className = 'text-xs mt-1 text-green-600';
                 } else {
                     localStorage.removeItem('appliedDiscount');
@@ -851,9 +922,12 @@
                 }
                 box.innerHTML = data.coupons.map(c => {
                     const can = c.eligible;
-                    const cls = can ? 'border-green-300 bg-white hover:border-[#ff6c2f] cursor-pointer' : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
-                    const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` : `Giảm ${Number(c.value).toLocaleString()}₫`;
-                    const cond = c.ineligible_reason ? `(<span class="text-red-500">${c.ineligible_reason}</span>)` : '';
+                    const cls = can ? 'border-green-300 bg-white hover:border-[#ff6c2f] cursor-pointer' :
+                        'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
+                    const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` :
+                        `Giảm ${Number(c.value).toLocaleString()}₫`;
+                    const cond = c.ineligible_reason ?
+                        `(<span class="text-red-500">${c.ineligible_reason}</span>)` : '';
                     return `<div class="coupon-item border rounded p-2 ${cls}" data-code="${c.code}" data-eligible="${can}">
                             <div class="flex justify-between items-center">
                                 <span class="font-semibold">${c.code}</span>
@@ -865,15 +939,21 @@
                 box.querySelectorAll('.coupon-item').forEach(div => {
                     div.addEventListener('click', () => {
                         if (div.dataset.eligible !== 'true') return;
-                        box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el.classList.remove('coupon-selected', 'border-[#ff6c2f]'));
+                        box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el
+                            .classList.remove('coupon-selected', 'border-[#ff6c2f]'));
                         div.classList.add('coupon-selected', 'border-[#ff6c2f]');
                         document.getElementById('sidebar-coupon-code').value = div.dataset.code;
                         const msg = document.getElementById('sidebar-coupon-message');
-                        if (msg) { msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận'; msg.className = 'text-xs mt-1 text-gray-600'; }
+                        if (msg) {
+                            msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận';
+                            msg.className = 'text-xs mt-1 text-gray-600';
+                        }
                     });
                 });
             })
-            .catch(() => { box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>'; });
+            .catch(() => {
+                box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>';
+            });
     }
 
     function clearSidebarCoupon() {
@@ -881,7 +961,10 @@
         const input = document.getElementById('sidebar-coupon-code');
         const msg = document.getElementById('sidebar-coupon-message');
         if (input) input.value = '';
-        if (msg) { msg.textContent = ''; msg.className = 'text-xs mt-1'; }
+        if (msg) {
+            msg.textContent = '';
+            msg.className = 'text-xs mt-1';
+        }
         recalcSelectedSubtotal();
     }
 
@@ -926,7 +1009,10 @@
                         const maxReq = Number(d.details?.max_order_value || 0);
                         if ((minReq && raw < minReq) || (maxReq && raw > maxReq)) {
                             localStorage.removeItem('appliedDiscount');
-                            if (messageEl) { messageEl.textContent = 'Mã không còn đủ điều kiện và đã bị hủy'; messageEl.className = 'text-xs mt-1 text-red-500'; }
+                            if (messageEl) {
+                                messageEl.textContent = 'Mã không còn đủ điều kiện và đã bị hủy';
+                                messageEl.className = 'text-xs mt-1 text-red-500';
+                            }
                         } else {
                             hasCoupon = true;
                             const storedAmount = Number(d.amount) || 0;
@@ -935,7 +1021,7 @@
                     }
                 }
             }
-        } catch (e) { }
+        } catch (e) {}
 
         if (hasCoupon) {
             discountRow.classList.remove('hidden');

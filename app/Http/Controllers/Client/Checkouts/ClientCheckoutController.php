@@ -134,14 +134,15 @@ class ClientCheckoutController extends Controller
     public function applyCoupon(Request $request)
     {
         $request->validate([
-            'coupon_code' => 'required|string'
+            'coupon_code' => 'required|string',
+            'subtotal' => 'required|numeric|min:0',
         ]);
 
         $coupon = Coupon::where('code', $request->coupon_code)
-                       ->where('status', 1)
-                       ->where('start_date', '<=', now())
-                       ->where('end_date', '>=', now())
-                       ->first();
+            ->where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
 
         if (!$coupon) {
             return response()->json([
@@ -150,25 +151,21 @@ class ClientCheckoutController extends Controller
             ]);
         }
 
-        // Kiểm tra điều kiện áp dụng
         $subtotal = $request->subtotal;
+        $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
 
-        if ($subtotal < $coupon->min_order_value) {
+        if ($discountAmount <= 0) {
+            // Lý do có thể: chưa đạt min, vượt max, hết hạn, v.v.
+            $msg = 'Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá';
+            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                $msg = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+            } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                $msg = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+            }
             return response()->json([
                 'success' => false,
-                'message' => 'Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá'
+                'message' => $msg
             ]);
-        }
-
-        // Tính toán giảm giá
-        $discountAmount = 0;
-        if ($coupon->discount_type === 'percent') {
-            $discountAmount = ($subtotal * $coupon->value) / 100;
-            if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
-                $discountAmount = $coupon->max_discount_amount;
-            }
-        } else {
-            $discountAmount = $coupon->value;
         }
 
         return response()->json([
@@ -437,5 +434,36 @@ class ClientCheckoutController extends Controller
         $order = $order->firstOrFail();
 
         return view('client.checkouts.success', compact('order'));
+    }
+
+    /**
+     * Tính toán số tiền giảm giá từ coupon cho một đơn hàng
+     * @param \App\Models\Coupon $coupon
+     * @param float|int $subtotal
+     * @return int
+     */
+    protected function calculateCouponDiscount($coupon, $subtotal)
+    {
+        if (!$coupon || !$coupon->status) return 0;
+        // Kiểm tra ngày hiệu lực
+        $now = now();
+        if ($coupon->start_date && $now->lt($coupon->start_date)) return 0;
+        if ($coupon->end_date && $now->gt($coupon->end_date)) return 0;
+        // Kiểm tra min/max đơn hàng
+        if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) return 0;
+        if ($coupon->max_order_value && $subtotal > $coupon->max_order_value) return 0;
+
+        $discount = 0;
+        if ($coupon->discount_type === 'percent') {
+            $discount = ($subtotal * $coupon->value) / 100;
+            if ($coupon->max_discount_amount && $discount > $coupon->max_discount_amount) {
+                $discount = $coupon->max_discount_amount;
+            }
+        } else {
+            $discount = $coupon->value;
+        }
+        // Không vượt quá tổng đơn hàng
+        $discount = min($discount, $subtotal);
+        return (int) $discount;
     }
 }

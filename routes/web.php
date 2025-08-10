@@ -31,6 +31,7 @@ use App\Http\Controllers\WebhookController;
 
 // --- Controllers cho CLIENT ---
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
@@ -47,6 +48,7 @@ use App\Http\Middleware\CheckPermission;
 // =========================================================================
 // === CLIENT ROUTES ===
 // =========================================================================
+
 
 // Trang chủ client
 // Test route to add product to cart
@@ -370,7 +372,12 @@ Route::prefix('carts')->name('carts.')->group(function () {
 Route::prefix('client')->name('client.')->group(function () {
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
-        // Routes khác có thể thêm vào đây sau
+        // AJAX xác nhận đã nhận hàng
+        Route::post('{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
+        // AJAX gửi yêu cầu trả hàng
+        Route::post('{id}/request-return', [ClientOrderController::class, 'requestReturn'])->name('request-return');
+        // AJAX hủy đơn hàng
+        Route::post('{id}/cancel', [ClientOrderController::class, 'cancel'])->name('cancel');
     });
 
     // Liên hệ
@@ -400,6 +407,8 @@ Route::prefix('api')->group(function () {
 
     // Coupon API - Using Client Controller
     Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+    Route::get('/coupons', [ClientCouponController::class, 'listAvailableCoupons']);
+    // Route::post('/buy-now', [ClientCheckoutController::class, 'buyNow'])->name('checkout.buyNow');
 });
 
 // ACCOUNTS ROUTES (Không có prefix /client)
@@ -419,6 +428,7 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
 });
+
 
 // =========================================================================
 // === ADMIN ROUTES ===
@@ -460,14 +470,27 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
     // ==== Orders ====
     // Sửa lại để sử dụng resource controller cho gọn gàng và chuẩn RESTful
+    // Route::prefix('orders')->name('orders.')->group(function () {
+    // Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+    // Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+    // Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+    // Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+    // Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+    // Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+    // Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+    // });
     Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
-        Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
-        Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
+        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)

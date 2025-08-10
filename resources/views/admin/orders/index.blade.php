@@ -34,9 +34,9 @@
                         <div class="card h-100 shadow-sm border-0 transition-all hover:shadow-lg">
                             @if ($order['image'])
                                 <!-- <img src="{{ asset($order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;" -->
-                                    <!-- alt="Ảnh đơn {{ $order['id'] }}"> -->
-                                    <img src="{{ asset($order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;"
-                                        alt="Ảnh đơn {{ $order['id'] }}">
+                                <!-- alt="Ảnh đơn {{ $order['id'] }}"> -->
+                                <img src="{{ asset($order['image']) }}" class="card-img-top object-fit-cover" style="height: 180px;"
+                                    alt="Ảnh đơn {{ $order['id'] }}">
                             @else
                                 <div class="card-img-top text-center py-5 bg-light text-muted"
                                     style="height: 180px; display: flex; align-items: center; justify-content: center;">

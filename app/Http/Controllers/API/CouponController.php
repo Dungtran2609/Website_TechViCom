@@ -9,6 +9,35 @@ use Carbon\Carbon;
 
 class CouponController extends Controller
 {
+    public function list(Request $request)
+    {
+        $subtotal = (float)$request->query('subtotal', 0);
+        $now = Carbon::now();
+        $coupons = Coupon::where('status', true)
+            ->where(function($q) use ($now) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $now->toDateString());
+            })
+            ->where(function($q) use ($now) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $now->toDateString());
+            })
+            ->get()
+            ->map(function($c) use ($subtotal) {
+                $eligible = true;
+                $reason = null;
+                if ($c->min_order_value && $subtotal < $c->min_order_value) { $eligible = false; $reason = 'Tối thiểu ' . number_format($c->min_order_value) . '₫'; }
+                if ($eligible && $c->max_order_value && $subtotal > $c->max_order_value) { $eligible = false; $reason = 'Tối đa ' . number_format($c->max_order_value) . '₫'; }
+                return [
+                    'code' => $c->code,
+                    'discount_type' => $c->discount_type,
+                    'value' => $c->value,
+                    'min_order_value' => $c->min_order_value,
+                    'max_order_value' => $c->max_order_value,
+                    'eligible' => $eligible,
+                    'ineligible_reason' => $reason,
+                ];
+            });
+        return response()->json(['success' => true, 'coupons' => $coupons]);
+    }
     public function validateCoupon(Request $request)
     {
         try {
@@ -86,6 +115,8 @@ class CouponController extends Controller
                     'discount_type' => $coupon->discount_type,
                     'value' => $coupon->value,
                     'max_discount_amount' => $coupon->max_discount_amount,
+                    'min_order_value' => $coupon->min_order_value,
+                    'max_order_value' => $coupon->max_order_value,
                     'message' => $this->getDiscountMessage($coupon, $discountAmount)
                 ]
             ]);

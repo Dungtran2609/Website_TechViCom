@@ -7,6 +7,7 @@ use App\Models\Banner;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
+
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -17,6 +18,7 @@ class HomeController extends Controller
         $banners = Banner::where('start_date', '<=', now())
                         ->where('end_date', '>=', now())
                         ->orderBy('stt')
+                        ->limit(3)
                         ->get();
 
         // Lấy sản phẩm mới nhất

@@ -4,6 +4,7 @@
 
 @push('styles')
 <style>
+    
     /* Slideshow Styles */
     .slideshow-container {
         position: relative;
@@ -151,86 +152,111 @@
 
 @section('content')
     <!-- Hero Banner Slideshow -->
-    <section class="relative overflow-hidden">
-        <div class="slideshow-container relative w-full h-96 md:h-[500px]">
-            <!-- Slide 1 -->
-            <div class="slide active">
-                <div class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SIÊU SALE</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">iPhone 15 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Giảm đến 5 triệu - Trả góp 0%</p>
-                                <button onclick="goToFeaturedProduct()" class="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold hover:bg-yellow-500 transition slide-in-delay-3">
-                                    MUA NGAY
-                                </button>
+    <section class="relative overflow-hidden bg-gray-50">
+        @if(isset($banners) && $banners->count() > 0)
+            <div class="slideshow-container relative w-full h-96 md:h-[400px] lg:h-[500px]">
+                @foreach($banners as $index => $banner)
+                    <div class="slide {{ $index == 0 ? 'active' : '' }}">
+                        @if($banner->link)
+                            <a href="{{ $banner->link }}" target="_blank" class="block h-full group">
+                                <div class="relative h-full overflow-hidden">
+                                    <img src="{{ asset('storage/' . $banner->image) }}" 
+                                         alt="Banner {{ $index + 1 }}" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                    <!-- Overlay for better text readability -->
+                                    <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+                                </div>
+                            </a>
+                        @else
+                            <div class="relative h-full overflow-hidden">
+                                <img src="{{ asset('storage/' . $banner->image) }}" 
+                                     alt="Banner {{ $index + 1 }}" 
+                                     class="w-full h-full object-cover transition-transform duration-700"
+                                     onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                <!-- Overlay for better text readability -->
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
                             </div>
-                            <div class="text-center">
-                                <img src="assets/images/iphone-15.png" alt="iPhone 15" class="max-w-full h-auto slide-in-right" onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
+                        @endif
+                    </div>
+                @endforeach
+
+                @if($banners->count() > 1)
+                    <!-- Navigation arrows -->
+                    <button class="slide-nav prev group" onclick="changeSlide(-1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-left text-lg"></i>
+                        </div>
+                    </button>
+                    <button class="slide-nav next group" onclick="changeSlide(1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-right text-lg"></i>
+                        </div>
+                    </button>
+
+                    <!-- Slide indicators -->
+                    <div class="slide-indicators">
+                        @foreach($banners as $index => $banner)
+                            <span class="indicator {{ $index == 0 ? 'active' : '' }}" onclick="currentSlide({{ $index + 1 }})"></span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @else
+            <!-- Fallback banner khi không có banner nào -->
+            <div class="slideshow-container relative w-full h-96 md:h-[500px] lg:h-[600px]">
+                <div class="slide active">
+                    <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white h-full relative overflow-hidden">
+                        <!-- Animated background elements -->
+                        <div class="absolute inset-0">
+                            <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+                            <div class="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-xl"></div>
+                            <div class="absolute top-1/2 left-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
+                        </div>
+                        
+                        <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-12 w-full">
+                                <div class="space-y-6">
+                                    <div class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                                        <i class="fas fa-star text-yellow-300 mr-2"></i>
+                                        Công nghệ hàng đầu
+                                    </div>
+                                    <h1 class="text-5xl lg:text-7xl font-bold mb-4 slide-in bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                                        TECHVICOM
+                                    </h1>
+                                    <h2 class="text-2xl lg:text-4xl mb-6 slide-in-delay-1 font-light">
+                                        Công nghệ tiên tiến
+                                    </h2>
+                                    <p class="text-lg lg:text-xl mb-8 slide-in-delay-2 text-blue-100 leading-relaxed">
+                                        Khám phá các sản phẩm công nghệ mới nhất với chất lượng cao và giá cả hợp lý
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-4 slide-in-delay-3">
+                                        <button onclick="window.location.href='{{ route('products.index') }}'" 
+                                                class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                            <i class="fas fa-shopping-cart mr-2"></i>
+                                            KHÁM PHÁ NGAY
+                                        </button>
+                                        <button onclick="window.location.href='{{ route('contacts.index') }}'" 
+                                                class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+                                            <i class="fas fa-phone mr-2"></i>
+                                            LIÊN HỆ
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-center relative">
+                                    <div class="relative inline-block">
+                                        <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-3xl opacity-30"></div>
+                                        <img src="{{ asset('client_css/images/placeholder.svg') }}" 
+                                             alt="TechViCom" 
+                                             class="relative z-10 max-w-full h-auto slide-in-right transform hover:scale-105 transition-transform duration-500">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Slide 2 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SAMSUNG</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Galaxy S24 Ultra</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Công nghệ AI tiên tiến - Giảm 3 triệu</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition slide-in-delay-3">
-                                    KHÁM PHÁ
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/samsung-s24-ultra.jpg" alt="Samsung S24 Ultra" class="max-w-full h-auto slide-in-right" onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">MACBOOK</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Pro M3 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Hiệu năng đỉnh cao - Ưu đãi học sinh sinh viên</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'" class="bg-gray-200 text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-300 transition slide-in-delay-3">
-                                    XEM NGAY
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/macbook-pro-m3.jpg" alt="MacBook Pro M3" class="max-w-full h-auto slide-in-right" onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation arrows -->
-            <button class="slide-nav prev" onclick="changeSlide(-1)">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="slide-nav next" onclick="changeSlide(1)">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-
-            <!-- Slide indicators -->
-            <div class="slide-indicators">
-                <span class="indicator active" onclick="currentSlide(1)"></span>
-                <span class="indicator" onclick="currentSlide(2)"></span>
-                <span class="indicator" onclick="currentSlide(3)"></span>
-            </div>
-        </div>
+        @endif
     </section>
 
     <!-- Featured Categories -->
@@ -1435,7 +1461,7 @@
             showSlide(currentSlideIndex);
         }
 
-        // Auto slide every 5 seconds
+        // Auto slide every 3 seconds
         function autoSlide() {
             nextSlide();
         }
@@ -1444,8 +1470,8 @@
         function initSlideshow() {
             if (slides.length > 0) {
                 showSlide(0);
-                // Auto-advance slides every 5 seconds
-                setInterval(autoSlide, 5000);
+                // Auto-advance slides every 3 seconds
+                setInterval(autoSlide, 3000);
             }
         }
 

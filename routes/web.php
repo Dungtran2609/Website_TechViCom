@@ -32,6 +32,7 @@ use App\Http\Controllers\WebhookController;
 // --- Controllers cho CLIENT ---
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\Products\ClientProductController;
+use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
 use App\Http\Controllers\Client\Accounts\ClientAccountController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Client\Checkouts\ClientCheckoutController;
 use App\Http\Controllers\Client\Contacts\ClientContactController;
 use App\Http\Controllers\Client\Coupon\ClientCouponController;
 use App\Http\Controllers\Client\Address\ClientAddressController;
+
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckPermission;
@@ -90,6 +92,8 @@ Route::get('/test-check-cart', function() {
 
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
 
 // Test cart functionality
 Route::get('/test-cart-page', function() {
@@ -339,6 +343,12 @@ Route::get('/client', [HomeController::class, 'index'])->name('client.home');
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
+    
+    // Product comments routes
+    Route::prefix('{productId}/comments')->name('comments.')->middleware(['auth'])->group(function () {
+        Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
+        Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
+    });
 });
 
 // Categories routes (public access)
@@ -394,6 +404,8 @@ Route::prefix('api')->group(function () {
     
     // Coupon API - Using Client Controller
     Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+    
+
 });
 
 // ACCOUNTS ROUTES (Không có prefix /client)
@@ -630,3 +642,5 @@ Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::clas
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
+
+

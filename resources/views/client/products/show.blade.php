@@ -245,11 +245,7 @@
                         Mua ngay
                     </button>
                     
-                    <!-- Debug button -->
-                    <button type="button" onclick="testAddToCart()" 
-                            class="w-full bg-yellow-500 text-black py-2 px-4 rounded-lg hover:bg-yellow-400 transition text-sm">
-                        Test Add to Cart (Debug)
-                    </button>
+                    
                 </div>
 
                 <!-- Product Features -->
@@ -364,7 +360,221 @@
         </a>
     </div>
 </section>
+
+<!-- Comments Section -->
+<section class="py-8 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Đánh giá & Bình luận</h2>
+            
+            <!-- Comment Form -->
+            @auth
+                @php
+                    $commentController = new \App\Http\Controllers\Client\Products\ClientProductCommentController();
+                    $canComment = $commentController->canComment($product->id);
+                @endphp
+                
+                @if($canComment)
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Viết đánh giá của bạn</h3>
+                        
+                        @if(session('success'))
+                            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+                        
+                        @if(session('error'))
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+                        
+                        <form action="{{ route('client.products.comments.store', $product->id) }}" method="POST">
+                            @csrf
+                            <div class="mb-4">
+                                <label for="rating" class="block text-sm font-medium text-gray-700 mb-2">Đánh giá</label>
+                                <div class="flex items-center space-x-2">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <input type="radio" id="rating_{{ $i }}" name="rating" value="{{ $i }}" class="sr-only" {{ old('rating') == $i ? 'checked' : '' }}>
+                                        <label for="rating_{{ $i }}" class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400 transition-colors">
+                                            <i class="fas fa-star"></i>
+                                        </label>
+                                    @endfor
+                                </div>
+                                @error('rating')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Nội dung bình luận</label>
+                                <textarea id="content" name="content" rows="4" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff6c2f] focus:border-transparent"
+                                          placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này...">{{ old('content') }}</textarea>
+                                @error('content')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="bg-[#ff6c2f] text-white px-6 py-2 rounded-md hover:bg-[#e55a28] transition">
+                                Gửi đánh giá
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                            <div>
+                                <p class="text-blue-800 font-medium">Thông báo</p>
+                                <p class="text-blue-700 text-sm">
+                                    @if(!auth()->check())
+                                        Bạn cần <a href="{{ route('login') }}" class="underline">đăng nhập</a> để bình luận.
+                                    @else
+                                        Bạn cần mua sản phẩm này trước khi bình luận hoặc đã bình luận rồi.
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @else
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                        <div>
+                            <p class="text-blue-800 font-medium">Thông báo</p>
+                            <p class="text-blue-700 text-sm">
+                                Bạn cần <a href="{{ route('login') }}" class="underline">đăng nhập</a> để bình luận.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endauth
+            
+            <!-- Comments List -->
+            <div class="space-y-6">
+                @php
+                    $approvedComments = $product->productComments()
+                        ->where('status', 'approved')
+                        ->whereNull('parent_id')
+                        ->with(['user', 'replies.user'])
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                @endphp
+                
+                @if($approvedComments->count() > 0)
+                    @foreach($approvedComments as $comment)
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-[#ff6c2f] rounded-full flex items-center justify-center">
+                                        <span class="text-white font-semibold text-sm">
+                                            {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h4 class="font-semibold text-gray-900">{{ $comment->user->name }}</h4>
+                                        <span class="text-gray-500 text-sm">{{ $comment->created_at->format('d/m/Y H:i') }}</span>
+                                    </div>
+                                    
+                                    @if($comment->rating)
+                                        <div class="flex items-center mb-2">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <i class="fas fa-star text-{{ $i <= $comment->rating ? 'yellow' : 'gray' }}-400"></i>
+                                            @endfor
+                                            <span class="ml-2 text-sm text-gray-600">{{ $comment->rating }}/5</span>
+                                        </div>
+                                    @endif
+                                    
+                                    <p class="text-gray-700 mb-4">{{ $comment->content }}</p>
+                                    
+                                    <!-- Reply Form -->
+                                    @auth
+                                        @php
+                                            $canReply = $commentController->canComment($product->id);
+                                        @endphp
+                                        
+                                        @if($canReply)
+                                            <button onclick="toggleReplyForm({{ $comment->id }})" 
+                                                    class="text-[#ff6c2f] hover:text-[#e55a28] text-sm font-medium">
+                                                Phản hồi
+                                            </button>
+                                            
+                                            <div id="reply-form-{{ $comment->id }}" class="hidden mt-4">
+                                                <form action="{{ route('client.products.comments.reply', $comment->id) }}" method="POST">
+                                                    @csrf
+                                                    <div class="mb-3">
+                                                        <textarea name="reply_content" rows="3" 
+                                                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff6c2f] focus:border-transparent"
+                                                                  placeholder="Viết phản hồi của bạn..."></textarea>
+                                                    </div>
+                                                    <div class="flex space-x-2">
+                                                        <button type="submit" 
+                                                                class="bg-[#ff6c2f] text-white px-4 py-2 rounded-md hover:bg-[#e55a28] transition text-sm">
+                                                            Gửi phản hồi
+                                                        </button>
+                                                        <button type="button" 
+                                                                onclick="toggleReplyForm({{ $comment->id }})"
+                                                                class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition text-sm">
+                                                            Hủy
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    @endauth
+                                    
+                                    <!-- Replies -->
+                                    @if($comment->replies->count() > 0)
+                                        <div class="mt-4 space-y-3">
+                                            @foreach($comment->replies as $reply)
+                                                @if($reply->status === 'approved')
+                                                    <div class="bg-gray-50 rounded-lg p-4 ml-4">
+                                                        <div class="flex items-start space-x-3">
+                                                            <div class="flex-shrink-0">
+                                                                <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                                                                    <span class="text-white font-semibold text-xs">
+                                                                        {{ strtoupper(substr($reply->user->name, 0, 1)) }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center space-x-2 mb-1">
+                                                                    <h5 class="font-medium text-gray-900 text-sm">{{ $reply->user->name }}</h5>
+                                                                    <span class="text-gray-500 text-xs">{{ $reply->created_at->format('d/m/Y H:i') }}</span>
+                                                                </div>
+                                                                <p class="text-gray-700 text-sm">{{ $reply->content }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+                        <i class="fas fa-comments text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-500">Chưa có bình luận nào cho sản phẩm này.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</section>
 @endif
+
+
 @endsection
 
 @push('scripts')
@@ -554,13 +764,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 });
 
-// Test function for debugging
-function testAddToCart() {
-    console.log('Test Add to Cart clicked');
-    console.log('CSRF Token:', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-    
-    const testData = {
-        product_id: {{ $product->id }},
+},
         quantity: 1,
         variant_id: null
     };
@@ -595,6 +799,17 @@ function testAddToCart() {
         console.error('Test Error:', error);
         alert('Test Error: ' + error);
     });
+}
+
+}')
+        .then(response => response.json())
+        .then(data => {
+            alert(`User ID: ${data.user_id}\nProduct ID: ${data.product_id}\nCan Comment: ${data.can_comment}\nMessage: ${data.message}`);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error checking comment permission');
+        });
 }
 </script>
 @endpush

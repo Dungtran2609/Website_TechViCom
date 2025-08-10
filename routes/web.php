@@ -31,6 +31,7 @@ use App\Http\Controllers\WebhookController;
 
 // --- Controllers cho CLIENT ---
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
@@ -47,9 +48,10 @@ use App\Http\Middleware\CheckPermission;
 // === CLIENT ROUTES ===
 // =========================================================================
 
+
 // Trang chủ client
 // Test route to add product to cart
-Route::get('/test-add-to-cart', function() {
+Route::get('/test-add-to-cart', function () {
     $cart = session()->get('cart', []);
     $cart[] = [
         'product_id' => 1,
@@ -57,7 +59,7 @@ Route::get('/test-add-to-cart', function() {
         'variant_id' => null
     ];
     session(['cart' => $cart]);
-    
+
     return 'Product added to cart. Cart size: ' . count($cart) . ' - <a href="/checkout">Go to checkout</a>';
 });
 
@@ -65,7 +67,7 @@ Route::get('/test-add-to-cart', function() {
 Route::get('/test-checkout-flow', function () {
     // Clear session và tạo test cart
     session()->forget('cart');
-    
+
     $cart = [
         'items' => [
             '1' => [
@@ -78,12 +80,12 @@ Route::get('/test-checkout-flow', function () {
         'total' => 100000
     ];
     session(['cart' => $cart]);
-    
+
     return 'Test cart created. <a href="/checkout">Go to checkout</a>';
 });
 
 // Test route để kiểm tra có session cart không
-Route::get('/test-check-cart', function() {
+Route::get('/test-check-cart', function () {
     $cart = session()->get('cart', []);
     return 'Session cart: <pre>' . json_encode($cart, JSON_PRETTY_PRINT) . '</pre> - <a href="/checkout">Go to checkout</a>';
 });
@@ -92,12 +94,12 @@ Route::get('/test-check-cart', function() {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Test cart functionality
-Route::get('/test-cart-page', function() {
+Route::get('/test-cart-page', function () {
     return view('test-cart');
 })->name('test-cart-page');
 
 // Test route for debugging cart
-Route::get('/test-cart', function() {
+Route::get('/test-cart', function () {
     $cart = session()->get('cart', []);
     return response()->json([
         'session_cart' => $cart,
@@ -107,7 +109,7 @@ Route::get('/test-cart', function() {
 });
 
 // Test add to cart (no CSRF for testing)
-Route::post('/test-add-cart', function(Request $request) {
+Route::post('/test-add-cart', function (Request $request) {
     error_log('TEST: Test add cart request: ' . json_encode($request->all()));
     Log::info('Test add cart request: ', $request->all());
     $cart = session()->get('cart', []);
@@ -121,7 +123,7 @@ Route::post('/test-add-cart', function(Request $request) {
     session()->save();
     error_log('TEST: Cart after save: ' . json_encode(session()->get('cart', [])));
     Log::info('Test add cart session after: ', session()->get('cart', []));
-    
+
     return response()->json([
         'success' => true,
         'session_cart' => session()->get('cart', [])
@@ -129,29 +131,29 @@ Route::post('/test-add-cart', function(Request $request) {
 })->withoutMiddleware(['csrf']);
 
 // Debug cart API
-Route::get('/debug-cart-api', function() {
+Route::get('/debug-cart-api', function () {
     $controller = new \App\Http\Controllers\Client\Carts\ClientCartController();
     $request = new \Illuminate\Http\Request();
     $request->headers->set('Accept', 'application/json');
-    
+
     $response = $controller->index($request);
     return $response;
 });
 
 // Debug cart data
-Route::get('/debug-cart-data', function() {
+Route::get('/debug-cart-data', function () {
     if (Auth::check()) {
         $cartItems = \App\Models\Cart::with(['product.productAllImages', 'productVariant.attributeValues.attribute'])
-                        ->where('user_id', Auth::id())
-                        ->get();
+            ->where('user_id', Auth::id())
+            ->get();
     } else {
         $sessionCart = session()->get('cart', []);
         $cartItems = [];
-        
+
         foreach ($sessionCart as $key => $item) {
             $product = \App\Models\Product::with(['productAllImages', 'variants.attributeValues.attribute'])
-                             ->find($item['product_id']);
-            
+                ->find($item['product_id']);
+
             if ($product) {
                 $cartItem = (object) [
                     'id' => $key,
@@ -165,7 +167,7 @@ Route::get('/debug-cart-data', function() {
             }
         }
     }
-    
+
     return response()->json([
         'type' => Auth::check() ? 'database' : 'session',
         'user_id' => Auth::check() ? Auth::id() : null,
@@ -176,13 +178,13 @@ Route::get('/debug-cart-data', function() {
 });
 
 // Test cart operations with debug
-Route::post('/debug-cart-update', function() {
+Route::post('/debug-cart-update', function () {
     $id = request('id');
     $quantity = request('quantity');
-    
+
     $sessionId = session()->getId();
     $cart = session()->get('cart', []);
-    
+
     $response = [
         'request_data' => [
             'id' => $id,
@@ -196,12 +198,12 @@ Route::post('/debug-cart-update', function() {
             'key_exists' => isset($cart[$id])
         ]
     ];
-    
+
     if (isset($cart[$id])) {
         $cart[$id]['quantity'] = $quantity;
         session()->put('cart', $cart);
         session()->save();
-        
+
         $response['update_result'] = [
             'success' => true,
             'cart_after' => session()->get('cart', [])
@@ -212,20 +214,20 @@ Route::post('/debug-cart-update', function() {
             'message' => 'Key not found'
         ];
     }
-    
+
     return response()->json($response);
 })->withoutMiddleware(['csrf']);
 
 // Test session directly
-Route::get('/test-session', function() {
+Route::get('/test-session', function () {
     // Start session if not started
     if (!session()->isStarted()) {
         session()->start();
     }
-    
+
     $sessionId = session()->getId();
     $cart = session()->get('cart', []);
-    
+
     // Add or update cart
     if (request('action') === 'add') {
         $key = '1_default';
@@ -242,7 +244,7 @@ Route::get('/test-session', function() {
         session()->save();
         $cart = session()->get('cart', []); // Refresh
     }
-    
+
     return response()->json([
         'session_started' => session()->isStarted(),
         'session_id' => $sessionId,
@@ -257,25 +259,25 @@ Route::get('/test-session', function() {
 });
 
 // Test update cart directly
-Route::post('/test-update-cart', function() {
+Route::post('/test-update-cart', function () {
     $id = request('id', '1_default');
     $quantity = request('quantity', 2);
-    
+
     $controller = new App\Http\Controllers\Client\Carts\ClientCartController();
     $request = new Illuminate\Http\Request();
     $request->merge(['quantity' => $quantity]);
     $request->setMethod('PUT');
-    
+
     return $controller->update($request, $id);
 });
 
 // Simple cart test
-Route::get('/simple-cart-test', function() {
+Route::get('/simple-cart-test', function () {
     // Add item to session cart
     if (request('action') === 'add') {
         $cart = session()->get('cart', []);
         $key = '1_default';
-        
+
         if (isset($cart[$key])) {
             $cart[$key]['quantity'] += 1;
         } else {
@@ -285,11 +287,11 @@ Route::get('/simple-cart-test', function() {
                 'quantity' => 1
             ];
         }
-        
+
         session()->put('cart', $cart);
         session()->save();
     }
-    
+
     // Display current state
     $cart = session()->get('cart', []);
     return response()->json([
@@ -302,33 +304,33 @@ Route::get('/simple-cart-test', function() {
 });
 
 // Debug cart page
-Route::get('/debug-cart', function() {
+Route::get('/debug-cart', function () {
     return view('debug-cart');
 });
 
 // Test cart API endpoint
-Route::get('/test-cart-api', function() {
+Route::get('/test-cart-api', function () {
     $controller = new App\Http\Controllers\Client\Carts\ClientCartController();
     $request = new Illuminate\Http\Request();
     $request->headers->set('Accept', 'application/json');
-    
+
     $response = $controller->index($request);
     return $response;
 });
 
 // Add test item to cart
-Route::get('/add-test-item', function() {
+Route::get('/add-test-item', function () {
     $sessionCart = session()->get('cart', []);
-    
+
     // Add a test product (assuming product ID 1 exists)
     $sessionCart[] = [
         'product_id' => 1,
         'variant_id' => null,
         'quantity' => 2
     ];
-    
+
     session()->put('cart', $sessionCart);
-    
+
     return redirect('/client/carts')->with('success', 'Test item added to cart');
 });
 
@@ -367,20 +369,20 @@ Route::prefix('carts')->name('carts.')->group(function () {
 
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
-    // Sản phẩm
-    Route::prefix('products')->name('products.')->group(function () {
-        Route::get('/', [ClientProductController::class, 'index'])->name('index');
-        Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
-    });
-
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
-        // Routes khác có thể thêm vào đây sau
+        // AJAX xác nhận đã nhận hàng
+        Route::post('{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
+        // AJAX gửi yêu cầu trả hàng
+        Route::post('{id}/request-return', [ClientOrderController::class, 'requestReturn'])->name('request-return');
+        // AJAX hủy đơn hàng
+        Route::post('{id}/cancel', [ClientOrderController::class, 'cancel'])->name('cancel');
     });
 
     // Liên hệ
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::get('/', [ClientContactController::class, 'index'])->name('index');
+        Route::get('/create', [ClientContactController::class, 'index'])->name('create'); // Redirect to index for contact form
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 });
@@ -391,9 +393,11 @@ Route::prefix('api')->group(function () {
     Route::get('/provinces', [ClientAddressController::class, 'getProvinces']);
     Route::get('/districts/{provinceCode}', [ClientAddressController::class, 'getDistricts']);
     Route::get('/wards/{districtCode}', [ClientAddressController::class, 'getWards']);
-    
+
     // Coupon API - Using Client Controller
     Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+    Route::get('/coupons', [ClientCouponController::class, 'listAvailableCoupons']);
+    // Route::post('/buy-now', [ClientCheckoutController::class, 'buyNow'])->name('checkout.buyNow');
 });
 
 // ACCOUNTS ROUTES (Không có prefix /client)
@@ -413,6 +417,7 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
 });
+
 
 // =========================================================================
 // === ADMIN ROUTES ===
@@ -454,14 +459,27 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
     // ==== Orders ====
     // Sửa lại để sử dụng resource controller cho gọn gàng và chuẩn RESTful
+    // Route::prefix('orders')->name('orders.')->group(function () {
+    // Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+    // Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+    // Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+    // Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+    // Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+    // Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+    // Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+    // });
     Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
-        Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
-        Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
+        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)
@@ -567,8 +585,8 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminOrderController::class) 
-            ->parameters(['' => 'order']) 
+        Route::resource('', AdminOrderController::class)
+            ->parameters(['' => 'order'])
             ->names([
                 'index' => 'index',
                 'create' => 'create',
@@ -579,7 +597,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
                 'destroy' => 'destroy',
             ]);
     });
-            // Liên hệ (Contacts)
+    // Liên hệ (Contacts)
     Route::prefix('contacts')->name('contacts.')->group(function () {
         // Quản lý liên hệ
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');

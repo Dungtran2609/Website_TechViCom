@@ -42,15 +42,14 @@
                                     @elseif ($orderData['status'] === 'processing')
                                         <option value="processing" {{ old('status', $orderData['status']) === 'processing' ? 'selected' : '' }}>Đang xử lý
                                         </option>
-                                        <option value="shipped" {{ old('status') === 'shipped' ? 'selected' : '' }}>Đã giao</option>
+                                            <option value="shipped" {{ old('status') === 'shipped' ? 'selected' : '' }}>Đã giao</option>
                                     @elseif ($orderData['status'] === 'shipped')
-                                        <option value="shipped" {{ old('status', $orderData['status']) === 'shipped' ? 'selected' : '' }}>Đã giao</option>
-                                        <option value="delivered" {{ old('status') === 'delivered' ? 'selected' : '' }}>Đã nhận
-                                        </option>
+                                        <option value="shipped" {{ old('status', $orderData['status']) === 'shipped' ? 'selected' : '' }}>Đang giao hàng</option>
+                                        <option value="delivered" {{ old('status') === 'delivered' ? 'selected' : '' }}>Đã giao</option>
                                     @elseif ($orderData['status'] === 'delivered')
-                                        <option value="delivered" {{ old('status', $orderData['status']) === 'delivered' ? 'selected' : '' }}>Đã nhận</option>
-                                        <option value="returned" {{ old('status') === 'returned' ? 'selected' : '' }}>Đã trả hàng
-                                        </option>
+                                        <option value="delivered" {{ old('status', $orderData['status']) === 'delivered' ? 'selected' : '' }}>Đã giao</option>
+                                        <option value="received" {{ old('status') === 'received' ? 'selected' : '' }}>Đã nhận hàng</option>
+                                        <option value="returned" {{ old('status') === 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
                                     @endif
                                 </select>
                             </div>
@@ -120,8 +119,8 @@
                                                             <option value="{{ $cp->id }}" {{ $orderData['coupon_id'] == $cp->id ? 'selected' : '' }}>
                                                                 {{ $cp->code }} –
                                                                 {{ $cp->discount_type == 'percent'
-                                    ? $cp->value . '%'
-                                    : number_format($cp->value, 0, ',', '.') . ' VND' }}
+        ? $cp->value . '%'
+        : number_format($cp->value, 0, ',', '.') . ' VND' }}
                                                             </option>
                                 @endforeach
                             </select>
@@ -166,14 +165,15 @@
                                         <tr>
                                             <td>{{ $item['name_product'] }}</td>
                                             <td>
-                                                <input type="number" name="order_items[{{ $index }}][quantity]"
-                                                    value="{{ old("order_items.$index.quantity", $item['quantity']) }}"
-                                                    class="form-control form-control-sm" min="1" @if($orderData['status'] !== 'pending') readonly @endif>
+                                                {{-- KHÓA KHÔNG CHO SỬA & vẫn submit giá trị --}}
+                                                <input type="number" value="{{ old("order_items.$index.quantity", $item['quantity']) }}"
+                                                    class="form-control form-control-sm" min="1" disabled>
+                                                <input type="hidden" name="order_items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
                                             </td>
                                             <td>
                                                 <input type="number" step="0.01" name="order_items[{{ $index }}][price]"
-                                                    value="{{ old("order_items.$index.price", $item['price']) }}"
-                                                    class="form-control form-control-sm" min="0" @if($orderData['status'] !== 'pending') readonly @endif>
+                                                    value="{{ old("order_items.$index.price", $item['price']) }}" class="form-control form-control-sm" min="0"
+                                                    @if($orderData['status'] !== 'pending') readonly @endif>
                                             </td>
                                             <td>{{ number_format($itTotal, 0, ',', '.') }} VND</td>
                                             <input type="hidden" name="order_items[{{ $index }}][id]" value="{{ $item['id'] }}">

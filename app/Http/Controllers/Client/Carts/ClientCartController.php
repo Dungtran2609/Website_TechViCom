@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-class ClientCartController extends Controller
-{
+class ClientCartController extends Controller{
+
     public function index(Request $request)
     {
         if (Auth::check()) {
@@ -45,34 +45,28 @@ class ClientCartController extends Controller
         if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
             $items = [];
             $total = 0;
-            
-            foreach ($cartItems as $cartItem) {
+            foreach ($cartItems as $key => $cartItem) {
                 $product = is_object($cartItem) ? $cartItem->product : $cartItem['product'];
                 $quantity = is_object($cartItem) ? $cartItem->quantity : $cartItem['quantity'];
-                
-                // Get price from variant or product
                 $price = 0;
-                
-                // If cart item has specific variant
+                // Nếu có variant cụ thể
                 if (is_object($cartItem) && isset($cartItem->productVariant) && $cartItem->productVariant) {
-                    $price = $cartItem->productVariant->price ?? 0;
+                    $price = $cartItem->productVariant->sale_price ?? $cartItem->productVariant->price ?? 0;
                 }
-                // If session cart item has variant_id
+                // Nếu là session cart và có variant_id
                 elseif (!is_object($cartItem) && isset($cartItem['variant_id']) && $cartItem['variant_id']) {
                     $variant = \App\Models\ProductVariant::find($cartItem['variant_id']);
-                    $price = $variant ? $variant->price : 0;
+                    $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
                 }
-                // Default to first variant of product
+                // Nếu có variant đầu tiên của product
                 elseif ($product->variants && $product->variants->count() > 0) {
-                    $price = $product->variants->first()->price ?? 0;
+                    $variant = $product->variants->first();
+                    $price = $variant->sale_price ?? $variant->price ?? 0;
                 }
-                
                 $total += $price * $quantity;
-                
                 $image = $product->productAllImages->first() ? 
                         asset('uploads/products/' . $product->productAllImages->first()->image) : 
                         asset('images/default-product.jpg');
-                
                 $items[] = [
                     'id' => is_object($cartItem) ? $cartItem->id : $key, // Use key for session cart
                     'product_id' => $product->id,
@@ -83,7 +77,6 @@ class ClientCartController extends Controller
                     'variant' => is_object($cartItem) ? $cartItem->productVariant : null
                 ];
             }
-            
             return response()->json([
                 'success' => true,
                 'items' => $items,

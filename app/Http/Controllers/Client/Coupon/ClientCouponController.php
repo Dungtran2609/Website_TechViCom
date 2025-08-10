@@ -9,6 +9,57 @@ use Carbon\Carbon;
 
 class ClientCouponController extends Controller
 {
+    public function listAvailableCoupons(Request $request)
+    {
+        $subtotal = $request->input('subtotal', 0);
+        $now = \Carbon\Carbon::now();
+        $coupons = \App\Models\Coupon::where('status', true)
+            ->whereNull('deleted_at')
+            ->where(function($q) use ($now) {
+                $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
+            })
+            ->where(function($q) use ($now) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
+            })
+            ->get();
+
+        $result = [];
+        foreach ($coupons as $coupon) {
+            $eligible = true;
+            $reason = '';
+            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                $eligible = false;
+                $reason = 'Chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+            }
+            if ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                $eligible = false;
+                $reason = 'Vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+            }
+            $discountAmount = 0;
+            if ($coupon->discount_type === 'percent') {
+                $discountAmount = $subtotal * ($coupon->value / 100);
+                if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                    $discountAmount = $coupon->max_discount_amount;
+                }
+            } else {
+                $discountAmount = $coupon->value;
+            }
+            $discountAmount = min($discountAmount, $subtotal);
+            $result[] = [
+                'code' => $coupon->code,
+                'discount_type' => $coupon->discount_type,
+                'value' => $coupon->value,
+                'max_discount_amount' => $coupon->max_discount_amount,
+                'min_order_value' => $coupon->min_order_value,
+                'max_order_value' => $coupon->max_order_value,
+                'eligible' => $eligible,
+                'reason' => $reason,
+                'discount_amount' => $discountAmount,
+                'message' => $eligible ? $this->getDiscountMessage($coupon, $discountAmount) : $reason
+            ];
+        }
+        return response()->json(['success' => true, 'coupons' => $result]);
+    }
     public function validateCoupon(Request $request)
     {
         try {
@@ -86,6 +137,8 @@ class ClientCouponController extends Controller
                     'discount_type' => $coupon->discount_type,
                     'value' => $coupon->value,
                     'max_discount_amount' => $coupon->max_discount_amount,
+                    'min_order_value' => $coupon->min_order_value,
+                    'max_order_value' => $coupon->max_order_value,
                     'message' => $this->getDiscountMessage($coupon, $discountAmount)
                 ]
             ]);

@@ -5,53 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // --- THÊM MỚI: Định nghĩa các hằng số để quản lý tập trung ---
-
     /**
-     * Các trạng thái xử lý của đơn hàng.
-     */
-    public const ORDER_STATUSES = [
-        'pending'    => 'Chờ xử lý',
-        'processing' => 'Đang xử lý',
-        'shipped'    => 'Đã giao hàng',
-        'delivered'  => 'Đã nhận hàng',
-        'cancelled'  => 'Đã hủy',
-        'returned'   => 'Đã trả hàng',
-    ];
-
-    /**
-     * Các phương thức thanh toán.
-     */
-    public const PAYMENT_METHODS = [
-        'cod'           => 'Thanh toán khi nhận hàng (COD)',
-        'bank_transfer' => 'Chuyển khoản ngân hàng (Thủ công)',
-        'vietqr'        => 'Thanh toán VietQR Online', // Thêm phương thức mới
-    ];
-
-    /**
-     * Các trạng thái thanh toán của đơn hàng.
-     */
-    public const PAYMENT_STATUSES = [
-        'unpaid'   => 'Chưa thanh toán', // Trạng thái ban đầu
-        'paid'     => 'Đã thanh toán',   // Webhook sẽ cập nhật trạng thái này
-        'failed'   => 'Thanh toán thất bại',
-        'refunded' => 'Đã hoàn tiền',
-    ];
-
-    /**
-     * Các thuộc tính có thể gán hàng loạt (mass assignable).
+     * Các thuộc tính có thể gán hàng loạt
      */
     protected $fillable = [
         'user_id',
         'address_id',
         'guest_name',
-        'guest_email', 
+        'guest_email',
         'guest_phone',
         'shipping_method_id',
         'payment_method',
@@ -66,76 +32,112 @@ class Order extends Model
         'recipient_phone',
         'recipient_address',
         'shipped_at',
-        'payment_status', // Rất quan trọng cho thanh toán online
+        'payment_status',
     ];
 
     /**
-     * Các trường kiểu ngày tháng cần được cast sang đối tượng Carbon.
+     * Trường kiểu ngày cần được cast sang Carbon
      */
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
-        'shipped_at' => 'datetime',
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'shipped_at',
     ];
 
-
+    /**
+     * Mối quan hệ: đơn hàng thuộc về người dùng
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Mối quan hệ: địa chỉ giao hàng
+     */
     public function address()
     {
         return $this->belongsTo(UserAddress::class, 'address_id');
     }
 
+    /**
+     * Mối quan hệ: phương thức vận chuyển
+     */
     public function shippingMethod()
     {
         return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
     }
 
+    /**
+     * Mối quan hệ: mã giảm giá áp dụng
+     */
     public function coupon()
     {
         return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
+    /**
+     * Mối quan hệ: các sản phẩm trong đơn hàng
+     */
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * Mối quan hệ: giao dịch thanh toán (nếu có)
+     */
+
+
+    /**
+     * Mối quan hệ: các lần trả hàng liên quan
+     */
     public function returns()
     {
         return $this->hasMany(OrderReturn::class);
     }
 
-    // =========================================================================
-    // === ACCESSORS & MUTATORS ===
-    // =========================================================================
-
     /**
-     * SỬA ĐỔI: Accessor dịch phương thức thanh toán sang tiếng Việt, sử dụng hằng số.
+     * Accessor: dịch phương thức thanh toán sang tiếng Việt
      */
-    public function getPaymentMethodVietnameseAttribute(): string
+    public function getPaymentMethodVietnameseAttribute()
     {
-        return self::PAYMENT_METHODS[$this->payment_method] ?? ucfirst($this->payment_method);
+        $methods = [
+            'credit_card' => 'Thẻ tín dụng/ghi nợ',
+            'bank_transfer' => 'Chuyển khoản ngân hàng',
+            'cod' => 'Thanh toán khi nhận hàng',
+        ];
+
+        return $methods[$this->payment_method] ?? $this->payment_method;
     }
 
     /**
-     * SỬA ĐỔI: Accessor dịch trạng thái đơn hàng sang tiếng Việt, sử dụng hằng số.
+     * Accessor: dịch trạng thái đơn hàng sang tiếng Việt
      */
-    public function getStatusVietnameseAttribute(): string
+    public function getStatusVietnameseAttribute()
     {
-        return self::ORDER_STATUSES[$this->status] ?? ucfirst($this->status);
-    }
+        $statuses = [
+            'pending' => 'Đang chờ xử lý',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đang giao',
+            'delivered' => 'Đã giao',
+            'received' => 'Đã nhận hàng',
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Đã trả hàng',
+        ];
 
-    /**
-     * SỬA ĐỔI: Accessor dịch trạng thái thanh toán sang tiếng Việt, sử dụng hằng số.
-     */
+        return $statuses[$this->status] ?? $this->status;
+    }
+    public const PAYMENT_STATUSES = [
+        'pending' => 'Đang chờ xử lý',
+        'paid' => 'Đã thanh toán',
+        'failed' => 'Thất bại',
+    ];
     public function getPaymentStatusVietnameseAttribute(): string
     {
-        return self::PAYMENT_STATUSES[$this->payment_status] ?? ucfirst($this->payment_status);
+        return self::PAYMENT_STATUSES[$this->payment_status]
+            ?? $this->payment_status;
     }
 
     /**
@@ -151,7 +153,7 @@ class Order extends Model
      */
     public function getCustomerNameAttribute()
     {
-        return $this->isGuestOrder() 
+        return $this->isGuestOrder()
             ? ($this->guest_name ?? 'Khách vãng lai')
             : ($this->user->name ?? 'Khách vãng lai');
     }
@@ -161,7 +163,7 @@ class Order extends Model
      */
     public function getCustomerEmailAttribute()
     {
-        return $this->isGuestOrder() 
+        return $this->isGuestOrder()
             ? ($this->guest_email ?? 'N/A')
             : ($this->user->email ?? 'N/A');
     }
@@ -171,10 +173,10 @@ class Order extends Model
      */
     public function getCustomerPhoneAttribute()
     {
-        return $this->isGuestOrder() 
+        return $this->isGuestOrder()
             ? ($this->guest_phone ?? 'N/A')
             : ($this->user->phone_number ?? 'N/A');
     }
     // ...
-    
+
 }

@@ -338,6 +338,16 @@
 
     <!-- Cart Items -->
     <div class="flex-1 overflow-y-auto p-4" id="cart-items-container">
+        <div id="cart-bulk-bar" class="hidden mb-3 px-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm flex items-center justify-between">
+            <label class="flex items-center space-x-2">
+                <input type="checkbox" id="sidebar-select-all" class="w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]">
+                <span>Chọn tất cả</span>
+            </label>
+            <div class="flex items-center space-x-2">
+                <button id="sidebar-delete-selected" class="px-3 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 text-xs disabled:opacity-40" disabled>Xóa</button>
+                <button id="sidebar-buy-selected" class="px-3 py-1 rounded bg-[#ff6c2f] text-white hover:bg-[#e55a28] text-xs disabled:opacity-40" disabled>Mua</button>
+            </div>
+        </div>
         <!-- Empty cart state -->
         <div id="empty-cart" class="text-center py-12">
             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -345,7 +355,7 @@
             </div>
             <h4 class="text-gray-600 font-medium mb-2">Giỏ hàng trống</h4>
             <p class="text-gray-500 text-sm mb-4">Thêm sản phẩm vào giỏ hàng để bắt đầu mua sắm</p>
-            <button onclick="closeCartSidebar()" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+            <button onclick="window.location.href='{{ route('home') }}'" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
                 Tiếp tục mua sắm
             </button>
         </div>
@@ -358,7 +368,25 @@
 
     <!-- Cart Footer -->
     <div id="cart-footer" class="border-t border-gray-200 p-4 hidden">
-        <!-- Subtotal -->
+        <!-- Coupon -->
+        <div id="sidebar-coupon-box" class="mb-3">
+            <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-gray-600">Mã giảm giá</label>
+                <button type="button" onclick="toggleCouponList()" class="text-[10px] text-[#ff6c2f] underline" id="toggle-coupon-list-btn">Danh sách</button>
+            </div>
+            <div class="flex space-x-2 mb-1">
+                <input type="text" id="sidebar-coupon-code" placeholder="Nhập mã" class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#ff6c2f]">
+                <button type="button" onclick="applySidebarCoupon()" class="px-3 py-1 bg-[#ff6c2f] text-white text-xs rounded hover:bg-[#e55a28]">Áp dụng</button>
+                <button type="button" onclick="clearSidebarCoupon()" class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded hover:bg-gray-300" title="Hủy">×</button>
+            </div>
+            <p id="sidebar-coupon-message" class="text-xs mt-1"></p>
+            <div id="available-coupons" class="mt-2 space-y-2 hidden max-h-40 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs"></div>
+        </div>
+        <div id="sidebar-discount-row" class="flex justify-between items-center mb-2 hidden">
+            <span class="text-gray-600">Giảm giá:</span>
+            <span class="text-sm font-semibold text-green-600" id="sidebar-discount-amount">-0₫</span>
+        </div>
+        <!-- Subtotal (after discount) -->
         <div class="flex justify-between items-center mb-4">
             <span class="text-gray-600">Tạm tính:</span>
             <span class="text-lg font-semibold text-gray-900" id="cart-subtotal">0₫</span>
@@ -369,9 +397,9 @@
             <button onclick="window.location.href='{{ route('carts.index') }}'" class="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition">
                 Xem giỏ hàng
             </button>
-            <button onclick="window.location.href='{{ route('checkout.index') }}'" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition">
-                Thanh toán ngay
-            </button>
+                <button onclick="handleSidebarCheckout()" class="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition">
+                    Thanh toán ngay
+                </button>
         </div>
     </div>
 </div>
@@ -443,6 +471,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load cart items
     loadCartItems();
+
+    // Watch coupon input changes: if user xóa hoặc sửa khác mã đã áp dụng -> hủy giảm giá
+    const couponInput = document.getElementById('sidebar-coupon-code');
+    if (couponInput) {
+        couponInput.addEventListener('input', () => {
+            try {
+                const saved = JSON.parse(localStorage.getItem('appliedDiscount')||'null');
+                if (!couponInput.value.trim() || (saved && saved.code && couponInput.value.trim().toUpperCase() !== saved.code.toUpperCase())) {
+                    localStorage.removeItem('appliedDiscount');
+                    const msg = document.getElementById('sidebar-coupon-message');
+                    if (msg) { msg.textContent = couponInput.value.trim() ? 'Nhập mã giảm giá' : ''; msg.className='text-xs mt-1 text-gray-500'; }
+                    recalcSelectedSubtotal();
+                }
+            } catch(e){}
+        });
+    }
 
     // Update authentication state on load
     @auth
@@ -543,21 +587,31 @@ function updateCartDisplay(items) {
         emptyCart.classList.add('hidden');
         cartItemsList.classList.remove('hidden');
         cartFooter.classList.remove('hidden');
+    // Save items globally for coupon usage
+    window.currentCartItems = items;
         
         // Render cart items
-        cartItemsList.innerHTML = items.map(item => {
+        // Show bulk bar
+        const bulkBar = document.getElementById('cart-bulk-bar');
+        if (bulkBar) bulkBar.classList.remove('hidden');
+
+    // Keep previously selected ids before re-render
+    const previouslySelected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(cb => cb.value);
+
+    cartItemsList.innerHTML = items.map(item => {
             console.log('Rendering item:', item);
             const price = parseFloat(item.price) || 0;
             return `
-            <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter">
-                <img src="${item.image || '/images/default-product.jpg'}" alt="${item.name}" class="w-16 h-16 object-cover rounded-lg">
+            <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
+                <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}">
+                <img src="${item.image || '/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
                 <div class="flex-1">
                     <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
                     <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
                     <div class="flex items-center space-x-2 mt-1">
-                        <button onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">-</button>
-                        <span class="text-sm">${item.quantity}</span>
-                        <button onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">+</button>
+                        <button onclick="changeSidebarQuantity('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">-</button>
+                        <span class="text-sm sidebar-qty" data-id="${item.id}">${item.quantity}</span>
+                        <button onclick="changeSidebarQuantity('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">+</button>
                     </div>
                 </div>
                 <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-700">
@@ -567,22 +621,59 @@ function updateCartDisplay(items) {
         `;
         }).join('');
 
-        // Update subtotal
-        const subtotal = items.reduce((sum, item) => {
-            const price = parseFloat(item.price) || 0;
-            const quantity = parseInt(item.quantity) || 0;
-            console.log(`Adding item price: ${price} x ${quantity} = ${price * quantity}`);
-            return sum + (price * quantity);
-        }, 0);
-        console.log('Calculated subtotal:', subtotal);
-        const subtotalElement = document.getElementById('cart-subtotal');
-        if (subtotalElement) {
-            subtotalElement.textContent = formatPrice(subtotal);
-            console.log('Updated subtotal element:', subtotalElement.textContent);
-        } else {
-            console.error('cart-subtotal element not found');
-        }
+        // Re-apply previous selections
+        previouslySelected.forEach(id => {
+            const cb = cartItemsList.querySelector(`.sidebar-item-checkbox[value="${id}"]`);
+            if (cb) cb.checked = true;
+        });
+        // Init events then recalc subtotal after restoring selection
+        initSidebarSelection();
+        recalcSelectedSubtotal();
     }
+
+function initSidebarSelection() {
+    const selectAll = document.getElementById('sidebar-select-all');
+    const itemCheckboxes = document.querySelectorAll('.sidebar-item-checkbox');
+    const deleteBtn = document.getElementById('sidebar-delete-selected');
+    const buyBtn = document.getElementById('sidebar-buy-selected');
+    if (!selectAll) return;
+
+    function updateState() {
+        const checked = Array.from(itemCheckboxes).filter(c => c.checked);
+        const any = checked.length > 0;
+        deleteBtn.disabled = !any;
+        buyBtn.disabled = !any;
+        if (checked.length === itemCheckboxes.length) selectAll.checked = true; else selectAll.checked = false;
+        // Recalculate subtotal based on selection
+        recalcSelectedSubtotal();
+    }
+
+    selectAll.addEventListener('change', () => {
+        itemCheckboxes.forEach(c => c.checked = selectAll.checked);
+        updateState();
+    });
+    itemCheckboxes.forEach(c => c.addEventListener('change', updateState));
+
+    deleteBtn.addEventListener('click', () => {
+        const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
+        if (ids.length === 0) return;
+        if (!confirm('Xóa các sản phẩm đã chọn?')) return;
+        Promise.all(ids.map(id => fetch(`{{ url('/carts') }}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(r => r.json()))).then(() => loadCartItems());
+    });
+
+    buyBtn.addEventListener('click', () => {
+        const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
+        if (ids.length === 0) return;
+        localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
+        window.location.href = '{{ route('checkout.index') }}?selected=1';
+    });
+
+    updateState();
+}
 }
 
 function formatPrice(price) {
@@ -633,7 +724,6 @@ function updateCartQuantity(itemId, newQuantity) {
         removeFromCart(itemId);
         return;
     }
-
     fetch(`{{ url('/carts') }}/${itemId}`, {
         method: 'PUT',
         headers: {
@@ -641,32 +731,33 @@ function updateCartQuantity(itemId, newQuantity) {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        credentials: 'same-origin', // Include cookies
-        body: JSON.stringify({
-            quantity: newQuantity
-        })
+        credentials: 'same-origin',
+        body: JSON.stringify({ quantity: newQuantity })
     })
-    .then(response => {
-        console.log('Update response status:', response.status);
-        return response.json();
-    })
+    .then(r => r.json())
     .then(data => {
-        console.log('Update response data:', data);
         if (data.success) {
-            loadCartItems();
-            showNotification('Đã cập nhật số lượng', 'success');
+            // Inline update DOM & cached data instead of full reload
+            const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
+            if (qtySpan) qtySpan.textContent = newQuantity;
+            if (Array.isArray(window.currentCartItems)) {
+                const it = window.currentCartItems.find(i => String(i.id) === String(itemId));
+                if (it) it.quantity = newQuantity;
+            }
+            recalcSelectedSubtotal();
         } else {
             showNotification(data.message || 'Có lỗi xảy ra khi cập nhật', 'error');
-            // Show debug info if available
-            if (data.debug) {
-                console.error('Debug info:', data.debug);
-            }
         }
     })
-    .catch(error => {
-        console.error('Error updating cart:', error);
-        showNotification('Có lỗi xảy ra khi cập nhật', 'error');
-    });
+    .catch(err => { console.error(err); showNotification('Có lỗi xảy ra khi cập nhật', 'error'); });
+}
+
+function changeSidebarQuantity(itemId, delta) {
+    const qtySpan = document.querySelector(`.sidebar-qty[data-id="${itemId}"]`);
+    if (!qtySpan) return;
+    const current = parseInt(qtySpan.textContent) || 0;
+    const next = current + delta;
+    updateCartQuantity(itemId, next);
 }
 
 function removeFromCart(itemId) {
@@ -735,4 +826,192 @@ window.loadCartItems = loadCartItems;
 window.updateCartCount = updateCartCount;
 window.closeCartSidebar = closeCartSidebar;
 window.showNotification = showNotification;
+window.applySidebarCoupon = applySidebarCoupon;
+window.toggleCouponList = toggleCouponList;
+window.clearSidebarCoupon = clearSidebarCoupon;
+window.recalcSelectedSubtotal = recalcSelectedSubtotal;
+window.handleSidebarCheckout = handleSidebarCheckout;
+// Global checkout handler (outside loadCartItems so button can call it immediately)
+function handleSidebarCheckout(){
+    const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c=>c.value);
+    if(selected.length>0){
+        localStorage.setItem('checkout_selected_items', JSON.stringify(selected));
+        window.location.href='{{ route('checkout.index') }}?selected=1';
+    } else {
+        localStorage.removeItem('checkout_selected_items');
+        window.location.href='{{ route('checkout.index') }}';
+    }
+}
+
+// Coupon apply function for sidebar
+function applySidebarCoupon() {
+    const codeInput = document.getElementById('sidebar-coupon-code');
+    const messageEl = document.getElementById('sidebar-coupon-message');
+    if (!codeInput) return;
+    const code = codeInput.value.trim();
+    if (!code) {
+        messageEl.textContent = 'Nhập mã giảm giá';
+        messageEl.className = 'text-xs mt-1 text-red-500';
+        return;
+    }
+    // Calculate current raw subtotal from SELECTED items only
+    let subtotal = getSelectedRawSubtotal();
+    messageEl.textContent = 'Đang kiểm tra...';
+    messageEl.className = 'text-xs mt-1 text-gray-500';
+    fetch('/api/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ coupon_code: code, subtotal: subtotal })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const amount = data.discount_amount || 0;
+            localStorage.setItem('appliedDiscount', JSON.stringify({ 
+                code: code, 
+                amount: amount, 
+                details: {
+                    min_order_value: data.coupon.min_order_value || 0,
+                    max_order_value: data.coupon.max_order_value || 0,
+                    discount_type: data.coupon.discount_type,
+                    value: data.coupon.value
+                }, 
+                fromDatabase: true 
+            }));
+            messageEl.textContent = data.coupon && data.coupon.message ? data.coupon.message : 'Áp dụng thành công';
+            messageEl.className = 'text-xs mt-1 text-green-600';
+        } else {
+            localStorage.removeItem('appliedDiscount');
+            messageEl.textContent = data.message || 'Mã không hợp lệ';
+            messageEl.className = 'text-xs mt-1 text-red-500';
+        }
+        // Only recalc; don't rebuild list so selections stay
+        recalcSelectedSubtotal();
+    })
+    .catch(err => {
+        console.error('Coupon error', err);
+        messageEl.textContent = 'Lỗi áp dụng mã';
+        messageEl.className = 'text-xs mt-1 text-red-500';
+    });
+}
+
+function toggleCouponList() {
+    const box = document.getElementById('available-coupons');
+    if (!box) return;
+    if (box.classList.contains('hidden')) {
+        loadAvailableCoupons();
+        box.classList.remove('hidden');
+        document.getElementById('toggle-coupon-list-btn').textContent = 'Ẩn';
+    } else {
+        box.classList.add('hidden');
+        document.getElementById('toggle-coupon-list-btn').textContent = 'Danh sách';
+    }
+}
+
+function loadAvailableCoupons() {
+    const box = document.getElementById('available-coupons');
+    if (!box) return;
+    // Calculate raw subtotal of selected items (or 0 if none)
+    let subtotal = getSelectedRawSubtotal();
+    fetch(`/api/coupons?subtotal=${subtotal}`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            if (!Array.isArray(data.coupons) || data.coupons.length === 0) { box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>'; return; }
+            box.innerHTML = data.coupons.map(c => {
+                const can = c.eligible;
+                const cls = can ? 'border-green-300 bg-white hover:border-[#ff6c2f] cursor-pointer' : 'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
+                const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` : `Giảm ${Number(c.value).toLocaleString()}₫`;
+                const cond = c.ineligible_reason ? `(<span class="text-red-500">${c.ineligible_reason}</span>)` : '';
+                return `<div class="coupon-item border rounded p-2 ${cls}" data-code="${c.code}" data-eligible="${can}">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold">${c.code}</span>
+                                <span class="text-[#ff6c2f] font-medium">${line}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-600 mt-1">${cond}</div>
+                        </div>`;
+            }).join('');
+            box.querySelectorAll('.coupon-item').forEach(div => {
+                div.addEventListener('click', () => {
+                    if (div.dataset.eligible !== 'true') return; // not eligible
+                    // remove previous selection highlight
+                    box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el.classList.remove('coupon-selected','border-[#ff6c2f]'));
+                    div.classList.add('coupon-selected','border-[#ff6c2f]');
+                    document.getElementById('sidebar-coupon-code').value = div.dataset.code;
+                    const msg = document.getElementById('sidebar-coupon-message');
+                    if (msg) { msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận'; msg.className = 'text-xs mt-1 text-gray-600'; }
+                });
+            });
+        })
+        .catch(err => { console.error('Load coupons error', err); box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>'; });
+}
+
+function clearSidebarCoupon() {
+    localStorage.removeItem('appliedDiscount');
+    const input = document.getElementById('sidebar-coupon-code');
+    const msg = document.getElementById('sidebar-coupon-message');
+    if (input) input.value='';
+    if (msg) { msg.textContent=''; msg.className='text-xs mt-1'; }
+    updateCartDisplay(window.currentCartItems||[]);
+    // Subtotal might change (remove discount)
+    recalcSelectedSubtotal();
+}
+
+// ================= Subtotal & Selection Helpers =================
+function getSelectedRawSubtotal() {
+    const selectedIds = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
+    if (!selectedIds.length) return 0;
+    let sum = 0;
+    (window.currentCartItems || []).forEach(i => { if (selectedIds.includes(String(i.id))) { const p = parseFloat(i.price)||0; const q = parseInt(i.quantity)||0; sum += p*q; } });
+    return sum;
+}
+
+function recalcSelectedSubtotal() {
+    const subtotalElement = document.getElementById('cart-subtotal');
+    if (!subtotalElement) return;
+    const discountRow = document.getElementById('sidebar-discount-row');
+    const discountAmountEl = document.getElementById('sidebar-discount-amount');
+    const codeInput = document.getElementById('sidebar-coupon-code');
+    const messageEl = document.getElementById('sidebar-coupon-message');
+    let raw = getSelectedRawSubtotal();
+    let discount = 0;
+    let hasCoupon = false;
+    try {
+        const saved = localStorage.getItem('appliedDiscount');
+        if (saved) {
+            const d = JSON.parse(saved);
+            if (d && d.code) {
+                // If user cleared or changed code input -> invalidate
+                if (codeInput && codeInput.value && codeInput.value.trim().toUpperCase() !== d.code.toUpperCase()) {
+                    localStorage.removeItem('appliedDiscount');
+                } else if (codeInput && !codeInput.value.trim()) {
+                    localStorage.removeItem('appliedDiscount');
+                } else {
+                // Check min/max constraints again with current raw subtotal; if fail -> remove coupon
+                const minReq = Number(d.details && d.details.min_order_value ? d.details.min_order_value : 0);
+                const maxReq = Number(d.details && d.details.max_order_value ? d.details.max_order_value : 0);
+                if ((minReq && raw < minReq) || (maxReq && raw > maxReq)) {
+                    // Invalidate coupon because selection no longer satisfies
+                    localStorage.removeItem('appliedDiscount');
+                        if (messageEl) { messageEl.textContent = 'Mã không còn đủ điều kiện và đã bị hủy'; messageEl.className='text-xs mt-1 text-red-500'; }
+                } else {
+                    hasCoupon = true;
+                    const storedAmount = Number(d.amount) || 0;
+                    discount = Math.min(storedAmount, raw); // cap
+                }
+                }
+            }
+        }
+    } catch(e){ console.warn('discount parse', e); }
+
+    // Show discount row if there is a coupon applied even when raw = 0 (display -0₫)
+    if (hasCoupon) {
+        discountRow.classList.remove('hidden');
+        const displayAmount = discount > 0 ? discount : 0;
+        discountAmountEl.textContent = '-' + formatPrice(displayAmount).replace('₫','') + '₫';
+    } else {
+        discountRow.classList.add('hidden');
+    }
+    subtotalElement.textContent = formatPrice(Math.max(0, raw - discount));
+}
 </script>

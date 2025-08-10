@@ -165,9 +165,19 @@
                                     data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                            @if($imagePath)
-                                                <img src="{{ $isAbsolute ? $imagePath : asset($imagePath) }}"
-                                                    alt="{{ $productName }}" class="w-full h-full object-cover">
+                                            @php
+                                                $imageUrl = '';
+                                                if ($variant && $variant->image) {
+                                                    $imageUrl = asset('storage/' . $variant->image);
+                                                } elseif ($imagePath) {
+                                                    $imageUrl = $isAbsolute ? $imagePath : asset($imagePath);
+                                                }
+                                            @endphp
+                                            @if($imageUrl)
+                                                <img src="{{ $imageUrl }}"
+                                                    alt="{{ $productName }}" 
+                                                    class="w-full h-full object-cover"
+                                                    onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                             @else
                                                 <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                                                     <i class="fas fa-image text-gray-400"></i>

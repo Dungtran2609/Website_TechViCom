@@ -257,10 +257,22 @@
                             <div class="product-item rounded-lg p-4">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0 me-4">
-                                        @if($item->product && $item->product->productAllImages->count() > 0)
-                                            <img src="{{ asset('uploads/products/' . $item->product->productAllImages->first()->image_url) }}" 
+                                        @php
+                                            $imageUrl = '';
+                                            if ($item->productVariant && $item->productVariant->image) {
+                                                $imageUrl = $item->productVariant->image;
+                                            } elseif ($item->product && $item->product->thumbnail) {
+                                                $imageUrl = $item->product->thumbnail;
+                                            } elseif ($item->product && $item->product->productAllImages->count() > 0) {
+                                                $imageUrl = $item->product->productAllImages->first()->image_path;
+                                            }
+                                        @endphp
+
+                                        @if($imageUrl)
+                                            <img src="{{ asset('storage/' . $imageUrl) }}" 
                                                  alt="{{ $item->name_product }}" 
-                                                 class="w-20 h-20 object-cover rounded-lg">
+                                                 class="w-20 h-20 object-cover rounded-lg"
+                                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                         @else
                                             <div class="w-20 h-20 bg-gray-200 rounded-lg d-flex align-items-center justify-content-center">
                                                 <i class="fas fa-image text-gray-400 text-2xl"></i>

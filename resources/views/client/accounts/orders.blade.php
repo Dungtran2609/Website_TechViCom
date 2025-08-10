@@ -17,6 +17,7 @@
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Mã đơn</th>
+                            <th scope="col">Sản phẩm</th>
                             <th scope="col">Ngày đặt</th>
                             <th scope="col">Trạng thái</th>
                             <th scope="col">Tổng tiền</th>
@@ -30,6 +31,38 @@
                                     <span class="text-dark">
                                         {{ $order->random_code ?? $order->code ?? ('DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}
                                     </span>
+                                </td>
+                                <td>
+                                    @foreach($order->orderItems as $item)
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2" style="width: 50px; height: 50px;">
+                                                @if($item->variant_id && $item->variant && $item->variant->image)
+                                                    <img src="{{ asset($item->variant->image) }}" 
+                                                        alt="{{ $item->name_product }}"
+                                                        class="img-fluid rounded"
+                                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                                @elseif($item->image_product)
+                                                    <img src="{{ asset('storage/' . $item->image_product) }}"
+                                                        alt="{{ $item->name_product }}"
+                                                        class="img-fluid rounded"
+                                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                                @else
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                        style="width: 100%; height: 100%;">
+                                                        <i class="fas fa-image text-muted"></i>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-truncate" style="max-width: 200px;">
+                                                    {{ $item->name_product }}
+                                                </div>
+                                                <div class="small text-muted">
+                                                    SL: {{ $item->quantity }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}</td>
                                 <td>

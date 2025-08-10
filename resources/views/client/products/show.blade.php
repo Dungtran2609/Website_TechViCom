@@ -522,47 +522,46 @@
             }
 
             window.buyNow = () => {
-                const attributeCount = variantForm ? variantForm.querySelectorAll('.attribute-options').length :
-                    0;
-                if (productData.type === 'variable' && Object.keys(state.selectedOptions).length !==
-                    attributeCount) {
+                const attributeCount = variantForm ? variantForm.querySelectorAll('.attribute-options').length : 0;
+                
+                if (productData.type === 'variable' && Object.keys(state.selectedOptions).length !== attributeCount) {
                     showNotification('Vui lòng chọn đầy đủ thuộc tính sản phẩm.', 'error');
                     return;
                 }
+                
                 if (!state.activeVariant) {
                     showNotification('Không tìm thấy biến thể phù hợp.', 'error');
                     return;
                 }
+                
                 if (state.activeVariant.stock <= 0) {
                     showNotification('Phiên bản này đã hết hàng.', 'error');
                     return;
                 }
 
-                fetch('/buynow', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': getCsrf()
-                        },
-                        body: JSON.stringify({
-                            product_id: {{ $product->id ?? 'null' }},
-                            quantity: state.quantity,
-                            variant_id: state.activeVariant.id
-                        })
+                // Thêm sản phẩm vào giỏ hàng
+                fetch('{{ route('carts.add') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrf()
+                    },
+                    body: JSON.stringify({
+                        product_id: {{ $product->id ?? 'null' }},
+                        quantity: state.quantity,
+                        variant_id: state.activeVariant.id
                     })
-                    .then(res => res.json().then(data => ({
-                        ok: res.ok,
-                        data
-                    })))
-                    .then(({
-                        ok,
-                        data
-                    }) => {
-                        if (ok) window.location.href = '{{ route('checkout.index') }}';
-                        else showNotification(data.message || 'Có lỗi xảy ra, không thể mua ngay.',
-                            'error');
-                    })
-                    .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Nếu thêm vào giỏ hàng thành công, chuyển đến trang checkout
+                        window.location.href = '{{ route('checkout.index') }}';
+                    } else {
+                        showNotification(data.message || 'Có lỗi xảy ra, không thể mua ngay.', 'error');
+                    }
+                })
+                .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
             }
 
             render();

@@ -71,9 +71,14 @@ class ClientCheckoutController extends Controller
         }
         // 2) User đăng nhập (bảng carts)
         elseif (Auth::check()) {
-            $cartItems = Cart::with(['product.productAllImages', 'product.variants', 'productVariant.attributeValues.attribute'])
-                ->where('user_id', Auth::id())
-                ->get();
+            $cartItems = Cart::with([
+                'product.productAllImages', 
+                'product.variants', 
+                'productVariant.attributeValues.attribute',
+                'productVariant' // Thêm eager loading cho productVariant
+            ])
+            ->where('user_id', Auth::id())
+            ->get();
 
             foreach ($cartItems as $item) {
                 $price = 0;
@@ -105,8 +110,14 @@ class ClientCheckoutController extends Controller
                     $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
 
                     $image = '';
-                    if ($product->productAllImages && $product->productAllImages->count() > 0) {
-                        $image = 'uploads/products/' . $product->productAllImages->first()->image_path;
+                    if ($variant && $variant->image) {
+                        $image = 'storage/' . $variant->image; // Thêm storage/ vào đường dẫn
+                    } elseif ($product->thumbnail) {
+                        $image = 'storage/' . $product->thumbnail;
+                    } elseif ($product->productAllImages && $product->productAllImages->count() > 0) {
+                        $image = 'storage/' . $product->productAllImages->first()->image_path;
+                    } else {
+                        $image = 'client_css/images/placeholder.svg';
                     }
 
                     $cartItems[] = (object) [
@@ -405,8 +416,12 @@ class ClientCheckoutController extends Controller
                 }
 
                 $productImage = '';
-                if ($item->product->productAllImages && $item->product->productAllImages->count() > 0) {
-                    $productImage = $item->product->productAllImages->first()->image_path ?? '';
+                if ($variant && $variant->image) {
+                    $productImage = $variant->image; // Lưu đường dẫn đầy đủ từ database
+                } elseif ($item->product->thumbnail) {
+                    $productImage = $item->product->thumbnail;
+                } elseif ($item->product->productAllImages && $item->product->productAllImages->count() > 0) {
+                    $productImage = $item->product->productAllImages->first()->image_path;
                 }
 
                 OrderItem::create([

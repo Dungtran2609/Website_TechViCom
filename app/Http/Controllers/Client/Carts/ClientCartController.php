@@ -332,4 +332,64 @@ class ClientCartController extends Controller
             'count' => $count
         ]);
     }
+
+    public function setBuyNow(Request $request)
+    {
+        try {
+            // Validate
+            if (!$request->product_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product ID is required'
+                ], 400);
+            }
+
+            $productId = $request->product_id;
+            $quantity = $request->quantity ?? 1;
+            $variantId = $request->variant_id ?? null;
+
+            // Kiểm tra sản phẩm tồn tại
+            $product = Product::find($productId);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sản phẩm không tồn tại'
+                ], 404);
+            }
+
+            // Kiểm tra variant nếu có
+            if ($variantId) {
+                $variant = ProductVariant::find($variantId);
+                if (!$variant || $variant->product_id != $productId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Biến thể sản phẩm không hợp lệ'
+                    ], 400);
+                }
+            }
+
+            // Set session buynow
+            $buynowData = [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'variant_id' => $variantId
+            ];
+            
+            session(['buynow' => $buynowData]);
+            
+            Log::info('Buynow session set', $buynowData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã sẵn sàng mua ngay'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('setBuyNow error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra'
+            ], 500);
+        }
+    }
 }

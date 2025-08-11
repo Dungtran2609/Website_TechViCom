@@ -24,7 +24,7 @@
                             </div>
                             <div class="flex justify-between py-1">
     <span>Tạm tính:</span>
-    <span class="font-medium">{{ number_format($order->total_amount) }}₫</span>
+    <span class="font-medium">{{ number_format($order->total_amount - ($order->shipping_fee ?? 0)) }}₫</span>
 </div>
                             <div class="flex justify-between">
                                 <span>Phí vận chuyển:</span>
@@ -65,27 +65,33 @@
 
                     <!-- Order Items -->
                     <div class="text-left mb-6">
-                        <h3 class="font-semibold text-gray-900 mb-4">Sản phẩm đã đặt</h3>
+                        <h3 class="font-semibold text-gray-900 mb-4">Sản phẩm đã đặt ({{ $order->orderItems->count() }} sản phẩm)</h3>
                         <div class="space-y-3">
-                            @foreach($order->orderItems as $item)
+                            @if($order->orderItems->count() > 0)
+                                @foreach($order->orderItems as $item)
                                 <div class="flex items-center justify-between py-2 border-b border-gray-100">
                                     <div class="flex items-center space-x-3">
                                         <div class="text-sm">
-                                            <div class="font-medium">{{ $item->product->name }}</div>
+                                            <div class="font-medium">{{ $item->name_product }}</div>
                                             <div class="text-gray-500">Số lượng: {{ $item->quantity }}</div>
                                         </div>
                                     </div>
                                     <div class="text-sm font-medium">
                                         @php
-        // Lấy giá giảm nếu có, không thì lấy giá gốc
-        $price = $item->variant->sale_price ?? $item->variant->price ?? $item->price ?? 0;
+        // Lấy giá từ order item (đã được lưu khi tạo order)
+        $price = $item->price ?? 0;
                                         @endphp
                                         {{ number_format($price) }}₫ x {{ $item->quantity }} = {{ number_format($price * $item->quantity) }}₫
                                     </div>
                                 </div>
                             @endforeach
+                            @else
+                                <div class="text-center py-4 text-gray-500">
+                                    <p>Không có sản phẩm nào trong đơn hàng</p>
+                                </div>
+                            @endif
                         </div>
-                    </div>svaa
+                    </div>
 
                     <!-- Actions -->
                     <div class="flex flex-col space-y-4">

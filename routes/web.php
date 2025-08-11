@@ -91,6 +91,8 @@ Route::get('/test-check-cart', function () {
     return 'Session cart: <pre>' . json_encode($cart, JSON_PRETTY_PRINT) . '</pre> - <a href="/checkout">Go to checkout</a>';
 });
 
+
+
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -363,6 +365,7 @@ Route::prefix('carts')->name('carts.')->group(function () {
     Route::get('/', [ClientCartController::class, 'index'])->name('index');
     Route::get('/count', [ClientCartController::class, 'count'])->name('count');
     Route::post('/add', [ClientCartController::class, 'add'])->name('add');
+    Route::post('/set-buy-now', [ClientCartController::class, 'setBuyNow'])->name('setBuyNow');
     Route::put('/{id}', [ClientCartController::class, 'update'])->name('update');
     Route::delete('/{id}', [ClientCartController::class, 'remove'])->name('remove');
     Route::delete('/', [ClientCartController::class, 'clear'])->name('clear');

@@ -838,63 +838,169 @@
             }
         });
 
-        /* ===== LỌC CHỈ CÁC ITEM ĐÃ CHỌN (client-side, an toàn) ===== */
-        (function filterSelectedItems() {
+        // Logic lọc sản phẩm được chọn từ giỏ hàng
+        function filterSelectedItems() {
             try {
-                // lấy selected từ URL hoặc localStorage
-                const qs = (new URLSearchParams(location.search).get('selected') || '').trim();
-                let tokens = qs ? qs.split(',').map(s => s.trim()).filter(Boolean) : [];
-                if (!tokens.length) {
-                    try { const arr = JSON.parse(localStorage.getItem('checkout_selected_items') || '[]'); if (Array.isArray(arr)) tokens = arr.map(String); } catch (e) { }
+                console.log('=== BẮT ĐẦU LỌC SẢN PHẨM ===');
+                
+                // Lấy danh sách ID từ URL hoặc localStorage
+                const urlParams = new URLSearchParams(window.location.search);
+                const selectedParam = urlParams.get('selected');
+                
+                let selectedIds = [];
+                
+                if (selectedParam === '1') {
+                    // Lấy từ localStorage
+                    try {
+                        const stored = localStorage.getItem('checkout_selected_items');
+                        if (stored) {
+                            selectedIds = JSON.parse(stored);
+                            console.log('Lấy từ localStorage:', selectedIds);
+                        }
+                    } catch (e) {
+                        console.error('Lỗi parse localStorage:', e);
+                    }
+                } else if (selectedParam) {
+                    // Lấy từ URL parameter
+                    selectedIds = selectedParam.split(',').map(id => id.trim()).filter(id => id);
+                    console.log('Lấy từ URL:', selectedIds);
                 }
-                if (!tokens.length) return;
-
-                const items = Array.from(document.querySelectorAll('.checkout-item'));
-                if (!items.length) return;
-
-                const isAllDigits = tokens.every(t => /^\d+$/.test(t));
-                const kept = items.filter(el => {
-                    const cartId = String(el.getAttribute('data-cart-id') || '');
-                    const key = String(el.getAttribute('data-item-id') || '');
-                    return isAllDigits ? tokens.includes(cartId) : tokens.includes(key);
+                
+                if (selectedIds.length === 0) {
+                    console.log('Không có sản phẩm nào được chọn, bỏ qua lọc');
+                    return;
+                }
+                
+                console.log('Danh sách ID cần giữ lại:', selectedIds);
+                
+                // Lấy tất cả các item trong checkout
+                const checkoutItems = document.querySelectorAll('.checkout-item');
+                console.log('Tổng số item trong checkout:', checkoutItems.length);
+                
+                let keptItems = [];
+                let removedCount = 0;
+                
+                checkoutItems.forEach((item, index) => {
+                    const cartId = item.getAttribute('data-cart-id');
+                    const itemId = item.getAttribute('data-item-id');
+                    
+                    console.log(`Item ${index + 1}: cartId="${cartId}", itemId="${itemId}"`);
+                    
+                    let shouldKeep = false;
+                    
+                    // Kiểm tra từng ID được chọn
+                    for (let selectedId of selectedIds) {
+                        // So sánh trực tiếp với cartId (chỉ khi cartId là số)
+                        if (cartId && /^\d+$/.test(cartId) && cartId === selectedId) {
+                            shouldKeep = true;
+                            console.log(`  ✓ Giữ lại (cartId match): ${cartId}`);
+                            break;
+                        }
+                        
+                        // So sánh trực tiếp với itemId
+                        if (itemId && itemId === selectedId) {
+                            shouldKeep = true;
+                            console.log(`  ✓ Giữ lại (itemId match): ${itemId}`);
+                            break;
+                        }
+                        
+                        // Chuyển đổi format: "1:2" <-> "1_2"
+                        if (itemId && itemId.includes(':')) {
+                            const converted = itemId.replace(':', '_');
+                            if (converted === selectedId) {
+                                shouldKeep = true;
+                                console.log(`  ✓ Giữ lại (converted match): ${itemId} -> ${converted}`);
+                                break;
+                            }
+                        }
+                        
+                        if (selectedId.includes('_')) {
+                            const converted = selectedId.replace('_', ':');
+                            if (itemId && itemId === converted) {
+                                shouldKeep = true;
+                                console.log(`  ✓ Giữ lại (reverse converted match): ${selectedId} -> ${converted}`);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (shouldKeep) {
+                        keptItems.push(item);
+                    } else {
+                        item.remove();
+                        removedCount++;
+                        console.log(`  ✗ Xóa item: ${itemId || cartId}`);
+                    }
                 });
-
-                if (!kept.length) {
+                
+                console.log(`Kết quả: Giữ lại ${keptItems.length} items, Xóa ${removedCount} items`);
+                
+                if (keptItems.length === 0) {
+                    console.log('Không có item nào được giữ lại!');
                     const title = document.getElementById('order-summary-title');
-                    if (title) title.textContent = 'Đơn hàng của bạn (không tìm thấy sản phẩm đã chọn)';
-                    return; // không xoá trắng nếu không khớp
+                    if (title) {
+                        title.textContent = 'Đơn hàng của bạn (không tìm thấy sản phẩm đã chọn)';
+                    }
+                    return;
                 }
-
-                // xóa các item không chọn
-                items.forEach(el => { if (!kept.includes(el)) el.remove(); });
-
-                // tính lại subtotal
+                
+                // Tính lại tổng tiền
                 let newSubtotal = 0;
-                kept.forEach(el => {
-                    const unit = parseInt(el.getAttribute('data-unit-price')) || 0;
-                    const qty = parseInt(el.getAttribute('data-quantity')) || 1;
-                    newSubtotal += unit * qty;
+                keptItems.forEach(item => {
+                    const unitPrice = parseInt(item.getAttribute('data-unit-price')) || 0;
+                    const quantity = parseInt(item.getAttribute('data-quantity')) || 1;
+                    newSubtotal += unitPrice * quantity;
                 });
+                
+                // Cập nhật hiển thị
                 const subtotalEl = document.getElementById('subtotal');
-                if (subtotalEl) subtotalEl.textContent = newSubtotal.toLocaleString('vi-VN') + '₫';
-                window.checkoutSubtotal = newSubtotal;
-
-                // khôi phục discount
-                let discount = 0; try { const saved = JSON.parse(localStorage.getItem('appliedDiscount') || 'null'); if (saved && saved.amount) discount = Math.min(Number(saved.amount) || 0, newSubtotal); } catch (e) { }
-                window.checkoutDiscount = discount;
-                const discountRow = document.getElementById('discount-row'); const discountAmount = document.getElementById('discount-amount');
-                if (discountRow && discountAmount) { if (discount > 0) { discountRow.style.display = 'flex'; discountAmount.textContent = '-' + discount.toLocaleString('vi-VN') + '₫'; } else { discountRow.style.display = 'none'; } }
-
-                updateCheckoutTotal();
-
-                const title = document.getElementById('order-summary-title'); if (title) title.textContent = 'Đơn hàng (sản phẩm đã chọn)';
-                const listBox = document.getElementById('checkout-available-coupons'); if (listBox && !listBox.classList.contains('hidden')) loadAvailableCouponsCheckout();
-
-                // cập nhật hidden input để POST
-                const hidden = document.getElementById('selected-input');
-                if (hidden) hidden.value = tokens.join(',');
-            } catch (e) { console.error('Filter selected checkout items error', e); }
-        })();
+                if (subtotalEl) {
+                    subtotalEl.textContent = newSubtotal.toLocaleString('vi-VN') + '₫';
+                }
+                
+                // Cập nhật title
+                const title = document.getElementById('order-summary-title');
+                if (title) {
+                    title.textContent = 'Đơn hàng (sản phẩm đã chọn)';
+                }
+                
+                // Cập nhật hidden input
+                const hiddenInput = document.getElementById('selected-input');
+                if (hiddenInput) {
+                    // Chỉ lưu những ID hợp lệ (số nguyên) cho cart items
+                    const validIds = selectedIds.filter(id => /^\d+$/.test(id));
+                    hiddenInput.value = validIds.join(',');
+                }
+                
+                // Tính lại tổng cộng
+                if (typeof updateCheckoutTotal === 'function') {
+                    updateCheckoutTotal();
+                }
+                
+                console.log('=== HOÀN THÀNH LỌC SẢN PHẨM ===');
+                
+            } catch (error) {
+                console.error('Lỗi trong filterSelectedItems:', error);
+            }
+        }
+        
+        // Gọi function khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready - gọi filterSelectedItems');
+            setTimeout(filterSelectedItems, 100);
+        });
+        
+        // Gọi function khi window load xong
+        window.addEventListener('load', function() {
+            console.log('Window loaded - gọi filterSelectedItems');
+            setTimeout(filterSelectedItems, 200);
+        });
+        
+        // Gọi function ngay nếu DOM đã sẵn sàng
+        if (document.readyState !== 'loading') {
+            console.log('DOM đã sẵn sàng - gọi filterSelectedItems ngay');
+            setTimeout(filterSelectedItems, 50);
+        }
     </script>
 
     <div id="shared-footer-container"></div>

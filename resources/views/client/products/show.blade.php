@@ -518,7 +518,10 @@
                             showNotification(data.message || 'Có lỗi xảy ra', 'error');
                         }
                     })
-                    .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
+                    .catch((error) => {
+                    console.error('BuyNow error:', error);
+                    showNotification('Lỗi kết nối, vui lòng thử lại.', 'error');
+                });
             }
 
             window.buyNow = () => {
@@ -539,8 +542,14 @@
                     return;
                 }
 
-                // Thêm sản phẩm vào giỏ hàng
-                fetch('{{ route('carts.add') }}', {
+                console.log('Sending buyNow request with data:', {
+                    product_id: {{ $product->id ?? 'null' }},
+                    quantity: state.quantity,
+                    variant_id: state.activeVariant.id
+                });
+                
+                // Set session buynow trước khi chuyển đến checkout
+                fetch('{{ route('carts.setBuyNow') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -554,14 +563,19 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    console.log('BuyNow response:', data);
                     if (data.success) {
-                        // Nếu thêm vào giỏ hàng thành công, chuyển đến trang checkout
+                        // Chuyển đến trang checkout với buynow session
+                        console.log('Redirecting to checkout...');
                         window.location.href = '{{ route('checkout.index') }}';
                     } else {
                         showNotification(data.message || 'Có lỗi xảy ra, không thể mua ngay.', 'error');
                     }
                 })
-                .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
+                .catch((error) => {
+                    console.error('BuyNow error:', error);
+                    showNotification('Lỗi kết nối, vui lòng thử lại.', 'error');
+                });
             }
 
             render();

@@ -107,16 +107,20 @@ class ClientCheckoutController extends Controller
                     // Đây có thể là cart item IDs format hoặc product IDs format
                     $selectedIds = explode(',', $selectedParam);
                     
-                    // Kiểm tra xem có phải là product IDs không (thường product IDs nhỏ hơn cart item IDs)
-                    $firstId = (int) $selectedIds[0];
-                    if ($firstId <= 100) {
-                        // Có thể là product IDs, tìm cart items theo product_id
-                        $cartQuery->whereIn('product_id', $selectedIds);
-                        Log::info('Using product IDs for filtering', ['product_ids' => $selectedIds]);
-                    } else {
-                        // Có thể là cart item IDs
+                    // Kiểm tra xem có phải là product IDs hay cart item IDs
+                    // Thử tìm cart items theo ID trước (cart item IDs)
+                    $cartItemsById = Cart::where('user_id', Auth::id())
+                        ->whereIn('id', $selectedIds)
+                        ->count();
+                    
+                    if ($cartItemsById > 0) {
+                        // Nếu tìm thấy cart items theo ID, sử dụng cart item IDs
                         $cartQuery->whereIn('id', $selectedIds);
                         Log::info('Using cart item IDs for filtering', ['cart_item_ids' => $selectedIds]);
+                    } else {
+                        // Nếu không tìm thấy, thử tìm theo product_id
+                        $cartQuery->whereIn('product_id', $selectedIds);
+                        Log::info('Using product IDs for filtering', ['product_ids' => $selectedIds]);
                     }
                 }
             }
@@ -137,6 +141,23 @@ class ClientCheckoutController extends Controller
                 // set các field dùng cho view
                 $item->price = (float) $price;
                 $item->cart_item_id = $buildKey($item->product?->id, $item->productVariant?->id);
+                
+                // Thêm các field cần thiết cho view
+                $item->product_name = $item->product ? $item->product->name : 'Unknown Product';
+                
+                // Set image
+                $image = '';
+                if ($item->productVariant && $item->productVariant->image) {
+                    $image = 'storage/' . $item->productVariant->image;
+                } elseif ($item->product && $item->product->thumbnail) {
+                    $image = 'storage/' . $item->product->thumbnail;
+                } elseif ($item->product && $item->product->productAllImages && $item->product->productAllImages->count() > 0) {
+                    $image = 'storage/' . $item->product->productAllImages->first()->image_path;
+                } else {
+                    $image = 'client_css/images/placeholder.svg';
+                }
+                $item->image = $image;
+                
                 $subtotal += (float) $price * (int) $item->quantity;
             }
         }

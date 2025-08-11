@@ -144,10 +144,15 @@
                                     $safeId = $item->cart_item_id ?? (($product?->id ? $product->id : $loop->index) . ':' . ($variant?->id ?? 0));
                                     $productName = $item->product_name ?? ($product?->name ?? 'Sản phẩm');
                                     $imagePath = $item->image ?? null;
+                                    
+                                    // Fallback cho image nếu không có
                                     if (!$imagePath && $product && $product->productAllImages && $product->productAllImages->count() > 0) {
                                         $imagePath = 'uploads/products/' . $product->productAllImages->first()->image_path;
                                     }
+                                    
                                     $isAbsolute = $imagePath ? preg_match('~^https?://|^//~', $imagePath) : false;
+                                    
+                                    // Ưu tiên sử dụng price đã được set trong controller
                                     if (isset($item->price)) {
                                         $displayPrice = (float) $item->price;
                                     } elseif ($variant) {
@@ -849,21 +854,45 @@
                 
                 let selectedIds = [];
                 
-                if (selectedParam === '1') {
-                    // Lấy từ localStorage
-                    try {
-                        const stored = localStorage.getItem('checkout_selected_items');
-                        if (stored) {
-                            selectedIds = JSON.parse(stored);
-                            console.log('Lấy từ localStorage:', selectedIds);
-                        }
-                    } catch (e) {
-                        console.error('Lỗi parse localStorage:', e);
-                    }
-                } else if (selectedParam) {
-                    // Lấy từ URL parameter
+                if (selectedParam) {
+                    // Ưu tiên lấy từ URL parameter trước
                     selectedIds = selectedParam.split(',').map(id => id.trim()).filter(id => id);
                     console.log('Lấy từ URL:', selectedIds);
+                    
+                    // Nếu URL parameter là '1' và không có item nào khớp, thử lấy từ localStorage
+                    if (selectedParam === '1' && selectedIds.length > 0) {
+                        // Kiểm tra xem có item nào khớp với selectedIds không
+                        const checkoutItems = document.querySelectorAll('.checkout-item');
+                        let hasMatchingItem = false;
+                        
+                        checkoutItems.forEach(item => {
+                            const cartId = item.getAttribute('data-cart-id');
+                            const itemId = item.getAttribute('data-item-id');
+                            
+                            for (let selectedId of selectedIds) {
+                                if ((cartId && cartId === selectedId) || 
+                                    (itemId && itemId === selectedId) ||
+                                    (itemId && itemId.includes(':') && itemId.split(':')[0] === selectedId)) {
+                                    hasMatchingItem = true;
+                                    break;
+                                }
+                            }
+                        });
+                        
+                        // Nếu không có item nào khớp, thử lấy từ localStorage
+                        if (!hasMatchingItem) {
+                            try {
+                                const stored = localStorage.getItem('checkout_selected_items');
+                                if (stored) {
+                                    const storedIds = JSON.parse(stored);
+                                    console.log('Không tìm thấy item khớp, lấy từ localStorage:', storedIds);
+                                    selectedIds = storedIds;
+                                }
+                            } catch (e) {
+                                console.error('Lỗi parse localStorage:', e);
+                            }
+                        }
+                    }
                 }
                 
                 if (selectedIds.length === 0) {
@@ -902,6 +931,17 @@
                             shouldKeep = true;
                             console.log(`  ✓ Giữ lại (itemId match): ${itemId}`);
                             break;
+                        }
+                        
+                        // Kiểm tra product ID trong itemId (format: "productId:variantId")
+                        if (itemId && itemId.includes(':')) {
+                            const parts = itemId.split(':');
+                            const productId = parts[0];
+                            if (productId === selectedId) {
+                                shouldKeep = true;
+                                console.log(`  ✓ Giữ lại (productId match): ${productId} in ${itemId}`);
+                                break;
+                            }
                         }
                         
                         // Chuyển đổi format: "1:2" <-> "1_2"

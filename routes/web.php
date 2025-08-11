@@ -33,6 +33,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductController;
+use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
 use App\Http\Controllers\Client\Accounts\ClientAccountController;
@@ -93,6 +94,8 @@ Route::get('/test-check-cart', function () {
 
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
 
 // Test cart functionality
 Route::get('/test-cart-page', function () {
@@ -342,6 +345,12 @@ Route::get('/client', [HomeController::class, 'index'])->name('client.home');
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
+
+    // Product comments routes
+    Route::prefix('{productId}/comments')->name('comments.')->middleware(['auth'])->group(function () {
+        Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
+        Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
+    });
 });
 
 // Categories routes (public access)
@@ -368,6 +377,12 @@ Route::prefix('carts')->name('carts.')->group(function () {
     Route::delete('/', [ClientCartController::class, 'clear'])->name('clear');
 });
 
+// Brands routes (public access)
+Route::prefix('brands')->name('brands.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\Brands\ClientBrandController::class, 'index'])->name('index');
+    Route::get('/{slug}', [App\Http\Controllers\Client\Brands\ClientBrandController::class, 'show'])->name('show');
+});
+
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
     // Đơn hàng
@@ -391,7 +406,7 @@ Route::prefix('client')->name('client.')->group(function () {
     Route::get('/tin-tuc', [ClientNewsController::class, 'index'])->name('news.index');
     Route::get('/tin-tuc/{id}', [ClientNewsController::class, 'show'])->name('news.show');
     // Bình luận bài viết (client) - yêu cầu đăng nhập
-    Route::middleware('auth')->group(function() {
+    Route::middleware('auth')->group(function () {
         Route::post('/tin-tuc/{id}/comment', [ClientNewsController::class, 'storeComment'])->name('news-comments.store');
         Route::post('/tin-tuc/comment/{id}/like', [ClientNewsController::class, 'likeComment'])->name('news-comments.like');
         Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
@@ -468,17 +483,6 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             ]);
     });
 
-    // ==== Orders ====
-    // Sửa lại để sử dụng resource controller cho gọn gàng và chuẩn RESTful
-    // Route::prefix('orders')->name('orders.')->group(function () {
-    // Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
-    // Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
-    // Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
-    // Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
-    // Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
-    // Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-    // Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
-    // });
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
@@ -661,9 +665,3 @@ Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::clas
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
-
-// Brands routes (public access)
-Route::prefix('brands')->name('brands.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Client\Brands\ClientBrandController::class, 'index'])->name('index');
-    Route::get('/{slug}', [\App\Http\Controllers\Client\Brands\ClientBrandController::class, 'show'])->name('show');
-});

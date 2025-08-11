@@ -85,7 +85,7 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>svaa
+                    </div>
 
                     <!-- Actions -->
                     <div class="flex flex-col space-y-4">

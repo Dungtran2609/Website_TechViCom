@@ -3,11 +3,12 @@
 @section('title', 'Techvicom - Điện thoại, Laptop, Tablet, Phụ kiện chính hãng')
 
 @push('styles')
-    <style>
-        /* Slideshow Styles */
-        .slideshow-container {
-            position: relative;
-        }
+<style>
+    
+    /* Slideshow Styles */
+    .slideshow-container {
+        position: relative;
+    }
 
         .slide {
             display: none;
@@ -152,39 +153,111 @@
 @endpush
 @section('content')
     <!-- Hero Banner Slideshow -->
-    <section class="relative overflow-hidden">
-        <div class="slideshow-container relative w-full h-96 md:h-[500px]">
-            @foreach ($banners as $key => $banner)
-                <div class="slide {{ $key === 0 ? 'active' : '' }}">
-                    <a href="{{ $banner->link ?? '#' }}">
-                        <img src="{{ asset('uploads/banners/' . $banner->image) }}" alt="{{ $banner->title }}"
-                            class="w-full h-full object-cover">
-                    </a>
-                    @if ($banner->title)
-                        <div class="absolute left-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent w-full">
-                            <h2 class="text-2xl md:text-4xl font-bold text-white">{{ $banner->title }}</h2>
-                            @if ($banner->description)
-                                <p class="text-white mt-2">{{ $banner->description }}</p>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            @endforeach
-            <!-- Navigation arrows -->
-            <button class="slide-nav prev" onclick="changeSlide(-1)">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="slide-nav next" onclick="changeSlide(1)">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <!-- Slide indicators -->
-            <div class="slide-indicators">
-                @foreach ($banners as $key => $banner)
-                    <span class="indicator {{ $key === 0 ? 'active' : '' }}"
-                        onclick="currentSlide({{ $key + 1 }})"></span>
+    <section class="relative overflow-hidden bg-gray-50">
+        @if(isset($banners) && $banners->count() > 0)
+            <div class="slideshow-container relative w-full h-96 md:h-[400px] lg:h-[500px]">
+                @foreach($banners as $index => $banner)
+                    <div class="slide {{ $index == 0 ? 'active' : '' }}">
+                        @if($banner->link)
+                            <a href="{{ $banner->link }}" target="_blank" class="block h-full group">
+                                <div class="relative h-full overflow-hidden">
+                                    <img src="{{ asset('storage/' . $banner->image) }}" 
+                                         alt="Banner {{ $index + 1 }}" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                    <!-- Overlay for better text readability -->
+                                    <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+                                </div>
+                            </a>
+                        @else
+                            <div class="relative h-full overflow-hidden">
+                                <img src="{{ asset('storage/' . $banner->image) }}" 
+                                     alt="Banner {{ $index + 1 }}" 
+                                     class="w-full h-full object-cover transition-transform duration-700"
+                                     onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                <!-- Overlay for better text readability -->
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+                            </div>
+                        @endif
+                    </div>
                 @endforeach
+
+                @if($banners->count() > 1)
+                    <!-- Navigation arrows -->
+                    <button class="slide-nav prev group" onclick="changeSlide(-1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-left text-lg"></i>
+                        </div>
+                    </button>
+                    <button class="slide-nav next group" onclick="changeSlide(1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-right text-lg"></i>
+                        </div>
+                    </button>
+
+                    <!-- Slide indicators -->
+                    <div class="slide-indicators">
+                        @foreach($banners as $index => $banner)
+                            <span class="indicator {{ $index == 0 ? 'active' : '' }}" onclick="currentSlide({{ $index + 1 }})"></span>
+                        @endforeach
+                    </div>
+                @endif
             </div>
-        </div>
+        @else
+            <!-- Fallback banner khi không có banner nào -->
+            <div class="slideshow-container relative w-full h-96 md:h-[500px] lg:h-[600px]">
+                <div class="slide active">
+                    <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white h-full relative overflow-hidden">
+                        <!-- Animated background elements -->
+                        <div class="absolute inset-0">
+                            <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+                            <div class="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-xl"></div>
+                            <div class="absolute top-1/2 left-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
+                        </div>
+                        
+                        <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-12 w-full">
+                                <div class="space-y-6">
+                                    <div class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                                        <i class="fas fa-star text-yellow-300 mr-2"></i>
+                                        Công nghệ hàng đầu
+                                    </div>
+                                    <h1 class="text-5xl lg:text-7xl font-bold mb-4 slide-in bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                                        TECHVICOM
+                                    </h1>
+                                    <h2 class="text-2xl lg:text-4xl mb-6 slide-in-delay-1 font-light">
+                                        Công nghệ tiên tiến
+                                    </h2>
+                                    <p class="text-lg lg:text-xl mb-8 slide-in-delay-2 text-blue-100 leading-relaxed">
+                                        Khám phá các sản phẩm công nghệ mới nhất với chất lượng cao và giá cả hợp lý
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-4 slide-in-delay-3">
+                                        <button onclick="window.location.href='{{ route('products.index') }}'" 
+                                                class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                            <i class="fas fa-shopping-cart mr-2"></i>
+                                            KHÁM PHÁ NGAY
+                                        </button>
+                                        <button onclick="window.location.href='{{ route('contacts.index') }}'" 
+                                                class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+                                            <i class="fas fa-phone mr-2"></i>
+                                            LIÊN HỆ
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-center relative">
+                                    <div class="relative inline-block">
+                                        <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-3xl opacity-30"></div>
+                                        <img src="{{ asset('client_css/images/placeholder.svg') }}" 
+                                             alt="TechViCom" 
+                                             class="relative z-10 max-w-full h-auto slide-in-right transform hover:scale-105 transition-transform duration-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </section>
 
     <!-- Featured Categories -->
@@ -1243,19 +1316,19 @@
                     showSlide(currentSlideIndex);
                 }
 
-                // Auto slide every 5 seconds
-                function autoSlide() {
-                    nextSlide();
-                }
+        // Auto slide every 3 seconds
+        function autoSlide() {
+            nextSlide();
+        }
 
-                // Initialize slideshow
-                function initSlideshow() {
-                    if (slides.length > 0) {
-                        showSlide(0);
-                        // Auto-advance slides every 5 seconds
-                        setInterval(autoSlide, 5000);
-                    }
-                }
+        // Initialize slideshow
+        function initSlideshow() {
+            if (slides.length > 0) {
+                showSlide(0);
+                // Auto-advance slides every 3 seconds
+                setInterval(autoSlide, 3000);
+            }
+        }
 
                 // Initialize slideshow when DOM is loaded
                 document.addEventListener('DOMContentLoaded', function() {

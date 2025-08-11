@@ -7,6 +7,7 @@ use App\Models\Banner;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
+
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -15,9 +16,10 @@ class HomeController extends Controller
     {
         // Lấy banner đang hoạt động
         $banners = Banner::where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->orderBy('stt')
-            ->get();
+                        ->where('end_date', '>=', now())
+                        ->orderBy('stt')
+                        ->limit(3)
+                        ->get();
 
         // Sản phẩm nổi bật: gắn cờ is_featured, trạng thái active
         $featuredProducts = Product::with(['brand', 'category', 'productAllImages', 'variants'])

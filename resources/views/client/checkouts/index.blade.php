@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('client.layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Thanh toán - Techvicom</title>
+@section('title', 'Đặt hàng thành công - Techvicom')
 
+@section('content')
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: { 'custom-primary': '#ff6c2f', 'custom-primary-dark': '#e55a28' } } } }
@@ -463,35 +459,7 @@
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-white py-8 mt-12 no-print">
-        <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-4 gap-8">
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Về Techvicom</h4>
-                    <p class="text-gray-300">Chuyên cung cấp các sản phẩm công nghệ chính hãng với giá tốt nhất.</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Liên hệ</h4>
-                    <p class="text-gray-300">📞 1900-xxxx</p>
-                    <p class="text-gray-300">📧 support@techvicom.vn</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Chính sách</h4>
-                    <ul class="text-gray-300 space-y-2">
-                        <li><a href="#" class="hover:text-orange-400">Chính sách bảo hành</a></li>
-                        <li><a href="#" class="hover:text-orange-400">Chính sách đổi trả</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Theo dõi</h4>
-                    <div class="flex space-x-4"><a href="#" class="text-gray-300 hover:text-orange-400"><i
-                                class="fab fa-facebook"></i></a><a href="#"
-                            class="text-gray-300 hover:text-orange-400"><i class="fab fa-instagram"></i></a><a href="#"
-                            class="text-gray-300 hover:text-orange-400"><i class="fab fa-youtube"></i></a></div>
-                </div>
-            </div>
-        </div>
-    </footer>
+
 
     <script>
         /* ===================== COUPON ===================== */
@@ -899,5 +867,6 @@
 
     <div id="shared-footer-container"></div>
 </body>
+@endsection
 
 </html>

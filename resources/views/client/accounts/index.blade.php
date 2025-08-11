@@ -255,7 +255,17 @@
                                     </div>
                                     <div class="d-flex justify-content-between">
                                         <span class="text-gray-600">Ngày sinh:</span>
-                                        <strong>{{ Auth::user()->birthday ? Auth::user()->birthday->format('d/m/Y') : 'Chưa cập nhật' }}</strong>
+                                        <strong>
+                                            @if(Auth::user()->birthday)
+                                                @if(Auth::user()->birthday instanceof \Carbon\Carbon)
+                                                    {{ Auth::user()->birthday->format('d/m/Y') }}
+                                                @else
+                                                    {{ \Carbon\Carbon::parse(Auth::user()->birthday)->format('d/m/Y') }}
+                                                @endif
+                                            @else
+                                                Chưa cập nhật
+                                            @endif
+                                        </strong>
                                     </div>
                                 </div>
                                 <div class="mt-3">

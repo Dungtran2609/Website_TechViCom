@@ -430,7 +430,7 @@ Route::prefix('api')->group(function () {
 Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {
     Route::get('/', [ClientAccountController::class, 'index'])->name('index');
     Route::get('/edit', [ClientAccountController::class, 'edit'])->name('edit');
-    Route::get('/orders', [ClientAccountController::class, 'orders'])->name('orders');
+    Route::get('/orders', [ClientAccountController::class, 'orders'])->name('orders'); // <-- Đường dẫn này
     Route::get('/orders/{id}', [ClientAccountController::class, 'orderDetail'])->name('order-detail');
     Route::post('/orders/{id}/cancel', [ClientAccountController::class, 'cancelOrder'])->name('cancel-order');
     Route::get('/profile', [ClientAccountController::class, 'profile'])->name('profile');
@@ -665,3 +665,8 @@ Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::clas
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
+
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.

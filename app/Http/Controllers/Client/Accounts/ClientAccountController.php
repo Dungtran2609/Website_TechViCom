@@ -49,18 +49,49 @@ class ClientAccountController extends Controller
 
         return view('client.orders.show', compact('order'));
     }
-
     public function cancelOrder($id)
     {
         $order = Order::where('user_id', Auth::id())
-                     ->where('id', $id)
-                     ->where('status', 'pending')
-                     ->firstOrFail();
+            ->where('id', $id)
+            ->where('status', 'pending')
+            ->first();
 
-        $order->update(['status' => 'cancelled']);
+        if (!$order) {
+            // Trả về lỗi dưới dạng JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy đơn hàng hoặc đơn hàng không còn ở trạng thái "Chờ xử lý".'
+            ], 404); // 404 Not Found
+        }
 
-        return response()->json(['success' => true, 'message' => 'Đơn hàng đã được hủy thành công']);
+        $clientNote = request('client_note', '');
+        try {
+            \App\Models\OrderReturn::create([
+                'order_id' => $order->id,
+                'type' => 'cancel',
+                'reason' => 'Khách hủy',
+                'client_note' => $clientNote,
+                'status' => 'pending',
+                'requested_at' => now(),
+            ]);
+
+        } catch (\Exception $e) {
+            // Trả về lỗi server dưới dạng JSON
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi hệ thống khi gửi yêu cầu hủy. Vui lòng thử lại.'
+            ], 500); // 500 Internal Server Error
+        }
+
+        // Trả về thành công dưới dạng JSON
+        return response()->json([
+            'success' => true,
+            'message' => 'Yêu cầu hủy đơn hàng đã được gửi thành công. Admin sẽ duyệt yêu cầu này.'
+        ]);
     }
+
+
+    
 
     public function profile()
     {

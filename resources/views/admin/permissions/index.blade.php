@@ -63,6 +63,7 @@
                     </button>
                 </div>
             </div>
+            <div class="mt-3">{{ $permissions->appends(request()->query())->links('pagination::bootstrap-5') }}</div>
         </div>
     </form>
 @endsection

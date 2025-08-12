@@ -3,11 +3,12 @@
 @section('title', 'Techvicom - Điện thoại, Laptop, Tablet, Phụ kiện chính hãng')
 
 @push('styles')
-    <style>
-        /* Slideshow Styles */
-        .slideshow-container {
-            position: relative;
-        }
+<style>
+    
+    /* Slideshow Styles */
+    .slideshow-container {
+        position: relative;
+    }
 
         .slide {
             display: none;
@@ -152,95 +153,111 @@
 @endpush
 @section('content')
     <!-- Hero Banner Slideshow -->
-    <section class="relative overflow-hidden">
-        <div class="slideshow-container relative w-full h-96 md:h-[500px]">
-            <!-- Slide 1 -->
-            <div class="slide active">
-                <div class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SIÊU SALE</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">iPhone 15 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Giảm đến 5 triệu - Trả góp 0%</p>
-                                <button onclick="goToFeaturedProduct()"
-                                    class="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold hover:bg-yellow-500 transition slide-in-delay-3">
-                                    MUA NGAY
-                                </button>
+    <section class="relative overflow-hidden bg-gray-50">
+        @if(isset($banners) && $banners->count() > 0)
+            <div class="slideshow-container relative w-full h-96 md:h-[400px] lg:h-[500px]">
+                @foreach($banners as $index => $banner)
+                    <div class="slide {{ $index == 0 ? 'active' : '' }}">
+                        @if($banner->link)
+                            <a href="{{ $banner->link }}" target="_blank" class="block h-full group">
+                                <div class="relative h-full overflow-hidden">
+                                    <img src="{{ asset('storage/' . $banner->image) }}" 
+                                         alt="Banner {{ $index + 1 }}" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                    <!-- Overlay for better text readability -->
+                                    <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+                                </div>
+                            </a>
+                        @else
+                            <div class="relative h-full overflow-hidden">
+                                <img src="{{ asset('storage/' . $banner->image) }}" 
+                                     alt="Banner {{ $index + 1 }}" 
+                                     class="w-full h-full object-cover transition-transform duration-700"
+                                     onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                <!-- Overlay for better text readability -->
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
                             </div>
-                            <div class="text-center">
-                                <img src="assets/images/iphone-15.png" alt="iPhone 15"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
+                        @endif
+                    </div>
+                @endforeach
+
+                @if($banners->count() > 1)
+                    <!-- Navigation arrows -->
+                    <button class="slide-nav prev group" onclick="changeSlide(-1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-left text-lg"></i>
+                        </div>
+                    </button>
+                    <button class="slide-nav next group" onclick="changeSlide(1)">
+                        <div class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-chevron-right text-lg"></i>
+                        </div>
+                    </button>
+
+                    <!-- Slide indicators -->
+                    <div class="slide-indicators">
+                        @foreach($banners as $index => $banner)
+                            <span class="indicator {{ $index == 0 ? 'active' : '' }}" onclick="currentSlide({{ $index + 1 }})"></span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @else
+            <!-- Fallback banner khi không có banner nào -->
+            <div class="slideshow-container relative w-full h-96 md:h-[500px] lg:h-[600px]">
+                <div class="slide active">
+                    <div class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white h-full relative overflow-hidden">
+                        <!-- Animated background elements -->
+                        <div class="absolute inset-0">
+                            <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+                            <div class="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-xl"></div>
+                            <div class="absolute top-1/2 left-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
+                        </div>
+                        
+                        <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-12 w-full">
+                                <div class="space-y-6">
+                                    <div class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
+                                        <i class="fas fa-star text-yellow-300 mr-2"></i>
+                                        Công nghệ hàng đầu
+                                    </div>
+                                    <h1 class="text-5xl lg:text-7xl font-bold mb-4 slide-in bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                                        TECHVICOM
+                                    </h1>
+                                    <h2 class="text-2xl lg:text-4xl mb-6 slide-in-delay-1 font-light">
+                                        Công nghệ tiên tiến
+                                    </h2>
+                                    <p class="text-lg lg:text-xl mb-8 slide-in-delay-2 text-blue-100 leading-relaxed">
+                                        Khám phá các sản phẩm công nghệ mới nhất với chất lượng cao và giá cả hợp lý
+                                    </p>
+                                    <div class="flex flex-col sm:flex-row gap-4 slide-in-delay-3">
+                                        <button onclick="window.location.href='{{ route('products.index') }}'" 
+                                                class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                                            <i class="fas fa-shopping-cart mr-2"></i>
+                                            KHÁM PHÁ NGAY
+                                        </button>
+                                        <button onclick="window.location.href='{{ route('contacts.index') }}'" 
+                                                class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
+                                            <i class="fas fa-phone mr-2"></i>
+                                            LIÊN HỆ
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-center relative">
+                                    <div class="relative inline-block">
+                                        <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full blur-3xl opacity-30"></div>
+                                        <img src="{{ asset('client_css/images/placeholder.svg') }}" 
+                                             alt="TechViCom" 
+                                             class="relative z-10 max-w-full h-auto slide-in-right transform hover:scale-105 transition-transform duration-500">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Slide 2 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">SAMSUNG</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Galaxy S24 Ultra</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Công nghệ AI tiên tiến - Giảm 3 triệu</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'"
-                                    class="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition slide-in-delay-3">
-                                    KHÁM PHÁ
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/samsung-s24-ultra.jpg" alt="Samsung S24 Ultra"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3 -->
-            <div class="slide">
-                <div class="bg-gradient-to-r from-gray-700 to-gray-900 text-white h-full">
-                    <div class="container mx-auto px-4 h-full flex items-center">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
-                            <div>
-                                <h1 class="text-4xl lg:text-6xl font-bold mb-4 slide-in">MACBOOK</h1>
-                                <h2 class="text-2xl lg:text-3xl mb-6 slide-in-delay-1">Pro M3 Series</h2>
-                                <p class="text-lg mb-8 slide-in-delay-2">Hiệu năng đỉnh cao - Ưu đãi học sinh sinh viên</p>
-                                <button onclick="window.location.href='{{ route('products.index') }}'"
-                                    class="bg-gray-200 text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-300 transition slide-in-delay-3">
-                                    XEM NGAY
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img src="assets/images/macbook-pro-m3.jpg" alt="MacBook Pro M3"
-                                    class="max-w-full h-auto slide-in-right"
-                                    onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Navigation arrows -->
-            <button class="slide-nav prev" onclick="changeSlide(-1)">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="slide-nav next" onclick="changeSlide(1)">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-
-            <!-- Slide indicators -->
-            <div class="slide-indicators">
-                <span class="indicator active" onclick="currentSlide(1)"></span>
-                <span class="indicator" onclick="currentSlide(2)"></span>
-                <span class="indicator" onclick="currentSlide(3)"></span>
-            </div>
-        </div>
+        @endif
     </section>
 
     <!-- Featured Categories -->
@@ -336,195 +353,15 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="flash-sale-products">
-                <!-- Flash sale products - Static HTML -->
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                    data-product-id="1" onclick="window.location.href='{{ route('products.show', 1) }}'">
-                    <div class="relative">
-                        <img src="assets/images/placeholder.svg" alt="iPhone 15 Pro Max"
-                            class="w-full h-48 object-cover rounded-t-lg">
-                        <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                            -8%
-                        </div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">iPhone 15 Pro Max 256GB</h3>
-                        <div class="flex items-center mb-2">
-                            <div class="flex text-yellow-400 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <span class="text-gray-500 text-sm ml-2">(156)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-lg font-bold text-[#ff6c2f]">34.990.000₫</span>
-                                <span class="text-sm text-gray-500 line-through ml-2">37.990.000₫</span>
-                            </div>
-                            <button
-                                onclick="event.stopPropagation(); addToCartStatic(1, 'iPhone 15 Pro Max 256GB', 34990000, 'assets/images/placeholder.svg')"
-                                class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                <i class="fas fa-cart-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                    data-product-id="2">
-                    <div class="relative">
-                        <img src="assets/images/samsung-s24-ultra.jpg" alt="Samsung Galaxy S24 Ultra"
-                            class="w-full h-48 object-cover rounded-t-lg">
-                        <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                            -8%
-                        </div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Samsung Galaxy S24 Ultra 512GB</h3>
-                        <div class="flex items-center mb-2">
-                            <div class="flex text-yellow-400 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <span class="text-gray-500 text-sm ml-2">(89)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-lg font-bold text-[#ff6c2f]">33.990.000₫</span>
-                                <span class="text-sm text-gray-500 line-through ml-2">36.990.000₫</span>
-                            </div>
-                            <button
-                                onclick="addToCartStatic(2, 'Samsung Galaxy S24 Ultra 512GB', 33990000, 'assets/images/samsung-s24-ultra.jpg')"
-                                class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                <i class="fas fa-cart-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                    data-product-id="3">
-                    <div class="relative">
-                        <img src="assets/images/macbook-pro-m3.jpg" alt="MacBook Pro M3"
-                            class="w-full h-48 object-cover rounded-t-lg">
-                        <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                            -10%
-                        </div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">MacBook Pro M3 14inch 512GB</h3>
-                        <div class="flex items-center mb-2">
-                            <div class="flex text-yellow-400 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <span class="text-gray-500 text-sm ml-2">(124)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-lg font-bold text-[#ff6c2f]">53.990.000₫</span>
-                                <span class="text-sm text-gray-500 line-through ml-2">59.990.000₫</span>
-                            </div>
-                            <button
-                                onclick="addToCartStatic(3, 'MacBook Pro M3 14inch 512GB', 53990000, 'assets/images/macbook-pro-m3.jpg')"
-                                class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                <i class="fas fa-cart-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                    data-product-id="4">
-                    <div class="relative">
-                        <img src="assets/images/ipad-pro-m2.jpg" alt="iPad Pro M2"
-                            class="w-full h-48 object-cover rounded-t-lg">
-                        <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                            -12%
-                        </div>
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                            <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">iPad Pro M2 11inch 256GB</h3>
-                        <div class="flex items-center mb-2">
-                            <div class="flex text-yellow-400 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <span class="text-gray-500 text-sm ml-2">(98)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-lg font-bold text-[#ff6c2f]">24.990.000₫</span>
-                                <span class="text-sm text-gray-500 line-through ml-2">28.990.000₫</span>
-                            </div>
-                            <button
-                                onclick="addToCartStatic(4, 'iPad Pro M2 11inch 256GB', 24990000, 'assets/images/ipad-pro-m2.jpg')"
-                                class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                <i class="fas fa-cart-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Products -->
-    <section class="py-12">
-        <div class="container mx-auto px-4">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold">Sản phẩm nổi bật</h2>
-                <a href="{{ route('products.index') }}"
-                    class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
-                    Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach ($latestProducts as $product)
+                @foreach ($flashSaleProducts ?? [] as $product)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative">
-                            @if ($product->productAllImages->count() > 0)
-                                <img src="{{ asset('uploads/products/' . $product->productAllImages->first()->image_url) }}"
-                                    alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg">
-                            @else
-                                <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="{{ $product->name }}"
-                                    class="w-full h-48 object-cover rounded-t-lg">
-                            @endif
-
-                            <div class="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                HOT
+                            <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
+                                alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                            <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
+                                -{{ $product->discount_percent ?? 0 }}%
                             </div>
                             <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
                                 <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
@@ -541,33 +378,31 @@
                                         <i class="fas fa-star"></i>
                                     @endfor
                                 </div>
-                                <span class="text-gray-500 text-sm ml-2">(0)</span>
+                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <div>
-                                    @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                        @php
-                                            $variant = $product->variants->first();
-                                        @endphp
+                                @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                    @php
+                                        $variant = $product->variants->first();
+                                    @endphp
+                                    <span
+                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                    @php
+                                        $minPrice = $product->variants->min('price');
+                                        $maxPrice = $product->variants->max('price');
+                                    @endphp
+                                    @if ($minPrice === $maxPrice)
                                         <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                    @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                        @php
-                                            $minPrice = $product->variants->min('price');
-                                            $maxPrice = $product->variants->max('price');
-                                        @endphp
-                                        @if ($minPrice === $maxPrice)
-                                            <span
-                                                class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                        @else
-                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                - {{ number_format($maxPrice) }}₫</span>
-                                        @endif
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
+                                            {{ number_format($maxPrice) }}₫</span>
                                     @endif
-                                </div>
-                                <button onclick="event.stopPropagation(); addToCart({{ $product->id }}, null, 1)"
+                                @else
+                                    <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                @endif
+                                <button onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', 0, '{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}')"
                                     class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>
@@ -575,169 +410,180 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+        </div>
+    </section>
 
-                @if ($latestProducts->count() < 8)
-                    <!-- Static products to fill up the grid if needed -->
+    <!-- Featured Products -->
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold">Sản phẩm nổi bật</h2>
+                <a href="{{ route('products.index') }}"
+                    class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
+                    Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                @foreach ($featuredProducts as $product)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="5">
+                        onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="AirPods Pro 2"
-                                class="w-full h-48 object-cover rounded-t-lg">
+                            <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
+                                alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                             <div class="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                HOT
+                                NỔI BẬT
                             </div>
                             <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
+                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
+                                    onclick="event.stopPropagation();">
                                     <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">AirPods Pro 2nd Gen</h3>
+                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
                             <div class="flex items-center mb-2">
                                 <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
                                 </div>
-                                <span class="text-gray-500 text-sm ml-2">(234)</span>
+                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">6.990.000₫</span>
-                                </div>
-                                <button
-                                    onclick="addToCartStatic(5, 'AirPods Pro 2nd Gen', 6990000, '{{ asset('client_css/images/placeholder.svg') }}')"
+                                @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                    @php
+                                        $variant = $product->variants->first();
+                                    @endphp
+                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                    @php
+                                        $minPrice = $product->variants->min('price');
+                                        $maxPrice = $product->variants->max('price');
+                                    @endphp
+                                    @if ($minPrice === $maxPrice)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                    @else
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} - {{ number_format($maxPrice) }}₫</span>
+                                    @endif
+                                @else
+                                    <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                @endif
+                                <button onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', 0, '{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}')"
                                     class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    <!-- Brand Section -->
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                @foreach ($brands as $brand)
+                    <div class="text-center group">
+                        <div
+                            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
 
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="6">
-                        <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="Apple Watch Series 9"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                NEW
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Apple Watch Series 9 GPS 45mm</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">(167)</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">10.990.000₫</span>
-                                </div>
-                                <button
-                                    onclick="addToCartStatic(6, 'Apple Watch Series 9 GPS 45mm', 10990000, '{{ asset('client_css/images/placeholder.svg') }}')"
-                                    class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                            @if ($brand->image)
+                                <img src="{{ asset('storage/' . $brand->image) }}" alt="{{ $brand->name }}"
+                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                            @else
+                                <img src="{{ asset('client_css/images/brand-default.jpg') }}" alt="Brand default"
+                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
+                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                            @endif
 
+                            <h3 class="font-semibold mb-2">{{ $brand->name }}</h3>
+                            <p class="text-sm text-gray-500 mb-2">{{ $brand->description }}</p>
+                            <a href="{{ route('brands.show', $brand->slug) }}"
+                                class="block mt-2 text-[#ff6c2f] font-semibold hover:underline">
+                                Xem thương hiệu
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    <!-- Hot Products -->
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold">Sản phẩm hot</h2>
+                <a href="{{ route('products.index') }}"
+                    class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
+                    Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                @foreach ($hotProducts as $product)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="7">
+                        onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="Sony WH-1000XM5"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div
-                                class="absolute top-2 left-2 bg-purple-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                -15%
+                            <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
+                                alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                            <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm font-bold">
+                                {{ $product->view_count }} lượt xem
                             </div>
                             <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
+                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
+                                    onclick="event.stopPropagation();">
                                     <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Sony WH-1000XM5 Wireless</h3>
+                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
                             <div class="flex items-center mb-2">
                                 <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
                                 </div>
-                                <span class="text-gray-500 text-sm ml-2">(145)</span>
+                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">8.490.000₫</span>
-                                    <span class="text-sm text-gray-500 line-through ml-2">9.990.000₫</span>
-                                </div>
+                                @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                    @php
+                                        $variant = $product->variants->first();
+                                    @endphp
+                                    <span
+                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                    @php
+                                        $minPrice = $product->variants->min('price');
+                                        $maxPrice = $product->variants->max('price');
+                                    @endphp
+                                    @if ($minPrice === $maxPrice)
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                    @else
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
+                                            {{ number_format($maxPrice) }}₫</span>
+                                    @endif
+                                @else
+                                    <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                @endif
                                 <button
-                                    onclick="addToCartStatic(7, 'Sony WH-1000XM5 Wireless', 8490000, '{{ asset('client_css/images/placeholder.svg') }}')"
+                                    onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', 0, '{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}')"
                                     class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>
                             </div>
+                            
                         </div>
                     </div>
-
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="8">
-                        <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="Samsung Galaxy Buds2"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div
-                                class="absolute top-2 left-2 bg-orange-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                -20%
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Samsung Galaxy Buds2 Pro</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">(189)</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">3.990.000₫</span>
-                                    <span class="text-sm text-gray-500 line-through ml-2">4.990.000₫</span>
-                                </div>
-                                <button
-                                    onclick="addToCartStatic(8, 'Samsung Galaxy Buds2 Pro', 3990000, '{{ asset('client_css/images/placeholder.svg') }}')"
-                                    class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+                @endforeach
             </div>
         </div>
     </section>
@@ -747,277 +593,219 @@
             <h2 class="text-3xl font-bold text-center mb-8 text-[#ff6c2f]">Bài viết mới</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center items-stretch">
                 @foreach ($latestNews as $item)
-                    <div class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group mx-auto relative h-[320px] min-w-[260px] max-w-[320px] w-full">
-                        <button onclick="window.location.href='{{ route('client.news.show', $item->id) }}'" class="absolute inset-0 w-full h-full z-10 cursor-pointer opacity-0" aria-label="Xem bài viết"></button>
+                    <div
+                        class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group mx-auto relative h-[320px] min-w-[260px] max-w-[320px] w-full">
+                        <button onclick="window.location.href='{{ route('client.news.show', $item->id) }}'"
+                            class="absolute inset-0 w-full h-full z-10 cursor-pointer opacity-0"
+                            aria-label="Xem bài viết"></button>
                         <div class="w-full h-[180px] relative flex items-center justify-center bg-gray-100">
-                            <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}" alt="{{ $item->title }}" class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
+                                alt="{{ $item->title }}"
+                                class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">{{ $item->title }}</h3>
+                            <h3
+                                class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">
+                                {{ $item->title }}</h3>
                         </div>
                     </div>
                 @endforeach
             </div>
             <div class="flex justify-center mt-6">
-                <a href="{{ route('client.news.index') }}" class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">Xem tất cả bài viết</a>
-            </div>
+                <a href="{{ route('client.news.index') }}"
+                    class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">Xem
+                    tất cả bài viết</a>
             </div>
         </div>
     </section>
 @endsection
 
-@push('scripts')
-    <script>
-        // Slideshow functionality
-        document.addEventListener('DOMContentLoaded', function() {
+    @push('scripts')
+        <script>
+            // Slideshow functionality
+            document.addEventListener('DOMContentLoaded', function() {
 
-            // Page-specific initialization will be handled in the main DOMContentLoaded listener below
+                // Page-specific initialization will be handled in the main DOMContentLoaded listener below
 
-            // Prevent multiple initialization
-            let isPageInitialized = false;
+                // Prevent multiple initialization
+                let isPageInitialized = false;
 
-            function setupAccountDropdownInline() {
-                if (!window.PRODUCT_DATA) {
-                    console.log('PRODUCT_DATA not loaded yet');
-                    return;
+                function setupAccountDropdownInline() {
+                    if (!window.PRODUCT_DATA) {
+                        console.log('PRODUCT_DATA not loaded yet');
+                        return;
+                    }
+
+                    const accountButton = document.getElementById('accountMenuBtn');
+                    if (!accountButton) return;
+
+                    // Check if dropdown already exists
+                    const existingDropdown = accountButton.parentElement.querySelector('.account-dropdown');
+                    if (existingDropdown) {
+                        console.log('Account dropdown already exists');
+                        return;
+                    }
+
+                    // Create dropdown element
+                    const dropdown = document.createElement('div');
+                    dropdown.className =
+                        'absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden account-dropdown';
+                    dropdown.innerHTML = ``;
+
+                    // Add dropdown to button's parent
+                    accountButton.parentElement.appendChild(dropdown);
+
+                    // Toggle dropdown on button click
+                    accountButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Close other dropdowns
+                        closeAllDropdowns();
+                        dropdown.classList.toggle('hidden');
+                    });
+
+                    // Prevent dropdown from closing when clicking inside it
+                    dropdown.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+
+                    // Check login status and update UI
+                    updateAccountStatus();
                 }
 
-                const accountButton = document.getElementById('accountMenuBtn');
-                if (!accountButton) return;
+                function updateAccountStatus() {
+                    // Check if user is logged in (you can implement your own logic here)
+                    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
 
-                // Check if dropdown already exists
-                const existingDropdown = accountButton.parentElement.querySelector('.account-dropdown');
-                if (existingDropdown) {
-                    console.log('Account dropdown already exists');
-                    return;
+                    const notLoggedInSection = document.getElementById('not-logged-in');
+                    const loggedInSection = document.getElementById('logged-in');
+                    const logoutSection = document.getElementById('logout-section');
+
+                    if (isLoggedIn && userData.name) {
+                        // Show logged in state
+                        notLoggedInSection.classList.add('hidden');
+                        loggedInSection.classList.remove('hidden');
+                        logoutSection.classList.remove('hidden');
+
+                        // Update user info
+                        document.getElementById('user-name').textContent = userData.name;
+                        document.getElementById('user-email').textContent = userData.email;
+                    } else {
+                        // Show not logged in state
+                        notLoggedInSection.classList.remove('hidden');
+                        loggedInSection.classList.add('hidden');
+                        logoutSection.classList.add('hidden');
+                    }
                 }
 
-                // Create dropdown element
-                const dropdown = document.createElement('div');
-                dropdown.className =
-                    'absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden account-dropdown';
-                dropdown.innerHTML = `
-                <div class="p-6">
-                    <!-- User Status Check -->
-                    <div id="account-status">
-                        <!-- Not logged in state -->
-                        <div id="not-logged-in" class="text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-user-circle text-6xl text-gray-300 mb-2"></i>
-                                <p class="text-gray-600">Chưa đăng nhập</p>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <button onclick="window.location.href='pages/login.html'" class="w-full bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>Đăng nhập
-                                </button>
-                                
-                                <button onclick="window.location.href='pages/register.html'" class="w-full border border-orange-500 text-orange-500 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition">
-                                    <i class="fas fa-user-plus mr-2"></i>Đăng ký tài khoản
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Logged in state (hidden by default) -->
-                        <div id="logged-in" class="hidden">
-                            <div class="flex items-center space-x-3 mb-4 pb-4 border-b">
-                                <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
-                                    <i class="fas fa-user text-white text-lg"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold text-gray-900" id="user-name">Nguyễn Văn A</h3>
-                                    <p class="text-sm text-gray-500" id="user-email">user@example.com</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Links -->
-                    <div class="border-t pt-4 mt-4">
-                        <div class="space-y-2">
-                            <a href="pages/account.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-user text-gray-500 w-5"></i>
-                                <span>Thông tin tài khoản</span>
-                            </a>
-                            <a href="pages/orders.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-shopping-bag text-gray-500 w-5"></i>
-                                <span>Đơn hàng của tôi</span>
-                            </a>
-                            <a href="pages/wishlist.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-heart text-gray-500 w-5"></i>
-                                <span>Sản phẩm yêu thích</span>
-                            </a>
-                            <a href="pages/contact.html" class="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition">
-                                <i class="fas fa-headset text-gray-500 w-5"></i>
-                                <span>Hỗ trợ khách hàng</span>
-                            </a>
-                            
-                            <!-- Logout button (only show when logged in) -->
-                            <div id="logout-section" class="hidden border-t pt-2 mt-2">
-                                <button onclick="logoutUser()" class="flex items-center space-x-3 p-3 hover:bg-orange-50 rounded-lg transition text-[#ff6c2f] w-full text-left">
-                                    <i class="fas fa-sign-out-alt text-[#ff6c2f] w-5"></i>
-                                    <span>Đăng xuất</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                function logoutUser() {
+                    // Clear user data
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userData');
 
-                // Add dropdown to button's parent
-                accountButton.parentElement.appendChild(dropdown);
+                    // Update UI
+                    updateAccountStatus();
 
-                // Toggle dropdown on button click
-                accountButton.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    // Close other dropdowns
+                    // Close dropdown
                     closeAllDropdowns();
-                    dropdown.classList.toggle('hidden');
-                });
 
-                // Prevent dropdown from closing when clicking inside it
-                dropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-
-                // Check login status and update UI
-                updateAccountStatus();
-            }
-
-            function updateAccountStatus() {
-                // Check if user is logged in (you can implement your own logic here)
-                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-                const notLoggedInSection = document.getElementById('not-logged-in');
-                const loggedInSection = document.getElementById('logged-in');
-                const logoutSection = document.getElementById('logout-section');
-
-                if (isLoggedIn && userData.name) {
-                    // Show logged in state
-                    notLoggedInSection.classList.add('hidden');
-                    loggedInSection.classList.remove('hidden');
-                    logoutSection.classList.remove('hidden');
-
-                    // Update user info
-                    document.getElementById('user-name').textContent = userData.name;
-                    document.getElementById('user-email').textContent = userData.email;
-                } else {
-                    // Show not logged in state
-                    notLoggedInSection.classList.remove('hidden');
-                    loggedInSection.classList.add('hidden');
-                    logoutSection.classList.add('hidden');
-                }
-            }
-
-            function logoutUser() {
-                // Clear user data
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userData');
-
-                // Update UI
-                updateAccountStatus();
-
-                // Close dropdown
-                closeAllDropdowns();
-
-                // Show notification
-                showNotificationInline('Đã đăng xuất thành công!');
-            }
-
-            function closeAllDropdowns() {
-                const dropdowns = document.querySelectorAll(
-                '.account-dropdown, .category-dropdown, .cart-dropdown');
-                dropdowns.forEach(dropdown => {
-                    dropdown.classList.add('hidden');
-                });
-            }
-
-            function setupCartSidebarInline() {
-                const cartButton = document.getElementById('cartMenuBtn');
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
-                const closeSidebarBtn = document.getElementById('close-cart-sidebar');
-
-                if (!cartButton || !cartSidebar || !cartOverlay || !closeSidebarBtn) return;
-
-                // Check if listeners already added
-                if (cartButton.dataset.listenerAdded === 'true') {
-                    console.log('Cart sidebar listeners already added');
-                    return;
+                    // Show notification
+                    showNotificationInline('Đã đăng xuất thành công!');
                 }
 
-                // Open sidebar when cart button clicked
-                cartButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openCartSidebar();
-                });
+                function closeAllDropdowns() {
+                    const dropdowns = document.querySelectorAll(
+                        '.account-dropdown, .category-dropdown, .cart-dropdown');
+                    dropdowns.forEach(dropdown => {
+                        dropdown.classList.add('hidden');
+                    });
+                }
 
-                // Close sidebar when close button clicked
-                closeSidebarBtn.addEventListener('click', function() {
-                    closeCartSidebar();
-                });
+                function setupCartSidebarInline() {
+                    const cartButton = document.getElementById('cartMenuBtn');
+                    const cartSidebar = document.getElementById('cart-sidebar');
+                    const cartOverlay = document.getElementById('cart-overlay');
+                    const closeSidebarBtn = document.getElementById('close-cart-sidebar');
 
-                // Close sidebar when overlay clicked
-                cartOverlay.addEventListener('click', function() {
-                    closeCartSidebar();
-                });
+                    if (!cartButton || !cartSidebar || !cartOverlay || !closeSidebarBtn) return;
 
-                // Mark listeners as added
-                cartButton.dataset.listenerAdded = 'true';
+                    // Check if listeners already added
+                    if (cartButton.dataset.listenerAdded === 'true') {
+                        console.log('Cart sidebar listeners already added');
+                        return;
+                    }
 
-                // Load cart content
-                loadCartSidebar();
-            }
+                    // Open sidebar when cart button clicked
+                    cartButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openCartSidebar();
+                    });
 
-            function openCartSidebar() {
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
+                    // Close sidebar when close button clicked
+                    closeSidebarBtn.addEventListener('click', function() {
+                        closeCartSidebar();
+                    });
 
-                if (cartSidebar && cartOverlay) {
-                    cartSidebar.classList.remove('hidden');
-                    cartOverlay.classList.remove('hidden');
+                    // Close sidebar when overlay clicked
+                    cartOverlay.addEventListener('click', function() {
+                        closeCartSidebar();
+                    });
 
-                    // Add slight delay for smooth animation
-                    setTimeout(() => {
-                        cartSidebar.classList.remove('translate-x-full');
-                    }, 10);
+                    // Mark listeners as added
+                    cartButton.dataset.listenerAdded = 'true';
 
-                    // Load latest cart data
+                    // Load cart content
                     loadCartSidebar();
-
-                    // Prevent body scroll
-                    document.body.style.overflow = 'hidden';
                 }
-            }
 
-            function closeCartSidebar() {
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
+                function openCartSidebar() {
+                    const cartSidebar = document.getElementById('cart-sidebar');
+                    const cartOverlay = document.getElementById('cart-overlay');
 
-                if (cartSidebar && cartOverlay) {
-                    cartSidebar.classList.add('translate-x-full');
+                    if (cartSidebar && cartOverlay) {
+                        cartSidebar.classList.remove('hidden');
+                        cartOverlay.classList.remove('hidden');
 
-                    setTimeout(() => {
-                        cartSidebar.classList.add('hidden');
-                        cartOverlay.classList.add('hidden');
-                    }, 300);
+                        // Add slight delay for smooth animation
+                        setTimeout(() => {
+                            cartSidebar.classList.remove('translate-x-full');
+                        }, 10);
 
-                    // Restore body scroll
-                    document.body.style.overflow = '';
+                        // Load latest cart data
+                        loadCartSidebar();
+
+                        // Prevent body scroll
+                        document.body.style.overflow = 'hidden';
+                    }
                 }
-            }
 
-            function loadCartSidebar() {
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const itemsContainer = document.getElementById('cart-items-container');
-                const summaryContainer = document.getElementById('cart-summary');
+                function closeCartSidebar() {
+                    const cartSidebar = document.getElementById('cart-sidebar');
+                    const cartOverlay = document.getElementById('cart-overlay');
 
-                if (!itemsContainer || !summaryContainer) return;
+                    if (cartSidebar && cartOverlay) {
+                        cartSidebar.classList.add('translate-x-full');
 
-                if (cart.length === 0) {
-                    // Empty cart state
-                    itemsContainer.innerHTML = `
+                        setTimeout(() => {
+                            cartSidebar.classList.add('hidden');
+                            cartOverlay.classList.add('hidden');
+                        }, 300);
+
+                        // Restore body scroll
+                        document.body.style.overflow = '';
+                    }
+                }
+
+                function loadCartSidebar() {
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const itemsContainer = document.getElementById('cart-items-container');
+                    const summaryContainer = document.getElementById('cart-summary');
+
+                    if (!itemsContainer || !summaryContainer) return;
+
+                    if (cart.length === 0) {
+                        // Empty cart state
+                        itemsContainer.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full text-center py-12">
                         <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
                         <h3 class="text-lg font-semibold text-gray-600 mb-2">Giỏ hàng trống</h3>
@@ -1027,55 +815,55 @@
                         </button>
                     </div>
                 `;
-                    summaryContainer.innerHTML = '';
-                    return;
-                }
+                        summaryContainer.innerHTML = '';
+                        return;
+                    }
 
-                // Cart items
-                itemsContainer.innerHTML = `
+                    // Cart items
+                    itemsContainer.innerHTML = `
                 <div class="space-y-4">
                     ${cart.map(item => `
-                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cart-item" data-id="${item.id}">
-                                <div class="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                                    <img src="${item.image || 'assets/images/placeholder.svg'}" 
-                                         alt="${item.name}" 
-                                         class="w-full h-full object-cover"
-                                         onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-medium text-gray-900 truncate">${item.name}</h4>
-                                    <p class="text-sm text-gray-500">${item.color || ''} ${item.storage || ''}</p>
-                                    <div class="flex items-center justify-between mt-2">
-                                        <div class="text-orange-600 font-semibold">
-                                            ${window.PRODUCT_UTILS.formatCurrency(item.price)}
+                                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cart-item" data-id="${item.id}">
+                                            <div class="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                                                <img src="${item.image || 'assets/images/placeholder.svg'}" 
+                                                     alt="${item.name}" 
+                                                     class="w-full h-full object-cover"
+                                                     onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="font-medium text-gray-900 truncate">${item.name}</h4>
+                                                <p class="text-sm text-gray-500">${item.color || ''} ${item.storage || ''}</p>
+                                                <div class="flex items-center justify-between mt-2">
+                                                    <div class="text-orange-600 font-semibold">
+                                                        ${window.PRODUCT_UTILS.formatCurrency(item.price)}
+                                                    </div>
+                                                    <div class="flex items-center space-x-2">
+                                                        <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity - 1})" 
+                                                                class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
+                                                            <i class="fas fa-minus text-xs"></i>
+                                                        </button>
+                                                        <span class="w-8 text-center font-medium">${item.quantity}</span>
+                                                        <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity + 1})" 
+                                                                class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
+                                                            <i class="fas fa-plus text-xs"></i>
+                                                        </button>
+                                                        <button onclick="removeFromCartInline(${item.id})" 
+                                                                class="w-8 h-8 flex items-center justify-center text-[#ff6c2f] hover:bg-orange-50 rounded">
+                                                            <i class="fas fa-trash text-xs"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center space-x-2">
-                                            <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity - 1})" 
-                                                    class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                <i class="fas fa-minus text-xs"></i>
-                                            </button>
-                                            <span class="w-8 text-center font-medium">${item.quantity}</span>
-                                            <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity + 1})" 
-                                                    class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                <i class="fas fa-plus text-xs"></i>
-                                            </button>
-                                            <button onclick="removeFromCartInline(${item.id})" 
-                                                    class="w-8 h-8 flex items-center justify-center text-[#ff6c2f] hover:bg-orange-50 rounded">
-                                                <i class="fas fa-trash text-xs"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
+                                    `).join('')}
                 </div>
             `;
 
-                // Cart summary
-                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+                    // Cart summary
+                    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-                summaryContainer.innerHTML = `
+                    summaryContainer.innerHTML = `
                 <div class="space-y-4">
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-gray-600">Tổng sản phẩm:</span>
@@ -1106,129 +894,129 @@
                     </div>
                 </div>
             `;
-            }
+                }
 
-            function updateCartQuantityInline(productId, newQuantity) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                function updateCartQuantityInline(productId, newQuantity) {
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-                if (newQuantity <= 0) {
-                    // Remove item if quantity is 0 or less
+                    if (newQuantity <= 0) {
+                        // Remove item if quantity is 0 or less
+                        cart = cart.filter(item => item.id !== productId);
+                    } else {
+                        // Update quantity
+                        const itemIndex = cart.findIndex(item => item.id === productId);
+                        if (itemIndex >= 0) {
+                            cart[itemIndex].quantity = newQuantity;
+                        }
+                    }
+
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    loadCartSidebar();
+                    updateCartCountInline();
+                }
+
+                function removeFromCartInline(productId) {
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
                     cart = cart.filter(item => item.id !== productId);
-                } else {
-                    // Update quantity
-                    const itemIndex = cart.findIndex(item => item.id === productId);
-                    if (itemIndex >= 0) {
-                        cart[itemIndex].quantity = newQuantity;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    loadCartSidebar();
+                    updateCartCountInline();
+                    showNotificationInline('Đã xóa sản phẩm khỏi giỏ hàng!');
+                }
+
+                function proceedToCheckout() {
+                    // Close sidebar
+                    closeCartSidebar();
+
+                    // Navigate to checkout page
+                    window.location.href = 'pages/checkout.html';
+                }
+
+                // Global click listener flag
+                let globalClickListenerAdded = false;
+
+                function demoLogin() {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userData', JSON.stringify({
+                        name: 'Nguyễn Văn A',
+                        email: 'nguyenvana@email.com'
+                    }));
+                    updateAccountStatus();
+                    showNotificationInline('Đăng nhập thành công!');
+                }
+
+                function loadFeaturedProductsInline() {
+                    try {
+                        const container = document.getElementById('featured-products');
+                        if (!container) {
+                            console.log('Featured products container not found');
+                            return;
+                        }
+
+                        if (!window.PRODUCT_DATA || !window.PRODUCT_DATA.products) {
+                            console.error('Product data not available');
+                            return;
+                        }
+
+                        container.innerHTML = '';
+                        const products = window.PRODUCT_DATA.products.slice(0, 8);
+
+                        products.forEach(product => {
+                            const productCard = createProductCardInline(product);
+                            container.appendChild(productCard);
+                        });
+
+                        console.log('Featured products loaded successfully');
+                    } catch (error) {
+                        console.error('Error loading featured products:', error);
                     }
                 }
 
-                localStorage.setItem('cart', JSON.stringify(cart));
-                loadCartSidebar();
-                updateCartCountInline();
-            }
+                function loadFlashSaleProductsInline() {
+                    try {
+                        const container = document.getElementById('flash-sale-products');
+                        if (!container) {
+                            console.log('Flash sale products container not found');
+                            return;
+                        }
 
-            function removeFromCartInline(productId) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                cart = cart.filter(item => item.id !== productId);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                loadCartSidebar();
-                updateCartCountInline();
-                showNotificationInline('Đã xóa sản phẩm khỏi giỏ hàng!');
-            }
+                        if (!window.PRODUCT_UTILS) {
+                            console.error('Product utils not available');
+                            return;
+                        }
 
-            function proceedToCheckout() {
-                // Close sidebar
-                closeCartSidebar();
+                        container.innerHTML = '';
+                        const flashProducts = window.PRODUCT_UTILS.getFlashSaleProducts();
 
-                // Navigate to checkout page
-                window.location.href = 'pages/checkout.html';
-            }
+                        flashProducts.forEach(product => {
+                            const productCard = createProductCardInline(product, true);
+                            container.appendChild(productCard);
+                        });
 
-            // Global click listener flag
-            let globalClickListenerAdded = false;
-
-            function demoLogin() {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userData', JSON.stringify({
-                    name: 'Nguyễn Văn A',
-                    email: 'nguyenvana@email.com'
-                }));
-                updateAccountStatus();
-                showNotificationInline('Đăng nhập thành công!');
-            }
-
-            function loadFeaturedProductsInline() {
-                try {
-                    const container = document.getElementById('featured-products');
-                    if (!container) {
-                        console.log('Featured products container not found');
-                        return;
+                        console.log('Flash sale products loaded successfully');
+                    } catch (error) {
+                        console.error('Error loading flash sale products:', error);
                     }
-
-                    if (!window.PRODUCT_DATA || !window.PRODUCT_DATA.products) {
-                        console.error('Product data not available');
-                        return;
-                    }
-
-                    container.innerHTML = '';
-                    const products = window.PRODUCT_DATA.products.slice(0, 8);
-
-                    products.forEach(product => {
-                        const productCard = createProductCardInline(product);
-                        container.appendChild(productCard);
-                    });
-
-                    console.log('Featured products loaded successfully');
-                } catch (error) {
-                    console.error('Error loading featured products:', error);
                 }
-            }
 
-            function loadFlashSaleProductsInline() {
-                try {
-                    const container = document.getElementById('flash-sale-products');
-                    if (!container) {
-                        console.log('Flash sale products container not found');
-                        return;
-                    }
+                function createProductCardInline(product, isFlashSale = false) {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md overflow-hidden product-card cursor-pointer';
 
-                    if (!window.PRODUCT_UTILS) {
-                        console.error('Product utils not available');
-                        return;
-                    }
+                    const discountBadge = product.discount ?
+                        `<div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">-${product.discount}%</div>` :
+                        '';
 
-                    container.innerHTML = '';
-                    const flashProducts = window.PRODUCT_UTILS.getFlashSaleProducts();
+                    const flashSaleBadge = isFlashSale ?
+                        '<div class="absolute top-2 right-2 bg-yellow-400 text-[#ff6c2f] px-2 py-1 rounded text-sm font-bold">⚡ FLASH</div>' :
+                        '';
 
-                    flashProducts.forEach(product => {
-                        const productCard = createProductCardInline(product, true);
-                        container.appendChild(productCard);
-                    });
+                    const price = isFlashSale && product.salePrice ? product.salePrice : product.price;
+                    const originalPriceHtml = product.originalPrice ?
+                        `<span class="text-gray-500 line-through text-sm">${window.PRODUCT_UTILS.formatCurrency(product.originalPrice)}</span>` :
+                        '';
 
-                    console.log('Flash sale products loaded successfully');
-                } catch (error) {
-                    console.error('Error loading flash sale products:', error);
-                }
-            }
-
-            function createProductCardInline(product, isFlashSale = false) {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow-md overflow-hidden product-card cursor-pointer';
-
-                const discountBadge = product.discount ?
-                    `<div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">-${product.discount}%</div>` :
-                    '';
-
-                const flashSaleBadge = isFlashSale ?
-                    '<div class="absolute top-2 right-2 bg-yellow-400 text-[#ff6c2f] px-2 py-1 rounded text-sm font-bold">⚡ FLASH</div>' :
-                    '';
-
-                const price = isFlashSale && product.salePrice ? product.salePrice : product.price;
-                const originalPriceHtml = product.originalPrice ?
-                    `<span class="text-gray-500 line-through text-sm">${window.PRODUCT_UTILS.formatCurrency(product.originalPrice)}</span>` :
-                    '';
-
-                card.innerHTML = `
+                    card.innerHTML = `
                 <div class="relative">
                     ${discountBadge}
                     ${flashSaleBadge}
@@ -1254,317 +1042,330 @@
                 </div>
             `;
 
-                // Add click event for product details
-                card.addEventListener('click', function(e) {
-                    if (!e.target.closest('button')) {
-                        window.location.href = `pages/product-detail.html?id=${product.id}`;
+                    // Add click event for product details
+                    card.addEventListener('click', function(e) {
+                        if (!e.target.closest('button')) {
+                            window.location.href = `pages/product-detail.html?id=${product.id}`;
+                        }
+                    });
+
+                    return card;
+                }
+
+                function addToCartInline(productId) {
+                    const product = window.PRODUCT_UTILS.getProductById(productId);
+                    if (!product) return;
+
+                    // Get existing cart from localStorage
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+                    // Check if product already in cart
+                    const existingItem = cart.find(item => item.id === productId);
+
+                    if (existingItem) {
+                        existingItem.quantity += 1;
+                    } else {
+                        cart.push({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            quantity: 1,
+                            category: product.category
+                        });
+                    }
+
+                    // Save to localStorage
+                    localStorage.setItem('cart', JSON.stringify(cart));
+
+                    // Update cart count
+                    updateCartCountInline();
+
+                    // Show notification
+                    showNotificationInline(`Đã thêm ${product.name} vào giỏ hàng!`);
+                }
+
+                function updateCartCountInline() {
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = totalItems;
+                    }
+                }
+
+                function showNotificationInline(message) {
+                    const notification = document.createElement('div');
+                    notification.className =
+                        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300';
+                    notification.textContent = message;
+
+                    document.body.appendChild(notification);
+
+                    // Show notification
+                    setTimeout(() => {
+                        notification.classList.remove('translate-x-full', 'opacity-0');
+                    }, 100);
+
+                    // Hide notification
+                    setTimeout(() => {
+                        notification.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }, 3000);
+                }
+
+                function startCountdownInline() {
+                    const hoursElement = document.getElementById('hours');
+                    const minutesElement = document.getElementById('minutes');
+                    const secondsElement = document.getElementById('seconds');
+
+                    if (!hoursElement || !minutesElement || !secondsElement) return;
+
+                    let timeLeft = 43200; // 12 hours in seconds
+
+                    const countdown = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(countdown);
+                            timeLeft = 43200; // Reset
+                            return;
+                        }
+
+                        const hours = Math.floor(timeLeft / 3600);
+                        const minutes = Math.floor((timeLeft % 3600) / 60);
+                        const seconds = timeLeft % 60;
+
+                        hoursElement.textContent = hours.toString().padStart(2, '0');
+                        minutesElement.textContent = minutes.toString().padStart(2, '0');
+                        secondsElement.textContent = seconds.toString().padStart(2, '0');
+
+                        timeLeft--;
+                    }, 1000);
+                }
+
+                // Initialize cart count on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOMContentLoaded fired');
+
+                    function checkExecutionLimit() {
+                        const maxExecutions = 5;
+                        const executionCount = parseInt(localStorage.getItem('executionCount') || '0');
+                        
+                        if (executionCount >= maxExecutions) {
+                            console.warn('Maximum execution limit reached');
+                            return false;
+                        }
+                        
+                        localStorage.setItem('executionCount', (executionCount + 1).toString());
+                        return true;
+                    }
+
+                    if (!checkExecutionLimit()) {
+                        return;
+                    }
+
+                    // Prevent double initialization
+                    if (isPageInitialized) {
+                        console.log('Page already initialized, skipping');
+                        return;
+                    }
+
+                    console.log('Initializing page...');
+                    isPageInitialized = true;
+
+                    // Check if PRODUCT_DATA is loaded
+                    if (!window.PRODUCT_DATA) {
+                        console.error('PRODUCT_DATA not loaded!');
+                        return;
+                    }
+
+                    try {
+                        // Initialize cart count
+                        updateCartCountInline();
+
+                        // Setup UI components
+                        setupAccountDropdownInline();
+                        setupCartSidebarInline();
+
+                        // Load products
+                        loadFeaturedProductsInline();
+                        loadFlashSaleProductsInline();
+                        startCountdownInline();
+
+                        // Add global click listener only once
+                        if (!globalClickListenerAdded) {
+                            document.addEventListener('click', function() {
+                                closeAllDropdowns();
+                            });
+                            globalClickListenerAdded = true;
+                        }
+
+                        console.log('Page initialization completed');
+                    } catch (error) {
+                        console.error('Error during page initialization:', error);
                     }
                 });
 
-                return card;
-            }
-
-            function addToCartInline(productId) {
-                const product = window.PRODUCT_UTILS.getProductById(productId);
-                if (!product) return;
-
-                // Get existing cart from localStorage
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-                // Check if product already in cart
-                const existingItem = cart.find(item => item.id === productId);
-
-                if (existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image,
+                // Static add to cart function for hardcoded products
+                function addToCartStatic(id, name, price, image) {
+                    const cartItem = {
+                        id: id,
+                        productId: id,
+                        name: name,
+                        price: price,
                         quantity: 1,
-                        category: product.category
-                    });
-                }
+                        image: image,
+                        color: 'Mặc định',
+                        storage: 'Mặc định'
+                    };
 
-                // Save to localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
+                    // Get existing cart
+                    let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-                // Update cart count
-                updateCartCountInline();
+                    // Check if item already exists
+                    const existingIndex = cart.findIndex(item => item.id === cartItem.id);
 
-                // Show notification
-                showNotificationInline(`Đã thêm ${product.name} vào giỏ hàng!`);
-            }
+                    if (existingIndex !== -1) {
+                        cart[existingIndex].quantity += 1;
+                    } else {
+                        cart.push(cartItem);
+                    }
 
-            function updateCartCountInline() {
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                const cartCount = document.getElementById('cart-count');
-                if (cartCount) {
-                    cartCount.textContent = totalItems;
-                }
-            }
+                    // Save to localStorage
+                    localStorage.setItem('cart', JSON.stringify(cart));
 
-            function showNotificationInline(message) {
-                const notification = document.createElement('div');
-                notification.className =
-                    'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300';
-                notification.textContent = message;
+                    // Update cart count if function exists
+                    if (typeof updateCartCount === 'function') {
+                        updateCartCount();
+                    }
 
-                document.body.appendChild(notification);
+                    // Show simple notification
+                    const notification = document.createElement('div');
+                    notification.className =
+                        'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    notification.textContent = `Đã thêm "${name}" vào giỏ hàng!`;
+                    document.body.appendChild(notification);
 
-                // Show notification
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full', 'opacity-0');
-                }, 100);
-
-                // Hide notification
-                setTimeout(() => {
-                    notification.classList.add('translate-x-full', 'opacity-0');
+                    // Remove notification after 3 seconds
                     setTimeout(() => {
                         if (notification.parentNode) {
                             notification.parentNode.removeChild(notification);
                         }
-                    }, 300);
-                }, 3000);
-            }
+                    }, 3000);
 
-            function startCountdownInline() {
-                const hoursElement = document.getElementById('hours');
-                const minutesElement = document.getElementById('minutes');
-                const secondsElement = document.getElementById('seconds');
+                    console.log('Added to cart:', cartItem);
+                }
 
-                if (!hoursElement || !minutesElement || !secondsElement) return;
+                // Function for hero section "MUA NGAY" button
+                function goToFeaturedProduct() {
+                    // Direct to iPhone 15 Pro product detail page
+                    window.location.href = 'pages/product-detail.html?id=iphone-15-pro';
+                }
 
-                let timeLeft = 43200; // 12 hours in seconds
+                // Slideshow functionality
+                let currentSlideIndex = 0;
+                const slides = document.querySelectorAll('.slide');
+                const indicators = document.querySelectorAll('.indicator');
+                const totalSlides = slides.length;
 
-                const countdown = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        timeLeft = 43200; // Reset
-                        return;
+                function showSlide(index) {
+                    // Hide all slides
+                    slides.forEach(slide => {
+                        slide.classList.remove('active');
+                    });
+
+                    // Remove active from all indicators
+                    indicators.forEach(indicator => {
+                        indicator.classList.remove('active');
+                    });
+
+                    // Show current slide
+                    if (slides[index]) {
+                        slides[index].classList.add('active');
                     }
 
-                    const hours = Math.floor(timeLeft / 3600);
-                    const minutes = Math.floor((timeLeft % 3600) / 60);
-                    const seconds = timeLeft % 60;
-
-                    hoursElement.textContent = hours.toString().padStart(2, '0');
-                    minutesElement.textContent = minutes.toString().padStart(2, '0');
-                    secondsElement.textContent = seconds.toString().padStart(2, '0');
-
-                    timeLeft--;
-                }, 1000);
-            }
-
-            // Initialize cart count on page load
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOMContentLoaded fired');
-
-                if (!checkExecutionLimit()) {
-                    return;
-                }
-
-                // Prevent double initialization
-                if (isPageInitialized) {
-                    console.log('Page already initialized, skipping');
-                    return;
-                }
-
-                console.log('Initializing page...');
-                isPageInitialized = true;
-
-                // Check if PRODUCT_DATA is loaded
-                if (!window.PRODUCT_DATA) {
-                    console.error('PRODUCT_DATA not loaded!');
-                    return;
-                }
-
-                try {
-                    // Initialize cart count
-                    updateCartCountInline();
-
-                    // Setup UI components
-                    setupAccountDropdownInline();
-                    setupCartSidebarInline();
-
-                    // Load products
-                    loadFeaturedProductsInline();
-                    loadFlashSaleProductsInline();
-                    startCountdownInline();
-
-                    // Add global click listener only once
-                    if (!globalClickListenerAdded) {
-                        document.addEventListener('click', function() {
-                            closeAllDropdowns();
-                        });
-                        globalClickListenerAdded = true;
+                    // Update indicator
+                    if (indicators[index]) {
+                        indicators[index].classList.add('active');
                     }
-
-                    console.log('Page initialization completed');
-                } catch (error) {
-                    console.error('Error during page initialization:', error);
                 }
-            });
 
-            // Static add to cart function for hardcoded products
-            function addToCartStatic(id, name, price, image) {
-                const cartItem = {
-                    id: id,
-                    productId: id,
-                    name: name,
-                    price: price,
-                    quantity: 1,
-                    image: image,
-                    color: 'Mặc định',
-                    storage: 'Mặc định'
+                function nextSlide() {
+                    currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+                    showSlide(currentSlideIndex);
+                }
+
+                function prevSlide() {
+                    currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
+                    showSlide(currentSlideIndex);
+                }
+
+                function changeSlide(direction) {
+                    if (direction === 1) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                }
+
+                function currentSlide(index) {
+                    currentSlideIndex = index - 1;
+                    showSlide(currentSlideIndex);
+                }
+
+        // Auto slide every 3 seconds
+        function autoSlide() {
+            nextSlide();
+        }
+
+        // Initialize slideshow
+        function initSlideshow() {
+            if (slides.length > 0) {
+                showSlide(0);
+                // Auto-advance slides every 3 seconds
+                setInterval(autoSlide, 3000);
+            }
+        }
+
+                // Initialize slideshow when DOM is loaded
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Add a small delay to ensure all elements are loaded
+                    setTimeout(initSlideshow, 100);
+                });
+
+                // Make functions globally available
+                window.changeSlide = changeSlide;
+                window.currentSlide = currentSlide;
+
+                // Category dropdown functionality
+                window.toggleCategoryDropdown = function(categoryId) {
+                    const dropdown = document.getElementById('dropdown-' + categoryId);
+                    const icon = document.getElementById('icon-' + categoryId);
+
+                    if (dropdown && icon) {
+                        dropdown.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
                 };
 
-                // Get existing cart
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!event.target.closest('.category-dropdown-wrapper')) {
+                        const dropdowns = document.querySelectorAll('.category-dropdown');
+                        const icons = document.querySelectorAll('[id^="icon-"]');
 
-                // Check if item already exists
-                const existingIndex = cart.findIndex(item => item.id === cartItem.id);
+                        dropdowns.forEach(dropdown => {
+                            dropdown.classList.add('hidden');
+                        });
 
-                if (existingIndex !== -1) {
-                    cart[existingIndex].quantity += 1;
-                } else {
-                    cart.push(cartItem);
-                }
-
-                // Save to localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Update cart count if function exists
-                if (typeof updateCartCount === 'function') {
-                    updateCartCount();
-                }
-
-                // Show simple notification
-                const notification = document.createElement('div');
-                notification.className =
-                    'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                notification.textContent = `Đã thêm "${name}" vào giỏ hàng!`;
-                document.body.appendChild(notification);
-
-                // Remove notification after 3 seconds
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
+                        icons.forEach(icon => {
+                            icon.classList.remove('rotate-180');
+                        });
                     }
-                }, 3000);
-
-                console.log('Added to cart:', cartItem);
-            }
-
-            // Function for hero section "MUA NGAY" button
-            function goToFeaturedProduct() {
-                // Direct to iPhone 15 Pro product detail page
-                window.location.href = 'pages/product-detail.html?id=iphone-15-pro';
-            }
-
-            // Slideshow functionality
-            let currentSlideIndex = 0;
-            const slides = document.querySelectorAll('.slide');
-            const indicators = document.querySelectorAll('.indicator');
-            const totalSlides = slides.length;
-
-            function showSlide(index) {
-                // Hide all slides
-                slides.forEach(slide => {
-                    slide.classList.remove('active');
                 });
-
-                // Remove active from all indicators
-                indicators.forEach(indicator => {
-                    indicator.classList.remove('active');
-                });
-
-                // Show current slide
-                if (slides[index]) {
-                    slides[index].classList.add('active');
-                }
-
-                // Update indicator
-                if (indicators[index]) {
-                    indicators[index].classList.add('active');
-                }
-            }
-
-            function nextSlide() {
-                currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
-                showSlide(currentSlideIndex);
-            }
-
-            function prevSlide() {
-                currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
-                showSlide(currentSlideIndex);
-            }
-
-            function changeSlide(direction) {
-                if (direction === 1) {
-                    nextSlide();
-                } else {
-                    prevSlide();
-                }
-            }
-
-            function currentSlide(index) {
-                currentSlideIndex = index - 1;
-                showSlide(currentSlideIndex);
-            }
-
-            // Auto slide every 5 seconds
-            function autoSlide() {
-                nextSlide();
-            }
-
-            // Initialize slideshow
-            function initSlideshow() {
-                if (slides.length > 0) {
-                    showSlide(0);
-                    // Auto-advance slides every 5 seconds
-                    setInterval(autoSlide, 5000);
-                }
-            }
-
-            // Initialize slideshow when DOM is loaded
-            document.addEventListener('DOMContentLoaded', function() {
-                // Add a small delay to ensure all elements are loaded
-                setTimeout(initSlideshow, 100);
             });
-
-            // Make functions globally available
-            window.changeSlide = changeSlide;
-            window.currentSlide = currentSlide;
-
-            // Category dropdown functionality
-            window.toggleCategoryDropdown = function(categoryId) {
-                const dropdown = document.getElementById('dropdown-' + categoryId);
-                const icon = document.getElementById('icon-' + categoryId);
-
-                if (dropdown && icon) {
-                    dropdown.classList.toggle('hidden');
-                    icon.classList.toggle('rotate-180');
-                }
-            };
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!event.target.closest('.category-dropdown-wrapper')) {
-                    const dropdowns = document.querySelectorAll('.category-dropdown');
-                    const icons = document.querySelectorAll('[id^="icon-"]');
-
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.add('hidden');
-                    });
-
-                    icons.forEach(icon => {
-                        icon.classList.remove('rotate-180');
-                    });
-                }
-            });
-        });
-    </script>
-@endpush
+        </script>
+    @endpush

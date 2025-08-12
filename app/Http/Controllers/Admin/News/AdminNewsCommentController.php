@@ -113,9 +113,36 @@ class AdminNewsCommentController extends Controller
         return back()->with('success', 'Đã thích bình luận.');
     }
 
-    public function show($news_id)
+    public function show($news_id, Request $request)
     {
-        $news = News::with(['comments.user', 'comments.children.user', 'category', 'author'])->findOrFail($news_id);
+        $news = News::with(['category', 'author'])->findOrFail($news_id);
+        
+        // Query comments với điều kiện tìm kiếm
+        $commentsQuery = NewsComment::with(['user', 'children.user'])
+            ->where('news_id', $news_id);
+        
+        // Thêm điều kiện tìm kiếm nếu có
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $commentsQuery->where(function($query) use ($search) {
+                $query->where('content', 'like', "%{$search}%")
+                      ->orWhereHas('user', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            });
+        }
+        
+        // Lọc theo trạng thái nếu có
+        if ($request->filled('status')) {
+            $commentsQuery->where('is_hidden', $request->status === 'hidden');
+        }
+        
+        // Lấy comments và gán vào news
+        $comments = $commentsQuery->whereNull('parent_id')
+                                ->orderByDesc('created_at')
+                                ->get();
+        $news->setRelation('comments', $comments);
+
         return view('admin.news.news_comments.show', compact('news'));
     }
 }

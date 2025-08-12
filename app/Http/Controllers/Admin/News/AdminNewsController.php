@@ -62,6 +62,11 @@ class AdminNewsController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
+            // Xóa ảnh cũ nếu có
+            if ($news->image && file_exists(public_path($news->image))) {
+                unlink(public_path($news->image));
+            }
+            
             $file = $request->file('image');
             $extension = $file->getClientOriginalExtension();
             $filename = time() . '_' . uniqid() . '.' . $extension;
@@ -97,6 +102,7 @@ class AdminNewsController extends Controller
 
     public function destroy(News $news)
     {
+        // Chỉ soft delete, không xóa ảnh
         $news->delete();
         return redirect()->route('admin.news.index')->with('success', 'Bài viết đã được chuyển vào thùng rác.');
     }

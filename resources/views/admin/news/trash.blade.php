@@ -24,6 +24,7 @@
                                 <th>Tiêu đề</th>
                                 <th>Tác giả</th>
                                 <th>Danh mục</th>
+                                <th>Có ảnh</th>
                                 <th>Ngày xoá</th>
                                 <th>Hành động</th>
                             </tr>
@@ -35,6 +36,17 @@
                                     <td>{{ $item->title }}</td>
                                     <td>{{ $item->author?->name ?? 'N/A' }}</td>
                                     <td>{{ $item->category?->name ?? 'Không có' }}</td>
+                                    <td>
+                                        @if($item->image)
+                                            <span class="badge bg-warning-subtle text-warning">
+                                                <i class="fas fa-image"></i> Có ảnh
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                <i class="fas fa-minus"></i> Không có
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td>{{ $item->deleted_at->format('d/m/Y H:i') }}</td>
                                     <td>
                                         <form action="{{ route('admin.news.restore', $item->id) }}" method="POST"
@@ -59,7 +71,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">
+                                    <td colspan="7" class="text-center text-muted">
                                         <i class="fas fa-info-circle"></i> Không có bài viết nào trong thùng rác.
                                     </td>
                                 </tr>

@@ -3,8 +3,57 @@
 @section('content')
     <div class="container mt-4">
         <h2 class="mb-4">Bình luận bài viết: <span class="text-primary">{{ $news->title }}</span></h2>
-    <a href="{{ route('admin.news-comments.index') }}" class="btn btn-outline-secondary mb-3">← Quay lại danh sách bình luận</a>
-    <a href="{{ route('admin.news.show', $news->id) }}" class="btn btn-outline-info mb-3 ms-2">Xem bài viết</a>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div>
+                <a href="{{ route('admin.news-comments.index') }}" class="btn btn-outline-secondary">← Quay lại danh sách bình luận</a>
+                <a href="{{ route('admin.news.show', $news->id) }}" class="btn btn-outline-info ms-2">Xem bài viết</a>
+            </div>
+            
+            <!-- Form tìm kiếm -->
+            <form action="{{ route('admin.news-comments.show', $news->id) }}" method="GET" class="d-flex gap-2">
+                <div class="input-group" style="width: 500px;">
+                    <input type="text" name="search" class="form-control form-control-lg" placeholder="Tìm kiếm bình luận..." value="{{ request('search') }}" style="font-size: 1rem;">
+                    <select name="status" class="form-select form-select-lg" style="max-width: 150px; font-size: 1rem;">
+                        <option value="">- Trạng thái -</option>
+                        <option value="visible" {{ request('status') === 'visible' ? 'selected' : '' }}>Hiện</option>
+                        <option value="hidden" {{ request('status') === 'hidden' ? 'selected' : '' }}>Ẩn</option>
+                    </select>
+                    <button class="btn btn-outline-primary btn-lg px-4" type="submit" style="font-size: 1rem;">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                </div>
+                @if(request()->hasAny(['search', 'status']))
+                    <a href="{{ route('admin.news-comments.show', $news->id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </a>
+                @endif
+            </form>
+        </div>
+        
+        @if(request()->hasAny(['search', 'status']))
+            <div class="alert alert-info">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-filter me-2"></i>
+                    <div>
+                        Đang lọc:
+                        @if(request('search'))
+                            <strong class="me-2">Từ khóa "{{ request('search') }}"</strong>
+                        @endif
+                        @if(request('status'))
+                            <strong>Trạng thái: {{ request('status') === 'hidden' ? 'Ẩn' : 'Hiện' }}</strong>
+                        @endif
+                        <div class="mt-1">
+                            @if($news->comments->isEmpty())
+                                Không tìm thấy bình luận nào phù hợp.
+                            @else
+                                Tìm thấy {{ $news->comments->count() }} bình luận phù hợp.
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

@@ -31,7 +31,9 @@ use App\Http\Controllers\WebhookController;
 
 // --- Controllers cho CLIENT ---
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductController;
+use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
 use App\Http\Controllers\Client\Accounts\ClientAccountController;
@@ -47,6 +49,7 @@ use App\Http\Middleware\CheckPermission;
 // =========================================================================
 // === CLIENT ROUTES ===
 // =========================================================================
+
 
 // Trang chủ client
 // Test route to add product to cart
@@ -91,6 +94,8 @@ Route::get('/test-check-cart', function () {
 
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
 
 // Test cart functionality
 Route::get('/test-cart-page', function () {
@@ -340,6 +345,12 @@ Route::get('/client', [HomeController::class, 'index'])->name('client.home');
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
+
+    // Product comments routes
+    Route::prefix('{productId}/comments')->name('comments.')->middleware(['auth'])->group(function () {
+        Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
+        Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
+    });
 });
 
 // Categories routes (public access)
@@ -366,11 +377,22 @@ Route::prefix('carts')->name('carts.')->group(function () {
     Route::delete('/', [ClientCartController::class, 'clear'])->name('clear');
 });
 
+// Brands routes (public access)
+Route::prefix('brands')->name('brands.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\Brands\ClientBrandController::class, 'index'])->name('index');
+    Route::get('/{slug}', [App\Http\Controllers\Client\Brands\ClientBrandController::class, 'show'])->name('show');
+});
+
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
-        // Routes khác có thể thêm vào đây sau
+        // AJAX xác nhận đã nhận hàng
+        Route::post('{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
+        // AJAX gửi yêu cầu trả hàng
+        Route::post('{id}/request-return', [ClientOrderController::class, 'requestReturn'])->name('request-return');
+        // AJAX hủy đơn hàng
+        Route::post('{id}/cancel', [ClientOrderController::class, 'cancel'])->name('cancel');
     });
 
     // Liên hệ
@@ -383,10 +405,12 @@ Route::prefix('client')->name('client.')->group(function () {
     // Tin tức
     Route::get('/tin-tuc', [ClientNewsController::class, 'index'])->name('news.index');
     Route::get('/tin-tuc/{id}', [ClientNewsController::class, 'show'])->name('news.show');
-    // Bình luận bài viết (client)
-    Route::post('/tin-tuc/{id}/comment', [ClientNewsController::class, 'storeComment'])->name('news-comments.store');
-    Route::post('/tin-tuc/comment/{id}/like', [ClientNewsController::class, 'likeComment'])->name('news-comments.like');
-    Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
+    // Bình luận bài viết (client) - yêu cầu đăng nhập
+    Route::middleware('auth')->group(function () {
+        Route::post('/tin-tuc/{id}/comment', [ClientNewsController::class, 'storeComment'])->name('news-comments.store');
+        Route::post('/tin-tuc/comment/{id}/like', [ClientNewsController::class, 'likeComment'])->name('news-comments.like');
+        Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
+    });
 });
 
 // API Routes
@@ -398,13 +422,15 @@ Route::prefix('api')->group(function () {
 
     // Coupon API - Using Client Controller
     Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+    Route::get('/coupons', [ClientCouponController::class, 'listAvailableCoupons']);
+    // Route::post('/buy-now', [ClientCheckoutController::class, 'buyNow'])->name('checkout.buyNow');
 });
 
 // ACCOUNTS ROUTES (Không có prefix /client)
 Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {
     Route::get('/', [ClientAccountController::class, 'index'])->name('index');
     Route::get('/edit', [ClientAccountController::class, 'edit'])->name('edit');
-    Route::get('/orders', [ClientAccountController::class, 'orders'])->name('orders');
+    Route::get('/orders', [ClientAccountController::class, 'orders'])->name('orders'); // <-- Đường dẫn này
     Route::get('/orders/{id}', [ClientAccountController::class, 'orderDetail'])->name('order-detail');
     Route::post('/orders/{id}/cancel', [ClientAccountController::class, 'cancelOrder'])->name('cancel-order');
     Route::get('/profile', [ClientAccountController::class, 'profile'])->name('profile');
@@ -417,6 +443,7 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
 });
+
 
 // =========================================================================
 // === ADMIN ROUTES ===
@@ -456,16 +483,18 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             ]);
     });
 
-    // ==== Orders ====
-    // Sửa lại để sử dụng resource controller cho gọn gàng và chuẩn RESTful
     Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
-        Route::post('{order}/restore', [AdminOrderController::class, 'restore'])->name('restore');
-        Route::delete('{order}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('{order}/update-status', [AdminOrderController::class, 'updateStatus'])->name('updateStatus'); // Đổi tên phương thức cho rõ ràng
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
         Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
         Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
-        Route::resource('', AdminOrderController::class)->parameters(['' => 'order'])->only(['index', 'show', 'destroy']);
+        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
+        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)
@@ -545,25 +574,25 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
     // ==== Permissions ====
     Route::prefix('permissions')->middleware(CheckRole::class . ':admin')->name('permissions.')->group(function () {
-    // Các route có đường dẫn cụ thể nên được đặt ở trên
-    Route::post('update-roles', [AdminPermissionController::class, 'updateRoles'])->name('updateRoles');
-    Route::get('list', [AdminPermissionController::class, 'list'])->name('list');
-    Route::get('trashed', [AdminPermissionController::class, 'trashed'])->name('trashed');
-    Route::post('sync', [AdminPermissionController::class, 'sync'])->name('sync');
-    Route::post('{id}/restore', [AdminPermissionController::class, 'restore'])->name('restore');
-    Route::delete('{id}/force-delete', [AdminPermissionController::class, 'forceDelete'])->name('force-delete');
-    Route::resource('', AdminPermissionController::class)
-        ->parameters(['' => 'permission'])
-        ->names([
-            'index' => 'index',
-            'create' => 'create',
-            'store' => 'store',
-            'show' => 'show', // Route này sẽ tạo ra /permissions/{permission}
-            'edit' => 'edit',
-            'update' => 'update',
-            'destroy' => 'destroy',
-        ]);
-});
+        // Các route có đường dẫn cụ thể nên được đặt ở trên
+        Route::post('update-roles', [AdminPermissionController::class, 'updateRoles'])->name('updateRoles');
+        Route::get('list', [AdminPermissionController::class, 'list'])->name('list');
+        Route::get('trashed', [AdminPermissionController::class, 'trashed'])->name('trashed');
+        Route::post('sync', [AdminPermissionController::class, 'sync'])->name('sync');
+        Route::post('{id}/restore', [AdminPermissionController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminPermissionController::class, 'forceDelete'])->name('force-delete');
+        Route::resource('', AdminPermissionController::class)
+            ->parameters(['' => 'permission'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show', // Route này sẽ tạo ra /permissions/{permission}
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
+    });
 
     // ==== Orders ====
     Route::prefix('orders')->name('orders.')->group(function () {
@@ -636,3 +665,8 @@ Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::clas
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
+
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.

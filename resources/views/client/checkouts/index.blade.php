@@ -111,18 +111,7 @@
     <!-- Steps -->
     <div class="bg-white border-b no-print">
         <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <!-- Nút quay lại -->
-                <div class="flex items-center">
-                    <button onclick="goBackToProduct()" 
-                            class="flex items-center px-4 py-2 text-gray-600 hover:text-orange-600 transition-colors">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        <span class="hidden sm:inline">Quay lại trang sản phẩm</span>
-                        <span class="sm:hidden">Quay lại</span>
-                    </button>
-                </div>
-                
-                <!-- Steps -->
+            <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
                         <span
@@ -143,15 +132,6 @@
                             class="w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2">3</span>
                         <span>Hoàn tất</span>
                     </div>
-                </div>
-                
-                <!-- Spacer để căn giữa steps -->
-                <div class="flex items-center invisible">
-                    <button class="flex items-center px-4 py-2">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        <span class="hidden sm:inline">Quay lại trang sản phẩm</span>
-                        <span class="sm:hidden">Quay lại</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -1238,6 +1218,22 @@
                     }
                 }
 
+                // Nếu không có selectedIds, thử lấy từ checkout state
+                if (selectedIds.length === 0) {
+                    try {
+                        const savedState = localStorage.getItem('checkout_state');
+                        if (savedState) {
+                            const state = JSON.parse(savedState);
+                            if (state.selected) {
+                                selectedIds = state.selected.split(',').map(id => id.trim()).filter(id => id);
+                                console.log('Lấy từ checkout state:', selectedIds);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Lỗi lấy từ checkout state:', e);
+                    }
+                }
+
                 if (selectedIds.length === 0) {
                     console.log('Không có sản phẩm nào được chọn, bỏ qua lọc');
                     return;
@@ -1385,50 +1381,7 @@
             setTimeout(filterSelectedItems, 50);
         }
 
-        // Function quay lại trang sản phẩm chi tiết
-        function goBackToProduct() {
-            // Kiểm tra xem có phải là buynow không
-            const selectedParam = new URLSearchParams(window.location.search).get('selected');
-            
-            if (selectedParam && selectedParam.includes(':')) {
-                // Đây là buynow format (product_id:variant_id)
-                const parts = selectedParam.split(':');
-                const productId = parts[0];
-                const variantId = parts[1] != '0' ? parts[1] : null;
-                
-                // Quay lại trang sản phẩm chi tiết
-                let productUrl = `/products/${productId}`;
-                if (variantId) {
-                    productUrl += `?variant=${variantId}`;
-                }
-                window.location.href = productUrl;
-            } else {
-                // Quay lại trang sản phẩm hoặc trang chủ
-                const checkoutItems = document.querySelectorAll('.checkout-item');
-                if (checkoutItems.length > 0) {
-                    const firstItem = checkoutItems[0];
-                    const itemId = firstItem.getAttribute('data-item-id');
-                    
-                    if (itemId && itemId.includes(':')) {
-                        const parts = itemId.split(':');
-                        const productId = parts[0];
-                        const variantId = parts[1] != '0' ? parts[1] : null;
-                        
-                        let productUrl = `/products/${productId}`;
-                        if (variantId) {
-                            productUrl += `?variant=${variantId}`;
-                        }
-                        window.location.href = productUrl;
-                    } else {
-                        // Quay lại trang chủ
-                        window.location.href = '/';
-                    }
-                } else {
-                    // Quay lại trang chủ
-                    window.location.href = '/';
-                }
-            }
-        }
+
     </script>
 
     <div id="shared-footer-container"></div>

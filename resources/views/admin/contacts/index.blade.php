@@ -32,9 +32,13 @@
         </div>
     </form>
 
-    {{-- Thông báo thành công --}}
+    {{-- Thông báo --}}
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
     {{-- Bảng dữ liệu --}}
@@ -96,21 +100,32 @@
                                             title="Xem chi tiết">
                                             <iconify-icon icon="solar:eye-broken" class="fs-5"></iconify-icon>
                                         </a>
-                                        <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST"
-                                            onsubmit="return confirm('Bạn có chắc chắn muốn xoá liên hệ này?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-soft-danger btn-sm" title="Xoá">
+                                        
+                                        {{-- Chỉ hiển thị nút xóa với trạng thái đã phản hồi hoặc bị từ chối --}}
+                                        @if(in_array($contact->status, ['responded', 'rejected']))
+                                            <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn xoá liên hệ này?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-soft-danger btn-sm" title="Xoá">
+                                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                        class="fs-5"></iconify-icon>
+                                                </button>
+                                            </form>
+                                        @else
+                                            {{-- Hiển thị nút xóa bị vô hiệu hóa với tooltip --}}
+                                            <button class="btn btn-soft-secondary btn-sm" disabled 
+                                                    title="Chỉ có thể xóa liên hệ đã phản hồi hoặc bị từ chối">
                                                 <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
                                                     class="fs-5"></iconify-icon>
                                             </button>
-                                        </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">Không có liên hệ nào.</td>
+                                <td colspan="12" class="text-center text-muted py-4">Không có liên hệ nào.</td>
                             </tr>
                         @endforelse
                     </tbody>

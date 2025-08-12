@@ -26,8 +26,8 @@
                     <select name="category_id" class="form-select">
                         <option value="">-- Chọn danh mục --</option>
                         @foreach ($categories as $cat)
-                            <option value="{{ $cat->category_id }}"
-                                {{ old('category_id', $news->category_id) == $cat->category_id ? 'selected' : '' }}>
+                            <option value="{{ $cat->id }}"
+                                {{ old('category_id', $news->category_id) == $cat->id ? 'selected' : '' }}>
                                 {{ $cat->name }}
                             </option>
                         @endforeach

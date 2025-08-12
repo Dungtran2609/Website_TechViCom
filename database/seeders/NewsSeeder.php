@@ -33,7 +33,7 @@ class NewsSeeder extends Seeder
         $authorIds = DB::table('users')->pluck('id')->take(5)->toArray(); // lấy tối đa 5 tác giả
 
         foreach ($categories as $categoryName => $newsItems) {
-            $categoryId = DB::table('news_categories')->where('name', $categoryName)->value('category_id');
+            $categoryId = DB::table('news_categories')->where('name', $categoryName)->value('id');
 
             if (!$categoryId) {
                 continue; // Bỏ qua nếu không tìm thấy danh mục

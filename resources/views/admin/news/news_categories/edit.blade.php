@@ -6,7 +6,7 @@
 
     
 
-    <form action="{{ route('admin.news-categories.update', $newsCategory->category_id) }}" method="POST">
+    <form action="{{ route('admin.news-categories.update', $newsCategory->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -19,7 +19,7 @@
             @enderror
         </div>
 
-        <button type="submit" class="btn btn-primary">Cập nhật</button>
+    <button type="submit" class="btn btn-primary">Cập nhật</button>
         <a href="{{ route('admin.news-categories.index') }}" class="btn btn-secondary">Quay lại</a>
     </form>
 </div>

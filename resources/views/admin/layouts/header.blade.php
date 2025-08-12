@@ -71,18 +71,22 @@
                     <button type="button" class="custom-dropdown-toggle topbar-button" aria-label="Tài khoản">
                         <span class="d-flex align-items-center">
                             @php
-                                $avatar = Auth::check() && Auth::user() && Auth::user()->image_profile
-                                    ? asset(Auth::user()->image_profile)
-                                    : asset('admin_assets/images/default-avatar.png');
+                                $user = Auth::user();
+                                $avatar = $user && $user->image_profile
+                                    ? asset('storage/' . $user->image_profile)
+                                    : asset('admin_css/images/avta.png');
                             @endphp
                             <img class="rounded-circle" width="32" src="{{ $avatar }}" alt="avatar">
                         </span>
                     </button>
                     <div class="custom-dropdown-menu dropdown-menu-end" style="top:110%; min-width:200px;">
                         <div class="dropdown-header"><i class="bx bx-user me-2"></i>Xin chào</div>
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân
-                        </a>
+                        @if($user)
+                            <a class="dropdown-item" href="{{ route('admin.users.show', $user->id) }}">
+                                <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân<br>
+                                <span class="fw-bold">{{ $user->name }}</span><br>
+                            </a>
+                        @endif
                         <div class="dropdown-divider"></div>
                         <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                             @csrf

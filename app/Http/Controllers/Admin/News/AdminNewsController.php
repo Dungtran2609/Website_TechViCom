@@ -19,7 +19,7 @@ class AdminNewsController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $news = $query->orderBy('published_at', 'desc')->paginate();
+    $news = $query->orderByDesc('published_at')->paginate(12);
 
         return view('admin.news.index', compact('news'));
     }
@@ -62,6 +62,11 @@ class AdminNewsController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
+            // Xóa ảnh cũ nếu có
+            if ($news->image && file_exists(public_path($news->image))) {
+                unlink(public_path($news->image));
+            }
+            
             $file = $request->file('image');
             $extension = $file->getClientOriginalExtension();
             $filename = time() . '_' . uniqid() . '.' . $extension;
@@ -69,7 +74,7 @@ class AdminNewsController extends Controller
             $data['image'] = 'uploads/news/' . $filename;
         }
 
-        if ($news->status !== 'published' && $data['status'] === 'published') {
+        if ($data['status'] === 'published') {
             $data['published_at'] = now();
         }
 
@@ -80,12 +85,24 @@ class AdminNewsController extends Controller
 
     public function show(News $news)
     {
-        $news->load(['comments.user']);
+        $news->load([
+            'comments' => function ($q) {
+                $q->where('is_hidden', false)->with([
+                    'user',
+                    'children' => function ($q2) {
+                        $q2->where('is_hidden', false)->with('user');
+                    }
+                ]);
+            },
+            'category',
+            'author'
+        ]);
         return view('admin.news.show', compact('news'));
     }
 
     public function destroy(News $news)
     {
+        // Chỉ soft delete, không xóa ảnh
         $news->delete();
         return redirect()->route('admin.news.index')->with('success', 'Bài viết đã được chuyển vào thùng rác.');
     }

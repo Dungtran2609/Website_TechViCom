@@ -55,12 +55,17 @@ class News extends Model
 
     public function category()
     {
-        return $this->belongsTo(NewsCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(NewsCategory::class, 'category_id', 'id');
     }
 
 
     public function visibleComments()
     {
         return $this->hasMany(NewsComment::class)->where('is_hidden', false);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(NewsComment::class, 'news_id')->where('is_like', true);
     }
 }

@@ -110,14 +110,14 @@ class ClientAccountController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . Auth::id(),
-            'phone' => 'nullable|string|max:20',
+            'phone_number' => 'nullable|string|max:20',
             'birthday' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other'
         ]);
 
         $user = Auth::user();
         
-        User::where('id', $user->id)->update($request->only(['name', 'email', 'phone', 'birthday', 'gender']));
+        User::where('id', $user->id)->update($request->only(['name', 'email', 'phone_number', 'birthday', 'gender']));
 
         return redirect()->back()->with('success', 'Cập nhật thông tin thành công');
     }

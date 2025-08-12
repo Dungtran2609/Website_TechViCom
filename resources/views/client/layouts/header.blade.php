@@ -801,7 +801,7 @@
             const ids = Array.from(itemCheckboxes).filter(c => c.checked).map(c => c.value);
             if (ids.length === 0) return;
             localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
-            window.location.href = '{{ route('checkout.index') }}?selected=1';
+            window.location.href = '{{ route('checkout.index') }}?selected=' + ids.join(',');
         });
 
         updateState(); // initialize state
@@ -1143,7 +1143,7 @@
         const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
         if (selected.length > 0) {
             localStorage.setItem('checkout_selected_items', JSON.stringify(selected));
-            window.location.href = '{{ route('checkout.index') }}?selected=1';
+            window.location.href = '{{ route('checkout.index') }}?selected=' + selected.join(',');
         } else {
             // KHÔNG cho đi checkout khi chưa chọn
             alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán');

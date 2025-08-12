@@ -442,23 +442,24 @@
                     <div class="space-x-2">
                         @if($order->status === 'pending')
                             @php
-                                $hasCancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved'])->exists();
-                                $hasRejectedCancelRequest = $order->returns()->where('type', 'cancel')->where('status', 'rejected')->exists();
+                                $hasCancelRequest = $order->returns()->where('type', 'cancel')->exists();
                             @endphp
                             @if(!$hasCancelRequest)
                                 <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                                     <i class="fas fa-times me-2"></i>
                                     Hủy đơn hàng
                                 </button>
-                            @elseif($hasRejectedCancelRequest)
-                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                                    <i class="fas fa-times me-2"></i>
-                                    Gửi yêu cầu hủy mới
-                                </button>
                             @else
+                                @php
+                                    $cancelRequest = $order->returns()->where('type', 'cancel')->first();
+                                @endphp
                                 <button class="btn btn-outline-secondary" disabled>
                                     <i class="fas fa-times me-2"></i>
-                                    Đã gửi yêu cầu hủy đơn hàng
+                                    @if($cancelRequest->status === 'rejected')
+                                        Yêu cầu hủy đã bị từ chối
+                                    @else
+                                        Đã gửi yêu cầu hủy đơn hàng
+                                    @endif
                                 </button>
                             @endif
                         @endif
@@ -466,8 +467,7 @@
                         {{-- Nếu đã giao nhưng chưa xác nhận nhận hàng thì hiện nút xác nhận nhận hàng và trả hàng --}}
                         @if($order->status === 'delivered')
                             @php
-                                $hasReturnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved'])->exists();
-                                $hasRejectedReturnRequest = $order->returns()->where('type', 'return')->where('status', 'rejected')->exists();
+                                $hasReturnRequest = $order->returns()->where('type', 'return')->exists();
                             @endphp
                             @if(!$hasReturnRequest)
                                 <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
@@ -478,23 +478,21 @@
                                     <i class="fas fa-undo me-2"></i>
                                     Yêu cầu trả hàng
                                 </button>
-                            @elseif($hasRejectedReturnRequest)
-                                <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Xác nhận đã nhận hàng
-                                </button>
-                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
-                                    <i class="fas fa-undo me-2"></i>
-                                    Gửi yêu cầu trả hàng mới
-                                </button>
                             @else
                                 <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
                                     <i class="fas fa-check-circle me-2"></i>
                                     Xác nhận đã nhận hàng
                                 </button>
+                                @php
+                                    $returnRequest = $order->returns()->where('type', 'return')->first();
+                                @endphp
                                 <button class="btn btn-outline-secondary" disabled>
                                     <i class="fas fa-undo me-2"></i>
-                                    Đã gửi yêu cầu trả hàng
+                                    @if($returnRequest->status === 'rejected')
+                                        Yêu cầu trả hàng đã bị từ chối
+                                    @else
+                                        Đã gửi yêu cầu trả hàng
+                                    @endif
                                 </button>
                             @endif
                         @endif
@@ -510,7 +508,7 @@
     </div>
 </div>
         <!-- Modal nhập lý do hủy đơn hàng -->
-        @if($order->status === 'pending' && (!$hasCancelRequest || $hasRejectedCancelRequest))
+        @if($order->status === 'pending' && !$hasCancelRequest)
         <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form id="cancelOrderForm">
@@ -536,7 +534,7 @@
         @endif
 
         <!-- Modal nhập lý do trả hàng -->
-        @if($order->status === 'delivered' && (!$hasReturnRequest || $hasRejectedReturnRequest))
+        @if($order->status === 'delivered' && !$hasReturnRequest)
         <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form id="returnOrderForm">

@@ -106,19 +106,22 @@
                                             </div>
 
                                             <div class="flex items-center space-x-4">
-                                                <div class="flex items-center space-x-2">
-                                                    <button
-                                                        onclick="updateQuantity('{{ $item->id }}', {{ max(1, (int) $item->quantity - 1) }})"
-                                                        class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
-                                                        <i class="fas fa-minus text-xs"></i>
-                                                    </button>
-                                                    <span class="w-8 text-center">{{ $item->quantity }}</span>
-                                                    <button
-                                                        onclick="updateQuantity('{{ $item->id }}', {{ (int) $item->quantity + 1 }})"
-                                                        class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
-                                                        <i class="fas fa-plus text-xs"></i>
-                                                    </button>
-                                                </div>
+                                                                                        <div class="flex items-center space-x-2">
+                                            <button
+                                                onclick="updateQuantity('{{ $item->id }}', {{ max(1, (int) $item->quantity - 1) }})"
+                                                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int) $item->quantity <= 1 ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                                <i class="fas fa-minus text-xs"></i>
+                                            </button>
+                                            <span class="w-8 text-center">{{ $item->quantity }}</span>
+                                            <button
+                                                onclick="updateQuantity('{{ $item->id }}', {{ (int) $item->quantity + 1 }})"
+                                                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 quantity-plus-btn"
+                                                data-item-id="{{ $item->id }}"
+                                                data-current-qty="{{ $item->quantity }}"
+                                                data-stock="{{ $item->productVariant ? $item->productVariant->stock : ($item->product->stock ?? 0) }}">
+                                                <i class="fas fa-plus text-xs"></i>
+                                            </button>
+                                        </div>
                                                 <button onclick="removeFromCart('{{ $item->id }}')"
                                                     class="text-red-500 hover:text-red-700 transition">
                                                     <i class="fas fa-trash"></i>
@@ -335,12 +338,77 @@
                                 const quantityEl = cartItem.querySelector('span.w-8.text-center');
                                 if (quantityEl) quantityEl.textContent = newQuantity;
                                 cartItem.dataset.quantity = newQuantity;
+                                
+                                // Cập nhật trạng thái nút tăng/giảm
+                                const plusBtn = cartItem.querySelector('.quantity-plus-btn');
+                                const minusBtn = cartItem.querySelector('button:first-child');
+                                
+                                if (plusBtn) {
+                                    plusBtn.dataset.currentQty = newQuantity;
+                                    const stock = parseInt(plusBtn.dataset.stock) || 0;
+                                    if (stock > 0 && newQuantity >= stock) {
+                                        plusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                        plusBtn.title = `Chỉ còn ${stock} sản phẩm trong kho`;
+                                    } else {
+                                        plusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                        plusBtn.title = '';
+                                    }
+                                }
+                                
+                                if (minusBtn) {
+                                    if (newQuantity <= 1) {
+                                        minusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                    } else {
+                                        minusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                    }
+                                }
+                                
                                 const checkbox = cartItem.querySelector('.item-checkbox');
                                 if (checkbox && checkbox.checked) renderSummary();
                                 updateCartCount();
                             }
                         } else {
                             showNotification(data.message || 'Có lỗi xảy ra khi cập nhật số lượng', 'error');
+                            
+                            // Nếu số lượng vượt quá tồn kho, cập nhật lại số lượng về giá trị tối đa
+                            if (data.max_quantity !== undefined) {
+                                const cartItem = document.querySelector(`.cart-item[data-id="${itemId}"]`);
+                                if (cartItem) {
+                                    const quantityEl = cartItem.querySelector('span.w-8.text-center');
+                                    if (quantityEl) {
+                                        quantityEl.textContent = data.max_quantity;
+                                        cartItem.dataset.quantity = data.max_quantity;
+                                        
+                                        // Cập nhật trạng thái nút tăng/giảm
+                                        const plusBtn = cartItem.querySelector('.quantity-plus-btn');
+                                        const minusBtn = cartItem.querySelector('button:first-child');
+                                        
+                                        if (plusBtn) {
+                                            plusBtn.dataset.currentQty = data.max_quantity;
+                                            const stock = parseInt(plusBtn.dataset.stock) || 0;
+                                            if (stock > 0 && data.max_quantity >= stock) {
+                                                plusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                                plusBtn.title = `Chỉ còn ${stock} sản phẩm trong kho`;
+                                            } else {
+                                                plusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                                plusBtn.title = '';
+                                            }
+                                        }
+                                        
+                                        if (minusBtn) {
+                                            if (data.max_quantity <= 1) {
+                                                minusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                                            } else {
+                                                minusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                            }
+                                        }
+                                        
+                                        const checkbox = cartItem.querySelector('.item-checkbox');
+                                        if (checkbox && checkbox.checked) renderSummary();
+                                        updateCartCount();
+                                    }
+                                }
+                            }
                         }
                     })
                     .catch(() => showNotification('Có lỗi kết nối', 'error'));
@@ -578,6 +646,25 @@
                 e.stopPropagation();
                 proceedToCheckoutSelected();
             });
+
+            // Kiểm tra và vô hiệu hóa nút tăng số lượng khi đã đạt giới hạn tồn kho
+            function checkStockLimits() {
+                document.querySelectorAll('.quantity-plus-btn').forEach(btn => {
+                    const currentQty = parseInt(btn.dataset.currentQty) || 0;
+                    const stock = parseInt(btn.dataset.stock) || 0;
+                    
+                    if (stock > 0 && currentQty >= stock) {
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        btn.title = `Chỉ còn ${stock} sản phẩm trong kho`;
+                    } else {
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        btn.title = '';
+                    }
+                });
+            }
+
+            // Gọi function kiểm tra khi trang load
+            checkStockLimits();
         });
     </script>
 @endsection

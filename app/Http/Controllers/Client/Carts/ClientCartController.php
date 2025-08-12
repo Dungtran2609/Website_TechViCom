@@ -226,9 +226,27 @@ class ClientCartController extends Controller
         ]);
 
         if (Auth::check()) {
-            $cartItem = Cart::where('user_id', Auth::id())
+            $cartItem = Cart::with(['product', 'productVariant'])
+                ->where('user_id', Auth::id())
                 ->where('id', $id)
                 ->firstOrFail();
+
+            // Kiểm tra số lượng tồn kho
+            $stock = null;
+            if ($cartItem->productVariant) {
+                $stock = $cartItem->productVariant->stock;
+            } else {
+                $stock = $cartItem->product->stock ?? 0;
+            }
+
+            // Kiểm tra nếu số lượng vượt quá tồn kho
+            if ($stock !== null && $request->quantity > $stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                    'max_quantity' => $stock
+                ], 400);
+            }
 
             $cartItem->quantity = $request->quantity;
             $cartItem->save();
@@ -239,6 +257,37 @@ class ClientCartController extends Controller
             error_log('Available keys: ' . json_encode(array_keys($cart)));
 
             if (isset($cart[$id])) {
+                // Kiểm tra số lượng tồn kho cho session cart
+                $productId = $cart[$id]['product_id'];
+                $variantId = $cart[$id]['variant_id'] ?? null;
+                
+                $product = Product::find($productId);
+                if (!$product) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sản phẩm không tồn tại'
+                    ], 404);
+                }
+
+                $stock = null;
+                if ($variantId) {
+                    $variant = ProductVariant::find($variantId);
+                    if ($variant) {
+                        $stock = $variant->stock;
+                    }
+                } else {
+                    $stock = $product->stock ?? 0;
+                }
+
+                // Kiểm tra nếu số lượng vượt quá tồn kho
+                if ($stock !== null && $request->quantity > $stock) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                        'max_quantity' => $stock
+                    ], 400);
+                }
+
                 $cart[$id]['quantity'] = $request->quantity;
                 session()->put('cart', $cart);
                 session()->save();

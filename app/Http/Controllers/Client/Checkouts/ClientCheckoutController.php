@@ -329,15 +329,21 @@ class ClientCheckoutController extends Controller
         try {
             $rules = [
                 'recipient_name' => 'required|string|max:255',
-                'recipient_phone' => 'required|string|max:20',
-                'recipient_email' => 'required|email|max:255', // <-- thêm email người nhận
+                'recipient_phone' => 'required|string|max:20|regex:/^0[3-9][0-9]{8}$/',
+                'recipient_email' => 'required|email|max:255',
                 'recipient_address' => 'required|string|max:500',
                 'payment_method' => 'required|in:cod,bank_transfer',
                 'shipping_method_id' => 'nullable|integer',
                 'coupon_code' => 'nullable|string',
-                'use_default_address' => 'sometimes|boolean', // nếu muốn ép dùng địa chỉ mặc định
+                'use_default_address' => 'sometimes|boolean',
             ];
-            $request->validate($rules);
+            
+            $messages = [
+                'recipient_phone.regex' => 'Số điện thoại không đúng định dạng. Vui lòng nhập số điện thoại Việt Nam hợp lệ (VD: 0362729054)',
+                'recipient_email.email' => 'Email không đúng định dạng. Vui lòng nhập email hợp lệ (VD: example@gmail.com)',
+            ];
+            
+            $request->validate($rules, $messages);
 
             // Nếu đã đăng nhập và user tick "dùng địa chỉ mặc định" thì mới ghi đè địa chỉ
             if (Auth::check() && $request->boolean('use_default_address')) {

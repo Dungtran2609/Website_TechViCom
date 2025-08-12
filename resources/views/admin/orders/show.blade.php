@@ -228,14 +228,6 @@
 
                         @elseif($orderData['status'] === 'delivered')
                             {{-- BƯỚC 1: khách đã nhận --}}
-                            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Xác nhận khách đã nhận hàng?');">
-                                @csrf
-                                <input type="hidden" name="status" value="received">
-                                <button type="submit" class="btn btn-outline-primary">
-                                    <i class="fas fa-user-check"></i> Xác nhận khách đã nhận hàng
-                                </button>
-                            </form>
 
                         @elseif($orderData['status'] === 'received')
                             {{-- BƯỚC 2: chỉ cho xác nhận thanh toán khi COD và chưa thanh toán --}}

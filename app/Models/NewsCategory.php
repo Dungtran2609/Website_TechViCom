@@ -16,7 +16,7 @@ class NewsCategory extends Model
     protected $table = 'news_categories';  // tên bảng
 
 
-    protected $primaryKey = 'category_id'; // khoá chính
+    protected $primaryKey = 'id'; // khoá chính
 
 
     public $incrementing = true;
@@ -33,6 +33,6 @@ class NewsCategory extends Model
      */
     public function news()
     {
-        return $this->hasMany(News::class, 'category_id', 'category_id');
+    return $this->hasMany(News::class, 'category_id', 'id'); // Không cần sửa, đã đúng
     }
 }

@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('news_categories', function (Blueprint $table) {
-            $table->id('category_id');
+            $table->id('id');
             $table->string('name');
             $table->string('slug')->unique()->nullable();
             $table->timestamps();

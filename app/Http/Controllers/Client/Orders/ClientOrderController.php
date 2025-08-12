@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Client;
+namespace App\Http\Controllers\Client\Orders;
 
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
@@ -15,8 +15,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
-class ClientOrderController extends Controller
-{
+class ClientOrderController extends Controller {
+    /**
+     * Xác nhận đã nhận hàng (chỉ khi đã delivered)
+     */
+    public function confirmReceived($id)
+    {
+        $user = Auth::user();
+        $order = Order::where('user_id', $user->id)
+            ->findOrFail($id);
+
+        // Cho phép xác nhận khi trạng thái là 'delivered' hoặc 'shipped'
+        if (!in_array($order->status, ['delivered', 'shipped'])) {
+            return response()->json(['success' => false, 'message' => 'Chỉ xác nhận khi đơn hàng đã giao hoặc đang giao!'], 400);
+        }
+
+        $order->status = 'received';
+        $order->shipped_at = now(); // Lưu thời gian nhận hàng
+        $order->save();
+
+        return response()->json(['success' => true, 'message' => 'Đã xác nhận nhận hàng!']);
+    }
+
     /**
      * Hiển thị danh sách đơn hàng của user
      */
@@ -78,6 +98,7 @@ class ClientOrderController extends Controller
         $validator = Validator::make($request->all(), [
             'recipient_name' => 'required|string|max:255',
             'recipient_phone' => 'required|string|max:20',
+            'recipient_email' => 'required|email|max:255',
             'recipient_address' => 'required|string|max:500',
             'shipping_method_id' => 'required|exists:shipping_methods,id',
             'payment_method' => 'required|in:credit_card,bank_transfer,cod',
@@ -127,6 +148,7 @@ class ClientOrderController extends Controller
                 'user_id' => $user->id,
                 'recipient_name' => $request->recipient_name,
                 'recipient_phone' => $request->recipient_phone,
+                'recipient_email' => $request->recipient_email,
                 'recipient_address' => $request->recipient_address,
                 'shipping_method_id' => $shipId,
                 'payment_method' => $request->payment_method,
@@ -184,10 +206,19 @@ class ClientOrderController extends Controller
             ->where('status', 'pending')
             ->findOrFail($id);
 
-        $order->status = 'cancelled';
-        $order->save();
+        $clientNote = request('client_note', '');
 
-        return back()->with('success', 'Đơn hàng đã được hủy.');
+        // Tạo yêu cầu hủy đơn hàng, chờ admin duyệt
+        \App\Models\OrderReturn::create([
+            'order_id' => $order->id,
+            'type' => 'cancel',
+            'reason' => 'Khách hủy',
+            'client_note' => $clientNote,
+            'status' => 'pending',
+            'requested_at' => now(),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Yêu cầu hủy đơn hàng đã được gửi. Admin sẽ duyệt yêu cầu này.']);
     }
 
     /**
@@ -217,15 +248,19 @@ class ClientOrderController extends Controller
             ->where('status', 'delivered')
             ->findOrFail($id);
 
+        $clientNote = request('client_note', '');
+
+        // Chỉ cho phép trả hàng khi trạng thái là 'delivered' (chưa xác nhận nhận hàng)
         OrderReturn::create([
             'order_id' => $order->id,
             'type' => 'return',
             'reason' => 'Khách hàng yêu cầu trả',
+            'client_note' => $clientNote,
             'status' => 'pending',
             'requested_at' => now(),
         ]);
 
-        return back()->with('success', 'Yêu cầu trả hàng đã được gửi.');
+        return response()->json(['success' => true, 'message' => 'Yêu cầu trả hàng đã được gửi.']);
     }
 
     /**

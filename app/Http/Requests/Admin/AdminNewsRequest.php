@@ -19,7 +19,7 @@ class AdminNewsRequest extends FormRequest
             'author_id' => 'required|exists:users,id',
             'status' => 'required|in:published,draft',
             'published_at' => 'nullable|date',
-            'category_id' => 'required|exists:news_categories,category_id',
+            'category_id' => 'required|exists:news_categories,id',
         ];
 
         if ($this->isMethod('post')) {

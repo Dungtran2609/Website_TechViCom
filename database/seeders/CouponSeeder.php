@@ -10,7 +10,7 @@ class CouponSeeder extends Seeder
 {
     public function run(): void
     {
-        // Dữ liệu từ nhánh main
+        // Dữ liệu mặc định
         DB::table('coupons')->insert([
             [
                 'code'                => 'DISCOUNT10',
@@ -24,10 +24,44 @@ class CouponSeeder extends Seeder
                 'end_date'            => now()->addMonths(1),
                 'status'              => true,
             ],
-        ]);
-
-        // Dữ liệu từ nhánh nhung
-        Coupon::insert([
+            // Mã cho đơn hàng lớn
+            [
+                'code' => 'BIGSALE10',
+                'discount_type' => 'percent',
+                'value' => 10, // 10%
+                'max_discount_amount' => 20000000, // 20 triệu
+                'min_order_value' => 50000000, // 50 triệu
+                'max_order_value' => 1000000000, // 1 tỷ
+                'max_usage_per_user' => 1,
+                'start_date' => now()->subDays(1),
+                'end_date' => now()->addMonths(1),
+                'status' => true,
+            ],
+            [
+                'code' => 'VIPFIXED',
+                'discount_type' => 'fixed',
+                'value' => 50000000, // 50 triệu
+                'max_discount_amount' => null,
+                'min_order_value' => 200000000, // 200 triệu
+                'max_order_value' => 2000000000, // 2 tỷ
+                'max_usage_per_user' => 1,
+                'start_date' => now()->subDays(1),
+                'end_date' => now()->addMonths(1),
+                'status' => true,
+            ],
+            [
+                'code' => 'MEGAVIP',
+                'discount_type' => 'percent',
+                'value' => 50, // 50%
+                'max_discount_amount' => 100000000, // 100 triệu
+                'min_order_value' => 500000000, // 500 triệu
+                'max_order_value' => 5000000000, // 5 tỷ
+                'max_usage_per_user' => 1,
+                'start_date' => now()->subDays(1),
+                'end_date' => now()->addMonths(1),
+                'status' => true,
+            ],
+            // Các mã nhỏ hơn
             [
                 'code' => 'SALE50',
                 'discount_type' => 'percent',

@@ -93,7 +93,7 @@
                            class="text-white/80 hover:text-white text-decoration-none me-3">
                             <i class="fas fa-arrow-left"></i>
                         </a>
-                        <h1 class="text-2xl font-bold mb-0">Chi tiết đơn hàng #{{ $order->id }}</h1>
+                        <h1 class="text-2xl font-bold mb-0">Chi tiết đơn hàng #{{ $order->random_code ?? $order->code ?? ('DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}</h1>
                     </div>
                     <p class="text-white/80 mb-0">
                         Đặt ngày {{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}
@@ -105,17 +105,21 @@
                             'pending' => ['class' => 'bg-warning text-dark', 'text' => 'Chờ xử lý', 'icon' => 'clock'],
                             'processing' => ['class' => 'bg-info', 'text' => 'Đang xử lý', 'icon' => 'cog'],
                             'shipped' => ['class' => 'bg-primary', 'text' => 'Đang giao', 'icon' => 'truck'],
-                            'delivered' => ['class' => 'bg-success', 'text' => 'Hoàn thành', 'icon' => 'check-circle'],
+                            'delivered' => ['class' => 'bg-success', 'text' => 'Đã giao hàng', 'icon' => 'check-circle'],
+                            'received' => ['class' => 'bg-success', 'text' => 'Hoàn thành', 'icon' => 'check-double'],
                             'cancelled' => ['class' => 'bg-danger', 'text' => 'Đã hủy', 'icon' => 'times-circle'],
                             'returned' => ['class' => 'bg-secondary', 'text' => 'Đã trả', 'icon' => 'undo']
                         ];
                         $config = $statusConfig[$order->status] ?? ['class' => 'bg-secondary', 'text' => $order->status, 'icon' => 'question'];
+                        $orderReturn = $order->returns()->latest()->first();
                     @endphp
-                    
                     <span class="badge {{ $config['class'] }} fs-6 px-3 py-2">
                         <i class="fas fa-{{ $config['icon'] }} me-2"></i>
                         {{ $config['text'] }}
                     </span>
+                    @if($order->status === 'returned' && $orderReturn && $orderReturn->status === 'pending')
+                        <span class="badge bg-info ms-2">Chờ admin xác nhận trả hàng</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -123,6 +127,14 @@
         <div class="row">
             <!-- Order Timeline -->
             <div class="col-lg-4 mb-6">
+                @php
+                    $orderReturn = $order->returns()->latest()->first();
+                @endphp
+                @if($orderReturn && in_array($order->status, ['cancelled', 'returned']) && $orderReturn->admin_note)
+                    <div class="alert alert-info mb-3">
+                        <strong>Ghi chú từ admin:</strong> {{ $orderReturn->admin_note }}
+                    </div>
+                @endif
                 <div class="bg-white rounded-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
                         <i class="fas fa-route me-2 text-orange-500"></i>
@@ -158,7 +170,16 @@
                                 <div>
                                     <h6 class="font-semibold mb-1">Đang vận chuyển</h6>
                                     <p class="text-sm text-gray-600 mb-0">
-                                        {{ $order->shipped_at ? $order->shipped_at->format('d/m/Y H:i') : 'Chưa vận chuyển' }}
+                                        @php
+                                            $shippedAt = $order->shipped_at;
+                                            if ($shippedAt instanceof \Carbon\Carbon) {
+                                                echo $shippedAt->format('d/m/Y H:i');
+                                            } elseif (!empty($shippedAt)) {
+                                                echo \Carbon\Carbon::parse($shippedAt)->format('d/m/Y H:i');
+                                            } else {
+                                                echo 'Chưa vận chuyển';
+                                            }
+                                        @endphp
                                     </p>
                                 </div>
                             </div>
@@ -236,10 +257,22 @@
                             <div class="product-item rounded-lg p-4">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0 me-4">
-                                        @if($item->product && $item->product->productAllImages->count() > 0)
-                                            <img src="{{ asset('uploads/products/' . $item->product->productAllImages->first()->image_url) }}" 
+                                        @php
+                                            $imageUrl = '';
+                                            if ($item->productVariant && $item->productVariant->image) {
+                                                $imageUrl = $item->productVariant->image;
+                                            } elseif ($item->product && $item->product->thumbnail) {
+                                                $imageUrl = $item->product->thumbnail;
+                                            } elseif ($item->product && $item->product->productAllImages->count() > 0) {
+                                                $imageUrl = $item->product->productAllImages->first()->image_path;
+                                            }
+                                        @endphp
+
+                                        @if($imageUrl)
+                                            <img src="{{ asset('storage/' . $imageUrl) }}" 
                                                  alt="{{ $item->name_product }}" 
-                                                 class="w-20 h-20 object-cover rounded-lg">
+                                                 class="w-20 h-20 object-cover rounded-lg"
+                                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                         @else
                                             <div class="w-20 h-20 bg-gray-200 rounded-lg d-flex align-items-center justify-content-center">
                                                 <i class="fas fa-image text-gray-400 text-2xl"></i>
@@ -332,7 +365,6 @@
                         <i class="fas fa-arrow-left me-2"></i>
                         Quay lại danh sách
                     </a>
-                    
                     <div class="space-x-2">
                         @if($order->status === 'pending')
                             <button class="btn btn-outline-danger" onclick="cancelOrder({{ $order->id }})">
@@ -340,18 +372,30 @@
                                 Hủy đơn hàng
                             </button>
                         @endif
-                        
+
+                        {{-- Nếu đã giao nhưng chưa xác nhận nhận hàng thì hiện nút xác nhận nhận hàng và trả hàng --}}
                         @if($order->status === 'delivered')
-                            <button class="btn btn-outline-warning">
-                                <i class="fas fa-star me-2"></i>
-                                Đánh giá sản phẩm
-                            </button>
-                            <button class="btn btn-primary">
-                                <i class="fas fa-redo me-2"></i>
-                                Mua lại
-                            </button>
+                            @php
+                                $hasReturnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved'])->exists();
+                            @endphp
+                            @if(!$hasReturnRequest)
+                                <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Xác nhận đã nhận hàng
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="requestReturn({{ $order->id }})">
+                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
+                                        <i class="fas fa-undo me-2"></i>
+                                        Yêu cầu trả hàng
+                                    </button>
+                            @else
+                                <button class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-undo me-2"></i>
+                                    Đã gửi yêu cầu trả hàng
+                                </button>
+                            @endif
                         @endif
-                        
+
                         <button class="btn btn-outline-info" onclick="window.print()">
                             <i class="fas fa-print me-2"></i>
                             In đơn hàng
@@ -362,6 +406,31 @@
         </div>
     </div>
 </div>
+        <!-- Modal nhập lý do trả hàng -->
+        @if($order->status === 'delivered')
+        <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="returnOrderForm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="returnOrderModalLabel">Lý do trả hàng</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="returnReason" class="form-label">Vui lòng nhập lý do trả hàng:</label>
+                                <textarea class="form-control" id="returnReason" name="client_note" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận yêu cầu trả hàng</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
 @endsection
 
 @push('scripts')
@@ -372,13 +441,44 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.forEach((element, index) => {
         element.style.opacity = '0';
         element.style.transform = 'translateY(20px)';
-        
         setTimeout(() => {
             element.style.transition = 'all 0.5s ease';
             element.style.opacity = '1';
             element.style.transform = 'translateY(0)';
         }, index * 100);
     });
+
+    // Xử lý submit modal trả hàng
+    var returnOrderForm = document.getElementById('returnOrderForm');
+    if (returnOrderForm) {
+        returnOrderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var clientNote = document.getElementById('returnReason').value;
+            var orderId = {{ $order->id }};
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            fetch(`/client/orders/${orderId}/request-return`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ client_note: clientNote })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Yêu cầu trả hàng đã được gửi, vui lòng chờ hệ thống duyệt.');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra khi gửi yêu cầu trả hàng');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi gửi yêu cầu trả hàng');
+            });
+        });
+    }
 });
 
 function cancelOrder(orderId) {
@@ -401,6 +501,30 @@ function cancelOrder(orderId) {
         .catch(error => {
             console.error('Error:', error);
             alert('Có lỗi xảy ra khi hủy đơn hàng');
+        });
+    }
+}
+
+function confirmReceived(orderId) {
+    if (confirm('Bạn xác nhận đã nhận được hàng?')) {
+        fetch(`/client/orders/${orderId}/confirm-received`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Có lỗi xảy ra khi xác nhận nhận hàng');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi xác nhận nhận hàng');
         });
     }
 }

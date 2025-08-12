@@ -67,7 +67,7 @@
 
 
 
-                                @if($return['status'] === 'pending')
+                                @if ($return['status'] === 'pending')
                                     <form action="{{ route('admin.orders.process-return', $return['id']) }}" method="POST">
                                         @csrf
                                         <div class="mb-3">
@@ -75,10 +75,12 @@
                                             <textarea name="admin_note" class="form-control" rows="3"></textarea>
                                         </div>
                                         <div class="d-flex gap-2">
-                                            <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">
+                                            <button type="submit" name="action" value="approve"
+                                                class="btn btn-success btn-sm">
                                                 Chấp nhận
                                             </button>
-                                            <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">
+                                            <button type="submit" name="action" value="reject"
+                                                class="btn btn-danger btn-sm">
                                                 Từ chối
                                             </button>
                                         </div>

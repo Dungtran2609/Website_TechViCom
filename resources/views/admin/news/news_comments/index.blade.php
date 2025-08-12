@@ -27,8 +27,6 @@
                     <a href="{{ route('admin.news-comments.index') }}" class="btn btn-secondary">Hủy</a>
                 @endif
             </form>
-
-
         </div>
 
         @if (session('success'))
@@ -41,13 +39,20 @@
             <div class="row">
                 @foreach ($allNews as $news)
                     <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body d-flex flex-column justify-content-between">
-                                <div>
-                                    <h5 class="card-title">{{ $news->title }}</h5>
-                                    <p class="card-text text-muted mb-2">ID: {{ $news->id }}</p>
+                        <div class="card h-100 shadow rounded-4 border-0 hover-shadow" style="transition:box-shadow .2s;">
+                            <div class="card-body d-flex flex-column justify-content-between p-4">
+                                <div class="text-center mb-3">
+                                    @if ($news->image)
+                                        <img src="{{ asset($news->image) }}" alt="Ảnh bài viết" class="w-100 rounded-top shadow-sm mb-0" style="height:160px;object-fit:cover;">
+                                    @else
+                                        <div class="bg-light rounded-top d-flex align-items-center justify-content-center mb-0" style="height:160px;">
+                                            <span class="text-muted">Ảnh bài viết</span>
+                                        </div>
+                                    @endif
+                                    <h5 class="card-title fw-bold text-dark mb-2" style="font-size:1.15rem;">{{ $news->title }}</h5>
+                                    <p class="card-text text-muted mb-1">ID: {{ $news->id }}</p>
                                 </div>
-                                <a href="{{ route('admin.news-comments.show', $news->id) }}" class="btn btn-primary mt-auto w-100">
+                                <a href="{{ route('admin.news-comments.show', $news->id) }}" class="btn btn-warning btn-lg fw-semibold w-100 mt-auto" style="letter-spacing:1px;">
                                     Xem tất cả bình luận
                                 </a>
                             </div>
@@ -55,6 +60,13 @@
                     </div>
                 @endforeach
             </div>
+@push('styles')
+    <style>
+        .card.hover-shadow:hover {
+            box-shadow: 0 6px 24px rgba(44,62,80,0.13) !important;
+        }
+    </style>
+@endpush
         @endif
     </div>
 @endsection

@@ -82,7 +82,8 @@
 @endpush
 
 @section('content')
-<div class="bg-gray-50 min-h-screen py-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <div class="bg-gray-50 min-h-screen py-8">
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="order-detail-header rounded-lg p-6 text-white mb-6">
@@ -120,6 +121,31 @@
                     @if($order->status === 'returned' && $orderReturn && $orderReturn->status === 'pending')
                         <span class="badge bg-info ms-2">Chờ admin xác nhận trả hàng</span>
                     @endif
+                    @php
+                        $cancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved'])->first();
+                    @endphp
+                    @if($cancelRequest)
+                        @if($cancelRequest->status === 'pending')
+                            <span class="badge bg-warning text-dark ms-2">Chờ admin xác nhận hủy đơn hàng</span>
+                        @elseif($cancelRequest->status === 'approved')
+                            <span class="badge bg-success ms-2">Yêu cầu hủy đã được phê duyệt</span>
+                        @elseif($cancelRequest->status === 'rejected')
+                            <span class="badge bg-danger ms-2">Yêu cầu hủy đã bị từ chối</span>
+                        @endif
+                    @endif
+                    
+                    @php
+                        $returnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
+                    @endphp
+                    @if($returnRequest)
+                        @if($returnRequest->status === 'pending')
+                            <span class="badge bg-warning text-dark ms-2">Chờ admin xác nhận trả hàng</span>
+                        @elseif($returnRequest->status === 'approved')
+                            <span class="badge bg-success ms-2">Yêu cầu trả hàng đã được phê duyệt</span>
+                        @elseif($returnRequest->status === 'rejected')
+                            <span class="badge bg-danger ms-2">Yêu cầu trả hàng đã bị từ chối</span>
+                        @endif
+                    @endif
                 </div>
             </div>
         </div>
@@ -133,6 +159,54 @@
                 @if($orderReturn && in_array($order->status, ['cancelled', 'returned']) && $orderReturn->admin_note)
                     <div class="alert alert-info mb-3">
                         <strong>Ghi chú từ admin:</strong> {{ $orderReturn->admin_note }}
+                    </div>
+                @endif
+                
+                @php
+                    $cancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
+                @endphp
+                @if($cancelRequest)
+                    <div class="alert alert-warning mb-3">
+                        <strong>Yêu cầu hủy đơn hàng:</strong>
+                        <br>
+                        <strong>Trạng thái:</strong> 
+                        @if($cancelRequest->status === 'pending')
+                            <span class="badge bg-warning text-dark">Đang chờ admin xử lý</span>
+                        @elseif($cancelRequest->status === 'approved')
+                            <span class="badge bg-success">Đã được phê duyệt</span>
+                        @elseif($cancelRequest->status === 'rejected')
+                            <span class="badge bg-danger">Đã bị từ chối</span>
+                        @endif
+                        <br>
+                        <strong>Lý do:</strong> {{ $cancelRequest->client_note }}
+                        @if($cancelRequest->admin_note)
+                            <br>
+                            <strong>Phản hồi từ admin:</strong> {{ $cancelRequest->admin_note }}
+                        @endif
+                    </div>
+                @endif
+                
+                @php
+                    $returnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
+                @endphp
+                @if($returnRequest)
+                    <div class="alert alert-info mb-3">
+                        <strong>Yêu cầu trả hàng:</strong>
+                        <br>
+                        <strong>Trạng thái:</strong> 
+                        @if($returnRequest->status === 'pending')
+                            <span class="badge bg-warning text-dark">Đang chờ admin xử lý</span>
+                        @elseif($returnRequest->status === 'approved')
+                            <span class="badge bg-success">Đã được phê duyệt</span>
+                        @elseif($returnRequest->status === 'rejected')
+                            <span class="badge bg-danger">Đã bị từ chối</span>
+                        @endif
+                        <br>
+                        <strong>Lý do:</strong> {{ $returnRequest->client_note }}
+                        @if($returnRequest->admin_note)
+                            <br>
+                            <strong>Phản hồi từ admin:</strong> {{ $returnRequest->admin_note }}
+                        @endif
                     </div>
                 @endif
                 <div class="bg-white rounded-lg p-6">
@@ -367,31 +441,58 @@
                     </a>
                     <div class="space-x-2">
                         @if($order->status === 'pending')
-                            <button class="btn btn-outline-danger" onclick="cancelOrder({{ $order->id }})">
-                                <i class="fas fa-times me-2"></i>
-                                Hủy đơn hàng
-                            </button>
+                            @php
+                                $hasCancelRequest = $order->returns()->where('type', 'cancel')->exists();
+                            @endphp
+                            @if(!$hasCancelRequest)
+                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                    <i class="fas fa-times me-2"></i>
+                                    Hủy đơn hàng
+                                </button>
+                            @else
+                                @php
+                                    $cancelRequest = $order->returns()->where('type', 'cancel')->first();
+                                @endphp
+                                <button class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-times me-2"></i>
+                                    @if($cancelRequest->status === 'rejected')
+                                        Yêu cầu hủy đã bị từ chối
+                                    @else
+                                        Đã gửi yêu cầu hủy đơn hàng
+                                    @endif
+                                </button>
+                            @endif
                         @endif
 
                         {{-- Nếu đã giao nhưng chưa xác nhận nhận hàng thì hiện nút xác nhận nhận hàng và trả hàng --}}
                         @if($order->status === 'delivered')
                             @php
-                                $hasReturnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved'])->exists();
+                                $hasReturnRequest = $order->returns()->where('type', 'return')->exists();
                             @endphp
                             @if(!$hasReturnRequest)
                                 <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
                                     <i class="fas fa-check-circle me-2"></i>
                                     Xác nhận đã nhận hàng
                                 </button>
-                                <button class="btn btn-outline-danger" onclick="requestReturn({{ $order->id }})">
-                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
-                                        <i class="fas fa-undo me-2"></i>
-                                        Yêu cầu trả hàng
-                                    </button>
+                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
+                                    <i class="fas fa-undo me-2"></i>
+                                    Yêu cầu trả hàng
+                                </button>
                             @else
+                                <button class="btn btn-outline-success" id="btn-confirm-received" onclick="confirmReceived({{ $order->id }})">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Xác nhận đã nhận hàng
+                                </button>
+                                @php
+                                    $returnRequest = $order->returns()->where('type', 'return')->first();
+                                @endphp
                                 <button class="btn btn-outline-secondary" disabled>
                                     <i class="fas fa-undo me-2"></i>
-                                    Đã gửi yêu cầu trả hàng
+                                    @if($returnRequest->status === 'rejected')
+                                        Yêu cầu trả hàng đã bị từ chối
+                                    @else
+                                        Đã gửi yêu cầu trả hàng
+                                    @endif
                                 </button>
                             @endif
                         @endif
@@ -406,8 +507,34 @@
         </div>
     </div>
 </div>
+        <!-- Modal nhập lý do hủy đơn hàng -->
+        @if($order->status === 'pending' && !$hasCancelRequest)
+        <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form id="cancelOrderForm">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="cancelOrderModalLabel">Lý do hủy đơn hàng</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="cancelReason" class="form-label">Vui lòng nhập lý do hủy đơn hàng:</label>
+                                <textarea class="form-control" id="cancelReason" name="client_note" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        @endif
+
         <!-- Modal nhập lý do trả hàng -->
-        @if($order->status === 'delivered')
+        @if($order->status === 'delivered' && !$hasReturnRequest)
         <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form id="returnOrderForm">
@@ -448,26 +575,92 @@ document.addEventListener('DOMContentLoaded', function() {
         }, index * 100);
     });
 
+    // Xử lý submit modal hủy đơn hàng
+    var cancelOrderForm = document.getElementById('cancelOrderForm');
+    if (cancelOrderForm) {
+        cancelOrderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var clientNote = document.getElementById('cancelReason').value.trim();
+            if (!clientNote) {
+                alert('Vui lòng nhập lý do hủy đơn hàng');
+                document.getElementById('cancelReason').focus();
+                return;
+            }
+            
+            var orderId = {{ $order->id }};
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            var formData = new FormData();
+            formData.append('client_note', clientNote);
+            
+            fetch(`/client/orders/${orderId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || 'Hủy đơn hàng thành công!');
+                    // Đóng modal
+                    var modalEl = document.getElementById('cancelOrderModal');
+                    if (modalEl && window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        instance.hide();
+                    }
+                    location.reload();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra khi hủy đơn hàng');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi hủy đơn hàng');
+            });
+        });
+    }
+
     // Xử lý submit modal trả hàng
     var returnOrderForm = document.getElementById('returnOrderForm');
     if (returnOrderForm) {
         returnOrderForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            var clientNote = document.getElementById('returnReason').value;
+            var clientNote = document.getElementById('returnReason').value.trim();
+            if (!clientNote) {
+                alert('Vui lòng nhập lý do trả hàng');
+                document.getElementById('returnReason').focus();
+                return;
+            }
+            
             var orderId = {{ $order->id }};
             var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            var formData = new FormData();
+            formData.append('client_note', clientNote);
+            
             fetch(`/client/orders/${orderId}/request-return`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify({ client_note: clientNote })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Yêu cầu trả hàng đã được gửi, vui lòng chờ hệ thống duyệt.');
+                    alert(data.message || 'Yêu cầu trả hàng đã được gửi!');
+                    // Đóng modal
+                    var modalEl = document.getElementById('returnOrderModal');
+                    if (modalEl && window.bootstrap && bootstrap.Modal) {
+                        var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        instance.hide();
+                    }
                     location.reload();
                 } else {
                     alert(data.message || 'Có lỗi xảy ra khi gửi yêu cầu trả hàng');
@@ -481,29 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function cancelOrder(orderId) {
-    if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-        fetch(`/accounts/orders/${orderId}/cancel`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Có lỗi xảy ra khi hủy đơn hàng');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi hủy đơn hàng');
-        });
-    }
-}
+
 
 function confirmReceived(orderId) {
     if (confirm('Bạn xác nhận đã nhận được hàng?')) {

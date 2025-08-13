@@ -929,7 +929,7 @@
                     closeCartSidebar();
 
                     // Navigate to checkout page
-                    window.location.href = 'pages/checkout.html';
+                    window.location.href = '{{ route('checkout.index') }}';
                 }
 
                 // Global click listener flag

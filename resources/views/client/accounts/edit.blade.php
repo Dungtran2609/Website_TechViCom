@@ -191,12 +191,12 @@
                                         Số điện thoại
                                     </label>
                                     <input type="tel" 
-                                           class="form-control @error('phone') is-invalid @enderror" 
+                                           class="form-control @error('phone_number') is-invalid @enderror" 
                                            id="phone" 
-                                           name="phone" 
-                                           value="{{ old('phone', Auth::user()->phone) }}" 
+                                           name="phone_number" 
+                                           value="{{ old('phone_number', Auth::user()->phone_number) }}" 
                                            placeholder="0987654321">
-                                    @error('phone')
+                                    @error('phone_number')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -212,7 +212,7 @@
                                            class="form-control @error('birthday') is-invalid @enderror" 
                                            id="birthday" 
                                            name="birthday" 
-                                           value="{{ old('birthday', Auth::user()->birthday && is_object(Auth::user()->birthday) ? Auth::user()->birthday->format('Y-m-d') : (Auth::user()->birthday ?: '')) }}">
+                                           value="{{ old('birthday', Auth::user()->birthday ? Auth::user()->birthday->format('Y-m-d') : '') }}">
                                     @error('birthday')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -27,6 +27,8 @@ class AdminPermissionController extends Controller
         $permissions = $query->with('roles')->orderByDesc('id')->get();
         $roles = Role::all();
 
+        $permissions = $query->orderByDesc('id')->paginate(10);
+
         return view('admin.permissions.index', compact('permissions', 'roles'));
     }
 

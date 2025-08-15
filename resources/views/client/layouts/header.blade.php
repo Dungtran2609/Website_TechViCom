@@ -712,9 +712,9 @@
         cartItemsList.innerHTML = items.map(item => {
             const price = parseFloat(item.price) || 0;
             let variantHtml = '';
-            if (item.variant && item.variant.attributes && item.variant.attributes.length > 0) {
-                variantHtml = `<div class=\"text-xs text-gray-500\">` +
-                    item.variant.attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ') +
+            if (item.attributes && item.attributes.length > 0) {
+                variantHtml = `<div class="text-xs text-gray-500">` +
+                    item.attributes.map(attr => `${attr.name}: ${attr.value}`).join(', ') +
                     `</div>`;
             }
             return `

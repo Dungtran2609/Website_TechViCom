@@ -129,7 +129,7 @@ class ClientCartController extends Controller
             if (Auth::check()) {
                 $existingCart = Cart::where('user_id', Auth::id())
                     ->where('product_id', $productId)
-                    ->where('product_variant_id', $variantId)
+                    ->where('variant_id', $variantId)
                     ->first();
                 if ($existingCart) {
                     $currentQty = $existingCart->quantity;
@@ -158,7 +158,7 @@ class ClientCartController extends Controller
                     $existingCart = Cart::create([
                         'user_id' => Auth::id(),
                         'product_id' => $productId,
-                        'product_variant_id' => $variantId,
+                        'variant_id' => $variantId,
                         'quantity' => $quantity
                     ]);
                 }
@@ -260,7 +260,7 @@ class ClientCartController extends Controller
                 // Kiểm tra số lượng tồn kho cho session cart
                 $productId = $cart[$id]['product_id'];
                 $variantId = $cart[$id]['variant_id'] ?? null;
-                
+
                 $product = Product::find($productId);
                 if (!$product) {
                     return response()->json([
@@ -423,9 +423,9 @@ class ClientCartController extends Controller
                 'quantity' => $quantity,
                 'variant_id' => $variantId
             ];
-            
+
             session(['buynow' => $buynowData]);
-            
+
             Log::info('Buynow session set', $buynowData);
 
             return response()->json([

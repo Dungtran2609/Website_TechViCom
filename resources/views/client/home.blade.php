@@ -619,7 +619,7 @@
         </div>
     </section>
 
-    <!-- Featured Products -->
+     <!-- Featured Products -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
@@ -630,20 +630,6 @@
                 </a>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                @foreach ($latestProducts as $product)
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        onclick="window.location.href='{{ route('products.show', $product->id) }}'">
-                        <div class="relative">
-                            @if ($product->productAllImages->count() > 0)
-                                <img src="{{ asset('uploads/products/' . $product->productAllImages->first()->image_url) }}"
-                                    alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg">
-                            @else
-                                <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="{{ $product->name }}"
-                                    class="w-full h-48 object-cover rounded-t-lg">
-                            @endif
-
-
                 @foreach ($featuredProducts as $product)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
@@ -651,7 +637,6 @@
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-
                             <div class="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">
                                 NỔI BẬT
                             </div>
@@ -673,27 +658,6 @@
                                 <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                             </div>
                             <div class="flex items-center justify-between">
-
-                                <div>
-                                    @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                        @php
-                                            $variant = $product->variants->first();
-                                        @endphp
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                    @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                        @php
-                                            $minPrice = $product->variants->min('price');
-                                            $maxPrice = $product->variants->max('price');
-                                        @endphp
-                                        @if ($minPrice === $maxPrice)
-                                            <span
-                                                class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                        @else
-                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                - {{ number_format($maxPrice) }}₫</span>
-                                        @endif
-
                                 @if ($product->type === 'simple' && $product->variants->count() > 0)
                                     @php
                                         $variant = $product->variants->first();
@@ -706,19 +670,13 @@
                                     @endphp
                                     @if ($minPrice === $maxPrice)
                                         <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-
                                     @else
                                         <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} - {{ number_format($maxPrice) }}₫</span>
                                     @endif
-
-                                </div>
-                                <button onclick="event.stopPropagation(); addToCart({{ $product->id }}, null, 1)"
-
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                                 <button onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', 0, '{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}')"
-
                                     class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
                                     <i class="fas fa-cart-plus"></i>
                                 </button>
@@ -726,97 +684,6 @@
                         </div>
                     </div>
                 @endforeach
-
-
-                @if ($latestProducts->count() < 8)
-                    <!-- Static products to fill up the grid if needed -->
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="5">
-                        <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="AirPods Pro 2"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div class="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                HOT
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">AirPods Pro 2nd Gen</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">(234)</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">6.990.000₫</span>
-                                </div>
-                                <button
-                                    onclick="addToCartStatic(5, 'AirPods Pro 2nd Gen', 6990000, '{{ asset('client_css/images/placeholder.svg') }}')"
-                                    class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="6">
-                        <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="Apple Watch Series 9"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div class="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                NEW
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Apple Watch Series 9 GPS 45mm</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">(167)</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <span class="text-lg font-bold text-[#ff6c2f]">10.990.000₫</span>
-                                </div>
-                                <button
-                                    onclick="addToCartStatic(6, 'Apple Watch Series 9 GPS 45mm', 10990000, '{{ asset('client_css/images/placeholder.svg') }}')"
-                                    class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                    <i class="fas fa-cart-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                        data-product-id="7">
-                        <div class="relative">
-                            <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="Sony WH-1000XM5"
-                                class="w-full h-48 object-cover rounded-t-lg">
-                            <div
-                                class="absolute top-2 left-2 bg-purple-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                -15%
-
             </div>
         </div>
     </section>

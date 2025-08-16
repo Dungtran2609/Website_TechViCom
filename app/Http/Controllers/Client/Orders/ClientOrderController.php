@@ -172,7 +172,7 @@ class ClientOrderController extends Controller {
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_variant_id' => $itm['variant_id'],
+                    'variant_id' => $itm['variant_id'],
                     'quantity' => $itm['quantity'],
                     'price' => $price,
                 ]);

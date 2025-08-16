@@ -144,22 +144,27 @@ class AdminOrderController extends Controller
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
-                $prod = $variant->product;
+                $prod = null;
+                if ($variant && $variant->product) {
+                    $prod = $variant->product;
+                } elseif ($item->product) {
+                    $prod = $item->product;
+                }
                 $price = $item->price ?? ($variant->sale_price ?? $variant->price ?? 0);
                 $imgPath = $item->image_product
-                    ?: $variant->image
+                    ?: ($variant ? $variant->image : null)
                     ?: null;
 
                 return [
                     'image_product_url' => $imgPath ? asset('storage/' . ltrim($imgPath, '/')) : null,
-                    'brand_name' => $prod->brand?->name ?? '',
-                    'category_name' => $prod->category?->name ?? '',
+                    'brand_name' => $prod->brand->name ?? '',
+                    'category_name' => $prod->category->name ?? '',
                     'stock' => $variant->stock ?? 0,
-                    'attributes' => $variant->attributeValues->map(fn($a) => [
+                    'attributes' => $variant && $variant->attributeValues ? $variant->attributeValues->map(fn($a) => [
                         'name' => $a->attribute->name,
                         'value' => $a->value,
-                    ])->toArray(),
-                    'name_product' => $prod->name,
+                    ])->toArray() : [],
+                    'name_product' => $prod->name ?? '',
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'total' => $item->total_price ?? ($price * $item->quantity),
@@ -564,5 +569,19 @@ class AdminOrderController extends Controller
         $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
         return redirect()->route('admin.orders.returns')->with('success', "Yêu cầu $msg");
     }
+}
+
+// Route test thêm sản phẩm vào giỏ hàng cho dev/test
+if (app()->environment('local')) {
+    \Route::get('/test-add-to-cart', function () {
+        $cart = session()->get('cart', []);
+        $cart[] = [
+            'product_id' => 1, // ID sản phẩm test, đổi nếu cần
+            'quantity' => 1,
+            'variant_id' => null
+        ];
+        session(['cart' => $cart]);
+        return 'Đã thêm sản phẩm test vào giỏ hàng. <a href="/checkout">Đi tới thanh toán</a>';
+    });
 }
 

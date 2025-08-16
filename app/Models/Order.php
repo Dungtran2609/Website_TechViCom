@@ -33,6 +33,11 @@ class Order extends Model
         'recipient_address',
         'shipped_at',
         'payment_status',
+        'vnpay_url',
+        'vnpay_transaction_id',
+        'vnpay_bank_code',
+        'vnpay_card_type',
+        'paid_at',
     ];
 
     /**
@@ -43,6 +48,7 @@ class Order extends Model
         'updated_at',
         'deleted_at',
         'shipped_at',
+        'paid_at',
     ];
 
     /**

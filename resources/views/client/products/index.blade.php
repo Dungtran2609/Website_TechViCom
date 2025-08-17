@@ -352,21 +352,28 @@
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            @if ($product->sale_price && $product->sale_price < $product->price)
+                                            @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                                @php $variant = $product->variants->first(); @endphp
                                                 <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->sale_price) }}₫</span>
-                                                <span
-                                                    class="text-sm text-gray-500 line-through ml-2">{{ number_format($product->price) }}₫</span>
+                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                            @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                                @php
+                                                    $minPrice = $product->variants->min('price');
+                                                    $maxPrice = $product->variants->max('price');
+                                                @endphp
+                                                @if ($minPrice === $maxPrice)
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                                @else
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
+                                                        - {{ number_format($maxPrice) }}₫</span>
+                                                @endif
                                             @else
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->price) }}₫</span>
+                                                <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                             @endif
                                         </div>
-                                        <button
-                                            onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', {{ $product->sale_price ?? $product->price }}, '{{ $product->productAllImages->isNotEmpty() ? asset('uploads/products/' . $product->productAllImages->first()->image_path) : asset('client_css/images/placeholder.svg') }}')"
-                                            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                            <i class="fas fa-cart-plus"></i>
-                                        </button>
+                                        {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
                                     </div>
                                 </div>
                             </div>

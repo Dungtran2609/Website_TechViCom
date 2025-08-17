@@ -4,99 +4,155 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class AddressController extends Controller
 {
+    /**
+     * API gốc dữ liệu hành chính VN (tỉnh/quận/phường)
+     */
+    protected string $base = 'https://provinces.open-api.vn/api';
+
+    /** TTL cache (giây) */
+    private const TTL = 86400; // 24h
+
+    /** Trả về đúng 1 tỉnh/thành: Hà Nội */
     public function getProvinces()
     {
-        $provinces = [
-            ['code' => 'hanoi', 'name' => 'Hà Nội'],
-            ['code' => 'hcm', 'name' => 'TP. Hồ Chí Minh'],
-            ['code' => 'danang', 'name' => 'Đà Nẵng'],
-            ['code' => 'cantho', 'name' => 'Cần Thơ'],
-            ['code' => 'haiphong', 'name' => 'Hải Phòng'],
-        ];
-        
-        return response()->json($provinces);
+        return response()->json([
+            ['code' => '01', 'name' => 'Thành phố Hà Nội', 'slug' => 'hanoi'],
+        ], Response::HTTP_OK);
     }
-    
+
+    /**
+     * Danh sách quận/huyện của Hà Nội
+     * $provinceCode: nhận 'hanoi' | 'ha-noi' | '01'
+     */
     public function getDistricts($provinceCode)
     {
-        $districts = [];
-        
-        switch ($provinceCode) {
-            case 'hanoi':
-                $districts = [
-                    ['code' => 'ba-dinh', 'name' => 'Ba Đình'],
-                    ['code' => 'hoan-kiem', 'name' => 'Hoàn Kiếm'],
-                    ['code' => 'tay-ho', 'name' => 'Tây Hồ'],
-                    ['code' => 'long-bien', 'name' => 'Long Biên'],
-                    ['code' => 'cau-giay', 'name' => 'Cầu Giấy'],
-                    ['code' => 'dong-da', 'name' => 'Đống Đa'],
-                    ['code' => 'hai-ba-trung', 'name' => 'Hai Bà Trưng'],
-                    ['code' => 'hoang-mai', 'name' => 'Hoàng Mai'],
-                    ['code' => 'thanh-xuan', 'name' => 'Thanh Xuân'],
-                ];
-                break;
-            case 'hcm':
-                $districts = [
-                    ['code' => 'quan-1', 'name' => 'Quận 1'],
-                    ['code' => 'quan-3', 'name' => 'Quận 3'],
-                    ['code' => 'quan-5', 'name' => 'Quận 5'],
-                    ['code' => 'quan-7', 'name' => 'Quận 7'],
-                    ['code' => 'quan-10', 'name' => 'Quận 10'],
-                    ['code' => 'binh-thanh', 'name' => 'Bình Thạnh'],
-                    ['code' => 'tan-binh', 'name' => 'Tân Bình'],
-                    ['code' => 'phu-nhuan', 'name' => 'Phú Nhuận'],
-                ];
-                break;
-            case 'danang':
-                $districts = [
-                    ['code' => 'hai-chau', 'name' => 'Hải Châu'],
-                    ['code' => 'thanh-khe', 'name' => 'Thanh Khê'],
-                    ['code' => 'son-tra', 'name' => 'Sơn Trà'],
-                    ['code' => 'ngu-hanh-son', 'name' => 'Ngũ Hành Sơn'],
-                    ['code' => 'lien-chieu', 'name' => 'Liên Chiểu'],
-                    ['code' => 'cam-le', 'name' => 'Cẩm Lệ'],
-                ];
-                break;
-            default:
-                $districts = [
-                    ['code' => 'district-1', 'name' => 'Quận/Huyện 1'],
-                    ['code' => 'district-2', 'name' => 'Quận/Huyện 2'],
-                    ['code' => 'district-3', 'name' => 'Quận/Huyện 3'],
-                ];
+        $code = $this->normalizeProvinceCode((string) $provinceCode);
+        if ($code !== '01') {
+            // Chỉ phục vụ Hà Nội
+            return response()->json([], Response::HTTP_OK);
         }
-        
-        return response()->json($districts);
+
+        try {
+            $data = Cache::remember("hn:districts:v2", self::TTL, function () use ($code) {
+                $res = Http::timeout(10)->get($this->base . "/p/{$code}", ['depth' => 2]);
+                if ($res->failed()) {
+                    throw new \RuntimeException('Không lấy được danh sách quận/huyện');
+                }
+                return $res->json();
+            });
+
+            $districts = collect($data['districts'] ?? [])
+                ->map(fn($d) => [
+                    'code' => (string) ($d['code'] ?? ''),      // ví dụ '001'
+                    'name' => (string) ($d['name'] ?? ''),      // Quận Ba Đình
+                    'slug' => Str::slug($d['name'] ?? ''),      // quan-ba-dinh
+                    'division_type' => $d['division_type'] ?? null,      // Quận/Huyện/Thị xã
+                ])
+                ->values()
+                ->all();
+
+            return response()->json($districts, Response::HTTP_OK);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tải quận/huyện',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_BAD_GATEWAY);
+        }
     }
-    
+
+    /**
+     * Danh sách phường/xã theo quận/huyện (chỉ cho HN)
+     * $districtCode: mã quận (vd: '001') hoặc slug (vd: 'ba-dinh')
+     */
     public function getWards($districtCode)
     {
-        $wards = [
-            ['code' => 'phuc-xa', 'name' => 'Phúc Xá'],
-            ['code' => 'truc-bach', 'name' => 'Trúc Bạch'],
-            ['code' => 'vinh-phuc', 'name' => 'Vĩnh Phúc'],
-            ['code' => 'dien-bien', 'name' => 'Điện Biên'],
-            ['code' => 'doi-can', 'name' => 'Đội Cấn'],
-            ['code' => 'hang-bai', 'name' => 'Hàng Bài'],
-            ['code' => 'hang-trong', 'name' => 'Hàng Trống'],
-            ['code' => 'phuc-tan', 'name' => 'Phúc Tán'],
-            ['code' => 'chuong-duong', 'name' => 'Chương Dương'],
-            ['code' => 'dich-vong', 'name' => 'Dịch Vọng'],
-            ['code' => 'nghia-tan', 'name' => 'Nghĩa Tân'],
-            ['code' => 'quan-hoa', 'name' => 'Quan Hoa'],
-            ['code' => 'yen-hoa', 'name' => 'Yên Hòa'],
-            ['code' => 'o-cho-dua', 'name' => 'Ô Chợ Dừa'],
-            ['code' => 'lang-ha', 'name' => 'Láng Hạ'],
-            ['code' => 'kim-lien', 'name' => 'Kim Liên'],
-            ['code' => 'tho-quan', 'name' => 'Thổ Quan'],
-            ['code' => 'tan-mai', 'name' => 'Tân Mai'],
-            ['code' => 'yen-so', 'name' => 'Yên Sở'],
-            ['code' => 'hoang-van-thu', 'name' => 'Hoàng Văn Thụ'],
-            ['code' => 'giap-bat', 'name' => 'Giáp Bát'],
-        ];
-        
-        return response()->json($wards);
+        $districtCode = $this->resolveDistrictCode((string) $districtCode);
+        if (!$districtCode) {
+            return response()->json([], Response::HTTP_OK);
+        }
+
+        try {
+            $data = Cache::remember("hn:wards:{$districtCode}:v2", self::TTL, function () use ($districtCode) {
+                $res = Http::timeout(10)->get($this->base . "/d/{$districtCode}", ['depth' => 2]);
+                if ($res->failed()) {
+                    throw new \RuntimeException('Không lấy được danh sách phường/xã');
+                }
+                return $res->json();
+            });
+
+            $wards = collect($data['wards'] ?? [])
+                ->map(fn($w) => [
+                    'code' => (string) ($w['code'] ?? ''),      // ví dụ '00001'
+                    'name' => (string) ($w['name'] ?? ''),      // Phường Phúc Xá
+                    'slug' => Str::slug($w['name'] ?? ''),      // phuong-phuc-xa
+                    'division_type' => $w['division_type'] ?? null,      // Phường/Xã/Thị trấn
+                ])
+                ->values()
+                ->all();
+
+            return response()->json($wards, Response::HTTP_OK);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tải phường/xã',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_BAD_GATEWAY);
+        }
+    }
+
+    /* ---------------- Helpers ---------------- */
+
+    /** Chuẩn hoá mã tỉnh: 'hanoi' | 'ha-noi' | '01' -> '01' */
+    protected function normalizeProvinceCode(string $code): string
+    {
+        $code = strtolower(trim($code));
+        return ($code === 'hanoi' || $code === 'ha-noi' || $code === '01') ? '01' : $code;
+    }
+
+    /**
+     * Nhận districtCode hoặc slug và trả về mã quận/huyện chính thức thuộc Hà Nội.
+     * Dựa trên cache từ getDistricts().
+     */
+    protected function resolveDistrictCode(string $input): ?string
+    {
+        $input = strtolower(trim($input));
+
+        try {
+            // Lấy danh sách quận/huyện HN đã cache
+            $districts = Cache::remember("hn:districts:v2", self::TTL, function () {
+                $res = Http::timeout(10)->get($this->base . "/p/01", ['depth' => 2]);
+                if ($res->failed()) {
+                    throw new \RuntimeException('Không lấy được danh sách quận/huyện');
+                }
+                $data = $res->json();
+                return collect($data['districts'] ?? [])->map(function ($d) {
+                    return [
+                        'code' => (string) ($d['code'] ?? ''),
+                        'name' => (string) ($d['name'] ?? ''),
+                        'slug' => Str::slug($d['name'] ?? ''),
+                    ];
+                })->values()->all();
+            });
+        } catch (\Throwable $e) {
+            // Nếu lỗi, trả null để API trả mảng rỗng
+            return null;
+        }
+
+        // Nếu truyền đúng mã số (vd '001'), trả luôn
+        if (preg_match('/^\d+$/', $input) && collect($districts)->firstWhere('code', $input)) {
+            return $input;
+        }
+
+        // Nếu truyền slug (vd 'ba-dinh'), map về code
+        $found = collect($districts)->firstWhere('slug', Str::slug($input));
+        return $found['code'] ?? null;
     }
 }

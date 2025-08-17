@@ -22,6 +22,9 @@ class AdminOrderController extends Controller
     private const FREESHIP_THRESHOLD = 3000000;
     private const SHIP_FEE = 50000;
 
+    /** Phương thức thanh toán online */
+    private const ONLINE_METHODS = ['credit_card', 'bank_transfer'];
+
     /* ========================= INDEX ========================= */
     public function index(Request $request)
     {
@@ -78,7 +81,7 @@ class AdminOrderController extends Controller
             $district = $order->address->district ?? '';
             $ward = $order->address->ward ?? '';
             $address = $order->address->address_line ?? '';
-        } else {
+} else {
             $city = $district = $ward = $address = '';
         }
 
@@ -99,7 +102,7 @@ class AdminOrderController extends Controller
         $finalTotal = (int) ($order->final_total ?? ($subtotal + $shippingFee - $discountAmount));
         $couponCode = $order->coupon_code ?? ($order->coupon->code ?? null);
 
-        // Map trạng thái
+        // Map trạng thái (VN chuẩn hoá)
         $statusMap = [
             'pending' => 'Đang chờ xử lý',
             'processing' => 'Đang xử lý',
@@ -140,26 +143,31 @@ class AdminOrderController extends Controller
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
             'payment_status' => $order->payment_status,
             'payment_status_vietnamese' => Order::PAYMENT_STATUSES[$order->payment_status] ?? $order->payment_status,
-            'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
+'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
-                $prod = $variant->product;
+                $prod = null;
+                if ($variant && $variant->product) {
+                    $prod = $variant->product;
+                } elseif ($item->product) {
+                    $prod = $item->product;
+                }
                 $price = $item->price ?? ($variant->sale_price ?? $variant->price ?? 0);
                 $imgPath = $item->image_product
-                    ?: $variant->image
+                    ?: ($variant ? $variant->image : null)
                     ?: null;
 
                 return [
                     'image_product_url' => $imgPath ? asset('storage/' . ltrim($imgPath, '/')) : null,
-                    'brand_name' => $prod->brand?->name ?? '',
-                    'category_name' => $prod->category?->name ?? '',
+                    'brand_name' => $prod->brand->name ?? '',
+                    'category_name' => $prod->category->name ?? '',
                     'stock' => $variant->stock ?? 0,
-                    'attributes' => $variant->attributeValues->map(fn($a) => [
+                    'attributes' => $variant && $variant->attributeValues ? $variant->attributeValues->map(fn($a) => [
                         'name' => $a->attribute->name,
                         'value' => $a->value,
-                    ])->toArray(),
-                    'name_product' => $prod->name,
+                    ])->toArray() : [],
+                    'name_product' => $prod->name ?? '',
                     'quantity' => $item->quantity,
                     'price' => $price,
                     'total' => $item->total_price ?? ($price * $item->quantity),
@@ -192,7 +200,7 @@ class AdminOrderController extends Controller
         $statusMap = [
             'pending' => 'Đang chờ xử lý',
             'processing' => 'Đang xử lý',
-            'shipped' => 'Đang giao',
+            'shipped' => 'Đang giao hàng',
             'delivered' => 'Đã giao',
             'received' => 'Đã nhận hàng',
             'cancelled' => 'Đã hủy',
@@ -205,7 +213,7 @@ class AdminOrderController extends Controller
         ];
 
         // subtotal theo dữ liệu hiện tại
-        $subtotal = $order->orderItems->sum(function ($item) {
+$subtotal = $order->orderItems->sum(function ($item) {
             return (float) ($item->total_price ?? (($item->price ?? ($item->productVariant->sale_price ?? $item->productVariant->price ?? 0)) * $item->quantity));
         });
 
@@ -258,7 +266,7 @@ class AdminOrderController extends Controller
 
     /* ========================= UPDATE ========================= */
     public function updateOrders(Request $request, int $id)
-    {
+{
         $order = Order::with('orderItems.productVariant')->findOrFail($id);
         $oldStatus = $order->status;
 
@@ -324,7 +332,7 @@ class AdminOrderController extends Controller
         // Coupon: ưu tiên id, sau đó code
         if (isset($data['coupon_id'])) {
             $order->coupon_id = $data['coupon_id'];
-            $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
+$order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         } elseif (!empty($data['coupon_code'])) {
             $order->coupon_code = $data['coupon_code'];
             $order->coupon_id = Coupon::where('code', $data['coupon_code'])->value('id');
@@ -365,21 +373,39 @@ class AdminOrderController extends Controller
         $order->recipient_phone = $data['recipient_phone'] ?? $order->recipient_phone;
         $order->recipient_address = $data['recipient_address'] ?? $order->recipient_address;
 
+        // Cho phép đổi phương thức thanh toán khi đơn còn pending
         if ($oldStatus === 'pending' && !empty($data['payment_method'])) {
             $order->payment_method = $data['payment_method'];
         }
+
+        // Cập nhật trạng thái thanh toán
         if (!empty($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];
         }
 
-        // Quy trình đặc biệt: received
-        if (($data['status'] ?? '') === 'received') {
-            $order->status = 'received';
-            $order->shipped_at = now();
-        } elseif (!empty($data['status'])) {
-            $order->status = $data['status'];
-            if (!empty($data['shipped_at'])) {
-                $order->shipped_at = $data['shipped_at'];
+        // ====== QUY TẮC MỚI: nếu thanh toán ONLINE đã "paid" thì tự chuyển trạng thái đơn từ pending => processing ======
+        // (tránh việc "paid" mà đơn vẫn ở trạng thái pending)
+        $effectivePaymentMethod = $data['payment_method'] ?? $order->payment_method;
+        $isOnlinePayment = in_array($effectivePaymentMethod, self::ONLINE_METHODS, true);
+        if (
+            $isOnlinePayment
+            && ($data['payment_status'] ?? $order->payment_status) === 'paid'
+            && ($data['status'] ?? $order->status) === 'pending'
+        ) {
+            // Nếu người dùng không tự set status thì tự nâng lên processing
+$order->status = 'processing';
+        }
+
+        // Nếu client gửi status rõ ràng thì ưu tiên theo client
+        if (!empty($data['status'])) {
+            if ($data['status'] === 'received') {
+                $order->status = 'received';
+                $order->shipped_at = now();
+            } else {
+                $order->status = $data['status'];
+                if (!empty($data['shipped_at'])) {
+                    $order->shipped_at = $data['shipped_at'];
+                }
             }
         }
 
@@ -432,20 +458,21 @@ class AdminOrderController extends Controller
                 'coupon_discount' => (int) ($order->discount_amount ?? $order->coupon_discount ?? 0),
                 'final_total' => (int) ($order->final_total ?? ($subtotal + (int) ($order->shipping_fee ?? 0) - (int) ($order->discount_amount ?? 0))),
                 'status' => $order->status,
-                'status_vietnamese' => [
+'status_vietnamese' => [
                     'pending' => 'Đang chờ xử lý',
                     'processing' => 'Đang xử lý',
-                    'shipped' => 'Đã giao',
-                    'delivered' => 'Đã nhận',
+                    'shipped' => 'Đang giao hàng',
+                    'delivered' => 'Đã giao',
+                    'received' => 'Đã nhận hàng',
                     'cancelled' => 'Đã hủy',
                     'returned' => 'Đã trả hàng'
                 ][$order->status] ?? $order->status,
                 'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
                 'payment_method' => $order->payment_method,
                 'payment_method_vietnamese' => [
-                    'credit_card' => 'Thẻ tín dụng',
-                    'bank_transfer' => 'Chuyển khoản',
-                    'cod' => 'COD'
+                    'credit_card' => 'Thẻ tín dụng/ghi nợ',
+                    'bank_transfer' => 'Chuyển khoản ngân hàng',
+                    'cod' => 'Thanh toán khi nhận hàng'
                 ][$order->payment_method] ?? $order->payment_method,
                 'recipient_name' => $order->recipient_name,
                 'recipient_phone' => $order->recipient_phone,
@@ -495,7 +522,7 @@ class AdminOrderController extends Controller
                 'id' => $ret->id,
                 'order_id' => $order->id,
                 'user_name' => $order->user->name ?? 'Khách vãng lai',
-                'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
+'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
                 'type' => $ret->type,
                 'status' => $ret->status,
                 'status_vietnamese' => [
@@ -503,8 +530,8 @@ class AdminOrderController extends Controller
                     'approved' => 'Đã phê duyệt',
                     'rejected' => 'Đã từ chối',
                     'processing' => 'Đang xử lý',
-                    'shipped' => 'Đã giao',
-                    'delivered' => 'Đã nhận',
+                    'shipped' => 'Đang giao hàng',
+                    'delivered' => 'Đã giao',
                     'cancelled' => 'Đã hủy',
                     'returned' => 'Đã trả hàng'
                 ][$ret->status] ?? $ret->status,
@@ -515,15 +542,15 @@ class AdminOrderController extends Controller
                 'order_status_vietnamese' => [
                     'pending' => 'Đang chờ xử lý',
                     'processing' => 'Đang xử lý',
-                    'shipped' => 'Đã giao',
-                    'delivered' => 'Đã nhận',
+                    'shipped' => 'Đang giao hàng',
+                    'delivered' => 'Đã giao',
                     'cancelled' => 'Đã hủy',
                     'returned' => 'Đã trả hàng'
                 ][$order->status] ?? $order->status,
                 'payment_method_vietnamese' => [
-                    'credit_card' => 'Thẻ tín dụng',
-                    'bank_transfer' => 'Chuyển khoản',
-                    'cod' => 'COD'
+                    'credit_card' => 'Thẻ tín dụng/ghi nợ',
+                    'bank_transfer' => 'Chuyển khoản ngân hàng',
+                    'cod' => 'Thanh toán khi nhận hàng'
                 ][$order->payment_method] ?? $order->payment_method,
             ];
         })->filter()->values();
@@ -561,8 +588,21 @@ class AdminOrderController extends Controller
         }
 
         $ret->save();
-        $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
+$msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
         return redirect()->route('admin.orders.returns')->with('success', "Yêu cầu $msg");
     }
 }
 
+// Route test thêm sản phẩm vào giỏ hàng cho dev/test
+if (app()->environment('local')) {
+    \Route::get('/test-add-to-cart', function () {
+        $cart = session()->get('cart', []);
+        $cart[] = [
+            'product_id' => 1, // ID sản phẩm test, đổi nếu cần
+            'quantity' => 1,
+            'variant_id' => null
+        ];
+        session(['cart' => $cart]);
+        return 'Đã thêm sản phẩm test vào giỏ hàng. <a href="/checkout">Đi tới thanh toán</a>';
+    });
+}

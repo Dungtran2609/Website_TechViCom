@@ -118,19 +118,12 @@
                         <div class="space-y-3">
                             <div>
                                 <h5 class="font-semibold text-gray-800 mb-1">
-                                    <i class="fas fa-user me-2 text-orange-500"></i>
-                                    {{ $address->recipient_name }}
+                                    <i class="fas fa-map-marker-alt me-2 text-orange-500"></i>
+                                    {{ $address->address_line }}
                                 </h5>
                                 <p class="text-gray-600 mb-0">
-                                    <i class="fas fa-phone me-2 text-blue-500"></i>
-                                    {{ $address->phone }}
-                                </p>
-                            </div>
-                            
-                            <div>
-                                <p class="text-gray-700 mb-0">
-                                    <i class="fas fa-map-marker-alt me-2 text-red-500"></i>
-                                    {{ $address->address }}
+                                    <i class="fas fa-location-arrow me-2 text-blue-500"></i>
+                                    {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
                                 </p>
                             </div>
                         </div>

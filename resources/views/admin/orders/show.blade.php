@@ -198,13 +198,19 @@
                     <!-- Hành động -->
                     <div class="mt-4">
                         @if($orderData['status'] === 'pending')
-                            {{-- Xác nhận đơn --}}
-                            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Bạn có chắc muốn xác nhận đơn hàng này?');">
-                                @csrf
-                                <input type="hidden" name="status" value="processing">
-                                <button type="submit" class="btn btn-success">Xác nhận đơn</button>
-                            </form>
+                            {{-- Xác nhận đơn - CHỈ cho phép khi đã thanh toán hoặc COD --}}
+                            @if($orderData['payment_status'] === 'paid' || $orderData['payment_method'] === 'cod')
+                                <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Bạn có chắc muốn xác nhận đơn hàng này?');">
+                                    @csrf
+                                    <input type="hidden" name="status" value="processing">
+                                    <button type="submit" class="btn btn-success">Xác nhận đơn</button>
+                                </form>
+                            @else
+                                <button type="button" class="btn btn-success" disabled title="Cần xác nhận thanh toán trước">
+                                    Xác nhận đơn
+                                </button>
+                            @endif
 
                         @elseif($orderData['status'] === 'processing')
                             {{-- Chuyển sang đang giao hàng --}}
@@ -228,14 +234,6 @@
 
                         @elseif($orderData['status'] === 'delivered')
                             {{-- BƯỚC 1: khách đã nhận --}}
-                            <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Xác nhận khách đã nhận hàng?');">
-                                @csrf
-                                <input type="hidden" name="status" value="received">
-                                <button type="submit" class="btn btn-outline-primary">
-                                    <i class="fas fa-user-check"></i> Xác nhận khách đã nhận hàng
-                                </button>
-                            </form>
 
                         @elseif($orderData['status'] === 'received')
                             {{-- BƯỚC 2: chỉ cho xác nhận thanh toán khi COD và chưa thanh toán --}}
@@ -253,11 +251,14 @@
 
                         <a href="{{ route('admin.orders.edit', $orderData['id']) }}" class="btn btn-primary ms-2">Sửa</a>
 
+                        {{-- Nút Xóa - CHỈ cho phép khi đã thanh toán và trạng thái là received --}}
                         <form action="{{ route('admin.orders.destroy', $orderData['id']) }}" method="POST" class="d-inline ms-2"
                             onsubmit="return confirm('Bạn có chắc muốn chuyển đơn hàng này vào thùng rác?');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger" @if(!in_array($orderData['status'], ['cancelled', 'returned', 'received'])) disabled @endif>
+                            <button type="submit" class="btn btn-danger" 
+                                @if(!($orderData['payment_status'] === 'paid' && $orderData['status'] === 'received')) disabled @endif
+                                title="@if(!($orderData['payment_status'] === 'paid' && $orderData['status'] === 'received')) Cần xác nhận thanh toán và khách đã nhận hàng @endif">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>

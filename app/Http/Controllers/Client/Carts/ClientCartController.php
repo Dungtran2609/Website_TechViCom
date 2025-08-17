@@ -226,9 +226,27 @@ class ClientCartController extends Controller
         ]);
 
         if (Auth::check()) {
-            $cartItem = Cart::where('user_id', Auth::id())
+            $cartItem = Cart::with(['product', 'productVariant'])
+                ->where('user_id', Auth::id())
                 ->where('id', $id)
                 ->firstOrFail();
+
+            // Kiểm tra số lượng tồn kho
+            $stock = null;
+            if ($cartItem->productVariant) {
+                $stock = $cartItem->productVariant->stock;
+            } else {
+                $stock = $cartItem->product->stock ?? 0;
+            }
+
+            // Kiểm tra nếu số lượng vượt quá tồn kho
+            if ($stock !== null && $request->quantity > $stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                    'max_quantity' => $stock
+                ], 400);
+            }
 
             $cartItem->quantity = $request->quantity;
             $cartItem->save();
@@ -239,6 +257,37 @@ class ClientCartController extends Controller
             error_log('Available keys: ' . json_encode(array_keys($cart)));
 
             if (isset($cart[$id])) {
+                // Kiểm tra số lượng tồn kho cho session cart
+                $productId = $cart[$id]['product_id'];
+                $variantId = $cart[$id]['variant_id'] ?? null;
+                
+                $product = Product::find($productId);
+                if (!$product) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sản phẩm không tồn tại'
+                    ], 404);
+                }
+
+                $stock = null;
+                if ($variantId) {
+                    $variant = ProductVariant::find($variantId);
+                    if ($variant) {
+                        $stock = $variant->stock;
+                    }
+                } else {
+                    $stock = $product->stock ?? 0;
+                }
+
+                // Kiểm tra nếu số lượng vượt quá tồn kho
+                if ($stock !== null && $request->quantity > $stock) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                        'max_quantity' => $stock
+                    ], 400);
+                }
+
                 $cart[$id]['quantity'] = $request->quantity;
                 session()->put('cart', $cart);
                 session()->save();
@@ -331,5 +380,65 @@ class ClientCartController extends Controller
             'success' => true,
             'count' => $count
         ]);
+    }
+
+    public function setBuyNow(Request $request)
+    {
+        try {
+            // Validate
+            if (!$request->product_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product ID is required'
+                ], 400);
+            }
+
+            $productId = $request->product_id;
+            $quantity = $request->quantity ?? 1;
+            $variantId = $request->variant_id ?? null;
+
+            // Kiểm tra sản phẩm tồn tại
+            $product = Product::find($productId);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sản phẩm không tồn tại'
+                ], 404);
+            }
+
+            // Kiểm tra variant nếu có
+            if ($variantId) {
+                $variant = ProductVariant::find($variantId);
+                if (!$variant || $variant->product_id != $productId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Biến thể sản phẩm không hợp lệ'
+                    ], 400);
+                }
+            }
+
+            // Set session buynow
+            $buynowData = [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'variant_id' => $variantId
+            ];
+            
+            session(['buynow' => $buynowData]);
+            
+            Log::info('Buynow session set', $buynowData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã sẵn sàng mua ngay'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('setBuyNow error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra'
+            ], 500);
+        }
     }
 }

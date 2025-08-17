@@ -154,15 +154,17 @@
                         <div class="flex items-center gap-4 pt-4 border-t border-gray-200">
                             <label class="text-sm font-medium">Số lượng:</label>
                             <div class="flex items-center">
-                                <button type="button" onclick="updateQuantity(-1, {{ $product->id ?? 0 }})"
-                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-lg hover:bg-gray-100 transition"><i
-                                        class="fas fa-minus text-xs"></i></button>
+                                <button type="button" id="quantity-minus-btn" onclick="updateQuantity(-1, {{ $product->id ?? 0 }})"
+                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-lg hover:bg-gray-100 transition quantity-btn">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
                                 <input type="number" id="quantity" value="1" min="1"
                                     class="w-12 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
                                     readonly>
-                                <button type="button" onclick="updateQuantity(1, {{ $product->id ?? 0 }})"
-                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-r-lg hover:bg-gray-100 transition"><i
-                                        class="fas fa-plus text-xs"></i></button>
+                                <button type="button" id="quantity-plus-btn" onclick="updateQuantity(1, {{ $product->id ?? 0 }})"
+                                    class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-r-lg hover:bg-gray-100 transition quantity-btn">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -630,6 +632,34 @@
                 actionButtons.forEach(btn => btn.disabled = !isAvailable);
             }
 
+            function updateQuantityButtons() {
+                const minusBtn = document.getElementById('quantity-minus-btn');
+                const plusBtn = document.getElementById('quantity-plus-btn');
+                
+                if (minusBtn) {
+                    if (state.quantity <= 1) {
+                        minusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        minusBtn.disabled = true;
+                    } else {
+                        minusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        minusBtn.disabled = false;
+                    }
+                }
+                
+                if (plusBtn) {
+                    const maxStock = state.activeVariant ? state.activeVariant.stock : (productData.variants.length > 0 ? productData.variants[0].stock : 0);
+                    if (maxStock > 0 && state.quantity >= maxStock) {
+                        plusBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        plusBtn.disabled = true;
+                        plusBtn.title = `Chỉ còn ${maxStock} sản phẩm trong kho`;
+                    } else {
+                        plusBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        plusBtn.disabled = false;
+                        plusBtn.title = '';
+                    }
+                }
+            }
+
             function updateMainImage() {
                 if (!mainImage) return;
                 if (state.activeVariant && state.activeVariant.image) {
@@ -714,6 +744,7 @@
                 updateActionButtons();
                 updateVariantOptionsUI();
                 updateMainImage();
+                updateQuantityButtons();
             }
 
             window.changeMainImage = (src) => {
@@ -724,10 +755,22 @@
                 const maxStock = state.activeVariant ? state.activeVariant.stock : (productData.variants
                     .length > 0 ? productData.variants[0].stock : 0);
                 let newQuantity = state.quantity + change;
-                if (newQuantity >= 1 && (maxStock === 0 || newQuantity <= maxStock)) {
-                    state.quantity = newQuantity;
-                    quantityInput.value = state.quantity;
+                
+                // Kiểm tra giới hạn tối thiểu
+                if (newQuantity < 1) {
+                    showNotification('Số lượng không thể nhỏ hơn 1', 'error');
+                    return;
                 }
+                
+                // Kiểm tra giới hạn tồn kho
+                if (maxStock > 0 && newQuantity > maxStock) {
+                    showNotification(`Chỉ còn ${maxStock} sản phẩm trong kho!`, 'error');
+                    return;
+                }
+                
+                state.quantity = newQuantity;
+                quantityInput.value = state.quantity;
+                updateQuantityButtons();
             }
 
             window.addProductToCart = () => {
@@ -773,7 +816,10 @@
                             showNotification(data.message || 'Có lỗi xảy ra', 'error');
                         }
                     })
-                    .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
+                    .catch((error) => {
+                    console.error('BuyNow error:', error);
+                    showNotification('Lỗi kết nối, vui lòng thử lại.', 'error');
+                });
             }
 
             window.buyNow = () => {
@@ -794,8 +840,14 @@
                     return;
                 }
 
-                // Thêm sản phẩm vào giỏ hàng
-                fetch('{{ route('carts.add') }}', {
+                console.log('Sending buyNow request with data:', {
+                    product_id: {{ $product->id ?? 'null' }},
+                    quantity: state.quantity,
+                    variant_id: state.activeVariant.id
+                });
+                
+                // Set session buynow trước khi chuyển đến checkout
+                fetch('{{ route('carts.setBuyNow') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -809,14 +861,19 @@
                 })
                 .then(res => res.json())
                 .then(data => {
+                    console.log('BuyNow response:', data);
                     if (data.success) {
-                        // Nếu thêm vào giỏ hàng thành công, chuyển đến trang checkout
+                        // Chuyển đến trang checkout với buynow session
+                        console.log('Redirecting to checkout...');
                         window.location.href = '{{ route('checkout.index') }}';
                     } else {
                         showNotification(data.message || 'Có lỗi xảy ra, không thể mua ngay.', 'error');
                     }
                 })
-                .catch(() => showNotification('Lỗi kết nối, vui lòng thử lại.', 'error'));
+                .catch((error) => {
+                    console.error('BuyNow error:', error);
+                    showNotification('Lỗi kết nối, vui lòng thử lại.', 'error');
+                });
             }
 
             render();

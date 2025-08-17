@@ -40,6 +40,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean', // Ép kiểu is_active về boolean
+        'birthday' => 'date', // Ép kiểu birthday về date
     ];
 
 

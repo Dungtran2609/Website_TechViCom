@@ -42,8 +42,10 @@ class ClientCheckoutController extends Controller
         $cartItems = [];
         $subtotal = 0;
 
-        // 1) Ưu tiên 'buynow'
+        // 1) Ưu tiên 'buynow' - chỉ hiển thị sản phẩm buynow, không hiển thị giỏ hàng
         $buynow = session('buynow');
+        Log::info('Checkout index - buynow session', ['buynow' => $buynow]);
+        
         if ($buynow) {
             $product = Product::with(['productAllImages', 'variants'])->find($buynow['product_id']);
             $variant = !empty($buynow['variant_id']) ? \App\Models\ProductVariant::find($buynow['variant_id']) : null;
@@ -69,16 +71,61 @@ class ClientCheckoutController extends Controller
             }
             session()->forget('buynow');
         }
-        // 2) User đăng nhập (bảng carts)
+        // 2) User đăng nhập (bảng carts) - chỉ khi không có buynow
         elseif (Auth::check()) {
-            $cartItems = Cart::with([
+            $cartQuery = Cart::with([
                 'product.productAllImages', 
                 'product.variants', 
                 'productVariant.attributeValues.attribute',
                 'productVariant' // Thêm eager loading cho productVariant
             ])
-            ->where('user_id', Auth::id())
-            ->get();
+            ->where('user_id', Auth::id());
+
+            // Kiểm tra xem có selected items không
+            $selectedParam = request()->get('selected');
+            $isSelectedCheckout = !empty($selectedParam);
+            
+            if ($isSelectedCheckout) {
+                // Kiểm tra xem có phải là buynow format (product_id:variant_id) không
+                $isBuyNowFormat = strpos($selectedParam, ':') !== false;
+                
+                if ($isBuyNowFormat) {
+                    // Đây là buynow format, chuyển thành buynow session
+                    $parts = explode(':', $selectedParam);
+                    $productId = $parts[0];
+                    $variantId = $parts[1] != '0' ? $parts[1] : null;
+                    
+                    session(['buynow' => [
+                        'product_id' => $productId,
+                        'variant_id' => $variantId,
+                        'quantity' => 1 // Mặc định quantity = 1 cho buynow
+                    ]]);
+                    
+                    // Redirect để reload page với buynow session
+                    return redirect()->route('checkout.index');
+                } else {
+                    // Đây có thể là cart item IDs format hoặc product IDs format
+                    $selectedIds = explode(',', $selectedParam);
+                    
+                    // Kiểm tra xem có phải là product IDs hay cart item IDs
+                    // Thử tìm cart items theo ID trước (cart item IDs)
+                    $cartItemsById = Cart::where('user_id', Auth::id())
+                        ->whereIn('id', $selectedIds)
+                        ->count();
+                    
+                    if ($cartItemsById > 0) {
+                        // Nếu tìm thấy cart items theo ID, sử dụng cart item IDs
+                        $cartQuery->whereIn('id', $selectedIds);
+                        Log::info('Using cart item IDs for filtering', ['cart_item_ids' => $selectedIds]);
+                    } else {
+                        // Nếu không tìm thấy, thử tìm theo product_id
+                        $cartQuery->whereIn('product_id', $selectedIds);
+                        Log::info('Using product IDs for filtering', ['product_ids' => $selectedIds]);
+                    }
+                }
+            }
+
+            $cartItems = $cartQuery->get();
 
             foreach ($cartItems as $item) {
                 $price = 0;
@@ -94,6 +141,23 @@ class ClientCheckoutController extends Controller
                 // set các field dùng cho view
                 $item->price = (float) $price;
                 $item->cart_item_id = $buildKey($item->product?->id, $item->productVariant?->id);
+                
+                // Thêm các field cần thiết cho view
+                $item->product_name = $item->product ? $item->product->name : 'Unknown Product';
+                
+                // Set image
+                $image = '';
+                if ($item->productVariant && $item->productVariant->image) {
+                    $image = 'storage/' . $item->productVariant->image;
+                } elseif ($item->product && $item->product->thumbnail) {
+                    $image = 'storage/' . $item->product->thumbnail;
+                } elseif ($item->product && $item->product->productAllImages && $item->product->productAllImages->count() > 0) {
+                    $image = 'storage/' . $item->product->productAllImages->first()->image_path;
+                } else {
+                    $image = 'client_css/images/placeholder.svg';
+                }
+                $item->image = $image;
+                
                 $subtotal += (float) $price * (int) $item->quantity;
             }
         }
@@ -101,6 +165,41 @@ class ClientCheckoutController extends Controller
         else {
             $cart = session()->get('cart', []);
             if (is_array($cart) && count($cart) > 0) {
+                // Kiểm tra xem có selected items không
+                $selectedParam = request()->get('selected');
+                $isSelectedCheckout = !empty($selectedParam);
+                
+                if ($isSelectedCheckout) {
+                    // Kiểm tra xem có phải là buynow format (product_id:variant_id) không
+                    $isBuyNowFormat = strpos($selectedParam, ':') !== false;
+                    
+                    if ($isBuyNowFormat) {
+                        // Đây là buynow format, chuyển thành buynow session
+                        $parts = explode(':', $selectedParam);
+                        $productId = $parts[0];
+                        $variantId = $parts[1] != '0' ? $parts[1] : null;
+                        
+                        session(['buynow' => [
+                            'product_id' => $productId,
+                            'variant_id' => $variantId,
+                            'quantity' => 1 // Mặc định quantity = 1 cho buynow
+                        ]]);
+                        
+                        // Redirect để reload page với buynow session
+                        return redirect()->route('checkout.index');
+                    } else {
+                        // Đây là cart keys format (cho session cart)
+                        $selectedKeys = explode(',', $selectedParam);
+                        $filteredCart = [];
+                        foreach ($selectedKeys as $key) {
+                            if (isset($cart[$key])) {
+                                $filteredCart[$key] = $cart[$key];
+                            }
+                        }
+                        $cart = $filteredCart;
+                    }
+                }
+                
                 foreach ($cart as $ci) {
                     $product = Product::with(['productAllImages', 'variants'])->find($ci['product_id']);
                     if (!$product)
@@ -285,15 +384,21 @@ class ClientCheckoutController extends Controller
         try {
             $rules = [
                 'recipient_name' => 'required|string|max:255',
-                'recipient_phone' => 'required|string|max:20',
-                'recipient_email' => 'required|email|max:255', // <-- thêm email người nhận
+                'recipient_phone' => 'required|string|max:20|regex:/^0[3-9][0-9]{8}$/',
+                'recipient_email' => 'required|email|max:255',
                 'recipient_address' => 'required|string|max:500',
                 'payment_method' => 'required|in:cod,bank_transfer',
                 'shipping_method_id' => 'nullable|integer',
                 'coupon_code' => 'nullable|string',
-                'use_default_address' => 'sometimes|boolean', // nếu muốn ép dùng địa chỉ mặc định
+                'use_default_address' => 'sometimes|boolean',
             ];
-            $request->validate($rules);
+            
+            $messages = [
+                'recipient_phone.regex' => 'Số điện thoại không đúng định dạng. Vui lòng nhập số điện thoại Việt Nam hợp lệ (VD: 0362729054)',
+                'recipient_email.email' => 'Email không đúng định dạng. Vui lòng nhập email hợp lệ (VD: example@gmail.com)',
+            ];
+            
+            $request->validate($rules, $messages);
 
             // Nếu đã đăng nhập và user tick "dùng địa chỉ mặc định" thì mới ghi đè địa chỉ
             if (Auth::check() && $request->boolean('use_default_address')) {
@@ -324,52 +429,171 @@ class ClientCheckoutController extends Controller
             $cartItems = [];
             $subtotal = 0.0;
 
-            if (Auth::check()) {
-                $cartItems = Cart::with(['product', 'product.variants', 'productVariant'])
-                    ->where('user_id', Auth::id())
-                    ->get();
+            // Kiểm tra xem có phải là checkout từ selected items không
+            $isSelectedCheckout = $request->has('selected') && $request->get('selected');
+            $selectedParam = $request->get('selected');
+            
+            // Kiểm tra xem có phải là buynow format (product_id:variant_id) không
+            $isBuyNowFormat = $isSelectedCheckout && strpos($selectedParam, ':') !== false;
+            
+            if ($isBuyNowFormat) {
+                // Đây là buynow format, chuyển thành buynow session
+                $parts = explode(':', $selectedParam);
+                $productId = $parts[0];
+                $variantId = $parts[1] != '0' ? $parts[1] : null;
+                
+                session(['buynow' => [
+                    'product_id' => $productId,
+                    'variant_id' => $variantId,
+                    'quantity' => 1 // Mặc định quantity = 1 cho buynow
+                ]]);
+                
+                Log::info('Converted selected to buynow session', [
+                    'selected' => $selectedParam,
+                    'product_id' => $productId,
+                    'variant_id' => $variantId
+                ]);
+            }
+            
+            $selectedIds = ($isSelectedCheckout && !$isBuyNowFormat) ? explode(',', $selectedParam) : [];
+
+            // Kiểm tra buynow session trước
+            $buynow = session('buynow');
+            Log::info('Buynow session check', ['buynow' => $buynow]);
+            
+            if ($buynow) {
+                $product = Product::with(['productAllImages', 'variants'])->find($buynow['product_id']);
+                $variant = !empty($buynow['variant_id']) ? \App\Models\ProductVariant::find($buynow['variant_id']) : null;
+
+                Log::info('Buynow product found', [
+                    'product_id' => $buynow['product_id'],
+                    'product' => $product ? $product->name : 'null',
+                    'variant_id' => $buynow['variant_id'] ?? 'null',
+                    'variant' => $variant ? $variant->id : 'null'
+                ]);
+
+                if ($product) {
+                    $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
+                    
+                    $cartItems[] = (object) [
+                        'product' => $product,
+                        'productVariant' => $variant,
+                        'quantity' => (int) $buynow['quantity'],
+                        'price' => (float) $price,
+                    ];
+                    $subtotal += (float) $price * (int) $buynow['quantity'];
+                    
+                    Log::info('Buynow item added', [
+                        'product_name' => $product->name,
+                        'quantity' => $buynow['quantity'],
+                        'price' => $price,
+                        'subtotal' => $subtotal
+                    ]);
+                }
+                session()->forget('buynow');
+            } elseif (Auth::check()) {
+                $cartQuery = Cart::with(['product', 'product.variants', 'productVariant'])
+                    ->where('user_id', Auth::id());
+                
+                // Nếu có selected items, chỉ lấy những items được chọn
+                if ($isSelectedCheckout && !empty($selectedIds)) {
+                    $cartQuery->whereIn('id', $selectedIds);
+                    Log::info('Selected checkout with IDs', ['selected_ids' => $selectedIds]);
+                }
+                
+                $cartItems = $cartQuery->get();
+                Log::info('Cart items found', ['count' => $cartItems->count(), 'items' => $cartItems->pluck('id')->toArray()]);
 
                 foreach ($cartItems as $item) {
                     $price = 0.0;
                     if ($item->productVariant) {
                         $price = $item->productVariant->sale_price ?? $item->productVariant->price ?? 0;
-                    } elseif ($item->product->variants && $item->product->variants->count() > 0) {
+                    } elseif ($item->product && $item->product->variants && $item->product->variants->count() > 0) {
                         $pv = $item->product->variants->first();
                         $price = $pv->sale_price ?? $pv->price ?? 0;
+                    } else {
+                        $price = $item->product ? ($item->product->sale_price ?? $item->product->price ?? 0) : 0;
                     }
+                    
+                    Log::info('Cart item processed', [
+                        'cart_item_id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product ? $item->product->name : 'null',
+                        'quantity' => $item->quantity,
+                        'price' => $price,
+                        'total' => $price * $item->quantity
+                    ]);
+                    
                     $subtotal += (float) $price * (int) $item->quantity;
                 }
             } else {
                 $cart = session()->get('cart', []);
-                foreach ($cart as $ci) {
-                    $product = Product::with('variants')->find($ci['product_id']);
-                    if (!$product)
-                        continue;
+                
+                // Nếu có selected items, chỉ lấy những items được chọn
+                if ($isSelectedCheckout && !empty($selectedIds)) {
+                    foreach ($selectedIds as $selectedKey) {
+                        if (isset($cart[$selectedKey])) {
+                            $ci = $cart[$selectedKey];
+                            $product = Product::with('variants')->find($ci['product_id']);
+                            if (!$product) continue;
 
-                    $price = 0.0;
-                    if (!empty($ci['variant_id'])) {
-                        $variant = \App\Models\ProductVariant::find($ci['variant_id']);
-                        $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
-                    } elseif ($product->variants && $product->variants->count() > 0) {
-                        $pv = $product->variants->first();
-                        $price = $pv->sale_price ?? $pv->price ?? 0;
+                            $price = 0.0;
+                            if (!empty($ci['variant_id'])) {
+                                $variant = \App\Models\ProductVariant::find($ci['variant_id']);
+                                $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
+                            } elseif ($product->variants && $product->variants->count() > 0) {
+                                $pv = $product->variants->first();
+                                $price = $pv->sale_price ?? $pv->price ?? 0;
+                            }
+
+                            $cartItems[] = (object) [
+                                'product' => $product,
+                                'quantity' => (int) $ci['quantity'],
+                                'productVariant' => !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null,
+                                'price' => (float) $price,
+                            ];
+
+                            $subtotal += (float) $price * (int) $ci['quantity'];
+                        }
                     }
+                } else {
+                    // Lấy tất cả items trong session cart
+                    foreach ($cart as $ci) {
+                        $product = Product::with('variants')->find($ci['product_id']);
+                        if (!$product) continue;
 
-                    $cartItems[] = (object) [
-                        'product' => $product,
-                        'quantity' => (int) $ci['quantity'],
-                        'productVariant' => !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null,
-                        'price' => (float) $price,
-                    ];
+                        $price = 0.0;
+                        if (!empty($ci['variant_id'])) {
+                            $variant = \App\Models\ProductVariant::find($ci['variant_id']);
+                            $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
+                        } elseif ($product->variants && $product->variants->count() > 0) {
+                            $pv = $product->variants->first();
+                            $price = $pv->sale_price ?? $pv->price ?? 0;
+                        }
 
-                    $subtotal += (float) $price * (int) $ci['quantity'];
+                        $cartItems[] = (object) [
+                            'product' => $product,
+                            'quantity' => (int) $ci['quantity'],
+                            'productVariant' => !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null,
+                            'price' => (float) $price,
+                        ];
+
+                        $subtotal += (float) $price * (int) $ci['quantity'];
+                    }
                 }
             }
 
             if (empty($cartItems)) {
-                Log::warning('Cart is empty');
-                return redirect()->route('carts.index')->with('error', 'Giỏ hàng trống');
+                Log::warning('Cart is empty - no items found for checkout');
+                file_put_contents(storage_path('logs/checkout_debug.log'), "Cart is empty - no items found for checkout\n", FILE_APPEND | LOCK_EX);
+                return redirect()->route('carts.index')->with('error', 'Không tìm thấy sản phẩm để thanh toán. Vui lòng kiểm tra lại giỏ hàng.');
             }
+
+            Log::info('Cart items prepared for order', [
+                'count' => count($cartItems),
+                'subtotal' => $subtotal
+            ]);
+            file_put_contents(storage_path('logs/checkout_debug.log'), "Cart items prepared: " . count($cartItems) . " items, subtotal: $subtotal\n", FILE_APPEND | LOCK_EX);
 
             // Coupon
             $discountAmount = 0.0;
@@ -446,9 +670,16 @@ class ClientCheckoutController extends Controller
             ]);
 
             Log::info('Order created', ['order_id' => $order->id]);
+            Log::info('Cart items count: ' . count($cartItems));
 
             // Tạo order items
             foreach ($cartItems as $item) {
+                Log::info('Processing item', [
+                    'product_id' => $item->product->id ?? 'null',
+                    'product_name' => $item->product->name ?? 'null',
+                    'quantity' => $item->quantity ?? 0,
+                    'price' => $item->price ?? 0
+                ]);
                 $price = 0.0;
                 $variant = null;
 
@@ -462,13 +693,13 @@ class ClientCheckoutController extends Controller
                     $price = $variant->sale_price ?? $variant->price ?? 0;
                 }
 
+                // Nếu không có variant, tạo một variant mặc định hoặc sử dụng null
                 if (!$variant && $item->product->variants && $item->product->variants->count() > 0) {
                     $variant = $item->product->variants->first();
                 }
-                if (!$variant) {
-                    Log::warning('Skip product without variant', ['product_id' => $item->product->id]);
-                    continue;
-                }
+                
+                // Nếu vẫn không có variant, có thể sản phẩm không có variant (buynow case)
+                // Trong trường hợp này, chúng ta vẫn tạo order item với variant_id = null
 
                 $productImage = '';
                 if ($variant && $variant->image) {
@@ -481,7 +712,7 @@ class ClientCheckoutController extends Controller
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'variant_id' => $variant->id, // theo migration
+                    'variant_id' => $variant ? $variant->id : null, // Có thể null nếu sản phẩm không có variant
                     'product_id' => $item->product->id,
                     'name_product' => $item->product->name ?? 'Unknown Product',
                     'image_product' => $productImage,
@@ -491,11 +722,39 @@ class ClientCheckoutController extends Controller
                 ]);
             }
 
-            // Xoá giỏ hàng
+            // Xoá giỏ hàng (chỉ xóa những sản phẩm đã được checkout)
             if (Auth::check()) {
-                Cart::where('user_id', Auth::id())->delete();
+                // Nếu có parameter selected, chỉ xóa những sản phẩm được chọn
+                if ($request->has('selected') && $request->get('selected')) {
+                    $selectedIds = explode(',', $request->get('selected'));
+                    // Lọc ra những ID hợp lệ (chỉ số nguyên)
+                    $validIds = array_filter($selectedIds, function($id) {
+                        return is_numeric($id) && $id > 0;
+                    });
+                    
+                    if (!empty($validIds)) {
+                        Cart::where('user_id', Auth::id())
+                            ->whereIn('id', $validIds)
+                            ->delete();
+                    }
+                } else {
+                    // Xóa toàn bộ giỏ hàng
+                    Cart::where('user_id', Auth::id())->delete();
+                }
             } else {
-                session()->forget('cart');
+                // Xử lý session cart cho khách vãng lai
+                if ($request->has('selected') && $request->get('selected')) {
+                    // Nếu có selected items, chỉ xóa những items được chọn
+                    $selectedKeys = explode(',', $request->get('selected'));
+                    $cart = session()->get('cart', []);
+                    foreach ($selectedKeys as $key) {
+                        unset($cart[$key]);
+                    }
+                    session(['cart' => $cart]);
+                } else {
+                    // Xóa toàn bộ session cart
+                    session()->forget('cart');
+                }
             }
 
             DB::commit();

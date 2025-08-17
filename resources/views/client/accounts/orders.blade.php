@@ -103,14 +103,9 @@
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ route('accounts.order-detail', $order->id) }}"
-                                        class="btn btn-outline-primary btn-sm rounded-pill me-1">
+                                        class="btn btn-outline-primary btn-sm rounded-pill">
                                         <i class="fas fa-eye"></i> Xem
                                     </a>
-                                    @if($order->status === 'pending')
-                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#cancelModal{{ $order->id }}">
-                                            <i class="fas fa-times"></i> Hủy
-                                        </button>
-                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -122,39 +117,7 @@
                 {{ $orders->links('pagination::bootstrap-5') }}
             </div>
 
-            {{-- Render các modal RIÊNG, tránh nằm trong <tbody> --}}
-                @foreach($orders as $order)
-                    @if($order->status === 'pending')
-                        <div class="modal fade" id="cancelModal{{ $order->id }}" tabindex="-1" aria-labelledby="cancelModalLabel{{ $order->id }}" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <form class="js-cancel-order-form" method="POST" action="{{ route('client.orders.cancel', $order->id) }}">
-                                    @csrf
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="cancelModalLabel{{ $order->id }}">
-                                                Lý do hủy đơn hàng
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label for="cancelReason{{ $order->id }}" class="form-label">
-                                                    Vui lòng nhập lý do hủy đơn hàng:
-                                                </label>
-                                                <textarea class="form-control" id="cancelReason{{ $order->id }}" name="client_note"
-                                                    rows="3" required></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
+
         @endif
     </div>
 @endsection
@@ -181,64 +144,3 @@
     </style>
 @endpush
 
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Lấy CSRF token từ thẻ meta (đảm bảo thẻ này có trong layout)
-            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
-
-            // Bắt submit các form hủy
-            var forms = document.querySelectorAll('.js-cancel-order-form');
-            forms.forEach(function (form) {
-                form.addEventListener('submit', function (e) {
-                    e.preventDefault();
-
-                    var textarea = form.querySelector('textarea[name="client_note"]');
-                    var clientNote = textarea ? textarea.value.trim() : '';
-                    if (!clientNote) {
-                        alert('Vui lòng nhập lý do hủy đơn hàng');
-                        if (textarea) textarea.focus();
-                        return;
-                    }
-
-                    var fd = new FormData();
-                    fd.append('client_note', clientNote);
-
-                    fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        },
-                        body: fd
-                    })
-                        .then(function (res) {
-                            var ct = res.headers.get('content-type') || '';
-                            if (ct.indexOf('application/json') !== -1) return res.json();
-                            return { success: res.ok };
-                        })
-                        .then(function (data) {
-                            if (data && data.success) {
-                                alert(data.message || 'Hủy đơn hàng thành công!');
-                                // Đóng modal (Bootstrap 5)
-                                var modalEl = form.closest('.modal');
-                                if (modalEl && window.bootstrap && bootstrap.Modal) {
-                                    var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                                    instance.hide();
-                                }
-                                window.location.reload();
-                            } else {
-                                alert((data && data.message) || 'Có lỗi xảy ra khi hủy đơn hàng');
-                            }
-                        })
-                        .catch(function (err) {
-                            console.error(err);
-                            alert('Có lỗi xảy ra khi hủy đơn hàng');
-                        });
-                });
-            });
-        });
-    </script>
-@endpush

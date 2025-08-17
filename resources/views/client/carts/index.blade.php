@@ -54,7 +54,7 @@
                     // ẢNH: ưu tiên ảnh biến thể
                     $imagePath = null;
                     if (!empty($item->productVariant?->image)) {
-                      $imagePath = asset('uploads/products/' . ltrim($item->productVariant->image, '/'));
+                      $imagePath = asset('storage/' . ltrim($item->productVariant->image, '/'));
                     } elseif (!empty($item->product->productAllImages) && $item->product->productAllImages->count() > 0) {
                       $imgObj   = $item->product->productAllImages->first();
                       $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
@@ -71,11 +71,14 @@
                     <div class="flex items-center space-x-4">
                       <input type="checkbox" class="item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="{{ $item->id }}">
                       <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        <img
-                          src="{{ $imagePath ?? asset('client_css/images/placeholder.svg') }}"
-                          alt="{{ $item->product->name }}"
-                          class="w-full h-full object-cover"
-                          onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                        @if(!empty($item->productVariant?->image))
+                          <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}"
+                               alt="{{ $item->product->name }}"
+                               class="w-full h-full object-cover"
+                               onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                        @else
+                          <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="No image" class="w-full h-full object-cover">
+                        @endif
                       </div>
                       <div>
                         <h3 class="font-medium text-gray-900">{{ $item->product->name }}</h3>
@@ -113,8 +116,9 @@
                         <span class="w-8 text-center">{{ $item->quantity }}</span>
                         <button
                           type="button"
-                          onclick="updateQuantity('{{ $item->id }}', {{ (int) $item->quantity + 1 }})"
-                          class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
+                          onclick="handleIncreaseQuantity('{{ $item->id }}', {{ (int) $item->quantity }}, {{ (int)($item->productVariant?->stock ?? 9999) }})"
+                          class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int)$item->quantity >= (int)($item->productVariant?->stock ?? 9999) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        >
                           <i class="fas fa-plus text-xs"></i>
                         </button>
                       </div>
@@ -164,14 +168,42 @@
               </div>
 
               <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
-                <div class="flex items-center">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Mã giảm giá</label>
+                <div class="flex items-center gap-2">
                   <input type="text" id="discount-code" placeholder="Nhập mã giảm giá"
-                         class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:border-[#ff6c2f]">
-                  <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-4 py-2 rounded-r-lg hover:bg-[#ff6c2f] transition" disabled>
-                    Áp dụng
+                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#ff6c2f] text-sm shadow-sm">
+                  <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-3 py-2 rounded-full hover:bg-orange-500 transition flex items-center gap-1 text-sm shadow disabled:opacity-50" disabled>
+                    <i class="fas fa-check"></i> Áp dụng
                   </button>
                 </div>
+                @if(isset($availableCoupons) && count($availableCoupons))
+                  <div class="mt-3 grid gap-2 max-h-36 overflow-y-auto">
+                    @foreach($availableCoupons as $coupon)
+                      @php
+                        $canUse = now()->between($coupon->start_date, $coupon->end_date);
+                      @endphp
+                      <div class="flex items-center justify-between p-2 rounded-lg border transition group {{ $coupon->can_apply ? 'hover:bg-orange-50 border-orange-200 cursor-pointer' : 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed pointer-events-none' }}"
+                           @if($coupon->can_apply) onclick="document.getElementById('discount-code').value='{{ $coupon->code }}'" @endif>
+                        <div class="flex flex-col">
+                          <span class="font-mono text-xs font-bold text-orange-600 group-hover:underline">{{ $coupon->code }}</span>
+                          <span class="text-xs text-gray-700">{{ $coupon->description ?? $coupon->name ?? '' }}</span>
+                          <span class="text-xs text-gray-500">
+                            @if($coupon->discount_type === 'percent')
+                              Giảm {{ $coupon->discount_value }}%
+                            @else
+                              Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}₫
+                            @endif
+                          </span>
+                        </div>
+                        @if($canUse)
+                          <i class="fas fa-check-circle text-green-500 text-lg"></i>
+                        @else
+                          <i class="fas fa-times-circle text-gray-400 text-lg"></i>
+                        @endif
+                      </div>
+                    @endforeach
+                  </div>
+                @endif
               </div>
 
               <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4" id="checkout-all-btn">
@@ -409,6 +441,22 @@ function initSelectionFeatures(){
   selectAll.checked = false;
   cbs.forEach(cb => cb.checked = false);
   refresh();
+}
+
+function showToast(msg, type = 'error') {
+  const toast = document.createElement('div');
+  toast.className = `fixed top-6 right-6 z-50 px-5 py-3 rounded-lg text-white font-medium shadow-lg transition-all duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = 0; }, 1800);
+  setTimeout(() => { toast.remove(); }, 2200);
+}
+function handleIncreaseQuantity(id, current, stock) {
+  if (current < stock) {
+    updateQuantity(id, current + 1);
+  } else {
+    showToast('Đã đạt tối đa tồn kho!');
+  }
 }
 
 // ===== Init =====

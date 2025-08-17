@@ -28,6 +28,16 @@ class AdminOrderController extends Controller
     /* ========================= INDEX ========================= */
     public function index(Request $request)
     {
+        $statusMap = [
+            'pending' => 'Đang chờ xử lý',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đang giao hàng',
+            'delivered' => 'Đã giao',
+            'received' => 'Đã nhận hàng',
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Đã trả hàng',
+        ];
+
         $orders = Order::with([
             'user:id,name',
             'orderItems.productVariant.product.images'
@@ -36,14 +46,23 @@ class AdminOrderController extends Controller
                 $q->where('id', 'like', "%{$s}%")
                     ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$s}%"));
             })
+            ->when($request->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when($request->created_from, function ($q, $from) {
+                $q->whereDate('created_at', '>=', $from);
+            })
+            ->when($request->created_to, function ($q, $to) {
+                $q->whereDate('created_at', '<=', $to);
+            })
             ->latest()
             ->paginate(15);
 
         $orderData = $orders->map(function ($order) {
             $firstItem = $order->orderItems->first();
-            $imgPath = $firstItem?->image_product
+            $imgPath = $firstItem?->productVariant?->image
+                ?: $firstItem?->image_product
                 ?: $firstItem?->productVariant?->product?->images->first()?->image_path
-                ?: $firstItem?->productVariant?->image
                 ?: null;
 
             return [
@@ -56,6 +75,7 @@ class AdminOrderController extends Controller
         return view('admin.orders.index', [
             'orders' => $orderData,
             'pagination' => $orders,
+            'statusMap' => $statusMap,
         ]);
     }
 
@@ -72,17 +92,15 @@ class AdminOrderController extends Controller
             'coupon'
         ])->findOrFail($id);
 
-        // ĐỊA CHỈ (ưu tiên text đã lưu trong order)
-        if (!empty($order->recipient_address)) {
-            $address = $order->recipient_address;
-            $city = $district = $ward = '';
-        } elseif ($order->address) {
+        // ĐỊA CHỈ: Nếu khách chọn địa chỉ DB thì lấy từ DB, ngược lại lấy nhập tay
+        if ($order->address_id && $order->address) {
             $city = $order->address->city ?? '';
             $district = $order->address->district ?? '';
             $ward = $order->address->ward ?? '';
             $address = $order->address->address_line ?? '';
-} else {
-            $city = $district = $ward = $address = '';
+        } else {
+            $address = $order->recipient_address ?? '';
+            $city = $district = $ward = '';
         }
 
         // SUBTOTAL: ưu tiên total_price đã lưu
@@ -161,8 +179,8 @@ class AdminOrderController extends Controller
                     $prod = $item->product;
                 }
                 $price = $item->price ?? ($variant->sale_price ?? $variant->price ?? 0);
-                $imgPath = $item->image_product
-                    ?: ($variant ? $variant->image : null)
+                $imgPath = $variant?->image
+                    ?: $item->image_product
                     ?: null;
 
                 return [

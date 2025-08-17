@@ -181,7 +181,8 @@
                                         <div class="space-y-2">
                                             @foreach ($addresses as $address)
                                                 <label class="flex items-center space-x-2 cursor-pointer">
-                                                    <input type="radio" name="selected_address" value="{{ $address->id }}" @if ($loop->first) checked @endif onchange="toggleAddressForm(false)">
+                                                    <input type="radio" name="selected_address" value="{{ $address->id }}" @if ($loop->first) checked @endif onchange="toggleAddressForm(false)"
+                                                        data-ward="{{ $address->ward }}" data-district="{{ $address->district }}" data-city="{{ $address->city }}" data-address="{{ $address->address_line }}">
                                                     <span>
                                                         {{ $address->address_line }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
                                                         @if ($address->is_default)
@@ -241,22 +242,16 @@
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-xl font-semibold mb-6">Phương thức vận chuyển</h3>
                             <div class="space-y-4 mb-8">
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 selected flex items-center" data-shipping="home_delivery">
-                                    <input type="radio" id="shipping1" name="shipping_method" value="home_delivery" checked class="mr-3 accent-orange-500">
-                                    <div class="flex-1">
-                                        <label for="shipping1" class="font-medium cursor-pointer">Giao hàng tận nơi</label>
-                                        <p class="text-sm text-gray-600">Nhân viên giao hàng sẽ liên hệ và giao tận địa chỉ bạn cung cấp.</p>
+                                @foreach ($shippingMethods->whereIn('id', [1,2]) as $method)
+                                    <div class="payment-option border-2 border-gray-300 rounded-lg p-4 {{ $loop->first ? 'selected' : '' }} flex items-center" data-shipping="{{ $method->id }}">
+                                        <input type="radio" id="shipping{{ $method->id }}" name="shipping_method" value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }} class="mr-3 accent-orange-500">
+                                        <div class="flex-1">
+                                            <label for="shipping{{ $method->id }}" class="font-medium cursor-pointer">{{ $method->name }}</label>
+                                            <p class="text-sm text-gray-600">{{ $method->description }}</p>
+                                        </div>
+                                        <i class="fas fa-truck text-orange-600 text-xl"></i>
                                     </div>
-                                    <i class="fas fa-truck text-orange-600 text-xl"></i>
-                                </div>
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center" data-shipping="store_pickup">
-                                    <input type="radio" id="shipping2" name="shipping_method" value="store_pickup" class="mr-3 accent-orange-500">
-                                    <div class="flex-1">
-                                        <label for="shipping2" class="font-medium cursor-pointer">Nhận hàng tại cửa hàng</label>
-                                        <p class="text-sm text-gray-600">Bạn sẽ đến cửa hàng Techvicom để nhận sản phẩm.</p>
-                                    </div>
-                                    <i class="fas fa-store text-orange-600 text-xl"></i>
-                                </div>
+                                @endforeach
                             </div>
                             <h3 class="text-xl font-semibold mb-6">Phương thức thanh toán</h3>
                             <div class="space-y-4">
@@ -417,6 +412,10 @@
 @push('scripts')
     {{-- nếu bạn có script dùng chung, nạp ở layout; ở đây chỉ nạp cần thiết --}}
     <script src="{{ asset('assets/js/component-loader.js') }}"></script>
+
+    <script>
+        window.shippingMethods = @json($shippingMethods->pluck('name', 'id'));
+    </script>
 
     <script>
         // Toggle hiển thị form nhập địa chỉ mới
@@ -615,8 +614,13 @@
         function updateCheckoutTotal() {
             const subtotal = Number(window.checkoutSubtotal || 0);
             const discount = Number(window.checkoutDiscount || 0);
-            const method = window.checkoutShippingMethod || 'home_delivery';
-            const shipping = (method === 'home_delivery') ? (subtotal >= 3000000 ? 0 : 50000) : 0;
+            const method = document.querySelector('input[name="shipping_method"]:checked')?.value || '1';
+            let shipping = 0;
+            if (method == '1') {
+                shipping = subtotal >= 3000000 ? 0 : 50000;
+            } else {
+                shipping = 0;
+            }
             const total = Math.max(0, subtotal + shipping - discount);
             const subtotalEl = document.getElementById('subtotal');
             const shippingEl = document.getElementById('shipping-fee');
@@ -837,10 +841,19 @@
                     const delivery = document.getElementById('delivery-summary');
                     const fullname = document.getElementById('fullname').value;
                     const phone = document.getElementById('phone').value;
-                    const address = document.getElementById('address').value;
-                    const province = document.getElementById('province').selectedOptions[0]?.text || '';
-                    const district = document.getElementById('district').selectedOptions[0]?.text || '';
-                    const ward = document.getElementById('ward').selectedOptions[0]?.text || '';
+                    let address = document.getElementById('address').value;
+                    let province = '', district = '', ward = '';
+                    const selectedAddressRadio = document.querySelector('input[name="selected_address"]:checked');
+                    if (selectedAddressRadio && selectedAddressRadio.value !== 'new') {
+                        ward = selectedAddressRadio.dataset.ward || '';
+                        district = selectedAddressRadio.dataset.district || '';
+                        province = selectedAddressRadio.dataset.city || '';
+                        address = selectedAddressRadio.dataset.address || address;
+                    } else {
+                        province = document.getElementById('province').selectedOptions[0]?.text || '';
+                        district = document.getElementById('district').selectedOptions[0]?.text || '';
+                        ward = document.getElementById('ward').selectedOptions[0]?.text || '';
+                    }
                     delivery.innerHTML = `<div><strong>Người nhận:</strong> ${fullname}</div>
                                       <div><strong>Số điện thoại:</strong> ${phone}</div>
                                       <div><strong>Địa chỉ:</strong> ${address}</div>
@@ -848,8 +861,10 @@
 
                     const shipping = document.getElementById('shipping-summary');
                     const sm = document.querySelector('input[name="shipping_method"]:checked');
-                    let shippingText = sm?.value === 'home_delivery' ? 'Giao hàng tận nơi' :
-                        sm?.value === 'store_pickup' ? 'Nhận hàng tại cửa hàng' : 'Chưa chọn';
+                    let shippingText = 'Chưa chọn';
+                    if (sm && window.shippingMethods) {
+                        shippingText = window.shippingMethods[sm.value] || 'Chưa chọn';
+                    }
                     shipping.innerHTML = `<div><strong>Phương thức:</strong> ${shippingText}</div>`;
 
                     const pay = document.getElementById('payment-summary');
@@ -1114,71 +1129,58 @@
             const formData = new FormData();
             formData.append('_token', document.querySelector('input[name="_token"]').value);
 
-            // Nếu chọn địa chỉ đã lưu thì chỉ gửi id
             if (selected && selected.value !== 'new') {
                 formData.append('selected_address', selected.value);
+                formData.append('province', selected.dataset.city || '');
+                formData.append('district', selected.dataset.district || '');
+                formData.append('ward', selected.dataset.ward || '');
+                formData.append('recipient_address', selected.dataset.address || '');
             } else {
-                // Nếu chọn địa chỉ mới thì gửi đầy đủ thông tin
                 const fullname = document.getElementById('fullname').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const emailVal = (document.getElementById('email').value || '').trim();
                 const address = document.getElementById('address').value.trim();
-                const province = document.getElementById('province').value;
-                const district = document.getElementById('district').value;
-                const ward = document.getElementById('ward').value;
-                @guest
-                formData.append('guest_email', emailVal);
-            @endguest
-            const provinceSel = document.getElementById('province');
-            const districtSel = document.getElementById('district');
-            const wardSel = document.getElementById('ward');
-            const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text || '';
-            const districtName = districtSel.options[districtSel.selectedIndex]?.text || '';
-            const wardName = wardSel.options[wardSel.selectedIndex]?.text || '';
-            const fullAddress = `${address}, ${wardName}, ${districtName}, ${provinceName}`;
-            formData.append('recipient_name', fullname);
-            formData.append('recipient_phone', phone);
-            formData.append('recipient_email', emailVal);
-            formData.append('recipient_address', fullAddress);
-            formData.append('province_code', province);
-            formData.append('district_code', district);
-            formData.append('ward_code', ward);
-        }
-
-        formData.append('shipping_method', shippingEl.value);
-        formData.append('payment_method', paymentEl.value);
-        formData.append('order_notes', document.getElementById('order-notes').value || '');
-
-        const couponInput = document.getElementById('checkout-coupon-code');
-        if (couponInput && couponInput.value.trim()) {
-            formData.append('coupon_code', couponInput.value.trim());
-        }
-
-        // GỬI SELECTED
-        let selectedVal = document.getElementById('selected-input')?.value || '';
-        if (!selectedVal) {
-            const domItems = Array.from(document.querySelectorAll('.checkout-item'));
-            if (domItems.length) {
-                const hasCartId = domItems.some(el => el.getAttribute('data-cart-id'));
-                selectedVal = domItems.map(el => hasCartId ? (el.getAttribute('data-cart-id') || '') :
-                        (el.getAttribute('data-item-id') || ''))
-                    .filter(Boolean).join(',');
+                const province = document.getElementById('province').selectedOptions[0]?.text || '';
+                const district = document.getElementById('district').selectedOptions[0]?.text || '';
+                const ward = document.getElementById('ward').selectedOptions[0]?.text || '';
+                formData.append('recipient_name', fullname);
+                formData.append('recipient_phone', phone);
+                formData.append('recipient_email', emailVal);
+                formData.append('recipient_address', address);
+                formData.append('province', province);
+                formData.append('district', district);
+                formData.append('ward', ward);
             }
-        }
-        formData.append('selected', selectedVal);
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route('checkout.process') }}';
-        for (const [k, v] of formData.entries()) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = k;
-            input.value = v;
-            form.appendChild(input);
-        }
-        document.body.appendChild(form);
-        form.submit();
+            formData.append('shipping_method_id', shippingEl.value); // value là id (1 hoặc 2)
+            formData.append('payment_method', paymentEl.value);
+            formData.append('order_notes', document.getElementById('order-notes').value || '');
+            const couponInput = document.getElementById('checkout-coupon-code');
+            if (couponInput && couponInput.value.trim()) {
+                formData.append('coupon_code', couponInput.value.trim());
+            }
+            let selectedVal = document.getElementById('selected-input')?.value || '';
+            if (!selectedVal) {
+                const domItems = Array.from(document.querySelectorAll('.checkout-item'));
+                if (domItems.length) {
+                    const hasCartId = domItems.some(el => el.getAttribute('data-cart-id'));
+                    selectedVal = domItems.map(el => hasCartId ? (el.getAttribute('data-cart-id') || '') :
+                        (el.getAttribute('data-item-id') || ''))
+                        .filter(Boolean).join(',');
+                }
+            }
+            formData.append('selected', selectedVal);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route('checkout.process') }}';
+            for (const [k, v] of formData.entries()) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = k;
+                input.value = v;
+                form.appendChild(input);
+            }
+            document.body.appendChild(form);
+            form.submit();
         }
         });
 

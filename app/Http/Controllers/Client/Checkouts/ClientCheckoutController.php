@@ -338,7 +338,7 @@ class ClientCheckoutController extends Controller
             if ($addressData) {
                 $request->validate([
                     'payment_method' => 'required|in:cod,bank_transfer',
-                    'shipping_method' => 'required|in:home_delivery,store_pickup',
+                    'shipping_method_id' => 'required|exists:shipping_methods,id',
                     'order_notes' => 'nullable|string',
                 ]);
             } else {
@@ -351,7 +351,7 @@ class ClientCheckoutController extends Controller
                     'district_code' => 'required|string',
                     'ward_code' => 'required|string',
                     'payment_method' => 'required|in:cod,bank_transfer',
-                    'shipping_method' => 'required|in:home_delivery,store_pickup',
+                    'shipping_method_id' => 'required|exists:shipping_methods,id',
                     'order_notes' => 'nullable|string',
                 ]);
                 $addressData = [
@@ -554,7 +554,7 @@ class ClientCheckoutController extends Controller
                 'ward' => $wardName,
 
                 'payment_method' => $request->payment_method,
-                'shipping_method' => $request->shipping_method,
+                'shipping_method_id' => $request->shipping_method_id,
                 'order_notes' => $request->order_notes,
                 'total_amount' => $subtotal,
                 'shipping_fee' => $shippingFee,

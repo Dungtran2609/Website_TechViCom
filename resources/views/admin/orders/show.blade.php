@@ -63,8 +63,15 @@
 
                         <dt class="col-sm-3">Địa chỉ giao</dt>
                         <dd class="col-sm-9">
-                            {{ $orderData['address'] }}, phường {{ $orderData['ward'] }}, quận {{ $orderData['district'] }},
-                            {{ $orderData['city'] }}
+                            @php
+                                $parts = array_filter([
+                                    $orderData['address'],
+                                    $orderData['ward'] ? 'phường ' . $orderData['ward'] : null,
+                                    $orderData['district'] ? 'quận ' . $orderData['district'] : null,
+                                    $orderData['city']
+                                ]);
+                            @endphp
+                            {{ implode(', ', $parts) }}
                         </dd>
 
                         <dt class="col-sm-3">Phí ship</dt>
@@ -257,8 +264,8 @@
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger" 
-                                @if(!($orderData['payment_status'] === 'paid' && $orderData['status'] === 'received')) disabled @endif
-                                title="@if(!($orderData['payment_status'] === 'paid' && $orderData['status'] === 'received')) Cần xác nhận thanh toán và khách đã nhận hàng @endif">
+                                @if(!in_array($orderData['status'], ['cancelled', 'returned', 'received'])) disabled @endif
+                                title="@if(!in_array($orderData['status'], ['cancelled', 'returned', 'received'])) Chỉ có thể xóa khi đơn đã hủy, đã trả hoặc đã nhận hàng @endif">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>

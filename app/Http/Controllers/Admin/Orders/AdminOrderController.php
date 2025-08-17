@@ -117,6 +117,13 @@ class AdminOrderController extends Controller
             'bank_transfer' => 'Chuyển khoản ngân hàng',
             'cod' => 'Thanh toán khi nhận hàng',
         ];
+        $paymentStatusMap = [
+            'pending' => 'Chưa thanh toán',
+            'processing' => 'Đang xử lý',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'cancelled' => 'Đã hủy thanh toán',
+        ];
 
         $orderData = [
             'id' => $order->id,
@@ -142,7 +149,7 @@ class AdminOrderController extends Controller
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
             'payment_status' => $order->payment_status,
-            'payment_status_vietnamese' => Order::PAYMENT_STATUSES[$order->payment_status] ?? $order->payment_status,
+            'payment_status_vietnamese' => $paymentStatusMap[$order->payment_status] ?? $order->payment_status,
 'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
@@ -210,6 +217,13 @@ class AdminOrderController extends Controller
             'credit_card' => 'Thẻ tín dụng/ghi nợ',
             'bank_transfer' => 'Chuyển khoản ngân hàng',
             'cod' => 'Thanh toán khi nhận hàng',
+        ];
+        $paymentStatusMap = [
+            'pending' => 'Chưa thanh toán',
+            'processing' => 'Đang xử lý',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'cancelled' => 'Đã hủy thanh toán',
         ];
 
         // subtotal theo dữ liệu hiện tại

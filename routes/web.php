@@ -375,7 +375,7 @@ Route::get('/checkout-success/{orderId}', [App\Http\Controllers\Client\Checkouts
 // VNPAY Payment routes
 Route::prefix('vnpay')->name('vnpay.')->group(function () {
     Route::get('/payment/{order_id}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_payment'])->name('payment');
-    Route::get('/return', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_return'])->name('return');
+    Route::get('/return', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_return'])->name('vnpay_return');
 });
 
 // Clear payment message route

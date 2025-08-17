@@ -292,16 +292,26 @@
         </form>
 
         <div class="divider">
-            <span>hoặc</span>
+            <span>hoặc đăng nhập nhanh</span>
         </div>
 
-        <div class="text-center auth-links">
+        <div class="d-flex flex-column gap-2 mb-3">
+            <a href="{{ url('auth/google') }}" class="btn btn-google mb-2" style="background: #fff; color: #444; border: 1px solid #e5e7eb; border-radius: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" style="width: 22px; height: 22px;"> Đăng nhập với Google
+            </a>
+            <a href="{{ url('auth/facebook') }}" class="btn btn-facebook" style="background: #1877f2; color: #fff; border-radius: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <i class="fab fa-facebook-f" style="font-size: 20px;"></i> Đăng nhập với Facebook
+            </a>
+        </div>
+
+        <div class="text-center auth-links mt-3">
             <span class="text-gray-600">Chưa có tài khoản?</span>
             <a href="{{ route('register') }}" class="ms-1">
                 <i class="fas fa-user-plus me-1"></i>
                 Đăng ký ngay
             </a>
         </div>
+
     </div>
 </div>
 @endsection

@@ -352,15 +352,46 @@
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div>
-                                            @if ($product->sale_price && $product->sale_price < $product->price)
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->sale_price) }}₫</span>
-                                                <span
-                                                    class="text-sm text-gray-500 line-through ml-2">{{ number_format($product->price) }}₫</span>
-                                            @else
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->price) }}₫</span>
-                                            @endif
+                                            @php
+                                                $displayPrice = null;
+                                                $minPrice = null;
+                                                $maxPrice = null;
+                                                $minFilter = request('min_price');
+                                                $maxFilter = request('max_price');
+                                                if ($product->type === 'variable' && $product->variants->count()) {
+                                                    $filteredVariants = $product->variants->filter(function($v) use ($minFilter, $maxFilter) {
+                                                        if ($minFilter && $v->price < $minFilter) return false;
+                                                        if ($maxFilter && $v->price > $maxFilter) return false;
+                                                        return true;
+                                                    });
+                                                    if ($filteredVariants->count()) {
+                                                        $minPrice = $filteredVariants->min('price');
+                                                        $maxPrice = $filteredVariants->max('price');
+                                                        $displayPrice = $minPrice == $maxPrice ? number_format($minPrice) . '₫' : number_format($minPrice) . '₫ - ' . number_format($maxPrice) . '₫';
+                                                    } else {
+                                                        $displayPrice = '<span class="text-lg font-bold text-[#ff6c2f]">0₫</span>';
+                                                    }
+                                                } elseif ($product->type === 'simple') {
+                                                    $variant = $product->variants->first();
+                                                    $price = $variant ? $variant->price : 0;
+                                                    $sale_price = ($variant && $variant->sale_price && $variant->sale_price < $variant->price) ? $variant->sale_price : null;
+                                                    $priceToCheck = $sale_price ?? $price;
+                                                    $show = true;
+                                                    if ($minFilter && $priceToCheck < $minFilter) $show = false;
+                                                    if ($maxFilter && $priceToCheck > $maxFilter) $show = false;
+                                                    if ($show && $variant) {
+                                                        if ($sale_price) {
+                                                            $displayPrice = '<span class="text-lg font-bold text-[#ff6c2f]">' . number_format($sale_price) . '₫</span>';
+                                                            $displayPrice .= '<span class="text-sm text-gray-500 line-through ml-2">' . number_format($price) . '₫</span>';
+                                                        } else {
+                                                            $displayPrice = '<span class="text-lg font-bold text-[#ff6c2f]">' . number_format($price) . '₫</span>';
+                                                        }
+                                                    } else {
+                                                        $displayPrice = '<span class="text-lg font-bold text-[#ff6c2f]">0₫</span>';
+                                                    }
+                                                }
+                                            @endphp
+                                            {!! $displayPrice !!}
                                         </div>
                                         <button
                                             onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', {{ $product->sale_price ?? $product->price }}, '{{ $product->productAllImages->isNotEmpty() ? asset('uploads/products/' . $product->productAllImages->first()->image_path) : asset('client_css/images/placeholder.svg') }}')"
@@ -442,6 +473,51 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto-check filters from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            // Brand
+            if (urlParams.has('brands')) {
+                const brands = urlParams.get('brands').split(',');
+                document.querySelectorAll('.brand-filter').forEach(cb => {
+                    if (brands.includes(cb.value)) cb.checked = true;
+                });
+            }
+            // RAM
+            if (urlParams.has('ram')) {
+                const rams = urlParams.get('ram').split(',');
+                document.querySelectorAll('.ram-filter').forEach(cb => {
+                    if (rams.includes(cb.value)) cb.checked = true;
+                });
+            }
+            // Storage
+            if (urlParams.has('storage')) {
+                const storages = urlParams.get('storage').split(',');
+                document.querySelectorAll('.storage-filter').forEach(cb => {
+                    if (storages.includes(cb.value)) cb.checked = true;
+                });
+            }
+            // Rating
+            if (urlParams.has('rating')) {
+                const rating = urlParams.get('rating');
+                document.querySelectorAll('.rating-filter').forEach(cb => {
+                    cb.checked = (cb.value === rating);
+                });
+            }
+            // Price
+            if (urlParams.has('min_price') || urlParams.has('max_price')) {
+                const min = urlParams.get('min_price') ? parseInt(urlParams.get('min_price')) : null;
+                const max = urlParams.get('max_price') ? parseInt(urlParams.get('max_price')) : null;
+                document.querySelectorAll('input[name="price"]').forEach(cb => {
+                    let val = cb.value;
+                    if (!val && !min && !max) cb.checked = true;
+                    else if (val && val.includes('-')) {
+                        const [vmin, vmax] = val.split('-');
+                        if (min === parseInt(vmin)*1000000 && max === parseInt(vmax)*1000000) cb.checked = true;
+                    } else if (val && val.endsWith('+')) {
+                        if (min === parseInt(val) * 1000000 && !max) cb.checked = true;
+                    }
+                });
+            }
             // Category buttons functionality
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -562,12 +638,35 @@
                 }
 
                 // Brand filter
-                const brandFilters = Array.from(document.querySelectorAll('.brand-filter:checked')).map(cb => cb
-                    .value);
+                const brandFilters = Array.from(document.querySelectorAll('.brand-filter:checked')).map(cb => cb.value);
                 if (brandFilters.length > 0) {
                     url.searchParams.set('brands', brandFilters.join(','));
                 } else {
                     url.searchParams.delete('brands');
+                }
+
+                // RAM filter
+                const ramFilters = Array.from(document.querySelectorAll('.ram-filter:checked')).map(cb => cb.value);
+                if (ramFilters.length > 0) {
+                    url.searchParams.set('ram', ramFilters.join(','));
+                } else {
+                    url.searchParams.delete('ram');
+                }
+
+                // Storage filter
+                const storageFilters = Array.from(document.querySelectorAll('.storage-filter:checked')).map(cb => cb.value);
+                if (storageFilters.length > 0) {
+                    url.searchParams.set('storage', storageFilters.join(','));
+                } else {
+                    url.searchParams.delete('storage');
+                }
+
+                // Rating filter
+                const ratingFilter = document.querySelector('input[name="rating"]:checked');
+                if (ratingFilter && ratingFilter.value) {
+                    url.searchParams.set('rating', ratingFilter.value);
+                } else {
+                    url.searchParams.delete('rating');
                 }
 
                 // Reset to first page

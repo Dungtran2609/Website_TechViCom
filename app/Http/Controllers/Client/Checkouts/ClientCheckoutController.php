@@ -26,7 +26,7 @@ class ClientCheckoutController extends Controller
         );
     }
 
-    public function index()
+    public function index(Request $request)
     {
         file_put_contents(storage_path('logs/debug.txt'), "Checkout method called at " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         file_put_contents(storage_path('logs/debug.txt'), "User logged in: " . (Auth::check() ? 'Yes' : 'No') . "\n", FILE_APPEND);
@@ -154,13 +154,59 @@ class ClientCheckoutController extends Controller
 
         $shippingMethods = ShippingMethod::all();
 
+        // Xử lý áp dụng mã giảm giá nếu có (không dùng API)
+        $appliedCoupon = null;
+        $discountAmount = 0;
+        $couponMessage = null;
+        if ($request->filled('coupon_code')) {
+            $couponCode = $request->input('coupon_code');
+            $coupon = Coupon::where('code', $couponCode)
+                ->where('status', 1)
+                ->where(function($q){
+                    $q->whereNull('deleted_at');
+                })
+                ->where(function($q){
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function($q){
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->first();
+            if ($coupon) {
+                // Kiểm tra điều kiện đơn hàng
+                if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                    $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+                } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                    $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+                } else {
+                    // Tính số tiền giảm
+                    if ($coupon->discount_type === 'percent') {
+                        $discountAmount = $subtotal * ($coupon->value / 100);
+                        if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                            $discountAmount = $coupon->max_discount_amount;
+                        }
+                    } else {
+                        $discountAmount = $coupon->value;
+                    }
+                    $discountAmount = min($discountAmount, $subtotal);
+                    $appliedCoupon = $coupon;
+                    $couponMessage = 'Áp dụng mã thành công!';
+                }
+            } else {
+                $couponMessage = 'Mã giảm giá không hợp lệ hoặc đã hết hạn';
+            }
+        }
+
         return view('client.checkouts.index', compact(
             'cartItems',
             'subtotal',
             'addresses',
             'shippingMethods',
             'currentUser',
-            'defaultAddress'
+            'defaultAddress',
+            'appliedCoupon',
+            'discountAmount',
+            'couponMessage'
         ));
     }
 

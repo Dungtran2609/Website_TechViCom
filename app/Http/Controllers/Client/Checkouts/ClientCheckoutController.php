@@ -679,17 +679,27 @@ class ClientCheckoutController extends Controller
 
             Log::info('VNPAY Return processed', ['vnpay_data' => $vnpayData]);
 
-            if (!$vnpayData['is_valid']) {
-                Log::warning('VNPAY Invalid signature', ['vnpay_data' => $vnpayData]);
-                return redirect()->route('checkout.index')
-                    ->with('error', 'Chữ ký không hợp lệ');
-            }
-
             $order = Order::find($vnpayData['order_id']);
             if (!$order) {
                 Log::error('VNPAY Order not found', ['order_id' => $vnpayData['order_id']]);
                 return redirect()->route('checkout.index')
                     ->with('error', 'Không tìm thấy đơn hàng');
+            }
+
+            // Nếu đơn đã thanh toán hoặc đã xử lý, không cho phép thanh toán lại
+            if ($order->payment_status === 'paid') {
+                return redirect()->route('checkout.success', $order->id)
+                    ->with('success', 'Đơn hàng đã được thanh toán.');
+            }
+            if (!in_array($order->status, ['pending', 'processing'])) {
+                return redirect()->route('checkout.index')
+                    ->with('error', 'Đơn hàng đã được xử lý hoặc không hợp lệ.');
+            }
+
+            if (!$vnpayData['is_valid']) {
+                Log::warning('VNPAY Invalid signature', ['vnpay_data' => $vnpayData]);
+                return redirect()->route('checkout.index')
+                    ->with('error', 'Chữ ký không hợp lệ');
             }
 
             $result = $vnpayService->updateOrderStatus($order, $vnpayData);

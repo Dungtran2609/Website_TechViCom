@@ -237,7 +237,7 @@ class VNPayService
             // Thanh toán thành công
             $order->update([
                 'payment_status' => 'paid',
-                'status' => 'processing',
+                // KHÔNG cập nhật 'status' => 'processing', giữ nguyên status hiện tại
                 'paid_at' => now(),
                 'vnpay_transaction_id' => $vnpayData['transaction_id'] ?? null,
                 'vnpay_bank_code' => $vnpayData['bank_code'] ?? null,

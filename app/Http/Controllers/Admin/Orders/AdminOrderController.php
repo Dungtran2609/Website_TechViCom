@@ -385,16 +385,15 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
         // ====== QUY TẮC MỚI: nếu thanh toán ONLINE đã "paid" thì tự chuyển trạng thái đơn từ pending => processing ======
         // (tránh việc "paid" mà đơn vẫn ở trạng thái pending)
-        $effectivePaymentMethod = $data['payment_method'] ?? $order->payment_method;
-        $isOnlinePayment = in_array($effectivePaymentMethod, self::ONLINE_METHODS, true);
-        if (
-            $isOnlinePayment
-            && ($data['payment_status'] ?? $order->payment_status) === 'paid'
-            && ($data['status'] ?? $order->status) === 'pending'
-        ) {
-            // Nếu người dùng không tự set status thì tự nâng lên processing
-$order->status = 'processing';
-        }
+        // ĐÃ BỎ ĐOẠN NÀY THEO YÊU CẦU KHÁCH HÀNG
+        // if (
+        //     $isOnlinePayment
+        //     && ($data['payment_status'] ?? $order->payment_status) === 'paid'
+        //     && ($data['status'] ?? $order->status) === 'pending'
+        // ) {
+        //     // Nếu người dùng không tự set status thì tự nâng lên processing
+        //     $order->status = 'processing';
+        // }
 
         // Nếu client gửi status rõ ràng thì ưu tiên theo client
         if (!empty($data['status'])) {

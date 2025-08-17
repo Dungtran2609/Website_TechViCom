@@ -103,7 +103,7 @@
                 <div class="text-end">
                     @php
                         $statusConfig = [
-                            'pending' => ['class' => 'bg-warning text-dark', 'text' => 'Chờ xử lý', 'icon' => 'clock'],
+                            'pending' => ['class' => 'bg-warning text-dark', 'text' => 'Đang chờ xử lý', 'icon' => 'clock'],
                             'processing' => ['class' => 'bg-info', 'text' => 'Đang xử lý', 'icon' => 'cog'],
                             'shipped' => ['class' => 'bg-primary', 'text' => 'Đang giao', 'icon' => 'truck'],
                             'delivered' => ['class' => 'bg-success', 'text' => 'Đã giao hàng', 'icon' => 'check-circle'],

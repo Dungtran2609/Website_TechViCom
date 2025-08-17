@@ -60,6 +60,15 @@
 @endpush
 
 @section('content')
+    @if(session('notification'))
+        <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transition-all duration-300
+            @if(session('notification.type') === 'success') bg-green-500
+            @elseif(session('notification.type') === 'error') bg-red-500
+            @else bg-yellow-500 @endif">
+            {{ session('notification.message') }}
+        </div>
+    @endif
+
     @if (session('payment_cancelled_message'))
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 mx-4 mt-4" role="alert"
             data-message="payment-cancelled">

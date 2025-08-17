@@ -99,7 +99,7 @@
 
     <!-- Main header -->
     <div class="container mx-auto px-4 py-3">
-        <div class="flex items-center justify-between flex-wrap lg:flex-nowrap gap-4">
+        <div class="flex items-center justify-between flex-nowrap gap-4">
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
                 <a href="{{ route('home') }}" class="flex items-center">
@@ -108,7 +108,6 @@
                     <span class="text-xl font-bold text-gray-800">Techvicom</span>
                 </a>
             </div>
-
             <!-- Category Menu Button -->
             <div class="ml-2 lg:ml-6">
                 <button id="categoryMenuBtn"
@@ -212,8 +211,35 @@
                 </div>
             </div>
 
-            <!-- Right side buttons -->
-            <div class="flex items-center space-x-2 lg:space-x-3">
+            <!-- Right side buttons: Bell, Quản trị, Admin, Giỏ hàng -->
+            <div class="flex flex-nowrap items-center space-x-2 lg:space-x-3 justify-end">
+                <!-- Bell notification icon -->
+                <div class="relative inline-block">
+                    <button id="notification-btn" class="focus:outline-none">
+                        <i class="fas fa-bell text-2xl"></i>
+                        @if(isset($unreadCount) && $unreadCount > 0)
+                            <span class="absolute -top-2 -right-2 bg-gradient-to-tr from-pink-500 to-orange-400 text-white rounded-full text-xs px-2 py-0.5 font-bold">
+                                {{ $unreadCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <!-- Dropdown notifications -->
+                    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg z-50">
+                        <div class="p-4 border-b font-bold">Thông báo</div>
+                        <ul>
+                            @if(isset($notifications) && count($notifications) > 0)
+                                @foreach($notifications as $noti)
+                                    <li class="px-4 py-2 border-b hover:bg-gray-50 {{ $noti->read_at ? '' : 'font-semibold' }}">
+                                        {{ $noti->data['message'] ?? $noti->data['title'] ?? 'Có thông báo mới' }}
+                                        <div class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($noti->created_at)->diffForHumans() }}</div>
+                                    </li>
+                                @endforeach
+                            @else
+                                <li class="px-4 py-2 text-gray-500">Không có thông báo mới</li>
+                            @endif
+                        </ul>
+                    </div>
+                </div>
                 @auth
                     @if (Auth::user()->hasRole(['admin', 'staff']))
                         <!-- Admin/Staff Quick Access Button -->

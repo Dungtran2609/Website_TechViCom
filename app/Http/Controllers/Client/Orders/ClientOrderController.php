@@ -172,7 +172,7 @@ class ClientOrderController extends Controller {
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_variant_id' => $itm['variant_id'],
+                    'variant_id' => $itm['variant_id'],
                     'quantity' => $itm['quantity'],
                     'price' => $price,
                 ]);
@@ -233,6 +233,7 @@ class ClientOrderController extends Controller {
             ->findOrFail($id);
 
         $order->payment_status = 'paid';
+        // KHÔNG cập nhật status, giữ nguyên 'pending' cho đến khi admin xử lý
         $order->save();
 
         return back()->with('success', 'Đã xác nhận thanh toán!');

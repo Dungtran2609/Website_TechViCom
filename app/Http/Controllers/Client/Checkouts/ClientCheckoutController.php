@@ -364,12 +364,6 @@ class ClientCheckoutController extends Controller
     }
 
 
-
-
-
-
-
-
     public function applyCoupon(Request $request)
     {
         $request->validate([
@@ -608,9 +602,13 @@ class ClientCheckoutController extends Controller
 
             // ===== PHÍ SHIP =====
             $subtotal = $cartItems->sum(fn($i) => ((float) $i->price) * ((int) $i->quantity));
-            $shippingFee = ($request->shipping_method === 'home_delivery')
-                ? (($subtotal >= 3000000) ? 0 : 50000)
-                : 0;
+            $shippingMethodId = $request->shipping_method_id;
+            $shippingFee = 0;
+            if ($shippingMethodId == 1) { // home_delivery
+                $shippingFee = ($subtotal >= 3000000) ? 0 : 50000;
+            } else {
+                $shippingFee = 0;
+            }
 
             // ===== COUPON =====
             $discountAmount = 0;
@@ -671,7 +669,7 @@ class ClientCheckoutController extends Controller
                 'ward' => $wardName,
 
                 'payment_method' => $request->payment_method,
-                'shipping_method_id' => $request->shipping_method_id,
+                'shipping_method_id' => $shippingMethodId,
                 'order_notes' => $request->order_notes,
                 'total_amount' => $subtotal,
                 'shipping_fee' => $shippingFee,
@@ -869,7 +867,7 @@ class ClientCheckoutController extends Controller
             return redirect()->route('checkout.index')->with('error', $msg);
 
         } catch (\Exception $e) {
-            \Log::error('VNPAY Return Error', ['msg' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('VNPAY Return Error', ['msg' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return redirect()->route('checkout.index')
                 ->with('error', 'Có lỗi xảy ra khi xử lý thanh toán. Vui lòng chọn lại phương thức.');
         }
@@ -969,58 +967,83 @@ class ClientCheckoutController extends Controller
         }
     }
 
-    public function applyCoupon(Request $request)
+    protected function calculateCouponDiscount($coupon, $subtotal)
     {
-        try {
-            $couponCode = $request->input('coupon_code');
-            $subtotal = $request->input('subtotal', 0);
+        if (!$coupon || !$coupon->status) return 0;
+        // Kiểm tra ngày hiệu lực
+        $now = now();
+        if ($coupon->start_date && $now->lt($coupon->start_date)) return 0;
+        if ($coupon->end_date && $now->gt($coupon->end_date)) return 0;
+        // Kiểm tra min/max đơn hàng
+        if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) return 0;
+        if ($coupon->max_order_value && $subtotal > $coupon->max_order_value) return 0;
 
-            $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
-            if (!$coupon) {
-                return response()->json(['success' => false, 'message' => 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa']);
+        $discount = 0;
+        if ($coupon->discount_type === 'percent') {
+            $discount = ($subtotal * $coupon->value) / 100;
+            if ($coupon->max_discount_amount && $discount > $coupon->max_discount_amount) {
+                $discount = $coupon->max_discount_amount;
             }
-
-            $now = Carbon::now();
-            if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
-                return response()->json(['success' => false, 'message' => 'Mã giảm giá chưa có hiệu lực']);
-            }
-            if ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
-                return response()->json(['success' => false, 'message' => 'Mã giảm giá đã hết hạn']);
-            }
-            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
-                return response()->json(['success' => false, 'message' => 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫']);
-            }
-            if ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
-                return response()->json(['success' => false, 'message' => 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫']);
-            }
-
-            $discountAmount = 0;
-            if ($coupon->discount_type === 'percent') {
-                $discountAmount = $subtotal * ($coupon->value / 100);
-                if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
-                    $discountAmount = $coupon->max_discount_amount;
-                }
-            } else {
-                $discountAmount = $coupon->value;
-            }
-
-            $discountAmount = min($discountAmount, $subtotal);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Mã giảm giá hợp lệ',
-                'discount_amount' => $discountAmount,
-                'coupon' => [
-                    'code' => $coupon->code,
-                    'discount_type' => $coupon->discount_type,
-                    'value' => $coupon->value,
-                    'max_discount_amount' => $coupon->max_discount_amount,
-                    'min_order_value' => $coupon->min_order_value,
-                    'max_order_value' => $coupon->max_order_value
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra khi xử lý mã giảm giá']);
+        } else {
+            $discount = $coupon->value;
         }
+        // Không vượt quá tổng đơn hàng
+        $discount = min($discount, $subtotal);
+        return (int) $discount;
     }
+
+    // public function applyCoupon(Request $request)
+    // {
+    //     try {
+    //         $couponCode = $request->input('coupon_code');
+    //         $subtotal = $request->input('subtotal', 0);
+
+    //         $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
+    //         if (!$coupon) {
+    //             return response()->json(['success' => false, 'message' => 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa']);
+    //         }
+
+    //         $now = Carbon::now();
+    //         if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+    //             return response()->json(['success' => false, 'message' => 'Mã giảm giá chưa có hiệu lực']);
+    //         }
+    //         if ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+    //             return response()->json(['success' => false, 'message' => 'Mã giảm giá đã hết hạn']);
+    //         }
+    //         if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+    //             return response()->json(['success' => false, 'message' => 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫']);
+    //         }
+    //         if ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+    //             return response()->json(['success' => false, 'message' => 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫']);
+    //         }
+
+    //         $discountAmount = 0;
+    //         if ($coupon->discount_type === 'percent') {
+    //             $discountAmount = $subtotal * ($coupon->value / 100);
+    //             if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+    //                 $discountAmount = $coupon->max_discount_amount;
+    //             }
+    //         } else {
+    //             $discountAmount = $coupon->value;
+    //         }
+
+    //         $discountAmount = min($discountAmount, $subtotal);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Mã giảm giá hợp lệ',
+    //             'discount_amount' => $discountAmount,
+    //             'coupon' => [
+    //                 'code' => $coupon->code,
+    //                 'discount_type' => $coupon->discount_type,
+    //                 'value' => $coupon->value,
+    //                 'max_discount_amount' => $coupon->max_discount_amount,
+    //                 'min_order_value' => $coupon->min_order_value,
+    //                 'max_order_value' => $coupon->max_order_value
+    //             ]
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra khi xử lý mã giảm giá']);
+    //     }
+    // }
 }

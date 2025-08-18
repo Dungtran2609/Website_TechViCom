@@ -244,7 +244,7 @@
                             <div class="space-y-4 mb-8">
                                 @foreach ($shippingMethods->whereIn('id', [1,2]) as $method)
                                     <div class="payment-option border-2 border-gray-300 rounded-lg p-4 {{ $loop->first ? 'selected' : '' }} flex items-center" data-shipping="{{ $method->id }}">
-                                        <input type="radio" id="shipping{{ $method->id }}" name="shipping_method" value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }} class="mr-3 accent-orange-500">
+                                        <input type="radio" id="shipping{{ $method->id }}" name="shipping_method_id" value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }} class="mr-3 accent-orange-500">
                                         <div class="flex-1">
                                             <label for="shipping{{ $method->id }}" class="font-medium cursor-pointer">{{ $method->name }}</label>
                                             <p class="text-sm text-gray-600">{{ $method->description }}</p>
@@ -614,7 +614,7 @@
         function updateCheckoutTotal() {
             const subtotal = Number(window.checkoutSubtotal || 0);
             const discount = Number(window.checkoutDiscount || 0);
-            const method = document.querySelector('input[name="shipping_method"]:checked')?.value || '1';
+            const method = document.querySelector('input[name="shipping_method_id"]:checked')?.value || '1';
             let shipping = 0;
             if (method == '1') {
                 shipping = subtotal >= 3000000 ? 0 : 50000;
@@ -646,7 +646,7 @@
                 window.checkoutSubtotal = subtotal;
                 window.checkoutDiscount = 0;
                 window.currentStep = 1;
-                window.checkoutShippingMethod = document.querySelector('input[name="shipping_method"]:checked')
+                window.checkoutShippingMethod = document.querySelector('input[name="shipping_method_id"]:checked')
                     ?.value || 'home_delivery';
 
                 try {
@@ -860,7 +860,7 @@
                                       <div><strong>Khu vực:</strong> ${ward}, ${district}, ${province}</div>`;
 
                     const shipping = document.getElementById('shipping-summary');
-                    const sm = document.querySelector('input[name="shipping_method"]:checked');
+                    const sm = document.querySelector('input[name="shipping_method_id"]:checked');
                     let shippingText = 'Chưa chọn';
                     if (sm && window.shippingMethods) {
                         shippingText = window.shippingMethods[sm.value] || 'Chưa chọn';
@@ -889,9 +889,9 @@
                 }
 
                 function setupShippingMethodListeners() {
-                    document.querySelectorAll('input[name="shipping_method"]').forEach(r => {
+                    document.querySelectorAll('input[name="shipping_method_id"]').forEach(r => {
                         r.addEventListener('change', () => {
-                            window.checkoutShippingMethod = r.value || 'home_delivery';
+                            window.checkoutShippingMethod = r.value || '1';
                             updateCheckoutTotal();
                         });
                     });
@@ -1118,7 +1118,7 @@
         function submitOrder() {
             var selected = document.querySelector('input[name="selected_address"]:checked');
             const paymentEl = document.querySelector('input[name="payment_method"]:checked');
-            const shippingEl = document.querySelector('input[name="shipping_method"]:checked');
+            const shippingEl = document.querySelector('input[name="shipping_method_id"]:checked');
             if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
             if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
 

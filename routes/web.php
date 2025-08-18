@@ -31,6 +31,7 @@ use App\Http\Controllers\WebhookController;
 
 // --- Controllers cho CLIENT ---
 use App\Http\Controllers\Client\HomeController;
+use App\Http\Controllers\Client\ChatbotController;
 use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductController;
 use App\Http\Controllers\Client\Products\ClientProductCommentController;
@@ -52,6 +53,12 @@ use App\Http\Middleware\CheckPermission;
 
 
 // Trang chủ client
+Route::get('/phpinfo', function () {
+    phpinfo();
+});
+//Route cho chatbot
+Route::post('/chatbot-send-message', [ChatbotController::class, 'sendMessage'])->name('chatbot.send');
+
 // Test route to add product to cart
 Route::get('/test-add-to-cart', function () {
     $cart = session()->get('cart', []);
@@ -367,7 +374,6 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/apply-coupon', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
     Route::post('/process', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'process'])->name('process');
     Route::get('/success/{orderId}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'success'])->name('success');
-    
 });
 
 // Route riêng cho success để test

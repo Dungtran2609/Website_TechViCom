@@ -12,12 +12,22 @@ use App\Models\ShippingMethod;
 use App\Models\Coupon;
 use App\Services\VNPayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ClientCheckoutController extends Controller
 {
+    public function __construct()
+    {
+        file_put_contents(
+            storage_path('logs/debug.txt'),
+            "Controller constructor called at " . date('Y-m-d H:i:s') . "\n",
+            FILE_APPEND
+        );
+    }
+
     /** Map tên tỉnh cho code (Hà Nội). */
     private function provinceNameByCode(?string $code): string
     {
@@ -46,10 +56,14 @@ class ClientCheckoutController extends Controller
         return $code ?? '';
     }
 
-
-
     public function index(Request $request)
     {
+        file_put_contents(storage_path('logs/debug.txt'), "Checkout method called at " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
+        file_put_contents(storage_path('logs/debug.txt'), "User logged in: " . (Auth::check() ? 'Yes' : 'No') . "\n", FILE_APPEND);
+        if (Auth::check()) {
+            file_put_contents(storage_path('logs/debug.txt'), "User ID: " . Auth::id() . "\n", FILE_APPEND);
+        }
+
         if ($request->has('clear_restored_coupon')) {
             session()->forget('restored_coupon');
         }
@@ -292,7 +306,49 @@ class ClientCheckoutController extends Controller
         }
 
         $shippingMethods = ShippingMethod::all();
-        $restoredCoupon = session('restored_coupon');
+
+        // Xử lý áp dụng mã giảm giá nếu có (không dùng API)
+        $appliedCoupon = null;
+        $discountAmount = 0;
+        $couponMessage = null;
+        if ($request->filled('coupon_code')) {
+            $couponCode = $request->input('coupon_code');
+            $coupon = Coupon::where('code', $couponCode)
+                ->where('status', 1)
+                ->where(function($q){
+                    $q->whereNull('deleted_at');
+                })
+                ->where(function($q){
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function($q){
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->first();
+            if ($coupon) {
+                // Kiểm tra điều kiện đơn hàng
+                if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                    $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+                } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                    $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+                } else {
+                    // Tính số tiền giảm
+                    if ($coupon->discount_type === 'percent') {
+                        $discountAmount = $subtotal * ($coupon->value / 100);
+                        if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                            $discountAmount = $coupon->max_discount_amount;
+                        }
+                    } else {
+                        $discountAmount = $coupon->value;
+                    }
+                    $discountAmount = min($discountAmount, $subtotal);
+                    $appliedCoupon = $coupon;
+                    $couponMessage = 'Áp dụng mã thành công!';
+                }
+            } else {
+                $couponMessage = 'Mã giảm giá không hợp lệ hoặc đã hết hạn';
+            }
+        }
 
         return view('client.checkouts.index', compact(
             'cartItems',
@@ -301,11 +357,72 @@ class ClientCheckoutController extends Controller
             'shippingMethods',
             'currentUser',
             'defaultAddress',
-            'restoredCoupon'
+            'appliedCoupon',
+            'discountAmount',
+            'couponMessage',
         ));
     }
 
 
+
+
+
+
+
+
+    public function applyCoupon(Request $request)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string',
+            'subtotal' => 'required|numeric|min:0',
+        ]);
+
+        $coupon = Coupon::where('code', $request->coupon_code)
+            ->where('status', 1)
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
+            ]);
+        }
+
+        $subtotal = $request->subtotal;
+        $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
+
+        if ($discountAmount <= 0) {
+            // Lý do có thể: chưa đạt min, vượt max, hết hạn, v.v.
+            $msg = 'Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá';
+            if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                $msg = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+            } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                $msg = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+            }
+            return response()->json([
+                'success' => false,
+                'message' => $msg
+            ]);
+        }
+
+        $discountAmount = 0.0;
+        if ($coupon->discount_type === 'percent') {
+            $discountAmount = ($subtotal * $coupon->value) / 100;
+            if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                $discountAmount = (float) $coupon->max_discount_amount;
+            }
+        } else {
+            $discountAmount = (float) $coupon->value;
+        }
+
+        return response()->json([
+            'success' => true,
+            'discount_amount' => $discountAmount,
+            'coupon' => $coupon,
+        ]);
+    }
 
     public function process(Request $request)
     {

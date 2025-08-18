@@ -666,6 +666,9 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::put('{id}/restore', [AdminCouponController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('forceDelete');
     });
+
+    // promotions (chương trình khuyến mãi)
+    Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
 });
 
 // =========================================================================
@@ -679,6 +682,15 @@ Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->nam
 // Các route upload hoặc route đặc biệt khác có thể đặt ở đây
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
 Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
+
+// đăng nhập google vs facebook
+use App\Http\Controllers\Auth\SocialController;
+
+Route::get('auth/google', [SocialController::class, 'redirectToGoogle']);
+Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+
+Route::get('auth/facebook', [SocialController::class, 'redirectToFacebook']);
+Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCallback']);
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';

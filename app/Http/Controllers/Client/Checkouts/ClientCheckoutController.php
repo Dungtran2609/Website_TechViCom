@@ -616,6 +616,15 @@ class ClientCheckoutController extends Controller
             if (!empty($request->coupon_code)) {
                 $couponCode = $request->coupon_code;
                 $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
+                if ($coupon && $coupon->max_usage_per_user > 0 && Auth::check()) {
+                    $usedCount = \App\Models\Order::where('user_id', Auth::id())
+                        ->where('coupon_code', $coupon->code)
+                        ->whereNull('deleted_at')
+                        ->count();
+                    if ($usedCount >= $coupon->max_usage_per_user) {
+                        return redirect()->route('checkout.index')->with('error', 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.');
+                    }
+                }
                 if ($coupon) {
                     $now = Carbon::now();
                     if (

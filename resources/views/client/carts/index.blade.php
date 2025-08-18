@@ -168,42 +168,19 @@
               </div>
 
               <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Mã giảm giá</label>
-                <div class="flex items-center gap-2">
-                  <input type="text" id="discount-code" placeholder="Nhập mã giảm giá"
-                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#ff6c2f] text-sm shadow-sm">
-                  <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-3 py-2 rounded-full hover:bg-orange-500 transition flex items-center gap-1 text-sm shadow disabled:opacity-50" disabled>
-                    <i class="fas fa-check"></i> Áp dụng
-                  </button>
-                </div>
-                @if(isset($availableCoupons) && count($availableCoupons))
-                  <div class="mt-3 grid gap-2 max-h-36 overflow-y-auto">
-                    @foreach($availableCoupons as $coupon)
-                      @php
-                        $canUse = now()->between($coupon->start_date, $coupon->end_date);
-                      @endphp
-                      <div class="flex items-center justify-between p-2 rounded-lg border transition group {{ $coupon->can_apply ? 'hover:bg-orange-50 border-orange-200 cursor-pointer' : 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed pointer-events-none' }}"
-                           @if($coupon->can_apply) onclick="document.getElementById('discount-code').value='{{ $coupon->code }}'" @endif>
-                        <div class="flex flex-col">
-                          <span class="font-mono text-xs font-bold text-orange-600 group-hover:underline">{{ $coupon->code }}</span>
-                          <span class="text-xs text-gray-700">{{ $coupon->description ?? $coupon->name ?? '' }}</span>
-                          <span class="text-xs text-gray-500">
-                            @if($coupon->discount_type === 'percent')
-                              Giảm {{ $coupon->discount_value }}%
-                            @else
-                              Giảm {{ number_format($coupon->discount_value, 0, ',', '.') }}₫
-                            @endif
-                          </span>
-                        </div>
-                        @if($canUse)
-                          <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                        @else
-                          <i class="fas fa-times-circle text-gray-400 text-lg"></i>
-                        @endif
-                      </div>
-                    @endforeach
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Mã giảm giá</label>
+                  <div class="flex items-center gap-2 flex-wrap">
+                      <input type="text" id="discount-code" placeholder="Nhập mã giảm giá"
+                             class="flex-1 px-2 py-1 border border-gray-300 rounded-full focus:outline-none focus:border-[#ff6c2f] text-xs shadow-sm max-w-[140px]">
+                      <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-2 py-1 rounded-full hover:bg-orange-500 transition flex items-center gap-1 text-xs shadow disabled:opacity-50" style="min-width: 60px; height: 28px;" disabled>
+                          <i class="fas fa-check text-xs"></i> Áp dụng
+                      </button>
+                      <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCart()" class="text-xs text-orange-600 underline">Danh sách</button>
                   </div>
-                @endif
+                  <div id="cart-coupon-message" class="mt-1 text-xs"></div>
+                  <div id="cart-available-coupons" class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 text-xs">
+                      <!-- Danh sách mã sẽ render ở đây -->
+                  </div>
               </div>
 
               <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4" id="checkout-all-btn">
@@ -457,6 +434,76 @@ function handleIncreaseQuantity(id, current, stock) {
   } else {
     showToast('Đã đạt tối đa tồn kho!');
   }
+}
+
+function toggleCouponListCart() {
+    const box = document.getElementById('cart-available-coupons');
+    const btn = document.getElementById('toggle-coupon-list');
+    if (!box || !btn) return;
+    if (box.classList.contains('hidden')) {
+        loadAvailableCouponsCart();
+        box.classList.remove('hidden');
+        btn.textContent = 'Ẩn';
+    } else {
+        box.classList.add('hidden');
+        btn.textContent = 'Danh sách';
+    }
+}
+function loadAvailableCouponsCart() {
+    const box = document.getElementById('cart-available-coupons');
+    if (!box) return;
+    const subtotal = calcSubtotal();
+    fetch(`/api/coupons?subtotal=${subtotal}`).then(r => r.json()).then(data => {
+        if (!data.success) {
+            box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+            return;
+        }
+        if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
+            box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>';
+            return;
+        }
+        const applied = (() => {
+            try {
+                const s = JSON.parse(localStorage.getItem('appliedDiscount'));
+                return s && s.code ? s.code : null;
+            } catch {
+                return null;
+            }
+        })();
+        box.innerHTML = data.coupons.map(c => {
+            const can = c.eligible;
+            const cls = can ? 'border border-green-300 bg-white hover:border-orange-500 cursor-pointer transition' :
+                'border border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
+            const selectedCls = applied && applied.toUpperCase() === c.code.toUpperCase() ?
+                'border-2 border-orange-500 coupon-selected shadow' : '';
+            return `<div class="coupon-item flex items-center justify-between rounded-lg p-2 mb-1 ${cls} ${selectedCls}" data-code="${c.code}" data-eligible="${can}">
+                <div class='flex flex-col'>
+                    <span class='font-mono text-xs font-bold text-orange-600 group-hover:underline'>${c.code}</span>
+                    <span class='text-[11px] text-gray-500'>${c.discount_type === 'percent' ? `Giảm ${c.value}%` : `Giảm ${Number(c.value).toLocaleString()}₫`}</span>
+                    ${c.reason ? `<span class='text-[10px] text-red-500 mt-1'>${c.reason}</span>` : ''}
+                </div>
+                <div>
+                    ${applied && applied.toUpperCase() === c.code.toUpperCase() ? '<i class="fas fa-check-circle text-green-500 text-base"></i>' : (can ? '<i class="fas fa-tag text-orange-400 text-xs"></i>' : '')}
+                </div>
+            </div>`;
+        }).join('');
+        box.querySelectorAll('.coupon-item').forEach(div => {
+            div.addEventListener('click', () => {
+                if (div.dataset.eligible !== 'true') return;
+                box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el.classList.remove('coupon-selected', 'border-orange-500', 'border-2', 'shadow'));
+                div.classList.add('coupon-selected', 'border-orange-500', 'border-2', 'shadow');
+                const input = document.getElementById('discount-code');
+                const msg = document.getElementById('cart-coupon-message');
+                if (input) input.value = div.dataset.code;
+                if (msg) {
+                    msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận';
+                    msg.className = 'mt-1 text-xs text-gray-600';
+                }
+            });
+        });
+    }).catch(() => {
+        box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>';
+    });
 }
 
 // ===== Init =====

@@ -352,28 +352,6 @@
                                     </div>
                                     <div class="flex items-center justify-between">
                                         <div>
-<<<<<<< HEAD
-                                            @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                                @php $variant = $product->variants->first(); @endphp
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                            @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                                @php
-                                                    $minPrice = $product->variants->min('price');
-                                                    $maxPrice = $product->variants->max('price');
-                                                @endphp
-                                                @if ($minPrice === $maxPrice)
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                                @else
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                        - {{ number_format($maxPrice) }}₫</span>
-                                                @endif
-                                            @else
-                                                <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
-                                            @endif
-=======
                                             @php
                                                 $displayPrice = null;
                                                 $minPrice = null;
@@ -414,7 +392,6 @@
                                                 }
                                             @endphp
                                             {!! $displayPrice !!}
->>>>>>> origin/dung
                                         </div>
                                         {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
                                     </div>

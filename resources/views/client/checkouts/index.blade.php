@@ -1151,7 +1151,7 @@
                 formData.append('district', district);
                 formData.append('ward', ward);
             }
-            formData.append('shipping_method_id', shippingEl.value); // value là id (1 hoặc 2)
+            formData.append('shipping_method', shippingEl.value); // value là id (1 hoặc 2)
             formData.append('payment_method', paymentEl.value);
             formData.append('order_notes', document.getElementById('order-notes').value || '');
             const couponInput = document.getElementById('checkout-coupon-code');

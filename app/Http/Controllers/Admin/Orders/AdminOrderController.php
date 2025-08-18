@@ -81,7 +81,7 @@ class AdminOrderController extends Controller
             $district = $order->address->district ?? '';
             $ward = $order->address->ward ?? '';
             $address = $order->address->address_line ?? '';
-} else {
+        } else {
             $city = $district = $ward = $address = '';
         }
 
@@ -150,7 +150,7 @@ class AdminOrderController extends Controller
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
             'payment_status' => $order->payment_status,
             'payment_status_vietnamese' => $paymentStatusMap[$order->payment_status] ?? $order->payment_status,
-'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
+            'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
@@ -227,7 +227,7 @@ class AdminOrderController extends Controller
         ];
 
         // subtotal theo dữ liệu hiện tại
-$subtotal = $order->orderItems->sum(function ($item) {
+        $subtotal = $order->orderItems->sum(function ($item) {
             return (float) ($item->total_price ?? (($item->price ?? ($item->productVariant->sale_price ?? $item->productVariant->price ?? 0)) * $item->quantity));
         });
 
@@ -280,7 +280,7 @@ $subtotal = $order->orderItems->sum(function ($item) {
 
     /* ========================= UPDATE ========================= */
     public function updateOrders(Request $request, int $id)
-{
+    {
         $order = Order::with('orderItems.productVariant')->findOrFail($id);
         $oldStatus = $order->status;
 
@@ -346,7 +346,7 @@ $subtotal = $order->orderItems->sum(function ($item) {
         // Coupon: ưu tiên id, sau đó code
         if (isset($data['coupon_id'])) {
             $order->coupon_id = $data['coupon_id'];
-$order->coupon_code = Coupon::find($data['coupon_id'])?->code;
+            $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         } elseif (!empty($data['coupon_code'])) {
             $order->coupon_code = $data['coupon_code'];
             $order->coupon_id = Coupon::where('code', $data['coupon_code'])->value('id');
@@ -471,7 +471,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
                 'coupon_discount' => (int) ($order->discount_amount ?? $order->coupon_discount ?? 0),
                 'final_total' => (int) ($order->final_total ?? ($subtotal + (int) ($order->shipping_fee ?? 0) - (int) ($order->discount_amount ?? 0))),
                 'status' => $order->status,
-'status_vietnamese' => [
+                'status_vietnamese' => [
                     'pending' => 'Đang chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'shipped' => 'Đang giao hàng',
@@ -535,7 +535,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
                 'id' => $ret->id,
                 'order_id' => $order->id,
                 'user_name' => $order->user->name ?? 'Khách vãng lai',
-'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
+                'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
                 'type' => $ret->type,
                 'status' => $ret->status,
                 'status_vietnamese' => [
@@ -601,7 +601,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         }
 
         $ret->save();
-$msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
+        $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
         return redirect()->route('admin.orders.returns')->with('success', "Yêu cầu $msg");
     }
 }

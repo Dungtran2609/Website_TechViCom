@@ -165,13 +165,19 @@
 
               <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Mã giảm giá</label>
-                <div class="flex items-center">
+                <div class="flex justify-between items-center mb-1">
+                  <span></span>
+                  <button type="button" id="toggle-coupon-list" class="text-xs text-orange-600 underline">Danh sách</button>
+                </div>
+                <div class="flex items-center mb-1">
                   <input type="text" id="discount-code" placeholder="Nhập mã giảm giá"
                          class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:border-[#ff6c2f]">
-                  <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-4 py-2 rounded-r-lg hover:bg-[#ff6c2f] transition" disabled>
+                  <button type="button" id="apply-coupon-btn" class="bg-[#ff6c2f] text-white px-3 py-1.5 rounded-r-lg hover:bg-[#ff6c2f] transition text-xs font-semibold h-8 min-w-[60px]" disabled>
                     Áp dụng
                   </button>
                 </div>
+                <div id="cart-coupon-message" class="mt-1 text-xs"></div>
+                <div id="cart-available-coupons" class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs"></div>
               </div>
 
               <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4" id="checkout-all-btn">
@@ -411,6 +417,77 @@ function initSelectionFeatures(){
   refresh();
 }
 
+function toggleCouponListCart() {
+  const box = document.getElementById('cart-available-coupons');
+  const btn = document.getElementById('toggle-coupon-list');
+  if (!box || !btn) return;
+  if (box.classList.contains('hidden')) {
+    loadAvailableCouponsCart();
+    box.classList.remove('hidden');
+    btn.textContent = 'Ẩn';
+  } else {
+    box.classList.add('hidden');
+    btn.textContent = 'Danh sách';
+  }
+}
+function loadAvailableCouponsCart() {
+  const box = document.getElementById('cart-available-coupons');
+  if (!box) return;
+  const subtotal = calcSubtotal();
+  fetch(`/api/coupons?subtotal=${subtotal}`).then(r => r.json()).then(data => {
+    if (!data.success) {
+      box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+      return;
+    }
+    if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
+      box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>';
+      return;
+    }
+    const applied = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('appliedDiscount'));
+        return s && s.code ? s.code : null;
+      } catch {
+        return null;
+      }
+    })();
+    box.innerHTML = data.coupons.map(c => {
+      const can = c.eligible;
+      const cls = can ? 'border-green-300 bg-white hover:border-orange-500 cursor-pointer' :
+        'border-gray-200 bg-gray-100 opacity-60 cursor-not-allowed';
+      const line = c.discount_type === 'percent' ? `Giảm ${c.value}%` :
+        `Giảm ${Number(c.value).toLocaleString()}₫`;
+      const reason = c.reason ? `(<span class='text-red-500'>${c.reason}</span>)` : '';
+      const selectedCls = applied && applied.toUpperCase() === c.code.toUpperCase() ?
+        'border-orange-500 coupon-selected' : '';
+      return `<div class="coupon-item border rounded p-2 ${cls} ${selectedCls}" data-code="${c.code}" data-eligible="${can}">
+        <div class='flex justify-between items-center'>
+          <span class='font-semibold'>${c.code}</span>
+          <span class='text-orange-600 font-medium'>${line}</span>
+        </div>
+        <div class='text-[10px] text-gray-600 mt-1'>${reason}</div>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('.coupon-item').forEach(div => {
+      div.addEventListener('click', () => {
+        if (div.dataset.eligible !== 'true') return;
+        box.querySelectorAll('.coupon-item.coupon-selected').forEach(el => el
+          .classList.remove('coupon-selected', 'border-orange-500'));
+        div.classList.add('coupon-selected', 'border-orange-500');
+        const input = document.getElementById('discount-code');
+        const msg = document.getElementById('cart-coupon-message');
+        if (input) input.value = div.dataset.code;
+        if (msg) {
+          msg.textContent = 'Đã chọn mã, bấm Áp dụng để xác nhận';
+          msg.className = 'mt-1 text-xs text-gray-600';
+        }
+      });
+    });
+  }).catch(() => {
+    box.innerHTML = '<p class="text-red-500">Lỗi tải mã</p>';
+  });
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', ()=>{
   renderSummary();
@@ -422,6 +499,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('delete-selected-btn')?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); deleteSelected(); });
   document.getElementById('checkout-all-btn')?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); proceedToCheckout(); });
   document.getElementById('checkout-selected-btn')?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); proceedToCheckoutSelected(); });
+  document.getElementById('toggle-coupon-list')?.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); toggleCouponListCart(); });
 });
 </script>
 @endsection

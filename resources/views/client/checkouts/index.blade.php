@@ -113,6 +113,12 @@
         </div>
     @endif
 
+    @if(isset($orderVnpayCancelCount) && $orderVnpayCancelCount >= 3)
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 mx-4 mt-4" role="alert">
+            <strong>Thông báo:</strong> Bạn đã hủy thanh toán VNPay quá 3 lần. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) để tiếp tục đặt hàng.
+        </div>
+    @endif
+
     {{-- Header dùng chung --}}
     <div id="shared-header-container" class="no-print"></div>
 
@@ -152,6 +158,9 @@
                 <form id="checkout-form" class="space-y-6">
                     @csrf
                     <input type="hidden" id="selected-input" name="selected" value="{{ request('selected') }}">
+                    @if(request('order_id'))
+                        <input type="hidden" name="order_id" value="{{ request('order_id') }}">
+                    @endif
                     {{-- STEP 1 --}}
                     <div id="checkout-step-1" class="checkout-content">
                         <div class="bg-white rounded-lg shadow-md p-6">
@@ -242,7 +251,7 @@
                             <h3 class="text-xl font-semibold mb-6">Phương thức vận chuyển</h3>
                             <div class="space-y-4 mb-8">
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 selected flex items-center" data-shipping="home_delivery">
-                                    <input type="radio" id="shipping1" name="shipping_method" value="home_delivery" checked class="mr-3 accent-orange-500">
+                                    <input type="radio" id="shipping1" name="shipping_method_id" value="1" checked class="mr-3 accent-orange-500">
                                     <div class="flex-1">
                                         <label for="shipping1" class="font-medium cursor-pointer">Giao hàng tận nơi</label>
                                         <p class="text-sm text-gray-600">Nhân viên giao hàng sẽ liên hệ và giao tận địa chỉ bạn cung cấp.</p>
@@ -250,7 +259,7 @@
                                     <i class="fas fa-truck text-orange-600 text-xl"></i>
                                 </div>
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center" data-shipping="store_pickup">
-                                    <input type="radio" id="shipping2" name="shipping_method" value="store_pickup" class="mr-3 accent-orange-500">
+                                    <input type="radio" id="shipping2" name="shipping_method_id" value="2" class="mr-3 accent-orange-500">
                                     <div class="flex-1">
                                         <label for="shipping2" class="font-medium cursor-pointer">Nhận hàng tại cửa hàng</label>
                                         <p class="text-sm text-gray-600">Bạn sẽ đến cửa hàng Techvicom để nhận sản phẩm.</p>
@@ -268,8 +277,8 @@
                                     </div>
                                     <i class="fas fa-money-bill-wave text-orange-600 text-xl"></i>
                                 </div>
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center" data-payment="bank_transfer">
-                                    <input type="radio" id="banking" name="payment_method" value="bank_transfer" class="mr-3 accent-orange-500">
+                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center @if(isset($orderVnpayCancelCount) && $orderVnpayCancelCount >= 3) opacity-50 pointer-events-none @endif" data-payment="bank_transfer">
+                                    <input type="radio" id="banking" name="payment_method" value="bank_transfer" class="mr-3 accent-orange-500" @if(isset($orderVnpayCancelCount) && $orderVnpayCancelCount >= 3) disabled @endif>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
@@ -642,8 +651,8 @@
                 window.checkoutSubtotal = subtotal;
                 window.checkoutDiscount = 0;
                 window.currentStep = 1;
-                window.checkoutShippingMethod = document.querySelector('input[name="shipping_method"]:checked')
-                    ?.value || 'home_delivery';
+                window.checkoutShippingMethod = document.querySelector('input[name="shipping_method_id"]:checked')
+                    ?.value || '1'; // Default to 1 for home delivery
 
                 try {
                     const saved = JSON.parse(localStorage.getItem('appliedDiscount') || 'null');
@@ -847,9 +856,9 @@
                                       <div><strong>Khu vực:</strong> ${ward}, ${district}, ${province}</div>`;
 
                     const shipping = document.getElementById('shipping-summary');
-                    const sm = document.querySelector('input[name="shipping_method"]:checked');
-                    let shippingText = sm?.value === 'home_delivery' ? 'Giao hàng tận nơi' :
-                        sm?.value === 'store_pickup' ? 'Nhận hàng tại cửa hàng' : 'Chưa chọn';
+                    const sm = document.querySelector('input[name="shipping_method_id"]:checked');
+                    let shippingText = sm?.value === '1' ? 'Giao hàng tận nơi' :
+                        sm?.value === '2' ? 'Nhận hàng tại cửa hàng' : 'Chưa chọn';
                     shipping.innerHTML = `<div><strong>Phương thức:</strong> ${shippingText}</div>`;
 
                     const pay = document.getElementById('payment-summary');
@@ -874,9 +883,9 @@
                 }
 
                 function setupShippingMethodListeners() {
-                    document.querySelectorAll('input[name="shipping_method"]').forEach(r => {
+                    document.querySelectorAll('input[name="shipping_method_id"]').forEach(r => {
                         r.addEventListener('change', () => {
-                            window.checkoutShippingMethod = r.value || 'home_delivery';
+                            window.checkoutShippingMethod = r.value || '1'; // Default to 1 for home delivery
                             updateCheckoutTotal();
                         });
                     });
@@ -1103,7 +1112,7 @@
         function submitOrder() {
             var selected = document.querySelector('input[name="selected_address"]:checked');
             const paymentEl = document.querySelector('input[name="payment_method"]:checked');
-            const shippingEl = document.querySelector('input[name="shipping_method"]:checked');
+            const shippingEl = document.querySelector('input[name="shipping_method_id"]:checked');
             if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
             if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
 
@@ -1145,7 +1154,7 @@
             formData.append('ward_code', ward);
         }
 
-        formData.append('shipping_method', shippingEl.value);
+        formData.append('shipping_method_id', shippingEl.value);
         formData.append('payment_method', paymentEl.value);
         formData.append('order_notes', document.getElementById('order-notes').value || '');
 
@@ -1166,6 +1175,13 @@
             }
         }
         formData.append('selected', selectedVal);
+
+        // === FIX: LUÔN LẤY order_id TỪ URL ===
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
+        if (orderId) {
+            formData.append('order_id', orderId);
+        }
 
         const form = document.createElement('form');
         form.method = 'POST';

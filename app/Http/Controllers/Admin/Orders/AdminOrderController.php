@@ -609,6 +609,8 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         if ($action === 'approve') {
             $ord = $ret->order;
             if ($ret->type === 'cancel' && $ord->status === 'pending') {
+                // Cộng lại tồn kho khi duyệt hủy đơn
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($ord);
                 $ord->status = 'cancelled';
             } elseif ($ret->type === 'return' && $ord->status === 'delivered') {
                 $ord->status = 'returned';

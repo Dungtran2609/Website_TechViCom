@@ -5,8 +5,8 @@
 @push('styles')
     <style>
         .category-card-pro {
-            transition: transform .28s cubic-bezier(.4, 2, .6, 1), box-shadow .28s ease;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, .07);
+            transition: all 0.3s cubic-bezier(.4, 2, .6, 1);
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.07);
             border-radius: 1.25rem;
             overflow: hidden;
             background: #fff;
@@ -14,65 +14,122 @@
             flex-direction: column;
             height: 100%;
             position: relative;
-            will-change: transform;
-            backface-visibility: hidden;
-            border: 1px solid #f1f1f1;
         }
 
         .category-card-pro:hover {
             transform: translateY(-6px) scale(1.03);
-            box-shadow: 0 8px 32px rgba(255, 108, 47, .15);
+            box-shadow: 0 8px 32px 0 rgba(255, 108, 47, 0.15);
             border-color: #ff6c2f;
         }
 
-        /* === Khung ảnh giống FPT === */
-        .category-img-wrap {
+        .category-img-pro {
             width: 100%;
-            height: 170px;
-            /* desktop */
+            height: 140px;
+            object-fit: cover;
             background: #f7f7f7;
             border-bottom: 1px solid #f1f1f1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
-            /* tránh sát mép */
         }
 
-        .category-img-pro {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            /* không cắt ảnh, giống FPT */
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-            transform: translateZ(0);
+        .category-badge-pro {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: #ff6c2f;
+            color: #fff;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            z-index: 2;
         }
 
-        @media (max-width: 640px) {
-            .category-img-wrap {
-                height: 140px;
-            }
-
-            /* mobile */
+        .category-products-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #0052cc;
+            color: #fff;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            z-index: 2;
         }
 
-        .category-title {
+        .category-card-pro .category-title {
             font-size: 1.15rem;
             font-weight: 700;
-            margin-bottom: .5rem;
+            margin-bottom: 0.5rem;
             color: #222;
             text-align: center;
         }
 
-        .category-footer {
+        .category-card-pro .category-children {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-card-pro .category-children span {
+            background: #f3f4f6;
+            color: #555;
+            font-size: 0.85rem;
+            padding: 0.15rem 0.6rem;
+            border-radius: 9999px;
+        }
+
+        .category-card-pro .category-footer {
             margin-top: auto;
-            padding: 1rem 1.5rem 1.25rem;
+            padding: 1rem 1.5rem 1.25rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+        }
+
+        .category-card-pro .category-link {
+            color: #ff6c2f;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: color 0.2s;
+        }
+
+        .category-card-pro .category-link:hover {
+            color: #0052cc;
+        }
+
+        .category-search-bar {
+            max-width: 420px;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 9999px;
+            box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+            padding: 0.5rem 1.25rem;
+            border: 1px solid #eee;
+        }
+
+        .category-search-bar input {
+            border: none;
+            outline: none;
+            background: transparent;
+            flex: 1;
+            font-size: 1rem;
+            padding: 0.5rem 0;
+        }
+
+        .category-search-bar button {
+            background: none;
+            border: none;
+            color: #ff6c2f;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 0.5rem;
         }
     </style>
 @endpush
@@ -90,7 +147,7 @@
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                        <i class="fas fa-hevron-right text-gray-400 mx-2"></i>
                         <span class="text-sm font-medium text-gray-500">Tất cả danh mục</span>
                     </div>
                 </li>
@@ -105,31 +162,32 @@
             </p>
         </div>
 
+
         <!-- Categories Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-7">
             @forelse($categories as $category)
                 <div class="category-card-pro group relative">
-                    <a href="{{ route('categories.show', $category->slug) }}" class="block h-full"
-                        aria-label="Mở danh mục {{ $category->name }}">
-                        <div class="category-img-wrap">
-                            @if ($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
-                                    class="category-img-pro" loading="lazy" decoding="async"
-                                    onerror="this.onerror=null;this.src='{{ asset('client_css/images/category-default.jpg') }}';">
-                            @else
-                                <img src="{{ asset('client_css/images/category-default.jpg') }}" alt="{{ $category->name }}"
-                                    class="category-img-pro">
-                            @endif
-                        </div>
+                    <a href="{{ route('categories.show', $category->slug) }}" class="block h-full">
+                        @if ($category->image)
+                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
+                                class="category-img-pro">
+                        @else
+                            <img src="{{ asset('client_css/images/category-default.jpg') }}" alt="{{ $category->name }}"
+                                class="category-img-pro">
+                        @endif
+                        <span class="category-badge-pro">{{ $category->children_count }} danh mục con</span>
 
                         <div class="px-4 pt-4 pb-2">
                             <div class="category-title group-hover:text-[#ff6c2f] transition">{{ $category->name }}</div>
+                            @if ($category->children_count > 0)
+                                <div class="category-children mb-2">
+                                    @foreach ($category->children->take(3) as $child)
+                                        <span>{{ $child->name }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
 
-                        <div class="category-footer px-4 pb-3 pt-1">
-                            <span class="text-xs text-gray-400">{{ number_format($category->children_count) }} danh mục
-                                con</span>
-                        </div>
                     </a>
                 </div>
             @empty
@@ -143,7 +201,7 @@
             @endforelse
         </div>
 
-        <!-- CTA giữ nguyên -->
+        <!-- Call to Action -->
         @if ($categories->count() > 0)
             <div class="text-center mt-12">
                 <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-8 text-white">

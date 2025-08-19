@@ -182,7 +182,8 @@
                                             @foreach ($addresses as $address)
                                                 <label class="flex items-center space-x-2 cursor-pointer">
                                                     <input type="radio" name="selected_address" value="{{ $address->id }}" @if ($loop->first) checked @endif onchange="toggleAddressForm(false)"
-                                                        data-ward="{{ $address->ward }}" data-district="{{ $address->district }}" data-city="{{ $address->city }}" data-address="{{ $address->address_line }}">
+                                                        data-ward="{{ $address->ward }}" data-district="{{ $address->district }}" data-city="{{ $address->city }}" data-address="{{ $address->address_line }}"
+                                                        data-province-code="01" data-district-code="{{ $address->district_code ?? '' }}" data-ward-code="{{ $address->ward_code ?? '' }}">
                                                     <span>
                                                         {{ $address->address_line }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
                                                         @if ($address->is_default)
@@ -1131,25 +1132,29 @@
 
             if (selected && selected.value !== 'new') {
                 formData.append('selected_address', selected.value);
-                formData.append('province', selected.dataset.city || '');
-                formData.append('district', selected.dataset.district || '');
-                formData.append('ward', selected.dataset.ward || '');
+                formData.append('province_code', selected.dataset.city || '');
+                formData.append('district_code', selected.dataset.district || '');
+                formData.append('ward_code', selected.dataset.ward || '');
                 formData.append('recipient_address', selected.dataset.address || '');
             } else {
                 const fullname = document.getElementById('fullname').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const emailVal = (document.getElementById('email').value || '').trim();
                 const address = document.getElementById('address').value.trim();
-                const province = document.getElementById('province').selectedOptions[0]?.text || '';
-                const district = document.getElementById('district').selectedOptions[0]?.text || '';
-                const ward = document.getElementById('ward').selectedOptions[0]?.text || '';
+                const provinceCode = document.getElementById('province').value;
+                const districtCode = document.getElementById('district').value;
+                const wardCode = document.getElementById('ward').value;
                 formData.append('recipient_name', fullname);
                 formData.append('recipient_phone', phone);
                 formData.append('recipient_email', emailVal);
-                formData.append('recipient_address', address);
-                formData.append('province', province);
-                formData.append('district', district);
-                formData.append('ward', ward);
+                const wardName = document.getElementById('ward').selectedOptions[0]?.text || '';
+                const districtName = document.getElementById('district').selectedOptions[0]?.text || '';
+                const provinceName = document.getElementById('province').selectedOptions[0]?.text || '';
+                const fullAddress = [address, wardName, districtName, provinceName].filter(Boolean).join(', ');
+                formData.append('recipient_address', fullAddress);
+                formData.append('province_code', provinceCode);
+                formData.append('district_code', districtCode);
+                formData.append('ward_code', wardCode);
             }
             formData.append('shipping_method_id', shippingEl.value); // value là id (1 hoặc 2)
             formData.append('payment_method', paymentEl.value);

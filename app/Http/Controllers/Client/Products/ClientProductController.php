@@ -14,7 +14,7 @@ class ClientProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['brand', 'category', 'productAllImages'])
-                       ->where('status', 1);
+            ->where('status', 1);
 
         // Lọc theo danh mục (hỗ trợ cả slug và id)
         if ($request->has('category') && $request->category) {
@@ -44,8 +44,8 @@ class ClientProductController extends Controller
         // Lọc theo nhiều RAM (attribute_id = 2)
         if ($request->has('ram') && $request->ram) {
             $rams = is_array($request->ram) ? $request->ram : explode(',', $request->ram);
-            $query->whereHas('variants', function($variant) use ($rams) {
-                $variant->whereHas('attributeValues', function($attr) use ($rams) {
+            $query->whereHas('variants', function ($variant) use ($rams) {
+                $variant->whereHas('attributeValues', function ($attr) use ($rams) {
                     $attr->where('attribute_id', 2)->whereIn('value', $rams);
                 });
             });
@@ -54,30 +54,30 @@ class ClientProductController extends Controller
         // Lọc theo nhiều Storage (attribute_id = 3)
         if ($request->has('storage') && $request->storage) {
             $storages = is_array($request->storage) ? $request->storage : explode(',', $request->storage);
-            $query->whereHas('variants.attributeValues', function($q) use ($storages) {
+            $query->whereHas('variants.attributeValues', function ($q) use ($storages) {
                 $q->where('attribute_id', 3)->whereIn('value', $storages);
             });
         }
 
         // Lọc theo rating trung bình đánh giá >= x sao
         if ($request->has('rating') && $request->rating) {
-            $query->whereHas('productComments', function($q) use ($request) {
+            $query->whereHas('productComments', function ($q) use ($request) {
                 $q->selectRaw('product_id, AVG(rating) as avg_rating')->groupBy('product_id')->havingRaw('AVG(rating) >= ?', [$request->rating]);
             });
         }
         // Tìm kiếm theo tên, danh mục, thương hiệu
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                  ->orWhereHas('category', function($cat) use ($search) {
-                      $cat->where('name', 'like', "%$search%")
-                          ->orWhere('slug', 'like', "%$search%") ;
-                  })
-                  ->orWhereHas('brand', function($brand) use ($search) {
-                      $brand->where('name', 'like', "%$search%")
-                            ->orWhere('slug', 'like', "%$search%") ;
-                  });
+                    ->orWhereHas('category', function ($cat) use ($search) {
+                        $cat->where('name', 'like', "%$search%")
+                            ->orWhere('slug', 'like', "%$search%");
+                    })
+                    ->orWhereHas('brand', function ($brand) use ($search) {
+                        $brand->where('name', 'like', "%$search%")
+                            ->orWhere('slug', 'like', "%$search%");
+                    });
             });
         }
 
@@ -85,7 +85,7 @@ class ClientProductController extends Controller
         if (($request->has('min_price') && $request->min_price) || ($request->has('max_price') && $request->max_price)) {
             $min = $request->min_price;
             $max = $request->max_price;
-            $query->whereHas('variants', function($v) use ($min, $max) {
+            $query->whereHas('variants', function ($v) use ($min, $max) {
                 if ($min) $v->where('price', '>=', $min);
                 if ($max) $v->where('price', '<=', $max);
             });
@@ -143,13 +143,16 @@ class ClientProductController extends Controller
             'productComments.user'
         ])->findOrFail($id);
 
+        // Tăng view_count mỗi khi vào chi tiết sản phẩm
+        $product->increment('view_count');
+
         // Sản phẩm liên quan
         $relatedProducts = Product::with(['brand', 'category', 'productAllImages', 'variants'])
-                                 ->where('category_id', $product->category_id)
-                                 ->where('id', '!=', $product->id)
-                                 ->where('status', 1)
-                                 ->limit(4)
-                                 ->get();
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('status', 1)
+            ->limit(4)
+            ->get();
 
         return view('client.products.show', compact('product', 'relatedProducts'));
     }

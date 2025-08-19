@@ -21,7 +21,14 @@ class AdminProductController extends Controller
     {
         $products = Product::with(['category', 'brand', 'variants'])
             ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
-            ->latest()->paginate(15);
+            ->when($request->type, fn($q, $type) => $q->where('type', $type))
+            ->when($request->status, fn($q, $status) => $q->where('status', $status))
+            ->when($request->stock === 'in', fn($q) => $q->whereHas('variants', fn($v) => $v->where('stock', '>', 0)))
+            ->when($request->stock === 'out', fn($q) => $q->whereHas('variants', fn($v) => $v->where('stock', '<=', 0)))
+            ->when($request->sort_price === 'asc', fn($q) => $q->orderByRaw('(select min(price) from product_variants where product_id=products.id) asc'))
+            ->when($request->sort_price === 'desc', fn($q) => $q->orderByRaw('(select max(price) from product_variants where product_id=products.id) desc'))
+            ->when(!$request->sort_price, fn($q) => $q->latest())
+            ->paginate(15);
         return view('admin.products.index', compact('products'));
     }
 
@@ -48,7 +55,7 @@ class AdminProductController extends Controller
             $productData = $this->prepareProductData($request);
             $product = Product::create($productData);
             $this->syncVariants($product, $request);
-            
+
             // Xử lý thư viện ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $image) {
@@ -84,7 +91,7 @@ class AdminProductController extends Controller
             $productData = $this->prepareProductData($request, $product);
             $product->update($productData);
             $this->syncVariants($product, $request);
-            
+
             if ($request->filled('delete_images')) {
                 foreach ($request->delete_images as $id) {
                     $image = $product->allImages()->find($id);
@@ -127,38 +134,37 @@ class AdminProductController extends Controller
     {
         $submittedVariantIds = [];
         if ($request->type === 'simple') {
-        $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
-        $simpleVariantData['is_active'] = true;
+            $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
+            $simpleVariantData['is_active'] = true;
 
-        // Sinh SKU tự động nếu không nhập
-        if (empty($simpleVariantData['sku'])) {
-            $simpleVariantData['sku'] = $this->generateUniqueSku();
-        }
+            // Sinh SKU tự động nếu không nhập
+            if (empty($simpleVariantData['sku'])) {
+                $simpleVariantData['sku'] = $this->generateUniqueSku();
+            }
 
-        $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
+            $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
 
-        // Lưu thuộc tính cho sản phẩm đơn
-        $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
-        $variant->attributeValues()->sync($attributeValueIds);
+            // Lưu thuộc tính cho sản phẩm đơn
+            $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
+            $variant->attributeValues()->sync($attributeValueIds);
 
-        $submittedVariantIds[] = $variant->id;
-        } 
-        elseif ($request->type === 'variable' && $request->has('variants')) {
+            $submittedVariantIds[] = $variant->id;
+        } elseif ($request->type === 'variable' && $request->has('variants')) {
             foreach ($request->variants as $key => $variantData) {
                 $variantData['is_active'] = isset($variantData['is_active']);
                 $variantPayload = Arr::except($variantData, ['attributes', 'image']);
-                
+
                 if (empty($variantPayload['sku'])) {
                     $variantPayload['sku'] = $this->generateUniqueSku();
                 }
 
                 $variant = $product->variants()->updateOrCreate(['id' => $variantData['id'] ?? null], $variantPayload);
-                
+
                 if ($request->hasFile("variants.{$key}.image")) {
                     $path = $request->file("variants.{$key}.image")->store('products/variants', 'public');
                     $variant->update(['image' => $path]);
                 }
-                
+
                 $variant->attributeValues()->sync($variantData['attributes']);
                 $submittedVariantIds[] = $variant->id;
             }
@@ -184,7 +190,7 @@ class AdminProductController extends Controller
     public function forceDelete($id)
     {
         $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
-        
+
         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
             Storage::disk('public')->delete($product->thumbnail);
         }
@@ -198,5 +204,4 @@ class AdminProductController extends Controller
         $product->forceDelete();
         return redirect()->route('admin.products.trashed')->with('success', 'Đã xoá vĩnh viễn sản phẩm.');
     }
-
 }

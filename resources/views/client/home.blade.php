@@ -799,7 +799,7 @@
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
                                 @endif
                                 <h3 class="font-semibold text-sm mb-1 line-clamp-1">{{ $brand->name }}</h3>
-                                
+
                                 <a href="{{ route('brands.show', $brand->slug) }}"
                                     class="block text-[#ff6c2f] text-sm font-semibold hover:underline">
                                     Xem thương hiệu

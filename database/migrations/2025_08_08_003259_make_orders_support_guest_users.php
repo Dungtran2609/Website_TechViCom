@@ -6,61 +6,55 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            // Làm user_id và address_id nullable để hỗ trợ khách vãng lai
+            // 1. Xóa các khóa ngoại cũ (Laravel tự tìm tên)
             $table->dropForeign(['user_id']);
             $table->dropForeign(['address_id']);
-            
+
+            // 2. Thay đổi các cột hiện có thành nullable (SỬA LỖI CÚ PHÁP)
+            // Phải định nghĩa lại toàn bộ cột khi dùng change()
             $table->foreignId('user_id')->nullable()->change();
             $table->foreignId('address_id')->nullable()->change();
-            
-            // Thêm các trường cho thông tin khách vãng lai
-            $table->string('guest_name')->nullable()->after('user_id');
+
+            // 3. Thêm các cột mới
+            $table->string('guest_name')->nullable()->after('address_id');
             $table->string('guest_email')->nullable()->after('guest_name');
             $table->string('guest_phone')->nullable()->after('guest_email');
-            
-            // Thêm payment_status column
             $table->string('payment_status')->default('pending')->after('status');
-            
-            // Thêm shipping_method_id nếu chưa có
+
             if (!Schema::hasColumn('orders', 'shipping_method_id')) {
-                $table->foreignId('shipping_method_id')->nullable()->after('shipped_at');
+                $table->foreignId('shipping_method_id')->nullable()->constrained()->onDelete('set null');
             }
-            
-            // Thêm lại foreign keys với nullable
+
+            // 4. Thêm lại các khóa ngoại với ràng buộc mới
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('address_id')->references('id')->on('user_addresses')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            // Xóa foreign keys
+            // 1. Xóa các khóa ngoại đã thêm ở phương thức up()
             $table->dropForeign(['user_id']);
             $table->dropForeign(['address_id']);
-            
-            // Xóa các trường đã thêm
+            if (Schema::hasColumn('orders', 'shipping_method_id')) {
+                 $table->dropForeign(['shipping_method_id']);
+            }
+
             $table->dropColumn(['guest_name', 'guest_email', 'guest_phone', 'payment_status']);
-            
-            // Xóa shipping_method_id nếu đã thêm trong migration này
             if (Schema::hasColumn('orders', 'shipping_method_id')) {
                 $table->dropColumn('shipping_method_id');
             }
-            
-            // Đặt lại user_id và address_id thành not nullable
-            $table->foreignId('user_id')->change();
-            $table->foreignId('address_id')->change();
-            
-            // Thêm lại foreign keys ban đầu
+
+
+            $table->foreignId('user_id')->nullable(false)->change();
+            $table->foreignId('address_id')->nullable(false)->change();
+
+
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('address_id')->references('id')->on('user_addresses')->onDelete('cascade');
         });

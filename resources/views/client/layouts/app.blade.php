@@ -203,6 +203,29 @@
         });
     </script>
 </div>
+<!-- Thanh topbar phải -->
+<!-- ĐÃ XÓA bell notification ở đây, sẽ chuyển vào header.blade.php -->
+<div class="flex items-center space-x-4 ml-auto">
+    <!-- Các nút khác (quản trị, admin, giỏ hàng) -->
+    @yield('topbar-buttons')
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('notification-btn');
+    const dropdown = document.getElementById('notification-dropdown');
+    if(btn && dropdown) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function(e) {
+            if (!btn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
 </head>
 
 <body>

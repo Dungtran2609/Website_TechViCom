@@ -9,12 +9,22 @@ use Illuminate\Http\Request;
 
 class ClientCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::where('status', true)
+        $query = Category::query()
+            ->where('status', true)
             ->whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
+            ->withCount(['products', 'children'])
+            ->with(['children' => function($q) {
+                $q->where('status', true)->withCount('products');
+            }]);
+
+        if ($request->filled('q')) {
+            $q = $request->input('q');
+            $query->where('name', 'like', "%$q%");
+        }
+
+        $categories = $query->orderBy('name')->get();
 
         return view('client.categories.index', compact('categories'));
     }

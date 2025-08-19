@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ClientCouponController extends Controller
 {
@@ -13,8 +14,21 @@ class ClientCouponController extends Controller
     {
         $subtotal = $request->input('subtotal', 0);
         $now = \Carbon\Carbon::now();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $usedCodes = [];
+        if ($user) {
+            $usedCodes = \App\Models\Order::where('user_id', $user->id)
+                ->whereNotNull('coupon_code')
+                ->pluck('coupon_code')
+                ->unique()
+                ->toArray();
+        }
+        if (empty($usedCodes)) {
+            return response()->json(['success' => true, 'coupons' => []]);
+        }
         $coupons = \App\Models\Coupon::where('status', true)
             ->whereNull('deleted_at')
+            ->whereIn('code', $usedCodes)
             ->where(function($q) use ($now) {
                 $q->whereNull('start_date')->orWhere('start_date', '<=', $now);
             })
@@ -22,7 +36,10 @@ class ClientCouponController extends Controller
                 $q->whereNull('end_date')->orWhere('end_date', '>=', $now);
             })
             ->get();
-
+        // Sắp xếp theo thứ tự usedCodes (mã đã dùng lên đầu)
+        $coupons = $coupons->sortBy(function($c) use ($usedCodes) {
+            return array_search($c->code, $usedCodes);
+        })->values();
         $result = [];
         foreach ($coupons as $coupon) {
             $eligible = true;
@@ -65,6 +82,7 @@ class ClientCouponController extends Controller
         try {
             $couponCode = $request->input('coupon_code');
             $subtotal = $request->input('subtotal', 0);
+            $user = Auth::user();
             
             // Find coupon in database
             $coupon = Coupon::where('code', $couponCode)
@@ -79,6 +97,20 @@ class ClientCouponController extends Controller
                 ]);
             }
             
+            // Check max usage per user
+            if ($user && $coupon->max_usage_per_user > 0) {
+                $usedCount = \App\Models\Order::where('user_id', $user->id)
+                    ->where('coupon_code', $coupon->code)
+                    ->whereNull('deleted_at')
+                    ->count();
+                if ($usedCount >= $coupon->max_usage_per_user) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.'
+                    ]);
+                }
+            }
+
             // Check if coupon is within valid date range
             $now = Carbon::now();
             if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {

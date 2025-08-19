@@ -26,14 +26,14 @@ class HomeController extends Controller
             ->where('status', 'active')
             ->where('is_featured', true)
             ->orderByDesc('created_at')
-            ->limit(8)
+            ->limit(10)
             ->get();
 
         // Sản phẩm hot: nhiều lượt xem nhất, trạng thái active
         $hotProducts = Product::with(['brand', 'category', 'productAllImages', 'variants'])
             ->where('status', 'active')
             ->orderByDesc('view_count')
-            ->limit(8)
+            ->limit(10)
             ->get();
 
         // Lấy danh mục cha và con

@@ -82,7 +82,7 @@ class PermissionRequest extends FormRequest
 
             // Description validation messages
             'description.string' => 'Mô tả phải là chuỗi ký tự.',
-            'description.max' => 'Mô tả không được vượt quá :max ký tự.',
+'description.max' => 'Mô tả không được vượt quá :max ký tự.',
 
             // Status validation messages
             'status.in' => 'Trạng thái không hợp lệ.',

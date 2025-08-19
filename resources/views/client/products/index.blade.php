@@ -393,11 +393,7 @@
                                             @endphp
                                             {!! $displayPrice !!}
                                         </div>
-                                        <button
-                                            onclick="event.stopPropagation(); addToCartStatic({{ $product->id }}, '{{ $product->name }}', {{ $product->sale_price ?? $product->price }}, '{{ $product->productAllImages->isNotEmpty() ? asset('uploads/products/' . $product->productAllImages->first()->image_path) : asset('client_css/images/placeholder.svg') }}')"
-                                            class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">
-                                            <i class="fas fa-cart-plus"></i>
-                                        </button>
+                                        {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
                                     </div>
                                 </div>
                             </div>

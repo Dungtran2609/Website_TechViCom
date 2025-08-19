@@ -20,11 +20,14 @@ class ClientCartController extends Controller
                 ->where('user_id', Auth::id())
                 ->get();
         } else {
+            // Giỏ hàng session cho guest
             $sessionCart = session()->get('cart', []);
             $cartItems = [];
+
             foreach ($sessionCart as $key => $item) {
                 $product = Product::with(['productAllImages', 'variants.attributeValues.attribute'])
                     ->find($item['product_id']);
+
                 if ($product) {
                     $cartItem = (object) [
                         'id' => $key,
@@ -39,40 +42,60 @@ class ClientCartController extends Controller
             }
         }
 
-        // Trả về JSON cho AJAX
+        // If AJAX request, return JSON
         if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
             $items = [];
             $total = 0;
             foreach ($cartItems as $key => $cartItem) {
-                $product = $cartItem->product;
-                $quantity = $cartItem->quantity;
-                $variant = $cartItem->productVariant;
-                $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
+                $product = is_object($cartItem) ? $cartItem->product : $cartItem['product'];
+                $quantity = is_object($cartItem) ? $cartItem->quantity : $cartItem['quantity'];
+                $price = 0;
+                // Nếu có variant cụ thể
+                if (is_object($cartItem) && isset($cartItem->productVariant) && $cartItem->productVariant) {
+                    $price = $cartItem->productVariant->sale_price ?? $cartItem->productVariant->price ?? 0;
+                }
+                // Nếu là session cart và có variant_id
+                elseif (!is_object($cartItem) && isset($cartItem['variant_id']) && $cartItem['variant_id']) {
+                    $variant = \App\Models\ProductVariant::find($cartItem['variant_id']);
+                    $price = $variant ? ($variant->sale_price ?? $variant->price) : 0;
+                }
+                // Nếu có variant đầu tiên của product
+                elseif ($product->variants && $product->variants->count() > 0) {
+                    $variant = $product->variants->first();
+                    $price = $variant->sale_price ?? $variant->price ?? 0;
+                }
                 $total += $price * $quantity;
                 // Lấy đúng trường ảnh
                 $image = asset('images/default-product.jpg');
-                if ($product->productAllImages && $product->productAllImages->count() > 0) {
+                if (is_object($cartItem) && isset($cartItem->productVariant) && $cartItem->productVariant && $cartItem->productVariant->image) {
+                    $image = asset('storage/' . ltrim($cartItem->productVariant->image, '/'));
+                }
+                // Nếu là session cart và có variant_id
+                elseif (!is_object($cartItem) && isset($cartItem['variant_id']) && $cartItem['variant_id']) {
+                    $variant = \App\Models\ProductVariant::find($cartItem['variant_id']);
+                    $image = $variant && $variant->image ? asset('storage/' . ltrim($variant->image, '/')) : ($variant ? ($variant->sale_price ?? $variant->price) : 0);
+                }
+                // Nếu có variant đầu tiên của product
+                elseif ($product->variants && $product->variants->count() > 0) {
+                    $variant = $product->variants->first();
+                    $image = $variant->image ? asset('storage/' . ltrim($variant->image, '/')) : ($variant->sale_price ?? $variant->price ?? 0);
+                }
+                // Nếu không có thì fallback sang ảnh sản phẩm
+                elseif ($product->productAllImages && $product->productAllImages->count() > 0) {
                     $imgObj = $product->productAllImages->first();
-                    $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
+                    $imgField = $imgObj->image_url ?? $imgObj->image ?? null;
                     if ($imgField) {
-                        $image = asset('storage/' . ltrim($imgField, '/'));
+                        $image = asset('uploads/products/' . ltrim($imgField, '/'));
                     }
                 }
-                $attributes = $variant ? $variant->attributeValues->map(function ($v) {
-                    return [
-                        'name' => $v->attribute->name,
-                        'value' => $v->value
-                    ];
-                }) : [];
                 $items[] = [
-                    'id' => $cartItem->id,
+                    'id' => is_object($cartItem) ? $cartItem->id : $key, // Use key for session cart
                     'product_id' => $product->id,
                     'name' => $product->name,
                     'price' => $price,
                     'quantity' => $quantity,
                     'image' => $image,
-                    'attributes' => $attributes,
-                    'variant_id' => $variant ? $variant->id : null
+                    'variant' => is_object($cartItem) ? $cartItem->productVariant : null
                 ];
             }
             return response()->json([
@@ -83,139 +106,156 @@ class ClientCartController extends Controller
             ]);
         }
 
-        return view('client.carts.index', compact('cartItems'));
+        $cartSubtotal = 0;
+        foreach ($cartItems as $item) {
+            $cartSubtotal += ($item->productVariant?->sale_price ?? $item->productVariant?->price ?? $item->price ?? 0) * $item->quantity;
+        }
+        $availableCoupons = \App\Models\Coupon::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->get();
+        // Đánh dấu coupon áp dụng được
+        foreach ($availableCoupons as $coupon) {
+            $coupon->can_apply = true;
+            if ($coupon->min_order_value && $cartSubtotal < $coupon->min_order_value) {
+                $coupon->can_apply = false;
+            }
+            // Có thể bổ sung kiểm tra theo sản phẩm/danh mục nếu cần
+        }
+        return view('client.carts.index', compact('cartItems', 'availableCoupons'));
     }
 
     public function add(Request $request)
     {
         try {
-            // Validate
-            if (!$request->product_id) {
+            $data = $request->validate([
+                'product_id' => ['required', 'integer', 'exists:products,id'],
+                'quantity' => ['nullable', 'integer', 'min:1'],
+                'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
+            ]);
+
+            $productId = (int) $data['product_id'];
+            $quantity = (int) ($data['quantity'] ?? 1);
+            $variantId = $data['variant_id'] ?? null;
+
+            $product = \App\Models\Product::with('variants:id,product_id,price,sale_price,stock')
+                ->findOrFail($productId);
+
+            // Nếu SP có biến thể mà chưa chọn -> chặn
+            if ($product->variants->count() > 0 && !$variantId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product ID is required'
-                ], 400);
-            }
-            $productId = $request->product_id;
-            $quantity = $request->quantity ?? 1;
-            $variantId = $request->variant_id;
-
-            $product = Product::with(['productAllImages', 'variants'])->find($productId);
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found'
-                ], 404);
+                    'message' => 'Vui lòng chọn phân loại sản phẩm'
+                ], 422);
             }
 
-            // Kiểm tra tồn kho
-            $stock = null;
-            $variant = null;
-            if ($variantId) {
-                $variant = ProductVariant::find($variantId);
-                if (!$variant) {
+            // Tồn kho
+            $stock = $variantId
+                ? (int) \App\Models\ProductVariant::findOrFail($variantId)->stock
+                : (int) ($product->stock ?? 0);
+
+            // Tìm item hiện có (⚠️ dùng variant_id, không phải product_variant_id)
+            if (\Illuminate\Support\Facades\Auth::check()) {
+                $existing = \App\Models\Cart::where('user_id', auth()->id())
+                    ->where('product_id', $productId)
+                    ->when(
+                        $variantId,
+                        fn($q) => $q->where('variant_id', $variantId),
+                        fn($q) => $q->whereNull('variant_id')
+                    )->first();
+
+                $currentQty = $existing?->quantity ?? 0;
+
+                if ($stock !== null && $currentQty + $quantity > $stock) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Biến thể không tồn tại'
-                    ], 404);
+                        'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                        'max_quantity' => $stock
+                    ], 400);
                 }
-                $stock = $variant->stock;
-            } else {
-                $stock = $product->stock ?? 0;
-            }
 
-            // Lấy số lượng hiện tại trong giỏ
-            $currentQty = 0;
-            if (Auth::check()) {
-                $existingCart = Cart::where('user_id', Auth::id())
-                    ->where('product_id', $productId)
-                    ->where('product_variant_id', $variantId)
-                    ->first();
-                if ($existingCart) {
-                    $currentQty = $existingCart->quantity;
-                }
-            } else {
-                $cart = session()->get('cart', []);
-                $key = $productId . '_' . ($variantId ?? 'default');
-                if (isset($cart[$key])) {
-                    $currentQty = $cart[$key]['quantity'];
-                }
-            }
-
-            if ($stock !== null && ($currentQty + $quantity) > $stock) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Số lượng vượt quá tồn kho!'
-                ], 400);
-            }
-
-            // Thêm vào giỏ
-            if (Auth::check()) {
-                if (isset($existingCart)) {
-                    $existingCart->quantity += $quantity;
-                    $existingCart->save();
+                if ($existing) {
+                    $existing->quantity = $currentQty + $quantity;
+                    $existing->save();
                 } else {
-                    $existingCart = Cart::create([
-                        'user_id' => Auth::id(),
+                    \App\Models\Cart::create([
+                        'user_id' => auth()->id(),
                         'product_id' => $productId,
-                        'product_variant_id' => $variantId,
-                        'quantity' => $quantity
+                        'variant_id' => $variantId,   // ✅ tên cột mới
+                        'quantity' => $quantity,
                     ]);
                 }
             } else {
+                // Guest – session cart
                 $cart = session()->get('cart', []);
                 $key = $productId . '_' . ($variantId ?? 'default');
-                if (isset($cart[$key])) {
-                    $cart[$key]['quantity'] += $quantity;
-                } else {
-                    $cart[$key] = [
-                        'product_id' => $productId,
-                        'variant_id' => $variantId,
-                        'quantity' => $quantity,
-                        'product' => $product->toArray()
-                    ];
+                $currentQty = isset($cart[$key]) ? (int) $cart[$key]['quantity'] : 0;
+
+                if ($stock !== null && $currentQty + $quantity > $stock) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Số lượng vượt quá tồn kho! Chỉ còn ' . $stock . ' sản phẩm.',
+                        'max_quantity' => $stock
+                    ], 400);
                 }
+
+                $cart[$key] = [
+                    'product_id' => $productId,
+                    'variant_id' => $variantId,     // ✅
+                    'quantity' => $currentQty + $quantity,
+                ];
                 session()->put('cart', $cart);
                 session()->save();
             }
 
-            // Trả về thông tin sản phẩm vừa thêm
-            $image = asset('images/default-product.jpg');
-            if ($product->productAllImages && $product->productAllImages->count() > 0) {
-                $imgObj = $product->productAllImages->first();
-                $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
-                if ($imgField) {
-                    $image = asset('storage/' . ltrim($imgField, '/'));
-                }
-            }
-            $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
-            $attributes = $variant ? $variant->attributeValues->map(function ($v) {
-                return [
-                    'name' => $v->attribute->name,
-                    'value' => $v->value
-                ];
-            }) : [];
-
             return response()->json([
                 'success' => true,
-                'message' => 'Đã thêm sản phẩm vào giỏ hàng',
-                'item' => [
-                    'product_id' => $productId,
-                    'variant_id' => $variantId,
-                    'name' => $product->name,
-                    'image' => $image,
-                    'price' => $price,
-                    'quantity' => $currentQty + $quantity,
-                    'attributes' => $attributes
-                ]
+                'message' => 'Đã thêm sản phẩm vào giỏ hàng'
             ]);
-        } catch (\Exception $e) {
+
+        } catch (\Throwable $e) {
+            \Log::error('cart.add failed', ['msg' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng'
             ], 500);
         }
     }
+
+    public function setBuyNow(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'product_id' => ['required', 'integer', 'exists:products,id'],
+                'quantity' => ['required', 'integer', 'min:1'],
+                'variant_id' => ['nullable', 'integer', 'exists:product_variants,id'],
+            ]);
+
+            // Lưu thông tin "buy now" vào session
+            session()->put('buynow', [
+                'product_id' => $data['product_id'],
+                'quantity' => $data['quantity'],
+                'variant_id' => $data['variant_id'] ?? null,
+            ]);
+            session()->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã set buy now thành công!',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('setBuyNow failed', ['msg' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi set buy now',
+            ], 500);
+        }
+    }
+
+
+
+
+
+
 
     public function update(Request $request, $id)
     {
@@ -226,20 +266,19 @@ class ClientCartController extends Controller
         ]);
 
         if (Auth::check()) {
-            $cartItem = Cart::with(['product', 'productVariant'])
-                ->where('user_id', Auth::id())
+            $cartItem = Cart::where('user_id', Auth::id())
                 ->where('id', $id)
                 ->firstOrFail();
 
-            // Kiểm tra số lượng tồn kho
+            // Lấy tồn kho
             $stock = null;
-            if ($cartItem->productVariant) {
-                $stock = $cartItem->productVariant->stock;
+            if ($cartItem->variant_id) {
+                $variant = ProductVariant::find($cartItem->variant_id);
+                $stock = $variant ? (int)$variant->stock : null;
             } else {
-                $stock = $cartItem->product->stock ?? 0;
+                $product = Product::find($cartItem->product_id);
+                $stock = $product ? (int)$product->stock : null;
             }
-
-            // Kiểm tra nếu số lượng vượt quá tồn kho
             if ($stock !== null && $request->quantity > $stock) {
                 return response()->json([
                     'success' => false,
@@ -257,29 +296,15 @@ class ClientCartController extends Controller
             error_log('Available keys: ' . json_encode(array_keys($cart)));
 
             if (isset($cart[$id])) {
-                // Kiểm tra số lượng tồn kho cho session cart
-                $productId = $cart[$id]['product_id'];
-                $variantId = $cart[$id]['variant_id'] ?? null;
-                
-                $product = Product::find($productId);
-                if (!$product) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Sản phẩm không tồn tại'
-                    ], 404);
-                }
-
+                // Lấy tồn kho
                 $stock = null;
-                if ($variantId) {
-                    $variant = ProductVariant::find($variantId);
-                    if ($variant) {
-                        $stock = $variant->stock;
-                    }
+                if (!empty($cart[$id]['variant_id'])) {
+                    $variant = ProductVariant::find($cart[$id]['variant_id']);
+                    $stock = $variant ? (int)$variant->stock : null;
                 } else {
-                    $stock = $product->stock ?? 0;
+                    $product = Product::find($cart[$id]['product_id']);
+                    $stock = $product ? (int)$product->stock : null;
                 }
-
-                // Kiểm tra nếu số lượng vượt quá tồn kho
                 if ($stock !== null && $request->quantity > $stock) {
                     return response()->json([
                         'success' => false,
@@ -287,7 +312,6 @@ class ClientCartController extends Controller
                         'max_quantity' => $stock
                     ], 400);
                 }
-
                 $cart[$id]['quantity'] = $request->quantity;
                 session()->put('cart', $cart);
                 session()->save();
@@ -380,65 +404,5 @@ class ClientCartController extends Controller
             'success' => true,
             'count' => $count
         ]);
-    }
-
-    public function setBuyNow(Request $request)
-    {
-        try {
-            // Validate
-            if (!$request->product_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product ID is required'
-                ], 400);
-            }
-
-            $productId = $request->product_id;
-            $quantity = $request->quantity ?? 1;
-            $variantId = $request->variant_id ?? null;
-
-            // Kiểm tra sản phẩm tồn tại
-            $product = Product::find($productId);
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Sản phẩm không tồn tại'
-                ], 404);
-            }
-
-            // Kiểm tra variant nếu có
-            if ($variantId) {
-                $variant = ProductVariant::find($variantId);
-                if (!$variant || $variant->product_id != $productId) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Biến thể sản phẩm không hợp lệ'
-                    ], 400);
-                }
-            }
-
-            // Set session buynow
-            $buynowData = [
-                'product_id' => $productId,
-                'quantity' => $quantity,
-                'variant_id' => $variantId
-            ];
-            
-            session(['buynow' => $buynowData]);
-            
-            Log::info('Buynow session set', $buynowData);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã sẵn sàng mua ngay'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('setBuyNow error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi xảy ra'
-            ], 500);
-        }
     }
 }

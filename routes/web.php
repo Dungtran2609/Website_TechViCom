@@ -377,12 +377,26 @@ Route::prefix('categories')->name('categories.')->group(function () {
 
 // Checkout routes (public access - không cần prefix client)
 Route::prefix('checkout')->name('checkout.')->group(function () {
-    Route::get('/', [ClientCheckoutController::class, 'index'])->name('index');
-    Route::post('/apply-coupon', [ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
-    Route::post('/process', [ClientCheckoutController::class, 'process'])->name('process');
-    Route::get('/success/{orderId}', [ClientCheckoutController::class, 'success'])->name('success');
+    Route::get('/', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'index'])->name('index');
+    Route::post('/apply-coupon', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
+    Route::post('/process', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'process'])->name('process');
+    Route::get('/success/{orderId}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'success'])->name('success');
+    
 });
 
+// Route riêng cho success để test
+Route::get('/checkout-success/{orderId}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'success'])->name('success.test');
+// VNPAY Payment routes
+Route::prefix('vnpay')->name('vnpay.')->group(function () {
+    Route::get('/payment/{order_id}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_payment'])->name('payment');
+    Route::get('/return', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_return'])->name('vnpay_return');
+});
+
+// Clear payment message route
+Route::post('/clear-payment-message', function () {
+    session()->forget('payment_cancelled_message');
+    return response()->json(['success' => true]);
+})->name('clear.payment.message');
 // Carts routes (public access - không cần prefix client)
 Route::prefix('carts')->name('carts.')->group(function () {
     Route::get('/', [ClientCartController::class, 'index'])->name('index');

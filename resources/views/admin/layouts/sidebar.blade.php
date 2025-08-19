@@ -1,13 +1,17 @@
+            
 <div class="main-nav">
     <!-- Sidebar Logo -->
     <div class="logo-box">
+        @php
+            $adminLogo = \App\Models\Logo::where('type', 'admin')->orderByDesc('id')->first();
+        @endphp
         <a href="{{ route('admin.dashboard') }}" class="logo-dark">
-            <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" class="logo-sm" alt="logo sm">
-            <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" class="logo-lg" alt="logo dark">
+            <img src="{{ $adminLogo ? asset('storage/' . $adminLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" class="logo-sm" alt="{{ $adminLogo->alt ?? 'logo sm' }}">
+            <img src="{{ $adminLogo ? asset('storage/' . $adminLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" class="logo-lg" alt="{{ $adminLogo->alt ?? 'logo dark' }}">
         </a>
         <a href="{{ route('admin.dashboard') }}" class="logo-light">
-            <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" class="logo-sm" alt="logo sm">
-            <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" class="logo-lg" alt="logo light">
+            <img src="{{ $adminLogo ? asset('storage/' . $adminLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" class="logo-sm" alt="{{ $adminLogo->alt ?? 'logo sm' }}">
+            <img src="{{ $adminLogo ? asset('storage/' . $adminLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" class="logo-lg" alt="{{ $adminLogo->alt ?? 'logo light' }}">
         </a>
     </div>
 
@@ -149,6 +153,21 @@
                 <div class="collapse" id="7">
                     <ul class="nav sub-navbar-nav">
                         <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.banner.index') }}">Quản lý banner</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.logos.index') }}">Quản lý logo</a></li>
+                    </ul>
+                </div>
+            </li>
+            <!-- Mail động -->
+            <li class="nav-item">
+                <a class="nav-link menu-arrow" href="#7" data-bs-toggle="collapse">
+                    <span class="nav-icon"><iconify-icon icon="mdi:email-outline"></iconify-icon></span>
+                    <span class="nav-text"> Quản lý mail </span>
+                </a>
+                <div class="collapse" id="7">
+                    <ul class="nav sub-navbar-nav">
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.mails.index') }}">Danh sách mail</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.mails.trash') }}">Thùng rác</a></li>
+                        <li class="sub-nav-item"><a class="sub-nav-link" href="{{ route('admin.mails.send') }}">Gửi mail</a></li>
                     </ul>
                 </div>
             </li>

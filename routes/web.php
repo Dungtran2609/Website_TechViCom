@@ -183,6 +183,20 @@ Route::get('/debug-cart-data', function () {
     ]);
 });
 
+// Route resource cho promotions và mails (trong group admin)
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
+    // Quản lý mail động
+    Route::get('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendForm'])->name('mails.send');
+    Route::post('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'send'])->name('mails.send');
+    Route::get('mails/trash', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'trash'])->name('mails.trash');
+    Route::post('mails/{mail}/restore', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'restore'])->name('mails.restore');
+    Route::delete('mails/{mail}/force-delete', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'forceDelete'])->name('mails.forceDelete');
+    Route::post('mails/{mail}/toggle-auto-send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'toggleAutoSend'])->name('mails.toggleAutoSend');
+    Route::post('mails/{mail}/send-test', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendTest'])->name('mails.sendTest');
+    Route::resource('mails', App\Http\Controllers\Admin\Mails\AdminMailController::class)->names('mails');
+});
+
 // Test cart operations with debug
 Route::post('/debug-cart-update', function () {
     $id = request('id');
@@ -682,6 +696,21 @@ Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCa
 require __DIR__ . '/auth.php';
 
 // Gợi ý fix lỗi: View [client.accounts.orders] not found
+
+// Route quản lý logo admin phải nằm trong group admin
+
+// ...existing code...
+
+// =========================================================================
+// === ADMIN ROUTES ===
+// =========================================================================
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // ...existing admin routes...
+
+    // Quản lý logo admin
+    Route::resource('logos', \App\Http\Controllers\Admin\Logo\AdminLogoController::class)->names('logos');
+});
+
 // 1. Tạo file: resources/views/client/accounts/orders.blade.php
 // 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
 // 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.

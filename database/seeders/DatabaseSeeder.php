@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             NewsCommentSeeder::class,
             ContactSeeder::class,
             PromotionSeeder::class,
+            MailTemplateSeeder::class,
+            LogoSeeder::class,
         ]);
     }
 }

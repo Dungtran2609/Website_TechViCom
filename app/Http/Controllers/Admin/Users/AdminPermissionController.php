@@ -104,7 +104,7 @@ class AdminPermissionController extends Controller
     }
 
     /**
-     * Danh sách quyền đã xoá.
+* Danh sách quyền đã xoá.
      */
     public function trashed()
     {
@@ -188,7 +188,7 @@ class AdminPermissionController extends Controller
                 !Str::contains($routeName, ['login', 'logout', 'password', 'debugbar']) &&
                 $route->getActionName() != 'Closure'
             ) {
-                $routePermissionNames[] = $routeName;
+$routePermissionNames[] = $routeName;
 
                 // Nếu quyền chưa tồn tại trong DB (kể cả trong thùng rác) thì tạo mới
                 if (!in_array($routeName, $existingPermissionNames)) {

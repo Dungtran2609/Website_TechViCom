@@ -4,9 +4,9 @@
 
 @push('styles')
     <style>
-        /* Slideshow Styles */
+        /* ================= Slideshow ================= */
         .slideshow-container {
-            position: relative;
+            position: relative
         }
 
         .slide {
@@ -17,271 +17,414 @@
             top: 0;
             left: 0;
             opacity: 0;
-
             transform: translateX(100%);
-            transition: transform 0.8s ease, opacity 0.8s ease;
+            transition: transform .6s ease, opacity .6s ease
         }
-
 
         .slide.active {
             display: block;
             opacity: 1;
             transform: translateX(0);
-            position: relative;
+            position: relative
         }
 
         .slide-nav {
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-
-            transition: opacity 0.5s ease-in-out;
-        }
-
-        .slide.active {
-            display: block;
-            opacity: 1;
-            position: relative;
-        }
-
-        .slide-nav {
-
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, .85);
             border: none;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             cursor: pointer;
             font-size: 18px;
             color: #333;
-            transition: all 0.3s ease;
+            transition: all .2s ease;
             z-index: 10;
+            opacity: 0;
+            visibility: hidden
         }
-
-        .slide-indicators {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 4px 8px;
-            border-radius: 20px;
-        }
-
 
         .slideshow-container:hover .slide-nav {
             opacity: 1;
-            visibility: visible;
+            visibility: visible
         }
 
         .slide-nav:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: translateY(-50%) scale(1.1);
+            background: #fff;
+            transform: translateY(-50%) scale(1.08)
         }
 
         .slide-nav.prev {
-            left: 20px;
+            left: 16px
         }
 
         .slide-nav.next {
-            right: 20px;
+            right: 16px
         }
 
         .slide-indicators {
             position: absolute;
-            bottom: 20px;
+            bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             z-index: 10;
+            background: rgba(0, 0, 0, .35);
+            padding: 4px 8px;
+            border-radius: 9999px
         }
 
         .indicator {
             width: 10px;
             height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transition: all 0.3s ease;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, .7);
+            transition: all .2s ease
         }
 
         .indicator.active {
             width: 20px;
-            border-radius: 10px;
-            background: white;
+            background: #fff
         }
 
-        .indicator:hover {
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Animation Classes */
         .slide-in {
-            animation: slideInLeft 0.8s ease-out;
+            animation: slideInLeft .6s ease-out
         }
 
         .slide-in-delay-1 {
-            animation: slideInLeft 0.8s ease-out 0.2s both;
+            animation: slideInLeft .6s ease-out .15s both
         }
 
         .slide-in-delay-2 {
-            animation: slideInLeft 0.8s ease-out 0.4s both;
-        }
-
-        .slide-in-delay-3 {
-            animation: slideInLeft 0.8s ease-out 0.6s both;
+            animation: slideInLeft .6s ease-out .3s both
         }
 
         .slide-in-right {
-            animation: slideInRight 0.8s ease-out 0.3s both;
+            animation: slideInRight .6s ease-out .2s both
         }
 
         @keyframes slideInLeft {
             from {
                 opacity: 0;
-                transform: translateX(-30px);
+                transform: translateX(-24px)
             }
 
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateX(0)
             }
         }
 
         @keyframes slideInRight {
             from {
                 opacity: 0;
-                transform: translateX(30px);
+                transform: translateX(24px)
             }
 
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateX(0)
             }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
+        .banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            backface-visibility: hidden;
+            transform: translateZ(0)
+        }
+
+        @media (max-width:768px) {
             .slide-nav {
                 width: 40px;
                 height: 40px;
-                font-size: 14px;
+                font-size: 14px
             }
 
             .slide-nav.prev {
-                left: 10px;
+                left: 10px
             }
 
             .slide-nav.next {
-                right: 10px;
+                right: 10px
             }
 
             .slide-indicators {
-                bottom: 10px;
+                bottom: 10px
             }
+        }
+
+        /* ============== Horizontal slider (categories & brands) ============== */
+        .hslider {
+            position: relative
+        }
+
+        .hslider .htrack {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+            gap: 24px;
+            padding: 2px;
+            -ms-overflow-style: none;
+            scrollbar-width: none
+        }
+
+        .hslider .htrack::-webkit-scrollbar {
+            display: none
+        }
+
+        .hslider .hnav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, .85);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+            transition: all .2s ease;
+            z-index: 20;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: auto
+        }
+
+        .hslider:hover .hnav {
+            opacity: 1;
+            visibility: visible
+        }
+
+        .hslider .hnav:hover {
+            transform: translateY(-50%) scale(1.08);
+            background: #fff
+        }
+
+        .hslider .hnav.prev {
+            left: 8px
+        }
+
+        .hslider .hnav.next {
+            right: 8px
+        }
+
+        .hitem {
+            flex: 0 0 auto;
+            scroll-snap-align: start
+        }
+
+        @media (min-width:1024px) {
+            .hitem {
+                width: calc(25% - 18px)
+            }
+        }
+
+        @media (min-width:768px) and (max-width:1023.98px) {
+            .hitem {
+                width: calc(50% - 12px)
+            }
+        }
+
+        @media (max-width:767.98px) {
+            .hitem {
+                width: 85vw
+            }
+        }
+
+        /* ============== Product image style ============== */
+        .prod-card .img-wrap {
+            height: 240px;
+            background: #fff;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prod-card .img-wrap img {
+            position: relative;
+            z-index: 0;
+            max-height: 100%;
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            image-rendering: auto;
+            image-rendering: -webkit-optimize-contrast;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+            transition: transform .25s ease;
+        }
+
+        .prod-card:hover .img-wrap img {
+            transform: scale(1.03)
+        }
+
+        @media (max-width:1023.98px) {
+            .prod-card .img-wrap {
+                height: 200px
+            }
+        }
+
+        @media (max-width:767.98px) {
+            .prod-card .img-wrap {
+                height: 180px
+            }
+        }
+
+        /* ============== Chips & Heart (fixed corners) ============== */
+        .chip {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ef4444;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 4
+        }
+
+        .chip-neutral {
+            background: #111827
+        }
+
+        .wish-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 5;
+            background: #fff;
+            border-radius: 9999px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .14)
+        }
+
+        .wish-btn i {
+            color: #9ca3af;
+            transition: color .15s ease
+        }
+
+        .wish-btn.active i {
+            color: #ff6c2f
+        }
+
+        /* ====== Brands: thu nhỏ & 5 item/khung ====== */
+        .brands-slider .brand-card {
+            padding: 16px
+        }
+
+        .brands-slider .brand-card img {
+            width: 56px;
+            height: 56px
+        }
+
+        @media (min-width:1024px) {
+            .brands-slider .hitem {
+                width: calc((100% - 96px)/5) !important;
+            }
+
+            /* 5 items + 4 gaps(24px)=96px */
         }
     </style>
 @endpush
+
 @section('content')
-    <!-- Hero Banner Slideshow -->
+    <!-- ================= Hero Banner Slideshow ================= -->
     <section class="relative overflow-hidden bg-gray-50">
         @if (isset($banners) && $banners->count() > 0)
-            <div class="slideshow-container relative w-full h-96 md:h-[400px] lg:h-[500px]">
+            <div class="slideshow-container relative w-full h-80 md:h-[420px] lg:h-[520px]">
                 @foreach ($banners as $index => $banner)
-                    <div class="slide {{ $index == 0 ? 'active' : '' }}">
+                    <div class="slide {{ $index === 0 ? 'active' : '' }}">
+                        @php $img = asset('storage/' . $banner->image); @endphp
                         @if ($banner->link)
-                            <a href="{{ $banner->link }}" target="_blank" class="block h-full group">
-                                <div class="relative h-full overflow-hidden">
-                                    <img src="{{ asset('storage/' . $banner->image) }}" alt="Banner {{ $index + 1 }}"
-                                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            <a href="{{ $banner->link }}" target="_blank" class="block h-full">
+                                <div class="relative h-full bg-white flex items-center justify-center">
+                                    <img src="{{ $img }}" alt="Banner {{ $index + 1 }}" class="banner-img"
+                                        loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                                        fetchpriority="{{ $index === 0 ? 'high' : 'auto' }}" decoding="async"
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                    <!-- Overlay for better text readability -->
-                                    <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
                                 </div>
                             </a>
                         @else
-                            <div class="relative h-full overflow-hidden">
-                                <img src="{{ asset('storage/' . $banner->image) }}" alt="Banner {{ $index + 1 }}"
-                                    class="w-full h-full object-cover transition-transform duration-700"
+                            <div class="relative h-full bg-white flex items-center justify-center">
+                                <img src="{{ $img }}" alt="Banner {{ $index + 1 }}" class="banner-img"
+                                    loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                                    fetchpriority="{{ $index === 0 ? 'high' : 'auto' }}" decoding="async"
                                     onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                <!-- Overlay for better text readability -->
-                                <div class="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
                             </div>
                         @endif
                     </div>
                 @endforeach
 
                 @if ($banners->count() > 1)
-                    <!-- Navigation arrows -->
-                    <button class="slide-nav prev group" onclick="changeSlide(-1)">
-                        <div
-                            class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-chevron-left text-lg"></i>
-                        </div>
-                    </button>
-                    <button class="slide-nav next group" onclick="changeSlide(1)">
-                        <div
-                            class="bg-white/80 hover:bg-white text-gray-800 hover:text-black rounded-full w-12 h-12 flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-chevron-right text-lg"></i>
-                        </div>
-                    </button>
-
-                    <!-- Slide indicators -->
+                    <button class="slide-nav prev" type="button" aria-label="Trước" data-slide="prev"><i
+                            class="fas fa-chevron-left"></i></button>
+                    <button class="slide-nav next" type="button" aria-label="Sau" data-slide="next"><i
+                            class="fas fa-chevron-right"></i></button>
                     <div class="slide-indicators">
                         @foreach ($banners as $index => $banner)
-                            <span class="indicator {{ $index == 0 ? 'active' : '' }}"
-                                onclick="currentSlide({{ $index + 1 }})"></span>
+                            <span class="indicator {{ $index === 0 ? 'active' : '' }}"
+                                data-to="{{ $index }}"></span>
                         @endforeach
                     </div>
                 @endif
             </div>
         @else
-            <!-- Fallback banner khi không có banner nào -->
-            <div class="slideshow-container relative w-full h-96 md:h-[500px] lg:h-[600px]">
+            <div class="slideshow-container relative w-full h-80 md:h-[420px] lg:h-[520px]">
                 <div class="slide active">
                     <div
                         class="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white h-full relative overflow-hidden">
-                        <!-- Animated background elements -->
                         <div class="absolute inset-0">
                             <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
                             <div class="absolute bottom-10 right-10 w-40 h-40 bg-white/5 rounded-full blur-xl"></div>
                             <div class="absolute top-1/2 left-1/4 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
                         </div>
-
                         <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-12 w-full">
-                                <div class="space-y-6">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 items-center gap-8 w-full">
+                                <div class="space-y-5">
                                     <div
                                         class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
-                                        <i class="fas fa-star text-yellow-300 mr-2"></i>
-                                        Công nghệ hàng đầu
+                                        <i class="fas fa-star text-yellow-300 mr-2"></i> Công nghệ hàng đầu
                                     </div>
                                     <h1
-                                        class="text-5xl lg:text-7xl font-bold mb-4 slide-in bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                                        TECHVICOM
-                                    </h1>
-                                    <h2 class="text-2xl lg:text-4xl mb-6 slide-in-delay-1 font-light">
-                                        Công nghệ tiên tiến
-                                    </h2>
-                                    <p class="text-lg lg:text-xl mb-8 slide-in-delay-2 text-blue-100 leading-relaxed">
+                                        class="text-5xl lg:text-7xl font-bold slide-in bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                                        TECHVICOM</h1>
+                                    <h2 class="text-2xl lg:text-4xl slide-in-delay-1 font-light">Công nghệ tiên tiến</h2>
+                                    <p class="text-lg lg:text-xl slide-in-delay-2 text-blue-100 leading-relaxed">
                                         Khám phá các sản phẩm công nghệ mới nhất với chất lượng cao và giá cả hợp lý
                                     </p>
-                                    <div class="flex flex-col sm:flex-row gap-4 slide-in-delay-3">
-                                        <button onclick="window.location.href='{{ route('products.index') }}'"
-                                            class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                                            <i class="fas fa-shopping-cart mr-2"></i>
-                                            KHÁM PHÁ NGAY
-                                        </button>
-                                        <button onclick="window.location.href='{{ route('contacts.index') }}'"
-                                            class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all duration-300 backdrop-blur-sm">
-                                            <i class="fas fa-phone mr-2"></i>
-                                            LIÊN HỆ
-                                        </button>
+                                    <div class="flex flex-col sm:flex-row gap-4">
+                                        <a href="{{ route('products.index') }}"
+                                            class="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition shadow-lg hover:shadow-xl">
+                                            <i class="fas fa-shopping-cart mr-2"></i> KHÁM PHÁ NGAY
+                                        </a>
+                                        <a href="{{ route('contacts.index') }}"
+                                            class="border-2 border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition backdrop-blur-sm">
+                                            <i class="fas fa-phone mr-2"></i> LIÊN HỆ
+                                        </a>
                                     </div>
                                 </div>
                                 <div class="text-center relative">
@@ -301,87 +444,64 @@
         @endif
     </section>
 
-    <!-- Featured Categories -->
+    <!-- ================= Featured Categories: CAROUSEL ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-8">Danh mục nổi bật</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                @foreach ($categories as $category)
-                    <div class="text-center group">
-                        <div
-                            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
-                            <!-- Category Image -->
-                            @if ($category->image)
-                                <img src="{{ asset('uploads/categories/' . $category->image) }}"
-                                    alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-3xl font-bold">Danh mục</h2>
+                <a href="{{ route('categories.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả
+                    <i class="fas fa-arrow-right ml-2"></i></a>
+            </div>
 
-                                <img src="{{ asset('uploads/categories/' . $category->image) }}"
-                                    alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg">
-                            @else
-                                <img src="{{ asset('client_css/images/categories/category-default.jpg') }}"
-                                    alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
-                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                            @endif
+            <div class="hslider" data-slider>
+                <button class="hnav prev" type="button" aria-label="Trước"><i class="fas fa-chevron-left"></i></button>
+                <button class="hnav next" type="button" aria-label="Sau"><i class="fas fa-chevron-right"></i></button>
 
-                            <!-- Category Name -->
-                            <h3 class="font-semibold mb-2">{{ $category->name }}</h3>
-
-                            <!-- Category Actions -->
-                            @if ($category->children->count() > 0)
-                                <div class="category-dropdown-wrapper">
-                                    <!-- Main category link -->
-                                    <a href="{{ route('categories.show', $category->slug) }}"
-                                        class="block text-sm text-blue-600 hover:text-blue-800 mb-2">
-                                        Xem tất cả
-                                    </a>
-
-                                    <!-- Dropdown trigger -->
-                                    <button class="text-xs text-gray-500 hover:text-gray-700 flex items-center mx-auto"
-                                        onclick="toggleCategoryDropdown({{ $category->id }})">
-                                        <span>{{ $category->children->count() }} danh mục con</span>
-                                        <i class="fas fa-chevron-down ml-1 transition-transform duration-200"
-                                            id="icon-{{ $category->id }}"></i>
-                                    </button>
-
-                                    <!-- Dropdown menu -->
-                                    <div class="category-dropdown absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden mt-2"
-                                        id="dropdown-{{ $category->id }}">
-                                        <div class="p-3">
-                                            <div class="space-y-2">
-                                                @foreach ($category->children as $subcategory)
-                                                    <a href="{{ route('categories.show', $subcategory->slug) }}"
-                                                        class="block text-sm text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-2 py-1 rounded transition">
-                                                        {{ $subcategory->name }}
-                                                    </a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @else
-                                <!-- Direct link for categories without children -->
+                <div class="htrack">
+                    @foreach ($categories->take(12) as $category)
+                        <div class="hitem">
+                            <div
+                                class="text-center group relative bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                                @if ($category->image)
+                                    <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
+                                        class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg" loading="lazy"
+                                        decoding="async"
+                                        onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                @else
+                                    <img src="{{ asset('client_css/images/placeholder.svg') }}"
+                                        alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg">
+                                @endif
+                                <h3 class="font-semibold mb-2 line-clamp-1">{{ $category->name }}</h3>
                                 <a href="{{ route('categories.show', $category->slug) }}"
-                                    class="text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
-                                    Xem sản phẩm
+                                    class="text-sm text-blue-600 hover:text-blue-800">
+                                    {{ $category->children->count() > 0 ? 'Xem tất cả' : 'Xem sản phẩm' }}
                                 </a>
-                            @endif
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+
+                    @if ($categories->count() > 12)
+                        <div class="hitem">
+                            <button onclick="window.location.href='{{ route('categories.index') }}'"
+                                class="w-full h-full min-h-[200px] flex flex-col items-center justify-center bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-2 border-dashed border-orange-400 text-orange-600">
+                                <i class="fas fa-ellipsis-h text-3xl mb-2"></i>
+                                <span class="font-semibold">Xem thêm danh mục</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Flash Sale -->
+    <!-- ================= Flash Sale ================= -->
     <section class="py-12 bg-yellow-50">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold text-[#ff6c2f]">⚡ FLASH SALE</h2>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('products.index') }}"
-                        class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
-                        Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
-                    </a>
+                    <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem
+                        tất cả <i class="fas fa-arrow-right ml-2"></i></a>
                     <div class="flex items-center space-x-2 text-lg font-semibold">
                         <span>Kết thúc trong:</span>
                         <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">12
@@ -396,258 +516,166 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="flash-sale-products">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="flash-sale-products">
+                @if (!empty($flashSaleProducts) && count($flashSaleProducts) > 0)
+                    @foreach ($flashSaleProducts as $product)
+                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
+                            onclick="window.location.href='{{ route('products.show', $product->id) }}'">
+                            <div class="relative img-wrap">
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%
+                                </div>
+                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                                    onclick="event.stopPropagation();">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
+                                    alt="{{ $product->name }}" loading="lazy" decoding="async"
+                                    onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                            </div>
 
-                <!-- Flash sale products - Static HTML -->
-                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                    data-product-id="1" onclick="window.location.href='{{ route('products.show', 1) }}'">
-                    <div class="relative">
-                        <img src="assets/images/placeholder.svg" alt="iPhone 15 Pro Max"
-                            class="w-full h-48 object-cover rounded-t-lg">
-                        <div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                            -8%
+                            <div class="p-4">
+                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
 
-                            @foreach ($flashSaleProducts ?? [] as $product)
-                                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                                    onclick="window.location.href='{{ route('products.show', $product->id) }}'">
-                                    <div class="relative">
-                                        <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                            alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
-                                            onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                        <div
-                                            class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                            -{{ $product->discount_percent ?? 0 }}%
-                                        </div>
-                                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                            <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
-                                                onclick="event.stopPropagation();">
-                                                <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                    <div class="p-4">
-                                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}
-                                        </h3>
-                                        <div class="flex items-center mb-2">
-                                            <div class="flex text-yellow-400 text-sm">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    <i class="fas fa-star"></i>
-                                                @endfor
-                                            </div>
+                                <div class="flex items-center justify-between mb-2">
+                                    @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                        @php $variant = $product->variants->first(); @endphp
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                    @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                        @php
+                                            $minPrice = $product->variants->min('price');
+                                            $maxPrice = $product->variants->max('price');
+                                        @endphp
+                                        @if ($minPrice === $maxPrice)
                                             <span
-                                                class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                                @php
-                                                    $variant = $product->variants->first();
-                                                @endphp
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                            @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                                @php
-                                                    $minPrice = $product->variants->min('price');
-                                                    $maxPrice = $product->variants->max('price');
-                                                @endphp
-                                                @if ($minPrice === $maxPrice)
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                                @else
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                        -
-                                                        {{ number_format($maxPrice) }}₫</span>
-                                                @endif
-                                            @else
-                                                <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
-                                            @endif
-                                        </div>
-                                    </div>
+                                                class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                        @else
+                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
+                                                - {{ number_format($maxPrice) }}₫</span>
+                                        @endif
+                                    @else
+                                        <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                    @endif
                                 </div>
 
-                                <div class="p-4">
-                                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">iPhone 15 Pro Max 256GB</h3>
-                                    <div class="flex items-center mb-2">
-                                        <div class="flex text-yellow-400 text-sm">
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm">
+                                        @for ($i = 1; $i <= 5; $i++)
                                             <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                            <i class="fas fa-star"></i>
-                                        </div>
-                                        <span class="text-gray-500 text-sm ml-2">(156)</span>
+                                        @endfor
                                     </div>
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <span class="text-lg font-bold text-[#ff6c2f]">34.990.000₫</span>
-                                            <span class="text-sm text-gray-500 line-through ml-2">37.990.000₫</span>
-                                        </div>
-                                        {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
-                                    </div>
+                                    <span
+                                        class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                                 </div>
+                            </div>
                         </div>
-
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                            data-product-id="2">
-                            <div class="relative">
-                                <img src="assets/images/samsung-s24-ultra.jpg" alt="Samsung Galaxy S24 Ultra"
-                                    class="w-full h-48 object-cover rounded-t-lg">
-                                <div
-                                    class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                    -8%
-                                </div>
-                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                        <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                    </button>
-                                </div>
+                    @endforeach
+                @else
+                    @php
+                        $fallbacks = [
+                            [
+                                'name' => 'iPhone 15 Pro Max 256GB',
+                                'price_old' => '37.990.000',
+                                'price' => '34.990.000',
+                                'discount' => 8,
+                                'img' => 'assets/images/placeholder.svg',
+                                'cmt' => 156,
+                            ],
+                            [
+                                'name' => 'Samsung Galaxy S24 Ultra 512GB',
+                                'price_old' => '36.990.000',
+                                'price' => '33.990.000',
+                                'discount' => 8,
+                                'img' => 'assets/images/samsung-s24-ultra.jpg',
+                                'cmt' => 89,
+                            ],
+                            [
+                                'name' => 'MacBook Pro M3 14" 512GB',
+                                'price_old' => '59.990.000',
+                                'price' => '53.990.000',
+                                'discount' => 10,
+                                'img' => 'assets/images/macbook-pro-m3.jpg',
+                                'cmt' => 124,
+                            ],
+                            [
+                                'name' => 'iPad Pro M2 11" 256GB',
+                                'price_old' => '28.990.000',
+                                'price' => '24.990.000',
+                                'discount' => 12,
+                                'img' => 'assets/images/ipad-pro-m2.jpg',
+                                'cmt' => 98,
+                            ],
+                            [
+                                'name' => 'Mobell M139 4G',
+                                'price_old' => '390.000',
+                                'price' => '199.000',
+                                'discount' => 49,
+                                'img' => 'assets/images/placeholder.svg',
+                                'cmt' => 12,
+                            ],
+                        ];
+                    @endphp
+                    @foreach ($fallbacks as $p)
+                        <div
+                            class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card">
+                            <div class="relative img-wrap">
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $p['discount'] }}%</div>
+                                <button class="wish-btn" title="Yêu thích" onclick="event.stopPropagation();"><i
+                                        class="far fa-heart"></i></button>
+                                <img src="{{ asset($p['img']) }}" alt="{{ $p['name'] }}">
                             </div>
                             <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">Samsung Galaxy S24 Ultra 512GB
-                                </h3>
-                                <div class="flex items-center mb-2">
-                                    <div class="flex text-yellow-400 text-sm">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                    <span class="text-gray-500 text-sm ml-2">(89)</span>
-                                </div>
-                                <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $p['name'] }}</h3>
+                                <div class="flex items-center justify-between mb-2">
                                     <div>
-                                        <span class="text-lg font-bold text-[#ff6c2f]">33.990.000₫</span>
-                                        <span class="text-sm text-gray-500 line-through ml-2">36.990.000₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ $p['price'] }}₫</span>
+                                        <span
+                                            class="text-sm text-gray-500 line-through ml-2">{{ $p['price_old'] }}₫</span>
                                     </div>
-                                    {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="fas fa-star"></i>
+                                        @endfor
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">({{ $p['cmt'] }})</span>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                            data-product-id="3">
-                            <div class="relative">
-                                <img src="assets/images/macbook-pro-m3.jpg" alt="MacBook Pro M3"
-                                    class="w-full h-48 object-cover rounded-t-lg">
-                                <div
-                                    class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                    -10%
-                                </div>
-                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                        <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">MacBook Pro M3 14inch 512GB</h3>
-                                <div class="flex items-center mb-2">
-                                    <div class="flex text-yellow-400 text-sm">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                    <span class="text-gray-500 text-sm ml-2">(124)</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-lg font-bold text-[#ff6c2f]">53.990.000₫</span>
-                                        <span class="text-sm text-gray-500 line-through ml-2">59.990.000₫</span>
-                                    </div>
-                                    {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
-                            data-product-id="4">
-                            <div class="relative">
-                                <img src="assets/images/ipad-pro-m2.jpg" alt="iPad Pro M2"
-                                    class="w-full h-48 object-cover rounded-t-lg">
-                                <div
-                                    class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                    -12%
-                                </div>
-                                <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                    <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                        <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">iPad Pro M2 11inch 256GB</h3>
-                                <div class="flex items-center mb-2">
-                                    <div class="flex text-yellow-400 text-sm">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                    <span class="text-gray-500 text-sm ml-2">(98)</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="text-lg font-bold text-[#ff6c2f]">24.990.000₫</span>
-                                        <span class="text-sm text-gray-500 line-through ml-2">28.990.000₫</span>
-                                    </div>
-                                    {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-
-                    </div>
-                </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
     </section>
 
-    <!-- Featured Products -->
+    <!-- ================= Featured Products ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold">Sản phẩm nổi bật</h2>
-                <a href="{{ route('products.index') }}"
-                    class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
-                    Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
-                </a>
+                <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả
+                    <i class="fas fa-arrow-right ml-2"></i></a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 @foreach ($featuredProducts as $product)
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
-                        <div class="relative">
+                        <div class="relative img-wrap">
+                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                                onclick="event.stopPropagation();">
+                                <i class="far fa-heart"></i>
+                            </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                alt="{{ $product->name }}" loading="lazy" decoding="async"
                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                            <div class="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                NỔI BẬT
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
-                                    onclick="event.stopPropagation();">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
                         </div>
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star"></i>
-                                    @endfor
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
-                            </div>
-                            <div class="flex items-center justify-between">
+
+                            <div class="flex items-center justify-between mb-2">
                                 @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php
-                                        $variant = $product->variants->first();
-                                    @endphp
+                                    @php $variant = $product->variants->first(); @endphp
                                     <span
                                         class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                 @elseif($product->type === 'variable' && $product->variants->count() > 0)
@@ -665,7 +693,15 @@
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
-                                {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 text-sm">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
+                                </div>
+                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                             </div>
                         </div>
                     </div>
@@ -673,81 +709,38 @@
             </div>
         </div>
     </section>
-    <!-- Brand Section -->
-    <section class="py-12">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                @foreach ($brands as $brand)
-                    <div class="text-center group">
-                        <div
-                            class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition group-hover:scale-105 relative">
 
-                            @if ($brand->image)
-                                <img src="{{ asset('storage/' . $brand->image) }}" alt="{{ $brand->name }}"
-                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
-                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
-                            @else
-                                <img src="{{ asset('client_css/images/brand-default.jpg') }}" alt="Brand default"
-                                    class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg"
-                                    onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
-                            @endif
-
-                            <h3 class="font-semibold mb-2">{{ $brand->name }}</h3>
-                            <p class="text-sm text-gray-500 mb-2">{{ $brand->description }}</p>
-                            <a href="{{ route('brands.show', $brand->slug) }}"
-                                class="block mt-2 text-[#ff6c2f] font-semibold hover:underline">
-                                Xem thương hiệu
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    <!-- Hot Products -->
+    <!-- ================= Sản phẩm hot ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-3xl font-bold">Sản phẩm hot</h2>
-                <a href="{{ route('products.index') }}"
-                    class="text-[#ff6c2f] hover:hover:text-[#ff6c2f] font-semibold flex items-center">
-                    Xem tất cả <i class="fas fa-arrow-right ml-2"></i>
-                </a>
+                <h3 class="text-3xl font-bold">Sản phẩm hot</h3>
+                <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả
+                    <i class="fas fa-arrow-right ml-2"></i></a>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 @foreach ($hotProducts as $product)
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group"
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
-                        <div class="relative">
+                        <div class="relative img-wrap">
+                            <div class="chip chip-neutral"><i class="fas fa-eye"></i> {{ $product->view_count }}</div>
+                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                                onclick="event.stopPropagation();">
+                                <i class="far fa-heart"></i>
+                            </button>
+
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                alt="{{ $product->name }}" loading="lazy" decoding="async"
                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                            <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm font-bold">
-                                {{ $product->view_count }} lượt xem
-                            </div>
-                            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
-                                    onclick="event.stopPropagation();">
-                                    <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                </button>
-                            </div>
                         </div>
+
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-                            <div class="flex items-center mb-2">
-                                <div class="flex text-yellow-400 text-sm">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star"></i>
-                                    @endfor
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
-                            </div>
-                            <div class="flex items-center justify-between">
+
+                            <div class="flex items-center justify-between mb-2">
                                 @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php
-                                        $variant = $product->variants->first();
-                                    @endphp
+                                    @php $variant = $product->variants->first(); @endphp
                                     <span
                                         class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                 @elseif($product->type === 'variable' && $product->variants->count() > 0)
@@ -766,846 +759,242 @@
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
+
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400 text-sm">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
+                                </div>
+                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                            </div>
                         </div>
                     </div>
                 @endforeach
             </div>
         </div>
     </section>
-    <!-- Bài viết mới Section -->
+
+    <!-- ================= Brand Section: CAROUSEL ================= -->
+    <section class="py-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu</h2>
+
+            <div class="hslider brands-slider" data-slider>
+                <button class="hnav prev" type="button" aria-label="Trước"><i class="fas fa-chevron-left"></i></button>
+                <button class="hnav next" type="button" aria-label="Sau"><i class="fas fa-chevron-right"></i></button>
+
+                <div class="htrack">
+                    @foreach ($brands as $brand)
+                        <div class="hitem">
+                            <div
+                                class="brand-card text-center group bg-white rounded-lg shadow-md hover:shadow-lg transition">
+                                @if ($brand->image)
+                                    <img src="{{ asset('storage/' . $brand->image) }}" alt="{{ $brand->name }}"
+                                        class="mx-auto mb-3 object-cover rounded-lg" loading="lazy" decoding="async"
+                                        onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                                @else
+                                    <img src="{{ asset('client_css/images/brand-default.jpg') }}" alt="Brand default"
+                                        class="mx-auto mb-3 object-cover rounded-lg" loading="lazy" decoding="async"
+                                        onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                                @endif
+                                <h3 class="font-semibold text-sm mb-1 line-clamp-1">{{ $brand->name }}</h3>
+                                
+                                <a href="{{ route('brands.show', $brand->slug) }}"
+                                    class="block text-[#ff6c2f] text-sm font-semibold hover:underline">
+                                    Xem thương hiệu
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= Bài viết mới ================= -->
     <section class="py-10 bg-gradient-to-b from-gray-50 to-white">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-8 text-[#ff6c2f]">Bài viết mới</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center items-stretch">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 @foreach ($latestNews as $item)
                     <div
-                        class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group mx-auto relative h-[320px] min-w-[260px] max-w-[320px] w-full">
-                        <button onclick="window.location.href='{{ route('client.news.show', $item->id) }}'"
-                            class="absolute inset-0 w-full h-full z-10 cursor-pointer opacity-0"
-                            aria-label="Xem bài viết"></button>
+                        class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group relative h-[320px] min-w-[260px] max-w-[320px] w-full mx-auto">
+                        <a href="{{ route('client.news.show', $item->id) }}" class="absolute inset-0 z-10"
+                            aria-label="Xem bài viết"></a>
                         <div class="w-full h-[180px] relative flex items-center justify-center bg-gray-100">
                             <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
                                 alt="{{ $item->title }}"
-                                class="w-full h-full object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-300">
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                             <h3
                                 class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">
-                                {{ $item->title }}</h3>
-
+                                {{ $item->title }}
+                            </h3>
                         </div>
                     </div>
                 @endforeach
             </div>
             <div class="flex justify-center mt-6">
                 <a href="{{ route('client.news.index') }}"
-                    class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">Xem
-                    tất cả bài viết</a>
+                    class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">
+                    Xem tất cả bài viết
+                </a>
             </div>
         </div>
     </section>
 @endsection
 
-
 @push('scripts')
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let slides = document.querySelectorAll(".slide");
-            let indicators = document.querySelectorAll(".indicator");
-            let currentIndex = 0;
-            let slideInterval = setInterval(nextSlide, 6000); // 4 giây
-
-            function showSlide(nextIndex, direction = 1) {
-                slides.forEach((slide, i) => {
-                    slide.classList.remove("active", "prev-active");
-                    if (i === currentIndex) {
-                        slide.classList.add(direction === 1 ? "prev-active" : "active");
-                    }
-                    if (i === nextIndex) {
-                        slide.classList.add("active");
-                    }
-                });
-
-                indicators.forEach((ind, i) => {
-                    ind.classList.toggle("active", i === nextIndex);
-                });
-
-                currentIndex = nextIndex;
-            }
-
-            function nextSlide() {
-                let nextIndex = (currentIndex + 1) % slides.length;
-                showSlide(nextIndex, 1);
-            }
-
-            function prevSlide() {
-                let prevIndex = (currentIndex - 1 + slides.length) % slides.length;
-                showSlide(prevIndex, -1);
-            }
-
-            // Nút điều hướng
-            document.querySelector(".slide-nav.next")?.addEventListener("click", () => {
-                clearInterval(slideInterval);
-                nextSlide();
-                slideInterval = setInterval(nextSlide, 5000);
-            });
-
-            document.querySelector(".slide-nav.prev")?.addEventListener("click", () => {
-                clearInterval(slideInterval);
-                prevSlide();
-                slideInterval = setInterval(nextSlide, 4000);
-            });
-
-            showSlide(currentIndex);
-        });
-    </script>
-@endpush
-
-@push('scripts')
-    <script>
-        // Slideshow functionality
+        // === Slideshow ===
         document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.querySelector('.slideshow-container');
+            if (!slider) return;
+            const slides = slider.querySelectorAll('.slide');
+            const prevBtn = slider.querySelector('[data-slide="prev"]');
+            const nextBtn = slider.querySelector('[data-slide="next"]');
+            const indicators = slider.querySelectorAll('.indicator');
+            let index = 0,
+                timer = null;
+            const DURATION = 5000;
 
-            // Page-specific initialization will be handled in the main DOMContentLoaded listener below
-
-            // Prevent multiple initialization
-            let isPageInitialized = false;
-
-            function setupAccountDropdownInline() {
-                if (!window.PRODUCT_DATA) {
-                    console.log('PRODUCT_DATA not loaded yet');
-                    return;
-                }
-
-                const accountButton = document.getElementById('accountMenuBtn');
-                if (!accountButton) return;
-
-                // Check if dropdown already exists
-                const existingDropdown = accountButton.parentElement.querySelector('.account-dropdown');
-                if (existingDropdown) {
-                    console.log('Account dropdown already exists');
-                    return;
-                }
-
-                // Create dropdown element
-                const dropdown = document.createElement('div');
-                dropdown.className =
-                    'absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden account-dropdown';
-                dropdown.innerHTML = ``;
-
-                // Add dropdown to button's parent
-                accountButton.parentElement.appendChild(dropdown);
-
-                // Toggle dropdown on button click
-                accountButton.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    // Close other dropdowns
-                    closeAllDropdowns();
-                    dropdown.classList.toggle('hidden');
-                });
-
-                // Prevent dropdown from closing when clicking inside it
-                dropdown.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
-
-                // Check login status and update UI
-                updateAccountStatus();
+            function go(to) {
+                if (!slides.length) return;
+                slides.forEach(s => s.classList.remove('active'));
+                indicators.forEach(i => i.classList.remove('active'));
+                index = (to + slides.length) % slides.length;
+                slides[index].classList.add('active');
+                if (indicators[index]) indicators[index].classList.add('active');
             }
-
-            function updateAccountStatus() {
-                // Check if user is logged in (you can implement your own logic here)
-                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-                const notLoggedInSection = document.getElementById('not-logged-in');
-                const loggedInSection = document.getElementById('logged-in');
-                const logoutSection = document.getElementById('logout-section');
-
-                if (isLoggedIn && userData.name) {
-                    // Show logged in state
-                    notLoggedInSection.classList.add('hidden');
-                    loggedInSection.classList.remove('hidden');
-                    logoutSection.classList.remove('hidden');
-
-                    // Update user info
-                    document.getElementById('user-name').textContent = userData.name;
-                    document.getElementById('user-email').textContent = userData.email;
-                } else {
-                    // Show not logged in state
-                    notLoggedInSection.classList.remove('hidden');
-                    loggedInSection.classList.add('hidden');
-                    logoutSection.classList.add('hidden');
-                }
+            const next = () => go(index + 1);
+            const prev = () => go(index - 1);
+            const start = () => {
+                stop();
+                timer = setInterval(next, DURATION);
             }
-
-            function logoutUser() {
-                // Clear user data
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userData');
-
-                // Update UI
-                updateAccountStatus();
-
-                // Close dropdown
-                closeAllDropdowns();
-
-                // Show notification
-                showNotificationInline('Đã đăng xuất thành công!');
+            const stop = () => {
+                if (timer) clearInterval(timer);
             }
-
-            function closeAllDropdowns() {
-                const dropdowns = document.querySelectorAll(
-                    '.account-dropdown, .category-dropdown, .cart-dropdown');
-                dropdowns.forEach(dropdown => {
-                    dropdown.classList.add('hidden');
-                });
-            }
-
-            function setupCartSidebarInline() {
-                const cartButton = document.getElementById('cartMenuBtn');
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
-                const closeSidebarBtn = document.getElementById('close-cart-sidebar');
-
-                if (!cartButton || !cartSidebar || !cartOverlay || !closeSidebarBtn) return;
-
-                // Check if listeners already added
-                if (cartButton.dataset.listenerAdded === 'true') {
-                    console.log('Cart sidebar listeners already added');
-                    return;
-                }
-
-                // Open sidebar when cart button clicked
-                cartButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openCartSidebar();
-                });
-
-                // Close sidebar when close button clicked
-                closeSidebarBtn.addEventListener('click', function() {
-                    closeCartSidebar();
-                });
-
-                // Close sidebar when overlay clicked
-                cartOverlay.addEventListener('click', function() {
-                    closeCartSidebar();
-                });
-
-                // Mark listeners as added
-                cartButton.dataset.listenerAdded = 'true';
-
-                // Load cart content
-                loadCartSidebar();
-            }
-
-            function openCartSidebar() {
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
-
-                if (cartSidebar && cartOverlay) {
-                    cartSidebar.classList.remove('hidden');
-                    cartOverlay.classList.remove('hidden');
-
-                    // Add slight delay for smooth animation
-                    setTimeout(() => {
-                        cartSidebar.classList.remove('translate-x-full');
-                    }, 10);
-
-                    // Load latest cart data
-                    loadCartSidebar();
-
-                    // Prevent body scroll
-                    document.body.style.overflow = 'hidden';
-                }
-            }
-
-            function closeCartSidebar() {
-                const cartSidebar = document.getElementById('cart-sidebar');
-                const cartOverlay = document.getElementById('cart-overlay');
-
-                if (cartSidebar && cartOverlay) {
-                    cartSidebar.classList.add('translate-x-full');
-
-                    setTimeout(() => {
-                        cartSidebar.classList.add('hidden');
-                        cartOverlay.classList.add('hidden');
-                    }, 300);
-
-                    // Restore body scroll
-                    document.body.style.overflow = '';
-                }
-            }
-
-            function loadCartSidebar() {
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const itemsContainer = document.getElementById('cart-items-container');
-                const summaryContainer = document.getElementById('cart-summary');
-
-                if (!itemsContainer || !summaryContainer) return;
-
-                if (cart.length === 0) {
-                    // Empty cart state
-                    itemsContainer.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-center py-12">
-                        <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
-                        <h3 class="text-lg font-semibold text-gray-600 mb-2">Giỏ hàng trống</h3>
-                        <p class="text-gray-500 mb-6">Hãy thêm sản phẩm để tiếp tục mua sắm</p>
-                        <button onclick="closeCartSidebar()" class="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition">
-                            Tiếp tục mua sắm
-                        </button>
-                    </div>
-                `;
-                    summaryContainer.innerHTML = '';
-                    return;
-                }
-
-                // Cart items
-                itemsContainer.innerHTML = `
-                <div class="space-y-4">
-                    ${cart.map(item => `
-                                                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cart-item" data-id="${item.id}">
-                                                            <div class="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                                                                <img src="${item.image || 'assets/images/placeholder.svg'}" 
-                                                                     alt="${item.name}" 
-                                                                     class="w-full h-full object-cover"
-                                                                     onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                                                            </div>
-                                                            <div class="flex-1 min-w-0">
-                                                                <h4 class="font-medium text-gray-900 truncate">${item.name}</h4>
-                                                                <p class="text-sm text-gray-500">${item.color || ''} ${item.storage || ''}</p>
-                                                                <div class="flex items-center justify-between mt-2">
-                                                                    <div class="text-orange-600 font-semibold">
-                                                                        ${window.PRODUCT_UTILS.formatCurrency(item.price)}
-                                                                    </div>
-                                                                    <div class="flex items-center space-x-2">
-                                                                        <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity - 1})" 
-                                                                                class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                                            <i class="fas fa-minus text-xs"></i>
-                                                                        </button>
-                                                                        <span class="w-8 text-center font-medium">${item.quantity}</span>
-                                                                        <button onclick="updateCartQuantityInline(${item.id}, ${item.quantity + 1})" 
-                                                                                class="w-8 h-8 flex items-center justify-center bg-white border border-gray-300 rounded hover:bg-gray-50">
-                                                                            <i class="fas fa-plus text-xs"></i>
-                                                                        </button>
-                                                                        <button onclick="removeFromCartInline(${item.id})" 
-                                                                                class="w-8 h-8 flex items-center justify-center text-[#ff6c2f] hover:bg-orange-50 rounded">
-                                                                            <i class="fas fa-trash text-xs"></i>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    `).join('')}
-                </div>
-            `;
-
-                // Cart summary
-                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-                summaryContainer.innerHTML = `
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Tổng sản phẩm:</span>
-                        <span class="font-medium">${itemCount} sản phẩm</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Tạm tính:</span>
-                        <span class="font-medium">${window.PRODUCT_UTILS.formatCurrency(total)}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-gray-600">Phí vận chuyển:</span>
-                        <span class="font-medium text-green-600">Miễn phí</span>
-                    </div>
-                    <div class="border-t pt-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="text-lg font-semibold text-gray-900">Tổng cộng:</span>
-                            <span class="text-xl font-bold text-orange-600">${window.PRODUCT_UTILS.formatCurrency(total)}</span>
-                        </div>
-                        <div class="space-y-3">
-                            <button onclick="proceedToCheckout()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
-                                <i class="fas fa-credit-card mr-2"></i>
-                                Thanh toán ngay
-                            </button>
-                            <button onclick="window.location.href='pages/cart.html'" class="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
-                                Xem giỏ hàng chi tiết
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            }
-
-            function updateCartQuantityInline(productId, newQuantity) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-                if (newQuantity <= 0) {
-                    // Remove item if quantity is 0 or less
-                    cart = cart.filter(item => item.id !== productId);
-                } else {
-                    // Update quantity
-                    const itemIndex = cart.findIndex(item => item.id === productId);
-                    if (itemIndex >= 0) {
-                        cart[itemIndex].quantity = newQuantity;
-                    }
-                }
-
-                localStorage.setItem('cart', JSON.stringify(cart));
-                loadCartSidebar();
-                updateCartCountInline();
-            }
-
-            function removeFromCartInline(productId) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                cart = cart.filter(item => item.id !== productId);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                loadCartSidebar();
-                updateCartCountInline();
-                showNotificationInline('Đã xóa sản phẩm khỏi giỏ hàng!');
-            }
-
-            function proceedToCheckout() {
-                // Close sidebar
-                closeCartSidebar();
-
-                // Navigate to checkout page
-                window.location.href = '{{ route('checkout.index') }}';
-            }
-
-            // Global click listener flag
-            let globalClickListenerAdded = false;
-
-            function demoLogin() {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userData', JSON.stringify({
-                    name: 'Nguyễn Văn A',
-                    email: 'nguyenvana@email.com'
-                }));
-                updateAccountStatus();
-                showNotificationInline('Đăng nhập thành công!');
-            }
-
-            function loadFeaturedProductsInline() {
-                try {
-                    const container = document.getElementById('featured-products');
-                    if (!container) {
-                        console.log('Featured products container not found');
-                        return;
-                    }
-
-                    if (!window.PRODUCT_DATA || !window.PRODUCT_DATA.products) {
-                        console.error('Product data not available');
-                        return;
-                    }
-
-                    container.innerHTML = '';
-                    const products = window.PRODUCT_DATA.products.slice(0, 8);
-
-                    products.forEach(product => {
-                        const productCard = createProductCardInline(product);
-                        container.appendChild(productCard);
-                    });
-
-                    console.log('Featured products loaded successfully');
-                } catch (error) {
-                    console.error('Error loading featured products:', error);
-                }
-            }
-
-            function loadFlashSaleProductsInline() {
-                try {
-                    const container = document.getElementById('flash-sale-products');
-                    if (!container) {
-                        console.log('Flash sale products container not found');
-                        return;
-                    }
-
-                    if (!window.PRODUCT_UTILS) {
-                        console.error('Product utils not available');
-                        return;
-                    }
-
-                    container.innerHTML = '';
-                    const flashProducts = window.PRODUCT_UTILS.getFlashSaleProducts();
-
-                    flashProducts.forEach(product => {
-                        const productCard = createProductCardInline(product, true);
-                        container.appendChild(productCard);
-                    });
-
-                    console.log('Flash sale products loaded successfully');
-                } catch (error) {
-                    console.error('Error loading flash sale products:', error);
-                }
-            }
-
-            function createProductCardInline(product, isFlashSale = false) {
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow-md overflow-hidden product-card cursor-pointer';
-
-                const discountBadge = product.discount ?
-                    `<div class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">-${product.discount}%</div>` :
-                    '';
-
-                const flashSaleBadge = isFlashSale ?
-                    '<div class="absolute top-2 right-2 bg-yellow-400 text-[#ff6c2f] px-2 py-1 rounded text-sm font-bold">⚡ FLASH</div>' :
-                    '';
-
-                const price = isFlashSale && product.salePrice ? product.salePrice : product.price;
-                const originalPriceHtml = product.originalPrice ?
-                    `<span class="text-gray-500 line-through text-sm">${window.PRODUCT_UTILS.formatCurrency(product.originalPrice)}</span>` :
-                    '';
-
-                card.innerHTML = `
-                <div class="relative">
-                    ${discountBadge}
-                    ${flashSaleBadge}
-                    <img src="${product.image || 'assets/images/placeholder.svg'}" alt="${product.name}" class="w-full h-48 object-cover" 
-                         onerror="this.onerror=null; this.src='assets/images/placeholder.svg'">
-                </div>
-                <div class="p-4">
-                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">${product.name}</h3>
-                    <div class="flex items-center mb-2">
-                        <div class="flex text-yellow-400">
-                            ${window.PRODUCT_UTILS.createStarRating(product.rating || 0)}
-                        </div>
-                        <span class="text-gray-500 text-sm ml-2">(${product.reviews || 0})</span>
-                    </div>
-                    <div class="mb-3">
-                        <div class="text-[#ff6c2f] font-bold text-lg">${window.PRODUCT_UTILS.formatCurrency(price)}</div>
-                        ${originalPriceHtml}
-                    </div>
-                    <button onclick="addToCartInline(${product.id})" 
-                            class="w-full bg-[#ff6c2f] text-white py-2 rounded-lg hover:bg-[#ff6c2f] transition">
-                        Thêm vào giỏ
-                    </button>
-                </div>
-            `;
-
-                // Add click event for product details
-                card.addEventListener('click', function(e) {
-                    if (!e.target.closest('button')) {
-                        window.location.href = `pages/product-detail.html?id=${product.id}`;
-                    }
-                });
-
-                return card;
-            }
-
-            function addToCartInline(productId) {
-                const product = window.PRODUCT_UTILS.getProductById(productId);
-                if (!product) return;
-
-                // Get existing cart from localStorage
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-                // Check if product already in cart
-                const existingItem = cart.find(item => item.id === productId);
-
-                if (existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image,
-                        quantity: 1,
-                        category: product.category
-                    });
-                }
-
-                // Save to localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Update cart count
-                updateCartCountInline();
-
-                // Show notification
-                showNotificationInline(`Đã thêm ${product.name} vào giỏ hàng!`);
-            }
-
-            function updateCartCountInline() {
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                const cartCount = document.getElementById('cart-count');
-                if (cartCount) {
-                    cartCount.textContent = totalItems;
-                }
-            }
-
-            function showNotificationInline(message) {
-                const notification = document.createElement('div');
-                notification.className =
-                    'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0 transition-all duration-300';
-                notification.textContent = message;
-
-                document.body.appendChild(notification);
-
-                // Show notification
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full', 'opacity-0');
-                }, 100);
-
-                // Hide notification
-                setTimeout(() => {
-                    notification.classList.add('translate-x-full', 'opacity-0');
-                    setTimeout(() => {
-                        if (notification.parentNode) {
-                            notification.parentNode.removeChild(notification);
-                        }
-                    }, 300);
-                }, 3000);
-            }
-
-            function startCountdownInline() {
-                const hoursElement = document.getElementById('hours');
-                const minutesElement = document.getElementById('minutes');
-                const secondsElement = document.getElementById('seconds');
-
-                if (!hoursElement || !minutesElement || !secondsElement) return;
-
-                let timeLeft = 43200; // 12 hours in seconds
-
-                const countdown = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        timeLeft = 43200; // Reset
-                        return;
-                    }
-
-                    const hours = Math.floor(timeLeft / 3600);
-                    const minutes = Math.floor((timeLeft % 3600) / 60);
-                    const seconds = timeLeft % 60;
-
-                    hoursElement.textContent = hours.toString().padStart(2, '0');
-                    minutesElement.textContent = minutes.toString().padStart(2, '0');
-                    secondsElement.textContent = seconds.toString().padStart(2, '0');
-
-                    timeLeft--;
-                }, 1000);
-            }
-
-            // Initialize cart count on page load
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('DOMContentLoaded fired');
-
-                function checkExecutionLimit() {
-                    const maxExecutions = 5;
-                    const executionCount = parseInt(localStorage.getItem('executionCount') || '0');
-
-                    if (executionCount >= maxExecutions) {
-                        console.warn('Maximum execution limit reached');
-                        return false;
-                    }
-
-                    localStorage.setItem('executionCount', (executionCount + 1).toString());
-                    return true;
-                }
-
-                if (!checkExecutionLimit()) {
-                    return;
-                }
-
-                // Prevent double initialization
-                if (isPageInitialized) {
-                    console.log('Page already initialized, skipping');
-                    return;
-                }
-
-                console.log('Initializing page...');
-                isPageInitialized = true;
-
-                // Check if PRODUCT_DATA is loaded
-                if (!window.PRODUCT_DATA) {
-                    console.error('PRODUCT_DATA not loaded!');
-                    return;
-                }
-
-                try {
-                    // Initialize cart count
-                    updateCartCountInline();
-
-                    // Setup UI components
-                    setupAccountDropdownInline();
-                    setupCartSidebarInline();
-
-                    // Load products
-                    loadFeaturedProductsInline();
-                    loadFlashSaleProductsInline();
-                    startCountdownInline();
-
-                    // Add global click listener only once
-                    if (!globalClickListenerAdded) {
-                        document.addEventListener('click', function() {
-                            closeAllDropdowns();
-                        });
-                        globalClickListenerAdded = true;
-                    }
-
-                    console.log('Page initialization completed');
-                } catch (error) {
-                    console.error('Error during page initialization:', error);
-                }
+            go(0);
+            start();
+            nextBtn && nextBtn.addEventListener('click', () => {
+                stop();
+                next();
+                start();
             });
-
-            // Static add to cart function for hardcoded products
-            function addToCartStatic(id, name, price, image) {
-                const cartItem = {
-                    id: id,
-                    productId: id,
-                    name: name,
-                    price: price,
-                    quantity: 1,
-                    image: image,
-                    color: 'Mặc định',
-                    storage: 'Mặc định'
-                };
-
-                // Get existing cart
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-                // Check if item already exists
-                const existingIndex = cart.findIndex(item => item.id === cartItem.id);
-
-                if (existingIndex !== -1) {
-                    cart[existingIndex].quantity += 1;
-                } else {
-                    cart.push(cartItem);
-                }
-
-                // Save to localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Update cart count if function exists
-                if (typeof updateCartCount === 'function') {
-                    updateCartCount();
-                }
-
-                // Show simple notification
-                const notification = document.createElement('div');
-                notification.className =
-                    'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                notification.textContent = `Đã thêm "${name}" vào giỏ hàng!`;
-                document.body.appendChild(notification);
-
-                // Remove notification after 3 seconds
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 3000);
-
-                console.log('Added to cart:', cartItem);
-            }
-
-            // Function for hero section "MUA NGAY" button
-            function goToFeaturedProduct() {
-                // Direct to iPhone 15 Pro product detail page
-                window.location.href = 'pages/product-detail.html?id=iphone-15-pro';
-            }
-
-            // Slideshow functionality
-            let currentSlideIndex = 0;
-            const slides = document.querySelectorAll('.slide');
-            const indicators = document.querySelectorAll('.indicator');
-            const totalSlides = slides.length;
-
-            function showSlide(index) {
-                // Hide all slides
-                slides.forEach(slide => {
-                    slide.classList.remove('active');
-                });
-
-                // Remove active from all indicators
-                indicators.forEach(indicator => {
-                    indicator.classList.remove('active');
-                });
-
-                // Show current slide
-                if (slides[index]) {
-                    slides[index].classList.add('active');
-                }
-
-                // Update indicator
-                if (indicators[index]) {
-                    indicators[index].classList.add('active');
-                }
-            }
-
-            function nextSlide() {
-                currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
-                showSlide(currentSlideIndex);
-            }
-
-            function prevSlide() {
-                currentSlideIndex = (currentSlideIndex - 1 + totalSlides) % totalSlides;
-                showSlide(currentSlideIndex);
-            }
-
-            function changeSlide(direction) {
-                if (direction === 1) {
-                    nextSlide();
-                } else {
-                    prevSlide();
-                }
-            }
-
-            function currentSlide(index) {
-                currentSlideIndex = index - 1;
-                showSlide(currentSlideIndex);
-            }
-
-            // Auto slide every 3 seconds
-            function autoSlide() {
-                nextSlide();
-            }
-
-            // Initialize slideshow
-            function initSlideshow() {
-                if (slides.length > 0) {
-                    showSlide(0);
-                    // Auto-advance slides every 3 seconds
-                    setInterval(autoSlide, 3000);
-                }
-            }
-
-            // Initialize slideshow when DOM is loaded
-            document.addEventListener('DOMContentLoaded', function() {
-                // Add a small delay to ensure all elements are loaded
-                setTimeout(initSlideshow, 100);
+            prevBtn && prevBtn.addEventListener('click', () => {
+                stop();
+                prev();
+                start();
             });
+            indicators.forEach(i => i.addEventListener('click', () => {
+                stop();
+                go(parseInt(i.dataset.to, 10));
+                start();
+            }));
+            slider.addEventListener('mouseenter', stop);
+            slider.addEventListener('mouseleave', start);
+        });
 
-            // Make functions globally available
-            window.changeSlide = changeSlide;
-            window.currentSlide = currentSlide;
+        // === Countdown (12h) ===
+        (function() {
+            const h = document.getElementById('hours'),
+                m = document.getElementById('minutes'),
+                s = document.getElementById('seconds');
+            if (!h || !m || !s) return;
+            let left = 12 * 60 * 60;
+            const tick = () => {
+                if (left <= 0) left = 12 * 60 * 60;
+                const hh = Math.floor(left / 3600);
+                const mm = Math.floor((left % 3600) / 60);
+                const ss = left % 60;
+                h.textContent = String(hh).padStart(2, '0');
+                m.textContent = String(mm).padStart(2, '0');
+                s.textContent = String(ss).padStart(2, '0');
+                left--;
+            };
+            tick();
+            setInterval(tick, 1000);
+        })();
 
-            // Category dropdown functionality
-            window.toggleCategoryDropdown = function(categoryId) {
-                const dropdown = document.getElementById('dropdown-' + categoryId);
-                const icon = document.getElementById('icon-' + categoryId);
-
-                if (dropdown && icon) {
-                    dropdown.classList.toggle('hidden');
-                    icon.classList.toggle('rotate-180');
+        // === Wishlist: toggle + persist localStorage ===
+        (function() {
+            const KEY = 'tv_wishlist_ids';
+            const parse = () => {
+                try {
+                    return new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+                } catch {
+                    return new Set();
                 }
             };
+            const save = (set) => localStorage.setItem(KEY, JSON.stringify([...set]));
+            const liked = parse();
 
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!event.target.closest('.category-dropdown-wrapper')) {
-                    const dropdowns = document.querySelectorAll('.category-dropdown');
-                    const icons = document.querySelectorAll('[id^="icon-"]');
-
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.add('hidden');
-                    });
-
-                    icons.forEach(icon => {
-                        icon.classList.remove('rotate-180');
-                    });
+            document.querySelectorAll('.wish-btn[data-id]').forEach(btn => {
+                const id = String(btn.dataset.id);
+                const icon = btn.querySelector('i');
+                const active = liked.has(id);
+                btn.classList.toggle('active', active);
+                if (icon) {
+                    icon.classList.toggle('fas', active);
+                    icon.classList.toggle('far', !active);
                 }
+                btn.addEventListener('click', () => {
+                    const nowActive = btn.classList.toggle('active');
+                    if (icon) {
+                        icon.classList.toggle('fas', nowActive);
+                        icon.classList.toggle('far', !nowActive);
+                    }
+                    if (nowActive) liked.add(id);
+                    else liked.delete(id);
+                    save(liked);
+                });
+            });
+        })();
+
+        // === Horizontal sliders controller (cho mọi .hslider) ===
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-slider]').forEach((root) => {
+                const track = root.querySelector('.htrack');
+                const prev = root.querySelector('.hnav.prev');
+                const next = root.querySelector('.hnav.next');
+
+                const getStep = () => {
+                    const first = track.querySelector('.hitem');
+                    if (!first) return 300;
+                    const cs = getComputedStyle(track);
+                    const gap = parseFloat(cs.columnGap || cs.gap || 0);
+                    return first.getBoundingClientRect().width + gap;
+                };
+
+                const scrollByStep = (dir) => track.scrollBy({
+                    left: dir * getStep(),
+                    behavior: 'smooth'
+                });
+
+                prev && prev.addEventListener('click', () => scrollByStep(-1));
+                next && next.addEventListener('click', () => scrollByStep(1));
+
+                const update = () => {
+                    const max = track.scrollWidth - track.clientWidth - 2;
+                    const atStart = track.scrollLeft <= 0;
+                    const atEnd = track.scrollLeft >= max;
+                    if (prev) {
+                        prev.disabled = atStart;
+                        prev.style.opacity = atStart ? .4 : 1;
+                    }
+                    if (next) {
+                        next.disabled = atEnd;
+                        next.style.opacity = atEnd ? .4 : 1;
+                    }
+                };
+                track.addEventListener('scroll', update, {
+                    passive: true
+                });
+                window.addEventListener('resize', update);
+                update();
             });
         });
     </script>

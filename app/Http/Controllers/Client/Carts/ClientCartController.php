@@ -243,7 +243,7 @@ class ClientCartController extends Controller
                 'message' => 'Đã set buy now thành công!',
             ]);
         } catch (\Throwable $e) {
-            \Log::error('setBuyNow failed', ['msg' => $e->getMessage()]);
+            Log::error('setBuyNow failed', ['msg' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi set buy now',

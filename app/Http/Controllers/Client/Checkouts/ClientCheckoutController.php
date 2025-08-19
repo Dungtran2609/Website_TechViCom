@@ -142,7 +142,7 @@ class ClientCheckoutController extends Controller
             session()->forget('restored_coupon');
         }
 
-        $buildKey = fn($productId, $variantId = null) => sprintf('%s:%s', (int)$productId, $variantId ? (int)$variantId : 0);
+        $buildKey = fn ($productId, $variantId = null) => sprintf('%s:%s', (int)$productId, $variantId ? (int)$variantId : 0);
 
         $cartItems = [];
         $subtotal  = 0;
@@ -225,7 +225,7 @@ class ClientCheckoutController extends Controller
                 }
 
                 foreach ($cart as $ci) {
-                    $product = Product::with(['productAllImages', 'variants'])->find($ci['product_id']);
+                    $product = Product::with(['productAllImages','variants'])->find($ci['product_id']);
                     if (!$product) continue;
                     $variant = !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null;
                     $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
@@ -248,9 +248,10 @@ class ClientCheckoutController extends Controller
                 }
             }
         }
-        /* ---------- Buynow ---------- */ elseif (session('buynow')) {
+        /* ---------- Buynow ---------- */
+        elseif (session('buynow')) {
             $buynow = session('buynow');
-            $product = Product::with(['productAllImages', 'variants'])->find($buynow['product_id']);
+            $product = Product::with(['productAllImages','variants'])->find($buynow['product_id']);
             $variant = !empty($buynow['variant_id']) ? \App\Models\ProductVariant::find($buynow['variant_id']) : null;
             if ($product) {
                 $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
@@ -271,12 +272,11 @@ class ClientCheckoutController extends Controller
                 $subtotal += $price * (int)($buynow['quantity'] ?? 1);
             }
         }
-        /* ---------- Mặc định ---------- */ else {
+        /* ---------- Mặc định ---------- */
+        else {
             if (Auth::check()) {
                 $dbCartItems = Cart::with([
-                    'product.productAllImages',
-                    'product.variants',
-                    'productVariant'
+                    'product.productAllImages', 'product.variants', 'productVariant'
                 ])->where('user_id', Auth::id())->get();
 
                 foreach ($dbCartItems as $ci) {
@@ -305,7 +305,7 @@ class ClientCheckoutController extends Controller
             } else {
                 $cart = session()->get('cart', []);
                 foreach ($cart as $ci) {
-                    $product = Product::with(['productAllImages', 'variants'])->find($ci['product_id']);
+                    $product = Product::with(['productAllImages','variants'])->find($ci['product_id']);
                     if (!$product) continue;
 
                     $variant = !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null;
@@ -342,7 +342,7 @@ class ClientCheckoutController extends Controller
         $defaultAddress = null;
         if (Auth::check()) {
             $currentUser = Auth::user();
-            $addresses = UserAddress::where('user_id', Auth::id())->orderBy('is_default', 'desc')->get();
+            $addresses = UserAddress::where('user_id', Auth::id())->orderBy('is_default','desc')->get();
             $defaultAddress = $addresses->first();
         }
 
@@ -365,15 +365,9 @@ class ClientCheckoutController extends Controller
             $couponCode = $request->input('coupon_code');
             $coupon = Coupon::where('code', $couponCode)
                 ->where('status', 1)
-                ->where(function ($q) {
-                    $q->whereNull('deleted_at');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-                })
+                ->where(function ($q) { $q->whereNull('deleted_at'); })
+                ->where(function ($q) { $q->whereNull('start_date')->orWhere('start_date','<=',now()); })
+                ->where(function ($q) { $q->whereNull('end_date')->orWhere('end_date','>=',now()); })
                 ->first();
 
             if ($coupon) {
@@ -495,7 +489,7 @@ class ClientCheckoutController extends Controller
                     'recipient_name'   => $address->recipient_name ?? (Auth::user()->name ?? ''),
                     'recipient_phone'  => $address->phone ?? (Auth::user()->phone_number ?? ''),
                     'recipient_email'  => Auth::user()->email ?? '',
-                    'recipient_address' => $address->address_line . ', ' . $address->ward . ', ' . $address->district . ', ' . $address->city,
+                    'recipient_address'=> $address->address_line . ', ' . $address->ward . ', ' . $address->district . ', ' . $address->city,
                     'province_code'    => $address->province_code ?? '01',
                     'district_code'    => $address->district_code ?? '',
                     'ward_code'        => $address->ward_code ?? '',
@@ -516,7 +510,7 @@ class ClientCheckoutController extends Controller
                     'recipient_name'   => $request->recipient_name,
                     'recipient_phone'  => $request->recipient_phone,
                     'recipient_email'  => $request->recipient_email,
-                    'recipient_address' => $request->recipient_address,
+                    'recipient_address'=> $request->recipient_address,
                     'province_code'    => $request->province_code,
                     'district_code'    => $request->district_code,
                     'ward_code'        => $request->ward_code,
@@ -531,7 +525,7 @@ class ClientCheckoutController extends Controller
 
             $buynow = session('buynow');
             if ($buynow) {
-                $product = Product::with(['productAllImages', 'variants'])->find($buynow['product_id']);
+                $product = Product::with(['productAllImages','variants'])->find($buynow['product_id']);
                 if (!$product) return redirect()->route('checkout.index')->with('error', 'Sản phẩm không tồn tại');
                 $variant = !empty($buynow['variant_id']) ? \App\Models\ProductVariant::find($buynow['variant_id']) : null;
                 $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
@@ -540,14 +534,14 @@ class ClientCheckoutController extends Controller
                     'product_id'    => $product->id,
                     'variant_id'    => $variant?->id,
                     'product'       => $product,
-                    'productVariant' => $variant,
+                    'productVariant'=> $variant,
                     'quantity'      => (int)($buynow['quantity'] ?? 1),
                     'price'         => (float)$price,
                     'image'         => $variant?->image ? 'storage/' . $variant->image
-                        : ($product->thumbnail ? 'storage/' . $product->thumbnail
-                            : (($product->productAllImages?->count() > 0)
-                                ? 'storage/' . $product->productAllImages->first()->image_path
-                                : 'client_css/images/placeholder.svg')),
+                                        : ($product->thumbnail ? 'storage/' . $product->thumbnail
+                                            : (($product->productAllImages?->count() > 0)
+                                                ? 'storage/' . $product->productAllImages->first()->image_path
+                                                : 'client_css/images/placeholder.svg')),
                 ]);
                 $source = 'buynow';
             } else {
@@ -562,7 +556,7 @@ class ClientCheckoutController extends Controller
                     }
 
                     foreach ($sessionCart as $ci) {
-                        $product = Product::with(['productAllImages', 'variants'])->find($ci['product_id']);
+                        $product = Product::with(['productAllImages','variants'])->find($ci['product_id']);
                         if (!$product) continue;
                         $variant = !empty($ci['variant_id']) ? \App\Models\ProductVariant::find($ci['variant_id']) : null;
                         $price = $variant ? ($variant->sale_price ?? $variant->price) : ($product->sale_price ?? $product->price);
@@ -571,28 +565,28 @@ class ClientCheckoutController extends Controller
                             'product_id'    => $product->id,
                             'variant_id'    => $variant?->id,
                             'product'       => $product,
-                            'productVariant' => $variant,
+                            'productVariant'=> $variant,
                             'quantity'      => (int)($ci['quantity'] ?? 1),
                             'price'         => (float)$price,
                             'image'         => $variant?->image ? 'storage/' . $variant->image
-                                : ($product->thumbnail ? 'storage/' . $product->thumbnail
-                                    : (($product->productAllImages?->count() > 0)
-                                        ? 'storage/' . $product->productAllImages->first()->image_path
-                                        : 'client_css/images/placeholder.svg')),
+                                                : ($product->thumbnail ? 'storage/' . $product->thumbnail
+                                                    : (($product->productAllImages?->count() > 0)
+                                                        ? 'storage/' . $product->productAllImages->first()->image_path
+                                                        : 'client_css/images/placeholder.svg')),
                         ]);
                     }
                     if ($cartItems->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
                     $source = 'session';
                 } else {
                     if (!empty($selectedIdsArr)) {
-                        $dbCartItems = Cart::with(['product.productAllImages', 'product.variants', 'productVariant'])
+                        $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
                             ->where('user_id', Auth::id())->whereIn('id', $selectedIdsArr)->get();
                         if ($dbCartItems->isEmpty()) { // id cart có thể đổi sau khi restore
-                            $dbCartItems = Cart::with(['product.productAllImages', 'product.variants', 'productVariant'])
+                            $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
                                 ->where('user_id', Auth::id())->get();
                         }
                     } else {
-                        $dbCartItems = Cart::with(['product.productAllImages', 'product.variants', 'productVariant'])
+                        $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
                             ->where('user_id', Auth::id())->get();
                     }
                     if ($dbCartItems->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
@@ -613,7 +607,7 @@ class ClientCheckoutController extends Controller
                             'product_id'    => $ci->product_id,
                             'variant_id'    => $ci->variant_id,
                             'product'       => $ci->product,
-                            'productVariant' => $ci->productVariant,
+                            'productVariant'=> $ci->productVariant,
                             'quantity'      => (int)$ci->quantity,
                             'price'         => (float)$price,
                             'image'         => $image,
@@ -713,7 +707,7 @@ class ClientCheckoutController extends Controller
                 $price     = (float)$item->price;
                 $variantId = $item->variant_id ?? ($item->productVariant->id ?? null);
                 $imageProd = $item->image ?? null;
-                $totalPrice = $price * (int)$item->quantity;
+                $totalPrice= $price * (int)$item->quantity;
 
                 OrderItem::create([
                     'order_id'      => $order->id,
@@ -1006,10 +1000,10 @@ class ClientCheckoutController extends Controller
                         'restored_coupon' => [
                             'code'   => $coupon->code,
                             'amount' => $order->discount_amount,
-                            'details' => [
+                            'details'=> [
                                 'discount_type'      => $coupon->discount_type,
                                 'value'              => $coupon->value,
-                                'max_discount_amount' => $coupon->max_discount_amount,
+                                'max_discount_amount'=> $coupon->max_discount_amount,
                                 'min_order_value'    => $coupon->min_order_value,
                                 'max_order_value'    => $coupon->max_order_value
                             ]
@@ -1021,7 +1015,7 @@ class ClientCheckoutController extends Controller
             Log::info('Cart restored from order', [
                 'order_id'   => $order->id,
                 'user_id'    => Auth::id(),
-                'items_count' => $order->orderItems->count(),
+                'items_count'=> $order->orderItems->count(),
                 'has_coupon' => !empty($order->coupon_code)
             ]);
         } catch (\Exception $e) {
@@ -1119,3 +1113,5 @@ class ClientCheckoutController extends Controller
         return (int)min($discount, $subtotal);
     }
 }
+
+

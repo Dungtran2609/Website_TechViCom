@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller; // Thêm dòng này
@@ -22,6 +21,7 @@ class ClientProfileController extends Controller // Đảm bảo kế thừa Con
         ]);
     }
 
+
     /**
      * Update the user's profile information.
      */
@@ -29,14 +29,18 @@ class ClientProfileController extends Controller // Đảm bảo kế thừa Con
     {
         $request->user()->fill($request->validated());
 
+
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
 
+
         $request->user()->save();
+
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
+
 
     /**
      * Delete the user's account.
@@ -47,15 +51,22 @@ class ClientProfileController extends Controller // Đảm bảo kế thừa Con
             'password' => ['required', 'current_password'],
         ]);
 
+
         $user = $request->user();
+
 
         Auth::logout();
 
+
         $user->delete();
+
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+
         return Redirect::to('/');
     }
 }
+
+

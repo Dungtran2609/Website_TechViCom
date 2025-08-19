@@ -131,6 +131,15 @@ class AdminUserController extends Controller
             return redirect()->route('admin.users.index')->with('error', 'Bạn không thể xóa chính mình.');
         }
 
+        // Chỉ cho phép xóa nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
+        // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
+        if ($user->orders()->whereNotIn('status', ['delivered', 'received'])->exists()) {
+            // Giải thích: Nếu user còn đơn hàng chưa giao thành công, không cho phép xóa để đảm bảo dữ liệu đơn hàng không bị mất liên kết
+            return redirect()->route('admin.users.index')->withErrors([
+                'delete' => 'Không thể xóa tài khoản này vì đang có đơn hàng chưa giao thành công hoặc đang đặt hàng!'
+            ]);
+        }
+
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
             Storage::disk('public')->delete($user->image_profile);
         }
@@ -160,6 +169,15 @@ class AdminUserController extends Controller
 
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.trashed')->with('error', 'Bạn không thể xóa chính mình vĩnh viễn.');
+        }
+
+        // Chỉ cho phép xóa vĩnh viễn nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
+        // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
+        if ($user->orders()->whereNotIn('status', ['delivered', 'received'])->exists()) {
+            // Giải thích: Nếu user còn đơn hàng chưa giao thành công, không cho phép xóa để đảm bảo dữ liệu đơn hàng không bị mất liên kết
+            return redirect()->route('admin.users.trashed')->withErrors([
+                'delete' => 'Không thể xóa tài khoản này vì đang có đơn hàng chưa giao thành công hoặc đang đặt hàng!'
+            ]);
         }
 
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {

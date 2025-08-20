@@ -28,6 +28,16 @@ class AdminOrderController extends Controller
     /* ========================= INDEX ========================= */
     public function index(Request $request)
     {
+        $statusMap = [
+            'pending' => 'Đang chờ xử lý',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đang giao hàng',
+            'delivered' => 'Đã giao',
+            'received' => 'Đã nhận hàng',
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Đã trả hàng',
+        ];
+
         $orders = Order::with([
             'user:id,name',
             'orderItems.productVariant.product.images'
@@ -36,14 +46,23 @@ class AdminOrderController extends Controller
                 $q->where('id', 'like', "%{$s}%")
                     ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$s}%"));
             })
+            ->when($request->status, function ($q, $status) {
+                $q->where('status', $status);
+            })
+            ->when($request->created_from, function ($q, $from) {
+                $q->whereDate('created_at', '>=', $from);
+            })
+            ->when($request->created_to, function ($q, $to) {
+                $q->whereDate('created_at', '<=', $to);
+            })
             ->latest()
             ->paginate(15);
 
         $orderData = $orders->map(function ($order) {
             $firstItem = $order->orderItems->first();
-            $imgPath = $firstItem?->image_product
+            $imgPath = $firstItem?->productVariant?->image
+                ?: $firstItem?->image_product
                 ?: $firstItem?->productVariant?->product?->images->first()?->image_path
-                ?: $firstItem?->productVariant?->image
                 ?: null;
 
             return [
@@ -56,6 +75,7 @@ class AdminOrderController extends Controller
         return view('admin.orders.index', [
             'orders' => $orderData,
             'pagination' => $orders,
+            'statusMap' => $statusMap,
         ]);
     }
 
@@ -72,17 +92,15 @@ class AdminOrderController extends Controller
             'coupon'
         ])->findOrFail($id);
 
-        // ĐỊA CHỈ (ưu tiên text đã lưu trong order)
-        if (!empty($order->recipient_address)) {
-            $address = $order->recipient_address;
-            $city = $district = $ward = '';
-        } elseif ($order->address) {
+        // ĐỊA CHỈ: Nếu khách chọn địa chỉ DB thì lấy từ DB, ngược lại lấy nhập tay
+        if ($order->address_id && $order->address) {
             $city = $order->address->city ?? '';
             $district = $order->address->district ?? '';
             $ward = $order->address->ward ?? '';
             $address = $order->address->address_line ?? '';
-} else {
-            $city = $district = $ward = $address = '';
+        } else {
+            $address = $order->recipient_address ?? '';
+            $city = $district = $ward = '';
         }
 
         // SUBTOTAL: ưu tiên total_price đã lưu
@@ -117,6 +135,13 @@ class AdminOrderController extends Controller
             'bank_transfer' => 'Chuyển khoản ngân hàng',
             'cod' => 'Thanh toán khi nhận hàng',
         ];
+        $paymentStatusMap = [
+            'pending' => 'Chưa thanh toán',
+            'processing' => 'Đang xử lý',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'cancelled' => 'Đã hủy thanh toán',
+        ];
 
         $orderData = [
             'id' => $order->id,
@@ -142,7 +167,7 @@ class AdminOrderController extends Controller
             'payment_method' => $order->payment_method,
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
             'payment_status' => $order->payment_status,
-            'payment_status_vietnamese' => Order::PAYMENT_STATUSES[$order->payment_status] ?? $order->payment_status,
+            'payment_status_vietnamese' => $paymentStatusMap[$order->payment_status] ?? $order->payment_status,
 'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
@@ -154,8 +179,8 @@ class AdminOrderController extends Controller
                     $prod = $item->product;
                 }
                 $price = $item->price ?? ($variant->sale_price ?? $variant->price ?? 0);
-                $imgPath = $item->image_product
-                    ?: ($variant ? $variant->image : null)
+                $imgPath = $variant?->image
+                    ?: $item->image_product
                     ?: null;
 
                 return [
@@ -210,6 +235,13 @@ class AdminOrderController extends Controller
             'credit_card' => 'Thẻ tín dụng/ghi nợ',
             'bank_transfer' => 'Chuyển khoản ngân hàng',
             'cod' => 'Thanh toán khi nhận hàng',
+        ];
+        $paymentStatusMap = [
+            'pending' => 'Chưa thanh toán',
+            'processing' => 'Đang xử lý',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'cancelled' => 'Đã hủy thanh toán',
         ];
 
         // subtotal theo dữ liệu hiện tại
@@ -385,16 +417,15 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
         // ====== QUY TẮC MỚI: nếu thanh toán ONLINE đã "paid" thì tự chuyển trạng thái đơn từ pending => processing ======
         // (tránh việc "paid" mà đơn vẫn ở trạng thái pending)
-        $effectivePaymentMethod = $data['payment_method'] ?? $order->payment_method;
-        $isOnlinePayment = in_array($effectivePaymentMethod, self::ONLINE_METHODS, true);
-        if (
-            $isOnlinePayment
-            && ($data['payment_status'] ?? $order->payment_status) === 'paid'
-            && ($data['status'] ?? $order->status) === 'pending'
-        ) {
-            // Nếu người dùng không tự set status thì tự nâng lên processing
-$order->status = 'processing';
-        }
+        // ĐÃ BỎ ĐOẠN NÀY THEO YÊU CẦU KHÁCH HÀNG
+        // if (
+        //     $isOnlinePayment
+        //     && ($data['payment_status'] ?? $order->payment_status) === 'paid'
+        //     && ($data['status'] ?? $order->status) === 'pending'
+        // ) {
+        //     // Nếu người dùng không tự set status thì tự nâng lên processing
+        //     $order->status = 'processing';
+        // }
 
         // Nếu client gửi status rõ ràng thì ưu tiên theo client
         if (!empty($data['status'])) {
@@ -578,6 +609,8 @@ $order->status = 'processing';
         if ($action === 'approve') {
             $ord = $ret->order;
             if ($ret->type === 'cancel' && $ord->status === 'pending') {
+                // Cộng lại tồn kho khi duyệt hủy đơn
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($ord);
                 $ord->status = 'cancelled';
             } elseif ($ret->type === 'return' && $ord->status === 'delivered') {
                 $ord->status = 'returned';

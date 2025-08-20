@@ -34,11 +34,18 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.permissions.list') }}" class="mb-4 d-flex gap-2 align-items-center">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25"
-               placeholder="Tìm quyền...">
-        <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
-        @if (request('search'))
+    <form method="GET" action="{{ route('admin.permissions.list') }}" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-auto" placeholder="Tìm quyền...">
+        <select name="module" class="form-select w-auto">
+            <option value="">Tất cả nhóm chức năng</option>
+            @if(isset($modules))
+                @foreach($modules as $m)
+                    <option value="{{ $m }}" {{ request('module') == $m ? 'selected' : '' }}>{{ ucfirst($m) }}</option>
+                @endforeach
+            @endif
+        </select>
+        <button type="submit" class="btn btn-outline-primary">Lọc</button>
+        @if (request('search') || request('module'))
             <a href="{{ route('admin.permissions.list') }}" class="btn btn-secondary">Xoá lọc</a>
         @endif
     </form>

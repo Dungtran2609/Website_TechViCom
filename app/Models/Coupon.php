@@ -12,9 +12,13 @@ class Coupon extends Model
     protected $fillable = [
         'code', 'discount_type', 'value', 'max_discount_amount',
         'min_order_value', 'max_order_value', 'max_usage_per_user',
-        'start_date', 'end_date', 'status',
+        'start_date', 'end_date', 'status', 'promotion_id'
     ];
 
     protected $dates = ['start_date', 'end_date', 'deleted_at'];
 
+    public function promotion()
+    {
+        return $this->belongsTo(Promotion::class);
+    }
 }

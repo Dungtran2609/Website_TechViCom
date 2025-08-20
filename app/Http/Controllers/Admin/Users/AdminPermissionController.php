@@ -40,12 +40,21 @@ class AdminPermissionController extends Controller
         $query = Permission::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $modules = Permission::select('module')->distinct()->pluck('module')->filter()->values();
+        if ($request->filled('module')) {
+            $query->where('module', $request->input('module'));
         }
 
         $permissions = $query->orderByDesc('id')->paginate(10);
 
-        return view('admin.permissions.list', compact('permissions'));
+        return view('admin.permissions.list', compact('permissions', 'modules'));
     }
 
     /**
@@ -104,7 +113,7 @@ class AdminPermissionController extends Controller
     }
 
     /**
-     * Danh sách quyền đã xoá.
+* Danh sách quyền đã xoá.
      */
     public function trashed()
     {
@@ -188,13 +197,13 @@ class AdminPermissionController extends Controller
                 !Str::contains($routeName, ['login', 'logout', 'password', 'debugbar']) &&
                 $route->getActionName() != 'Closure'
             ) {
-                $routePermissionNames[] = $routeName;
+$routePermissionNames[] = $routeName;
 
                 // Nếu quyền chưa tồn tại trong DB (kể cả trong thùng rác) thì tạo mới
                 if (!in_array($routeName, $existingPermissionNames)) {
                     $newPermission = Permission::create([
                         'name' => $routeName,
-                        'description' => "Auto-generated for route: {$routeName}"
+                        'description' => "Quyền tự động tạo từ hệ thống: {$routeName}"
                     ]);
                     $adminRole->permissions()->attach($newPermission->id);
                     $newPermissionsCount++;
@@ -225,7 +234,7 @@ class AdminPermissionController extends Controller
             if (!empty($permissionsToDelete)) {
                 // Chỉ xóa những quyền được tạo tự động để tránh xóa nhầm quyền tạo tay
                 $deletedCount = Permission::whereIn('name', $permissionsToDelete)
-                    ->where('description', 'like', 'Auto-generated%')
+                    ->where('description', 'like', 'Quyền tự động tạo từ hệ thống%')
                     ->delete();
                 if ($deletedCount > 0) {
                     $messages[] = "Đã xoá {$deletedCount} quyền cũ không còn sử dụng.";

@@ -104,8 +104,6 @@ Route::get('/test-check-cart', function () {
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-
-
 // Test cart functionality
 Route::get('/test-cart-page', function () {
     return view('test-cart');
@@ -381,7 +379,7 @@ Route::get('/checkout-success/{orderId}', [App\Http\Controllers\Client\Checkouts
 // VNPAY Payment routes
 Route::prefix('vnpay')->name('vnpay.')->group(function () {
     Route::get('/payment/{order_id}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_payment'])->name('payment');
-    Route::get('/return', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_return'])->name('return');
+    Route::get('/return', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'vnpay_return'])->name('vnpay_return');
 });
 
 // Clear payment message route
@@ -465,6 +463,7 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::get('/addresses/{id}/edit', [ClientAccountController::class, 'editAddress'])->name('edit-address');
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
+    Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
 });
 
 
@@ -672,6 +671,9 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::put('{id}/restore', [AdminCouponController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('forceDelete');
     });
+
+    // promotions (chương trình khuyến mãi)
+    Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
 });
 
 // =========================================================================
@@ -685,6 +687,15 @@ Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->nam
 // Các route upload hoặc route đặc biệt khác có thể đặt ở đây
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
 Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
+
+// đăng nhập google vs facebook
+use App\Http\Controllers\Auth\SocialController;
+
+Route::get('auth/google', [SocialController::class, 'redirectToGoogle']);
+Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
+
+Route::get('auth/facebook', [SocialController::class, 'redirectToFacebook']);
+Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCallback']);
 
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';

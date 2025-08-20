@@ -64,7 +64,7 @@ class ChatbotController extends Controller
 
         // Khởi tạo Dialogflow SessionsClient
         $sessionsClient = new SessionsClient([
-            'credentials' => json_decode(file_get_contents($credentialsPath), true)
+            'credentials' => $credentialsPath
         ]);
 
         // Tạo tên session

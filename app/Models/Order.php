@@ -38,6 +38,15 @@ class Order extends Model
         'vnpay_bank_code',
         'vnpay_card_type',
         'paid_at',
+        'payment_status',
+        'status',
+        'paid_at',
+        'vnp_txn_ref',
+        'vnp_amount_expected',
+        'vnpay_url',
+        'vnpay_transaction_id',
+        'vnpay_bank_code',
+        'vnpay_card_type',
     ];
 
     /**

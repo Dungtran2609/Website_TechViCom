@@ -3,6 +3,7 @@
 @section('title', 'Danh sách sản phẩm - Techvicom')
 
 @push('styles')
+    {{-- Tailwind theme --}}
     <script>
         tailwind.config = {
             theme: {
@@ -15,6 +16,10 @@
             }
         }
     </script>
+
+    {{-- Swiper CSS cho banner & danh mục --}}
+    <link rel="stylesheet" href="https://unpkg.com/swiper@10/swiper-bundle.min.css" />
+
     <style>
         .category-btn {
             @apply px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-[#ff6c2f] hover:text-[#ff6c2f] transition-all duration-200 cursor-pointer;
@@ -22,6 +27,10 @@
 
         .category-btn.active {
             @apply bg-[#ff6c2f] text-white border-[#ff6c2f];
+        }
+
+        .product-card {
+            border: 1px solid #eee;
         }
 
         .product-card:hover {
@@ -33,6 +42,66 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        /* Ảnh sản phẩm kiểu FPT */
+        .product-image-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #fff;
+            overflow: hidden;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            image-rendering: auto;
+        }
+
+        /* Tim yêu thích: luôn hiện và giữ trạng thái bằng class is-active */
+        .fav-btn {
+            position: absolute;
+            top: .5rem;
+            right: .5rem;
+            background: #fff;
+            border-radius: 9999px;
+            padding: .5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+        }
+
+        .fav-btn i {
+            transition: transform .15s;
+        }
+
+        .fav-btn.is-active i {
+            color: #ff6c2f !important;
+        }
+
+        .fav-btn:not(.is-active) i {
+            color: #9ca3af !important;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: #fff;
+            --swiper-navigation-size: 24px;
+        }
+
+        .banner-swiper .swiper-pagination-bullet {
+            background: #fff;
+            opacity: .7;
+        }
+
+        .banner-swiper .swiper-pagination-bullet-active {
+            opacity: 1;
+        }
+
+        .cat-swiper .swiper-slide {
+            width: auto;
         }
     </style>
 @endpush
@@ -56,49 +125,71 @@
         </div>
     </nav>
 
-    <!-- Page Header with Search -->
-    <section class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white py-8">
+    <!-- Page Header với Banner Slider -->
+    <section class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white pt-6 pb-10">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-6">
+            <div class="text-center mb-4">
                 @if (isset($currentCategory) && $currentCategory)
-                    <h1 class="text-4xl font-bold mb-4">{{ $currentCategory->name }}</h1>
-                    <p class="text-xl">Khám phá các sản phẩm {{ strtolower($currentCategory->name) }} chất lượng cao</p>
+                    <h1 class="text-4xl font-bold mb-2">{{ $currentCategory->name }}</h1>
+                    <p class="text-lg opacity-90">Khám phá các sản phẩm {{ strtolower($currentCategory->name) }} chất lượng
+                        cao</p>
                 @elseif(request('search'))
-                    <h1 class="text-4xl font-bold mb-4">Kết quả tìm kiếm</h1>
-                    <p class="text-xl">Tìm kiếm cho: "{{ request('search') }}"</p>
+                    <h1 class="text-4xl font-bold mb-2">Kết quả tìm kiếm</h1>
+                    <p class="text-lg opacity-90">Tìm kiếm cho: "{{ request('search') }}"</p>
                 @else
-                    <h1 class="text-4xl font-bold mb-4">Danh sách sản phẩm</h1>
-                    <p class="text-xl">Khám phá tất cả sản phẩm công nghệ với giá tốt nhất</p>
+                    <h1 class="text-4xl font-bold mb-2">Danh sách sản phẩm</h1>
+                    <p class="text-lg opacity-90">Khám phá tất cả sản phẩm công nghệ với giá tốt nhất</p>
                 @endif
             </div>
 
-            <!-- Search Bar -->
-            <div class="max-w-2xl mx-auto">
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="Tìm kiếm sản phẩm..."
-                        value="{{ request('search') }}"
-                        class="w-full px-6 py-4 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
-                    <button id="search-btn"
-                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#ff6c2f] text-white p-3 rounded-full hover:bg-[#e55a28] transition">
-                        <i class="fas fa-search"></i>
-                    </button>
+            {{-- Banner slide --}}
+            <div class="rounded-2xl overflow-hidden shadow-lg">
+                <div class="swiper banner-swiper">
+                    <div class="swiper-wrapper">
+                        @forelse(($banners ?? []) as $banner)
+                            <div class="swiper-slide">
+                                <img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
+                                    src="{{ asset($banner->image_path) }}" alt="{{ $banner->title ?? 'Banner' }}"
+                                    loading="eager" decoding="async" fetchpriority="high">
+                            </div>
+                        @empty
+                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
+                                    src="{{ asset('client_css/images/banners/banner1.jpg') }}" alt="Banner 1"></div>
+                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
+                                    src="{{ asset('client_css/images/banners/banner2.jpg') }}" alt="Banner 2"></div>
+                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
+                                    src="{{ asset('client_css/images/banners/banner3.jpg') }}" alt="Banner 3"></div>
+                        @endforelse
+                    </div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Category Selection -->
+    <!-- Category Selection (Slider) -->
     <section class="bg-white py-4 border-b border-gray-200">
         <div class="container mx-auto px-4">
-            <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-3 mb-3">
                 <h3 class="font-semibold text-gray-700">Danh mục:</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button class="category-btn {{ !request('category') ? 'active' : '' }}" data-category="">Tất cả</button>
+            </div>
+            <div class="swiper cat-swiper">
+                <div class="swiper-wrapper items-center">
+                    <div class="swiper-slide">
+                        <button class="category-btn {{ !request('category') ? 'active' : '' }}" data-category="">Tất
+                            cả</button>
+                    </div>
                     @foreach ($categories as $category)
-                        <button class="category-btn {{ request('category') == $category->slug ? 'active' : '' }}"
-                            data-category="{{ $category->slug }}">{{ $category->name }}</button>
+                        <div class="swiper-slide">
+                            <button class="category-btn {{ request('category') == $category->slug ? 'active' : '' }}"
+                                data-category="{{ $category->slug }}">{{ $category->name }}</button>
+                        </div>
                     @endforeach
                 </div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
             </div>
         </div>
     </section>
@@ -116,30 +207,18 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Khoảng giá</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="" class="mr-2 price-filter" checked>
-                                    <span>Tất cả</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="0-5" class="mr-2 price-filter">
-                                    <span>Dưới 5 triệu</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="5-10" class="mr-2 price-filter">
-                                    <span>5 - 10 triệu</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="10-20" class="mr-2 price-filter">
-                                    <span>10 - 20 triệu</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="20-30" class="mr-2 price-filter">
-                                    <span>20 - 30 triệu</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="price" value="30+" class="mr-2 price-filter">
-                                    <span>Trên 30 triệu</span>
-                                </label>
+                                <label class="flex items-center"><input type="radio" name="price" value=""
+                                        class="mr-2 price-filter" checked><span>Tất cả</span></label>
+                                <label class="flex items-center"><input type="radio" name="price" value="0-5"
+                                        class="mr-2 price-filter"><span>Dưới 5 triệu</span></label>
+                                <label class="flex items-center"><input type="radio" name="price" value="5-10"
+                                        class="mr-2 price-filter"><span>5 - 10 triệu</span></label>
+                                <label class="flex items-center"><input type="radio" name="price" value="10-20"
+                                        class="mr-2 price-filter"><span>10 - 20 triệu</span></label>
+                                <label class="flex items-center"><input type="radio" name="price" value="20-30"
+                                        class="mr-2 price-filter"><span>20 - 30 triệu</span></label>
+                                <label class="flex items-center"><input type="radio" name="price" value="30+"
+                                        class="mr-2 price-filter"><span>Trên 30 triệu</span></label>
                             </div>
                         </div>
 
@@ -147,30 +226,12 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Thương hiệu</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="apple" class="mr-2 brand-filter">
-                                    <span>Apple</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="samsung" class="mr-2 brand-filter">
-                                    <span>Samsung</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="xiaomi" class="mr-2 brand-filter">
-                                    <span>Xiaomi</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="oppo" class="mr-2 brand-filter">
-                                    <span>OPPO</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="vivo" class="mr-2 brand-filter">
-                                    <span>Vivo</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="huawei" class="mr-2 brand-filter">
-                                    <span>Huawei</span>
-                                </label>
+                                @foreach ($brands as $b)
+                                    <label class="flex items-center">
+                                        <input type="checkbox" value="{{ $b->slug }}" class="mr-2 brand-filter">
+                                        <span>{{ $b->name }}</span>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
 
@@ -178,26 +239,16 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">RAM</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="4" class="mr-2 ram-filter">
-                                    <span>4GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="6" class="mr-2 ram-filter">
-                                    <span>6GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="8" class="mr-2 ram-filter">
-                                    <span>8GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="12" class="mr-2 ram-filter">
-                                    <span>12GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="16" class="mr-2 ram-filter">
-                                    <span>16GB</span>
-                                </label>
+                                <label class="flex items-center"><input type="checkbox" value="4"
+                                        class="mr-2 ram-filter"><span>4GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="6"
+                                        class="mr-2 ram-filter"><span>6GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="8"
+                                        class="mr-2 ram-filter"><span>8GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="12"
+                                        class="mr-2 ram-filter"><span>12GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="16"
+                                        class="mr-2 ram-filter"><span>16GB</span></label>
                             </div>
                         </div>
 
@@ -205,85 +256,57 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Bộ nhớ</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="64" class="mr-2 storage-filter">
-                                    <span>64GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="128" class="mr-2 storage-filter">
-                                    <span>128GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="256" class="mr-2 storage-filter">
-                                    <span>256GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="512" class="mr-2 storage-filter">
-                                    <span>512GB</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" value="1024" class="mr-2 storage-filter">
-                                    <span>1TB</span>
-                                </label>
+                                <label class="flex items-center"><input type="checkbox" value="64"
+                                        class="mr-2 storage-filter"><span>64GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="128"
+                                        class="mr-2 storage-filter"><span>128GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="256"
+                                        class="mr-2 storage-filter"><span>256GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="512"
+                                        class="mr-2 storage-filter"><span>512GB</span></label>
+                                <label class="flex items-center"><input type="checkbox" value="1024"
+                                        class="mr-2 storage-filter"><span>1TB</span></label>
                             </div>
                         </div>
 
-                        <!-- Rating Filter -->
+                        <!-- Rating Filter: 1–5 sao -->
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Đánh giá</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="" class="mr-2 rating-filter"
-                                        checked>
-                                    <span>Tất cả</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="5" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2">
-                                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i>
+                                <label class="flex items-center"><input type="radio" name="rating" value=""
+                                        class="mr-2 rating-filter" checked><span>Tất cả</span></label>
+
+                                @for ($r = 1; $r <= 5; $r++)
+                                    <label class="flex items-center">
+                                        <input type="radio" name="rating" value="{{ $r }}"
+                                            class="mr-2 rating-filter">
+                                        <div class="flex items-center">
+                                            <div class="flex text-yellow-400 text-sm mr-2">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <= $r)
+                                                        <i class="fas fa-star"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <span>{{ $r }} sao</span>
                                         </div>
-                                        <span>5 sao</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="4" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2">
-                                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="far fa-star"></i>
-                                        </div>
-                                        <span>4 sao trở lên</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="3" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2">
-                                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="far fa-star"></i><i
-                                                class="far fa-star"></i>
-                                        </div>
-                                        <span>3 sao trở lên</span>
-                                    </div>
-                                </label>
+                                    </label>
+                                @endfor
                             </div>
                         </div>
 
                         <!-- Clear Filters -->
                         <button id="clear-filters"
-                            class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition">
-                            Xóa bộ lọc
-                        </button>
+                            class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition">Xóa bộ
+                            lọc</button>
                     </div>
                 </div>
 
                 <!-- Products Content -->
                 <div class="lg:col-span-3">
-                    <!-- Sort and View Options -->
+                    <!-- Sort -->
                     <div class="flex flex-wrap items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-md">
                         <div class="flex items-center gap-4">
                             <span class="text-gray-700">Hiển thị {{ $products->count() }} trong tổng số
@@ -311,69 +334,135 @@
                     <!-- Products Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-grid">
                         @forelse($products as $product)
+                            @php
+                                $minFilter = request('min_price');
+                                $maxFilter = request('max_price');
+                                $selectedRams = collect(explode(',', request('ram', '')))
+                                    ->filter()
+                                    ->values();
+                                $selectedStorages = collect(explode(',', request('storage', '')))
+                                    ->filter()
+                                    ->values();
+
+                                $variants = $product->variants ?? collect();
+
+                                // Lọc theo RAM & Storage (trên cùng 1 biến thể)
+                                $variants = $variants->filter(function ($v) use ($selectedRams, $selectedStorages) {
+                                    $ok = true;
+                                    if ($selectedRams->count()) {
+                                        $ok =
+                                            $ok &&
+                                            $v->attributeValues->contains(function ($av) use ($selectedRams) {
+                                                if ((int) $av->attribute_id !== 2) {
+                                                    return false;
+                                                }
+                                                $val = strtolower((string) $av->value);
+                                                $val = (int) str_replace('gb', '', $val);
+                                                return in_array($val, $selectedRams->map(fn($x) => (int) $x)->all());
+                                            });
+                                    }
+                                    if ($ok && $selectedStorages->count()) {
+                                        $ok =
+                                            $ok &&
+                                            $v->attributeValues->contains(function ($av) use ($selectedStorages) {
+                                                if ((int) $av->attribute_id !== 3) {
+                                                    return false;
+                                                }
+                                                $val = strtolower((string) $av->value);
+                                                $gb = str_contains($val, 'tb')
+                                                    ? (int) str_replace('tb', '', $val) * 1024
+                                                    : (int) str_replace('gb', '', $val);
+                                                return in_array($gb, $selectedStorages->map(fn($x) => (int) $x)->all());
+                                            });
+                                    }
+                                    return $ok;
+                                });
+
+                                // Lọc theo GIÁ hiệu lực
+                                $variants = $variants->filter(function ($v) use ($minFilter, $maxFilter) {
+                                    $price = $v->sale_price && $v->sale_price < $v->price ? $v->sale_price : $v->price;
+                                    if ($minFilter && $price < $minFilter) {
+                                        return false;
+                                    }
+                                    if ($maxFilter && $price > $maxFilter) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+
+                                // Tính min/max
+                                if ($variants->count()) {
+                                    $prices = $variants->map(
+                                        fn($v) => $v->sale_price && $v->sale_price < $v->price
+                                            ? $v->sale_price
+                                            : $v->price,
+                                    );
+                                    $minPrice = $prices->min();
+                                    $maxPrice = $prices->max();
+                                } else {
+                                    $minPrice = null;
+                                    $maxPrice = null;
+                                }
+
+                                $stars = (int) round($product->avg_rating ?? 0);
+                                $reviewsCount = (int) ($product->reviews_count ?? 0);
+                            @endphp
+
                             <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group product-card"
                                 onclick="goToProductDetail({{ $product->id }})">
-                                <div class="relative">
-                                    <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                        alt="{{ $product->name }}" class="w-full h-48 object-cover rounded-t-lg"
+                                <div class="relative product-image-wrap">
+                                    @php
+                                        $thumb = $product->thumbnail
+                                            ? asset('storage/' . $product->thumbnail)
+                                            : asset('client_css/images/placeholder.svg');
+                                    @endphp
+                                    <img src="{{ $thumb }}" alt="{{ $product->name }}" class="product-image"
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                    @if ($product->sale_price && $product->sale_price < $product->price)
-                                        @php
-                                            $discount = round(
-                                                (($product->price - $product->sale_price) / $product->price) * 100,
-                                            );
-                                        @endphp
-                                        <div
-                                            class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                            -{{ $discount }}%
-                                        </div>
-                                    @endif
-                                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
-                                        <button onclick="event.stopPropagation()"
-                                            class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
-                                            <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
-                                        </button>
-                                    </div>
+
+                                    {{-- Tim yêu thích: một chiều --}}
+                                    <button onclick="event.stopPropagation()" class="fav-btn favorite-once"
+                                        aria-label="Yêu thích" data-product-id="{{ $product->id }}">
+                                        <i class="far fa-heart"></i>
+                                    </button>
                                 </div>
+
                                 <div class="p-4">
                                     <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-                                    <div class="flex items-center mb-2">
+
+                                    {{-- GIÁ + Lượt xem --}}
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div>
+                                            @if (!is_null($minPrice) && !is_null($maxPrice))
+                                                @if ($minPrice == $maxPrice)
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                                @else
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫
+                                                        - {{ number_format($maxPrice) }}₫</span>
+                                                @endif
+                                            @else
+                                                <span class="text-lg font-bold text-[#ff6c2f]">0₫</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm">
+                                            <i class="far fa-eye mr-1"></i>
+                                            <span>{{ number_format($product->view_count ?? 0) }}</span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Đánh giá dưới giá --}}
+                                    <div class="flex items-center">
                                         <div class="flex text-yellow-400 text-sm">
                                             @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <= ($product->rating ?? 4))
+                                                @if ($i <= $stars)
                                                     <i class="fas fa-star"></i>
                                                 @else
                                                     <i class="far fa-star"></i>
                                                 @endif
                                             @endfor
                                         </div>
-                                        <span
-                                            class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
-                                    </div>
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                                @php $variant = $product->variants->first(); @endphp
-                                                <span
-                                                    class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                            @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                                @php
-                                                    $minPrice = $product->variants->min('price');
-                                                    $maxPrice = $product->variants->max('price');
-                                                @endphp
-                                                @if ($minPrice === $maxPrice)
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                                @else
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                        - {{ number_format($maxPrice) }}₫</span>
-                                                @endif
-                                            @else
-                                                <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
-                                            @endif
-                                        </div>
-                                        {{-- Nút thêm vào giỏ hàng đã bị loại bỏ --}}
+                                        <span class="text-gray-500 text-sm ml-2">({{ $reviewsCount }})</span>
                                     </div>
                                 </div>
                             </div>
@@ -388,57 +477,9 @@
                             </div>
                         @endforelse
 
-                        <!-- Pagination -->
                         @if ($products->hasPages())
-                            <div class="mt-8">
-                                {{ $products->links() }}
-                            </div>
+                            <div class="mt-8">{{ $products->links() }}</div>
                         @endif
-                    </div>
-                </div>
-            </div>
-    </section>
-
-    <!-- Featured Brands -->
-    <section class="py-12 bg-white">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-6">
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/apple.png" alt="Apple" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/samsung.png" alt="Samsung"
-                            class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/xiaomi.png" alt="Xiaomi" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/oppo.png" alt="Oppo" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('admin_css/images/brands/vivo.png') }}" alt="Vivo" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('admin_css/images/placeholder.svg') }}'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('admin_css/images/brands/huawei.png') }}" alt="Huawei" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('admin_css/images/placeholder.svg') }}'">
                     </div>
                 </div>
             </div>
@@ -447,92 +488,113 @@
 @endsection
 
 @push('scripts')
+    {{-- Swiper JS --}}
+    <script src="https://unpkg.com/swiper@10/swiper-bundle.min.js"></script>
+
     <script>
+        // Banner slider
+        const bannerSwiper = new Swiper('.banner-swiper', {
+            loop: true,
+            autoplay: {
+                delay: 3500,
+                disableOnInteraction: false
+            },
+            pagination: {
+                el: '.banner-swiper .swiper-pagination',
+                clickable: true
+            },
+            navigation: {
+                nextEl: '.banner-swiper .swiper-button-next',
+                prevEl: '.banner-swiper .swiper-button-prev'
+            }
+        });
+
+        // Category slider
+        const catSwiper = new Swiper('.cat-swiper', {
+            slidesPerView: 'auto',
+            spaceBetween: 12,
+            freeMode: true,
+            navigation: {
+                nextEl: '.cat-swiper .swiper-button-next',
+                prevEl: '.cat-swiper .swiper-button-prev'
+            },
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Category buttons functionality
+            // --- Auto-check filters from URL ---
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('brands')) {
+                const brands = urlParams.get('brands').split(',');
+                document.querySelectorAll('.brand-filter').forEach(cb => {
+                    if (brands.includes(cb.value)) cb.checked = true;
+                });
+            }
+            if (urlParams.has('ram')) {
+                const rams = urlParams.get('ram').split(',');
+                document.querySelectorAll('.ram-filter').forEach(cb => {
+                    if (rams.includes(cb.value)) cb.checked = true;
+                });
+            }
+            if (urlParams.has('storage')) {
+                const storages = urlParams.get('storage').split(',');
+                document.querySelectorAll('.storage-filter').forEach(cb => {
+                    if (storages.includes(cb.value)) cb.checked = true;
+                });
+            }
+            if (urlParams.has('rating')) {
+                const rating = urlParams.get('rating');
+                document.querySelectorAll('.rating-filter').forEach(cb => {
+                    cb.checked = (cb.value === rating);
+                });
+            }
+            if (urlParams.has('min_price') || urlParams.has('max_price')) {
+                const min = urlParams.get('min_price') ? parseInt(urlParams.get('min_price')) : null;
+                const max = urlParams.get('max_price') ? parseInt(urlParams.get('max_price')) : null;
+                document.querySelectorAll('input[name="price"]').forEach(cb => {
+                    let val = cb.value;
+                    if (!val && !min && !max) cb.checked = true;
+                    else if (val && val.includes('-')) {
+                        const [vmin, vmax] = val.split('-');
+                        if (min === parseInt(vmin) * 1000000 && max === parseInt(vmax) * 1000000) cb
+                            .checked = true;
+                    } else if (val && val.endsWith('+')) {
+                        if (min === parseInt(val) * 1000000 && !max) cb.checked = true;
+                    }
+                });
+            }
+
+            // Category buttons
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const category = this.dataset.category;
                     const url = new URL(window.location);
-
-                    if (category) {
-                        url.searchParams.set('category', category);
-                    } else {
-                        url.searchParams.delete('category');
-                    }
-
-                    // Reset to first page
+                    if (category) url.searchParams.set('category', category);
+                    else url.searchParams.delete('category');
                     url.searchParams.delete('page');
-
                     window.location.href = url.toString();
                 });
             });
 
-            // Search functionality
-            const searchInput = document.getElementById('search-input');
-            const searchBtn = document.getElementById('search-btn');
-
-            function performSearch() {
-                const searchTerm = searchInput.value.trim();
-                const url = new URL(window.location);
-
-                if (searchTerm) {
-                    url.searchParams.set('search', searchTerm);
-                } else {
-                    url.searchParams.delete('search');
-                }
-
-                // Reset to first page and clear category
-                url.searchParams.delete('page');
-                url.searchParams.delete('category');
-
-                window.location.href = url.toString();
-            }
-
-            if (searchBtn) {
-                searchBtn.addEventListener('click', performSearch);
-            }
-
-            if (searchInput) {
-                searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        performSearch();
-                    }
-                });
-            }
-
-            // Sort functionality
+            // Sort change
             const sortFilter = document.getElementById('sort-filter');
             if (sortFilter) {
                 sortFilter.addEventListener('change', function() {
                     const url = new URL(window.location);
-
-                    if (this.value && this.value !== 'latest') {
-                        url.searchParams.set('sort', this.value);
-                    } else {
-                        url.searchParams.delete('sort');
-                    }
-
-                    // Reset to first page
+                    if (this.value && this.value !== 'latest') url.searchParams.set('sort', this.value);
+                    else url.searchParams.delete('sort');
                     url.searchParams.delete('page');
-
                     window.location.href = url.toString();
                 });
             }
 
-            // Filter functionality for sidebar filters
+            // Filters change
             document.querySelectorAll('.price-filter, .brand-filter, .ram-filter, .storage-filter, .rating-filter')
-                .forEach(filter => {
-                    filter.addEventListener('change', function() {
-                        applyFilters();
-                    });
-                });
+                .forEach(filter => filter.addEventListener('change', applyFilters));
 
-            // Clear filters functionality
+            // Clear filters
             const clearFiltersBtn = document.getElementById('clear-filters');
             if (clearFiltersBtn) {
                 clearFiltersBtn.addEventListener('click', function() {
-                    // Reset all filters
                     document.querySelectorAll('input[name="price"]').forEach(input => {
                         input.checked = input.value === '';
                     });
@@ -543,7 +605,6 @@
                     document.querySelectorAll('input[name="rating"]').forEach(input => {
                         input.checked = input.value === '';
                     });
-
                     applyFilters();
                 });
             }
@@ -551,80 +612,103 @@
             function applyFilters() {
                 const url = new URL(window.location);
 
-                // Price filter
+                // Price (triệu -> VND)
                 const priceFilter = document.querySelector('input[name="price"]:checked');
                 if (priceFilter && priceFilter.value) {
                     const priceRange = priceFilter.value.split('-');
                     if (priceRange.length === 2) {
                         url.searchParams.set('min_price', priceRange[0] * 1000000);
-                        if (priceRange[1] !== '+') {
-                            url.searchParams.set('max_price', priceRange[1] * 1000000);
-                        } else {
-                            url.searchParams.delete('max_price');
-                        }
+                        if (priceRange[1] !== '+') url.searchParams.set('max_price', priceRange[1] * 1000000);
+                        else url.searchParams.delete('max_price');
                     }
                 } else {
                     url.searchParams.delete('min_price');
                     url.searchParams.delete('max_price');
                 }
 
-                // Brand filter
+                // Brand
                 const brandFilters = Array.from(document.querySelectorAll('.brand-filter:checked')).map(cb => cb
                     .value);
-                if (brandFilters.length > 0) {
-                    url.searchParams.set('brands', brandFilters.join(','));
-                } else {
-                    url.searchParams.delete('brands');
-                }
+                if (brandFilters.length > 0) url.searchParams.set('brands', brandFilters.join(','));
+                else url.searchParams.delete('brands');
 
-                // Reset to first page
+                // RAM
+                const ramFilters = Array.from(document.querySelectorAll('.ram-filter:checked')).map(cb => cb.value);
+                if (ramFilters.length > 0) url.searchParams.set('ram', ramFilters.join(','));
+                else url.searchParams.delete('ram');
+
+                // Storage
+                const storageFilters = Array.from(document.querySelectorAll('.storage-filter:checked')).map(cb => cb
+                    .value);
+                if (storageFilters.length > 0) url.searchParams.set('storage', storageFilters.join(','));
+                else url.searchParams.delete('storage');
+
+                // Rating: 1..5
+                const ratingFilter = document.querySelector('input[name="rating"]:checked');
+                if (ratingFilter && ratingFilter.value) url.searchParams.set('rating', ratingFilter.value);
+                else url.searchParams.delete('rating');
+
                 url.searchParams.delete('page');
-
                 window.location.href = url.toString();
+            }
+
+            // Yêu thích: một chiều, lưu localStorage
+            const FAVORITES_KEY = 'favorites';
+            const favBtns = document.querySelectorAll('.favorite-once');
+
+            function readFavs() {
+                try {
+                    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function writeFavs(arr) {
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(arr));
+            }
+
+            function setHeart(btn, on) {
+                const icon = btn.querySelector('i');
+                btn.classList.toggle('is-active', !!on);
+                if (icon) {
+                    icon.classList.toggle('fas', !!on);
+                    icon.classList.toggle('far', !on);
+                }
+                if (on) btn.dataset.locked = '1';
+            }
+
+            const favInit = readFavs();
+            favBtns.forEach(btn => {
+                const id = parseInt(btn.dataset.productId);
+                setHeart(btn, favInit.includes(id));
+            });
+
+            favBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const id = parseInt(this.dataset.productId);
+                    if (this.dataset.locked === '1') return; // đã thích -> không tắt
+                    setHeart(this, true);
+                    let favs = readFavs();
+                    if (!favs.includes(id)) {
+                        favs.push(id);
+                        writeFavs(favs);
+                    }
+                    toast('Đã thêm vào yêu thích');
+                });
+            });
+
+            function toast(msg) {
+                const node = document.createElement('div');
+                node.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white';
+                node.style.backgroundColor = '#10b981';
+                node.textContent = msg;
+                document.body.appendChild(node);
+                setTimeout(() => node.remove(), 1500);
             }
         });
 
-        // Static add to cart function
-        function addToCartStatic(productId, name, price, image) {
-            // Use the global addToCart function from header
-            if (typeof addToCart === 'function') {
-                addToCart(productId, null, 1);
-            } else {
-                // Fallback cart functionality
-                const cartItem = {
-                    id: productId,
-                    name: name,
-                    price: price,
-                    image: image,
-                    quantity: 1
-                };
-
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                const existingIndex = cart.findIndex(item => item.id === cartItem.id);
-
-                if (existingIndex !== -1) {
-                    cart[existingIndex].quantity += 1;
-                } else {
-                    cart.push(cartItem);
-                }
-
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Show notification
-                const notification = document.createElement('div');
-                notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                notification.textContent = `Đã thêm "${name}" vào giỏ hàng!`;
-                document.body.appendChild(notification);
-
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 3000);
-            }
-        }
-
-        // Navigate to product detail page
         function goToProductDetail(productId) {
             window.location.href = `/products/${productId}`;
         }

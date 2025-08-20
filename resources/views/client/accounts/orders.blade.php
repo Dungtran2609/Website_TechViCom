@@ -25,7 +25,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($orders as $order)
+                        @php
+                            $statusOrder = [
+                                'pending' => 1,
+                                'processing' => 2,
+                                'shipped' => 3,
+                                'delivered' => 4,
+                                'received' => 5,
+                                'returned' => 6,
+                                'cancelled' => 7,
+                            ];
+                        @endphp
+                        @foreach($orders->sortBy(function($order) use ($statusOrder) {
+                            return $statusOrder[$order->status] ?? 99;
+                        }) as $order)
                             <tr>
                                 <td class="fw-bold text-primary">
                                     <span class="text-dark">
@@ -37,7 +50,7 @@
                                         <div class="d-flex align-items-center mb-2">
                                             <div class="me-2" style="width: 50px; height: 50px;">
                                                 @if($item->variant_id && $item->variant && $item->variant->image)
-                                                    <img src="{{ asset($item->variant->image) }}" 
+                                                    <img src="{{ asset('storage/' . $item->variant->image) }}" 
                                                         alt="{{ $item->name_product }}"
                                                         class="img-fluid rounded"
                                                         style="width: 100%; height: 100%; object-fit: cover;">

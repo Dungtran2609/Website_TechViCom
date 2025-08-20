@@ -69,6 +69,8 @@
 
     {{-- End main wrapper --}}
     @yield('scripts')
+
+    
 </body>
 
 </html>

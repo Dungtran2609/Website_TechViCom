@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Quản lý người dùng</h1>
@@ -13,16 +14,29 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 d-flex gap-2 align-items-center">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25" placeholder="Tìm người dùng...">
-        <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
 
-        @if(request('search'))
+
+    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-auto"
+            placeholder="Tìm theo tên hoặc email...">
+
+        <select name="role" class="form-select w-auto">
+            <option value="">Tất cả vai trò</option>
+            @foreach($roles as $role)
+                <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+            @endforeach
+        </select>
+
+        <button type="submit" class="btn btn-outline-primary">Lọc</button>
+
+        @if (request('search') || request('role'))
             <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
                 <i class="fas fa-undo"></i> Quay lại danh sách đầy đủ
             </a>
         @endif
     </form>
+
+
 
 
     @if (session('success'))
@@ -31,11 +45,13 @@
         </div>
     @endif
 
+
     @if ($errors->has('delete'))
         <div class="alert alert-danger">
             {{ $errors->first('delete') }}
         </div>
     @endif
+
 
     <div class="card">
         <div class="card-body">
@@ -62,7 +78,8 @@
                                 <td>
                                     @if ($user->roles->isNotEmpty())
                                         @foreach ($user->roles as $role)
-                                            <span class="badge bg-primary" title="Vai trò: {{ $role->name }}">{{ $role->name }}</span>
+                                            <span class="badge bg-primary"
+                                                title="Vai trò: {{ $role->name }}">{{ $role->name }}</span>
                                         @endforeach
                                     @else
                                         <span class="text-secondary">Chưa có vai trò</span>
@@ -75,17 +92,24 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('admin.users.show', $user) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                        <a href="{{ route('admin.users.show', $user) }}" class="btn btn-light btn-sm"
+                                            title="Xem chi tiết">
                                             <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                         </a>
-                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
-                                            <iconify-icon icon="solar:pen-2-broken" class="align-middle fs-18"></iconify-icon>
+                                        <a href="{{ route('admin.users.edit', $user) }}"
+                                            class="btn btn-soft-primary btn-sm" title="Chỉnh sửa">
+                                            <iconify-icon icon="solar:pen-2-broken"
+                                                class="align-middle fs-18"></iconify-icon>
                                         </a>
-                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
+                                            class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xoá người dùng này?')" title="Xoá">
-                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
+                                            <button type="submit" class="btn btn-soft-danger btn-sm"
+                                                onclick="return confirm('Bạn có chắc muốn xoá người dùng này?')"
+                                                title="Xoá">
+                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                    class="align-middle fs-18"></iconify-icon>
                                             </button>
                                         </form>
                                     </div>

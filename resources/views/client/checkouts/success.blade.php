@@ -3,6 +3,14 @@
 @section('title', 'Đặt hàng thành công - Techvicom')
 
 @section('content')
+@if(session('notification'))
+    <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transition-all duration-300
+        @if(session('notification.type') === 'success') bg-green-500
+        @elseif(session('notification.type') === 'error') bg-red-500
+        @else bg-yellow-500 @endif">
+        {{ session('notification.message') }}
+    </div>
+@endif
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto">
         <!-- Success Message -->
@@ -119,7 +127,25 @@
 
                     <div class="flex justify-between">
                         <span>Trạng thái đơn hàng:</span>
-                        <span class="font-medium text-blue-600">Đang xử lý</span>
+                        <span class="font-medium text-blue-600">
+                            @if($order->status === 'pending')
+                                Đang chờ xử lý
+                            @elseif($order->status === 'processing')
+                                Đang xử lý
+                            @elseif($order->status === 'shipped')
+                                Đang vận chuyển
+                            @elseif($order->status === 'delivered')
+                                Đã giao hàng
+                            @elseif($order->status === 'received')
+                                Hoàn thành
+                            @elseif($order->status === 'cancelled')
+                                Đã hủy
+                            @elseif($order->status === 'returned')
+                                Đã trả hàng
+                            @else
+                                {{ $order->status }}
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>

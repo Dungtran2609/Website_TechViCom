@@ -68,6 +68,7 @@ class ClientOrderController extends Controller {
         return view('client.orders.show', [
             'order' => $order,
             'paymentStatusMap' => Order::PAYMENT_STATUSES,
+            'shippingFee' => $order->shipping_fee,
         ]);
     }
 

@@ -61,8 +61,8 @@
 
 @section('content')
     @php
-        // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3
-        $vnpayLocked = session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3;
+        // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
+        $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
     @endphp
 
     @if (session('notification'))
@@ -329,8 +329,7 @@
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
                                         @if ($vnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn
-                                                COD.
+                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn COD hoặc thử lại sau 24 giờ.
                                             </p>
                                         @endif
                                     </div>

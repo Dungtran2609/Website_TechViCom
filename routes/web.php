@@ -517,6 +517,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
         Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
         Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/reset-vnpay-counter', [AdminOrderController::class, 'resetVnpayCancelCount'])->name('reset-vnpay-counter');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)

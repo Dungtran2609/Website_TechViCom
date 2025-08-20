@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Admin\Contacts;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Contact;
+use App\Models\User;
 
 class AdminContactsController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Contact::query();
+        $query = Contact::with(['user', 'handledByUser']);
 
         // Tìm kiếm theo từ khóa
         if ($request->filled('keyword')) {
@@ -19,6 +20,7 @@ class AdminContactsController extends Controller
                 $q->where('name', 'like', "%$keyword%")
                     ->orWhere('email', 'like', "%$keyword%")
                     ->orWhere('phone', 'like', "%$keyword%")
+                    ->orWhere('subject', 'like', "%$keyword%")
                     ->orWhere('message', 'like', "%$keyword%");
             });
         }
@@ -28,10 +30,43 @@ class AdminContactsController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Sắp xếp liên hệ mới nhất lên đầu
-        $contacts = $query->orderBy('created_at', 'desc')->paginate();
+        // Lọc theo ngày gửi
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
 
-        return view('admin.contacts.index', compact('contacts'));
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Lọc theo người xử lý
+        if ($request->filled('handled_by')) {
+            $query->where('handled_by', $request->handled_by);
+        }
+
+        // Sắp xếp
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        if ($sortBy === 'name') {
+            $query->orderBy('name', $sortOrder);
+        } elseif ($sortBy === 'status') {
+            $query->orderBy('status', $sortOrder);
+        } elseif ($sortBy === 'updated_at') {
+            $query->orderBy('updated_at', $sortOrder);
+        } else {
+            $query->orderBy('created_at', $sortOrder);
+        }
+
+        $contacts = $query->paginate(15);
+
+        // Lấy danh sách người xử lý cho filter
+        $handlers = \App\Models\User::whereIn('id', Contact::whereNotNull('handled_by')->pluck('handled_by'))
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.contacts.index', compact('contacts', 'handlers'));
     }
 
 

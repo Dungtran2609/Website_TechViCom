@@ -27,14 +27,20 @@ class AdminAttributeValueController extends Controller
     {
         $attribute = Attribute::findOrFail($attributeId);
 
-        AttributeValue::create([
+        $data = [
             'attribute_id' => $attribute->id,
             'value' => $request->value,
-            'color_code' => $attribute->type === 'color' ? $request->color_code : null,
-        ]);
+        ];
+        if ($attribute->type === 'color') {
+            $data['color_code'] = $request->color_code;
+        } else {
+            $data['color_code'] = null;
+        }
+
+        AttributeValue::create($data);
 
         return redirect()->route('admin.products.attributes.values.index', $attribute->id)
-                         ->with('success', 'Thêm giá trị thành công.');
+            ->with('success', 'Thêm giá trị thành công.');
     }
 
     public function edit($id)
@@ -50,13 +56,19 @@ class AdminAttributeValueController extends Controller
         $value = AttributeValue::findOrFail($id);
         $attribute = $value->attribute;
 
-        $value->update([
+        $data = [
             'value' => $request->value,
-            'color_code' => $attribute->type === 'color' ? $request->color_code : null,
-        ]);
+        ];
+        if ($attribute->type === 'color') {
+            $data['color_code'] = $request->color_code;
+        } else {
+            $data['color_code'] = null;
+        }
+
+        $value->update($data);
 
         return redirect()->route('admin.products.attributes.values.index', $attribute->id)
-                         ->with('success', 'Cập nhật giá trị thành công.');
+            ->with('success', 'Cập nhật giá trị thành công.');
     }
 
     public function destroy($id)
@@ -71,7 +83,7 @@ class AdminAttributeValueController extends Controller
 
         $value->delete();
         return redirect()->route('admin.products.attributes.values.index', $attributeId)
-                        ->with('success', 'Đã chuyển giá trị vào thùng rác.');
+            ->with('success', 'Đã chuyển giá trị vào thùng rác.');
     }
 
     public function trashed($attributeId)
@@ -101,7 +113,7 @@ class AdminAttributeValueController extends Controller
         if ($value->productVariants()->exists()) {
             return back()->with('error', 'Không thể xóa vĩnh viễn. Giá trị này vẫn đang được sản phẩm sử dụng.');
         }
-        
+
         $value->forceDelete();
         return back()->with('success', 'Đã xoá vĩnh viễn giá trị.');
     }

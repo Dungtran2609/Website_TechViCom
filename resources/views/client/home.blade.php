@@ -500,150 +500,59 @@
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold text-[#ff6c2f]">⚡ FLASH SALE</h2>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem
-                        tất cả <i class="fas fa-arrow-right ml-2"></i></a>
+                    <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả <i class="fas fa-arrow-right ml-2"></i></a>
                     <div class="flex items-center space-x-2 text-lg font-semibold">
                         <span>Kết thúc trong:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">12
-                        </div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">00</div>
                         <span>:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="minutes">34
-                        </div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="minutes">00</div>
                         <span>:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="seconds">56
-                        </div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="seconds">00</div>
                     </div>
                 </div>
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="flash-sale-products">
                 @if (!empty($flashSaleProducts) && count($flashSaleProducts) > 0)
                     @foreach ($flashSaleProducts as $product)
                         <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                             onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                             <div class="relative img-wrap">
-                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%
-                                </div>
-                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
-                                    onclick="event.stopPropagation();">
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%</div>
+                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích" onclick="event.stopPropagation();">
                                     <i class="far fa-heart"></i>
                                 </button>
                                 <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                     alt="{{ $product->name }}" loading="lazy" decoding="async"
                                     onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                             </div>
-
                             <div class="p-4">
                                 <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
                                 <div class="flex items-center justify-between mb-2">
-                                    @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                        @php $variant = $product->variants->first(); @endphp
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                    @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                        @php
-                                            $minPrice = $product->variants->min('price');
-                                            $maxPrice = $product->variants->max('price');
-                                        @endphp
-                                        @if ($minPrice === $maxPrice)
-                                            <span
-                                                class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                        @else
-                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}
-                                                - {{ number_format($maxPrice) }}₫</span>
+                                    @php
+                                        $variant = $product->variants->first();
+                                    @endphp
+                                    @if ($variant)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price ?? $variant->price) }}₫</span>
+                                        @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                            <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                         @endif
                                     @else
                                         <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                     @endif
                                 </div>
-
                                 <div class="flex items-center">
                                     <div class="flex text-yellow-400 text-sm">
                                         @for ($i = 1; $i <= 5; $i++)
                                             <i class="fas fa-star"></i>
                                         @endfor
                                     </div>
-                                    <span
-                                        class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                                    <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 @else
-                    @php
-                        $fallbacks = [
-                            [
-                                'name' => 'iPhone 15 Pro Max 256GB',
-                                'price_old' => '37.990.000',
-                                'price' => '34.990.000',
-                                'discount' => 8,
-                                'img' => 'assets/images/placeholder.svg',
-                                'cmt' => 156,
-                            ],
-                            [
-                                'name' => 'Samsung Galaxy S24 Ultra 512GB',
-                                'price_old' => '36.990.000',
-                                'price' => '33.990.000',
-                                'discount' => 8,
-                                'img' => 'assets/images/samsung-s24-ultra.jpg',
-                                'cmt' => 89,
-                            ],
-                            [
-                                'name' => 'MacBook Pro M3 14" 512GB',
-                                'price_old' => '59.990.000',
-                                'price' => '53.990.000',
-                                'discount' => 10,
-                                'img' => 'assets/images/macbook-pro-m3.jpg',
-                                'cmt' => 124,
-                            ],
-                            [
-                                'name' => 'iPad Pro M2 11" 256GB',
-                                'price_old' => '28.990.000',
-                                'price' => '24.990.000',
-                                'discount' => 12,
-                                'img' => 'assets/images/ipad-pro-m2.jpg',
-                                'cmt' => 98,
-                            ],
-                            [
-                                'name' => 'Mobell M139 4G',
-                                'price_old' => '390.000',
-                                'price' => '199.000',
-                                'discount' => 49,
-                                'img' => 'assets/images/placeholder.svg',
-                                'cmt' => 12,
-                            ],
-                        ];
-                    @endphp
-                    @foreach ($fallbacks as $p)
-                        <div
-                            class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card">
-                            <div class="relative img-wrap">
-                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $p['discount'] }}%</div>
-                                <button class="wish-btn" title="Yêu thích" onclick="event.stopPropagation();"><i
-                                        class="far fa-heart"></i></button>
-                                <img src="{{ asset($p['img']) }}" alt="{{ $p['name'] }}">
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $p['name'] }}</h3>
-                                <div class="flex items-center justify-between mb-2">
-                                    <div>
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ $p['price'] }}₫</span>
-                                        <span
-                                            class="text-sm text-gray-500 line-through ml-2">{{ $p['price_old'] }}₫</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="flex text-yellow-400 text-sm">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            <i class="fas fa-star"></i>
-                                        @endfor
-                                    </div>
-                                    <span class="text-gray-500 text-sm ml-2">({{ $p['cmt'] }})</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                    <div class="col-span-5 text-center text-muted py-5">Hiện không có chương trình Flash Sale nào đang diễn ra.</div>
                 @endif
             </div>
         </div>
@@ -662,6 +571,9 @@
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
+                            @if($product->flash_sale_price && $product->discount_percent > 0)
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
+                            @endif
                             <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
                                 <i class="far fa-heart"></i>
@@ -672,29 +584,19 @@
                         </div>
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
                             <div class="flex items-center justify-between mb-2">
-                                @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php $variant = $product->variants->first(); @endphp
-                                    <span
-                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                    @php
-                                        $minPrice = $product->variants->min('price');
-                                        $maxPrice = $product->variants->max('price');
-                                    @endphp
-                                    @if ($minPrice === $maxPrice)
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                @php $variant = $product->variants->first(); @endphp
+                                @if ($variant)
+                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
-                                            {{ number_format($maxPrice) }}₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
-
                             <div class="flex items-center">
                                 <div class="flex text-yellow-400 text-sm">
                                     @for ($i = 1; $i <= 5; $i++)
@@ -725,6 +627,9 @@
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
                             <div class="chip chip-neutral"><i class="fas fa-eye"></i> {{ $product->view_count }}</div>
+                            @if($product->flash_sale_price && $product->discount_percent > 0)
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
+                            @endif
                             <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
                                 <i class="far fa-heart"></i>
@@ -737,29 +642,19 @@
 
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
                             <div class="flex items-center justify-between mb-2">
-                                @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php $variant = $product->variants->first(); @endphp
-                                    <span
-                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                    @php
-                                        $minPrice = $product->variants->min('price');
-                                        $maxPrice = $product->variants->max('price');
-                                    @endphp
-                                    @if ($minPrice === $maxPrice)
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                @php $variant = $product->variants->first(); @endphp
+                                @if ($variant)
+                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
-                                            {{ number_format($maxPrice) }}₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
-
                             <div class="flex items-center">
                                 <div class="flex text-yellow-400 text-sm">
                                     @for ($i = 1; $i <= 5; $i++)
@@ -951,25 +846,34 @@
             slider.addEventListener('mouseleave', start);
         });
 
-        // === Countdown (12h) ===
+        // === Countdown Flash Sale ===
         (function() {
             const h = document.getElementById('hours'),
                 m = document.getElementById('minutes'),
                 s = document.getElementById('seconds');
             if (!h || !m || !s) return;
-            let left = 12 * 60 * 60;
-            const tick = () => {
-                if (left <= 0) left = 12 * 60 * 60;
+            @if(!empty($flashSaleEndTime))
+                const end = new Date(@json($flashSaleEndTime));
+            @else
+                const end = null;
+            @endif
+            function updateCountdown() {
+                if (!end) {
+                    h.textContent = m.textContent = s.textContent = '00';
+                    return;
+                }
+                const now = new Date();
+                let left = Math.floor((end - now) / 1000);
+                if (left < 0) left = 0;
                 const hh = Math.floor(left / 3600);
                 const mm = Math.floor((left % 3600) / 60);
                 const ss = left % 60;
                 h.textContent = String(hh).padStart(2, '0');
                 m.textContent = String(mm).padStart(2, '0');
                 s.textContent = String(ss).padStart(2, '0');
-                left--;
-            };
-            tick();
-            setInterval(tick, 1000);
+            }
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
         })();
 
         // === Wishlist: toggle + persist localStorage ===

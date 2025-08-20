@@ -24,6 +24,7 @@ class StoreCouponRequest extends FormRequest
         return [
             'code' => ['required', 'string', 'max:20', 'unique:coupons,code'],
             'discount_type' => ['required', Rule::in(['percent', 'fixed'])],
+            'apply_type' => ['required', Rule::in(['all', 'product', 'category', 'user'])],
             'value' => ['required', 'numeric', 'min:0'],
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'min_order_value' => ['nullable', 'numeric', 'min:0'],
@@ -58,8 +59,10 @@ class StoreCouponRequest extends FormRequest
         'code.max' => 'Mã giảm giá không được vượt quá 20 ký tự.',
         'code.unique' => 'Mã giảm giá đã tồn tại.',
 
-        'discount_type.required' => 'Vui lòng chọn loại giảm giá.',
-        'discount_type.in' => 'Loại giảm giá không hợp lệ.',
+    'discount_type.required' => 'Vui lòng chọn loại giảm giá.',
+    'discount_type.in' => 'Loại giảm giá không hợp lệ.',
+    'apply_type.required' => 'Vui lòng chọn kiểu áp dụng.',
+    'apply_type.in' => 'Kiểu áp dụng không hợp lệ.',
 
         'value.required' => 'Vui lòng nhập giá trị giảm.',
         'value.numeric' => 'Giá trị giảm phải là số.',

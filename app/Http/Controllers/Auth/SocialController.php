@@ -29,8 +29,16 @@ class SocialController extends Controller
             ]
         );
 
-    Auth::login($user);
-    return redirect('/');
+        // Gán vai trò 'user' nếu chưa có vai trò nào
+        if ($user->roles()->count() === 0) {
+            $userRole = \App\Models\Role::where('slug', 'user')->orWhere('name', 'user')->first();
+            if ($userRole) {
+                $user->roles()->attach($userRole->id);
+            }
+        }
+
+        Auth::login($user);
+        return redirect('/');
     }
 
     // Facebook
@@ -52,7 +60,15 @@ class SocialController extends Controller
             ]
         );
 
-    Auth::login($user);
-    return redirect('/');
+        // Gán vai trò 'user' nếu chưa có vai trò nào
+        if ($user->roles()->count() === 0) {
+            $userRole = \App\Models\Role::where('slug', 'user')->orWhere('name', 'user')->first();
+            if ($userRole) {
+                $user->roles()->attach($userRole->id);
+            }
+        }
+
+        Auth::login($user);
+        return redirect('/');
     }
 }

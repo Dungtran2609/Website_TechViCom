@@ -143,23 +143,85 @@ class ClientCouponController extends Controller
                 ]);
             }
             
+            // Kiểm tra điều kiện apply_type
+            $cartProductIds = $request->input('cart_product_ids', []); // truyền lên từ client
+            $cartProductAmounts = $request->input('cart_product_amounts', []); // [{id:..., amount:...}]
+            $eligibleSubtotal = null;
+            if ($coupon->apply_type === 'product') {
+                $couponProductIds = $coupon->products()->pluck('products.id')->toArray();
+                if (empty($couponProductIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã giảm giá này hiện không áp dụng cho sản phẩm nào.'
+                    ]);
+                }
+                // Tính tổng giá trị các sản phẩm hợp lệ trong giỏ
+                $eligibleSubtotal = 0;
+                foreach ($cartProductAmounts as $item) {
+                    if (in_array($item['id'], $couponProductIds)) {
+                        $eligibleSubtotal += (float)$item['amount'];
+                    }
+                }
+                if ($eligibleSubtotal <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã giảm giá này chỉ áp dụng cho một số sản phẩm nhất định.'
+                    ]);
+                }
+            } else if ($coupon->apply_type === 'category') {
+                $couponCategoryIds = $coupon->categories()->pluck('categories.id')->toArray();
+                if (empty($couponCategoryIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã giảm giá này hiện không áp dụng cho danh mục nào.'
+                    ]);
+                }
+                $cartCategoryIds = $request->input('cart_category_ids', []); // truyền lên từ client
+                $valid = false;
+                foreach ($cartCategoryIds as $catId) {
+                    if (in_array($catId, $couponCategoryIds)) {
+                        $valid = true;
+                        break;
+                    }
+                }
+                if (!$valid) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã giảm giá này chỉ áp dụng cho một số danh mục sản phẩm nhất định.'
+                    ]);
+                }
+            } else if ($coupon->apply_type === 'user') {
+                $allowedUserIds = $coupon->users()->pluck('users.id')->toArray();
+                if (empty($allowedUserIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Mã giảm giá này không áp dụng cho tài khoản nào.'
+                    ]);
+                }
+                if (!$user || !in_array($user->id, $allowedUserIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Tài khoản của bạn không được phép sử dụng mã giảm giá này.'
+                    ]);
+                }
+            }
+
             // Calculate discount amount
+            if ($coupon->apply_type === 'product') {
+                $baseAmount = $eligibleSubtotal;
+            } else {
+                $baseAmount = $subtotal;
+            }
             $discountAmount = 0;
             if ($coupon->discount_type === 'percent') {
-                $discountAmount = $subtotal * ($coupon->value / 100);
-                
-                // Apply max discount limit for percentage type
+                $discountAmount = $baseAmount * ($coupon->value / 100);
                 if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
                     $discountAmount = $coupon->max_discount_amount;
                 }
             } else {
-                // Fixed amount discount
-                $discountAmount = $coupon->value;
+                $discountAmount = min($coupon->value, $baseAmount);
             }
-            
-            // Make sure discount doesn't exceed subtotal
-            $discountAmount = min($discountAmount, $subtotal);
-            
+            $discountAmount = min($discountAmount, $baseAmount);
             return response()->json([
                 'success' => true,
                 'message' => 'Mã giảm giá hợp lệ',

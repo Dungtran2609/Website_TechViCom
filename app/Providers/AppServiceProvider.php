@@ -7,6 +7,8 @@ use App\Models\Contact;
 use App\Models\Category;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+    // Đăng ký observer cho User
+    User::observe(UserObserver::class);
 
         // Chia sẻ biến $Contacts cho tất cả view trong admin
         View::composer('admin.*', function ($view) {

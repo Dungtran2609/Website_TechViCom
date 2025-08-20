@@ -5,7 +5,10 @@
             <!-- Logo và thông tin công ty -->
             <div class="col-span-1">
                 <div class="flex items-center mb-4">
-                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom" class="w-12 h-12 rounded-lg mr-3 object-cover">
+                    @php
+                        $clientLogo = \App\Models\Logo::where('type', 'client')->orderByDesc('id')->first();
+                    @endphp
+                    <img src="{{ $clientLogo ? asset('storage/' . $clientLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" alt="{{ $clientLogo->alt ?? 'Techvicom' }}" class="w-12 h-12 rounded-lg mr-3 object-cover">
                     <div>
                         <h2 class="text-xl font-bold text-white">Techvicom</h2>
                     </div>

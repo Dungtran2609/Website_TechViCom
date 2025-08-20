@@ -391,7 +391,10 @@
                                 });
 
                                 // Tính min/max
-                                if ($variants->count()) {
+                                if ($product->flash_sale_price && $variants->count()) {
+                                    // Nếu có giá flash sale, dùng giá này cho tất cả biến thể (giả định chỉ có 1 biến thể)
+                                    $minPrice = $maxPrice = $product->flash_sale_price;
+                                } elseif ($variants->count()) {
                                     $prices = $variants->map(
                                         fn($v) => $v->sale_price && $v->sale_price < $v->price
                                             ? $v->sale_price
@@ -432,14 +435,20 @@
                                     {{-- GIÁ + Lượt xem --}}
                                     <div class="flex items-center justify-between mb-2">
                                         <div>
-                                            @if (!is_null($minPrice) && !is_null($maxPrice))
+                                            @if ($product->flash_sale_price && $variants->count())
+                                                <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                                @php $variant = $variants->first(); @endphp
+                                                @if($variant && $variant->price > $product->flash_sale_price)
+                                                    <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                                @endif
+                                                @if($product->discount_percent > 0)
+                                                    <span class="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded">-{{ $product->discount_percent }}%</span>
+                                                @endif
+                                            @elseif (!is_null($minPrice) && !is_null($maxPrice))
                                                 @if ($minPrice == $maxPrice)
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
                                                 @else
-                                                    <span
-                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫
-                                                        - {{ number_format($maxPrice) }}₫</span>
+                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫ - {{ number_format($maxPrice) }}₫</span>
                                                 @endif
                                             @else
                                                 <span class="text-lg font-bold text-[#ff6c2f]">0₫</span>

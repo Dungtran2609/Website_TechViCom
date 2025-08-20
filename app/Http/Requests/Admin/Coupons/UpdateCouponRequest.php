@@ -71,7 +71,7 @@ class UpdateCouponRequest extends FormRequest
             'start_date' => [
                 'required',
                 'date',
-                'after_or_equal:today'
+                // 'after_or_equal:today' will be handled in withValidator
             ],
             'end_date' => [
                 'required',
@@ -99,6 +99,29 @@ class UpdateCouponRequest extends FormRequest
             $data = $this->all();
             if (isset($data['min_order_value'], $data['max_order_value']) && $data['min_order_value'] > $data['max_order_value']) {
                 $validator->errors()->add('max_order_value', 'Giá trị đơn hàng tối đa phải lớn hơn hoặc bằng tối thiểu.');
+            }
+
+            // Custom: only block changing start_date to a past date
+            $routeCoupon = $this->route('coupon');
+            $routeId = $this->route('id');
+            if (!is_null($routeCoupon) || !is_null($routeId)) {
+                $couponId = $routeCoupon ?? $routeId;
+                $oldCoupon = \App\Models\Coupon::find($couponId);
+                if ($oldCoupon) {
+                    $oldStart = $oldCoupon->start_date ? date('Y-m-d', strtotime($oldCoupon->start_date)) : null;
+                    $newStart = $this->input('start_date');
+                    if ($newStart && $newStart !== $oldStart) {
+                        if (strtotime($newStart) < strtotime(date('Y-m-d'))) {
+                            $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
+                        }
+                    }
+                }
+            } else {
+                // Create: always block past date
+                $newStart = $this->input('start_date');
+                if ($newStart && strtotime($newStart) < strtotime(date('Y-m-d'))) {
+                    $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
+                }
             }
         });
     }

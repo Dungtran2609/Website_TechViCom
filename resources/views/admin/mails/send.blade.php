@@ -24,7 +24,7 @@
 									@foreach($mailTemplates as $mail)
 										<div class="col-12 mb-1 mail-template-checkbox-item">
 											<label class="form-check-label w-100">
-												<input type="checkbox" name="mail_ids[]" value="{{ $mail->id }}" class="form-check-input me-1" required>
+												<input type="checkbox" name="mail_ids[]" value="{{ $mail->id }}" class="form-check-input me-1">
 												<span class="fw-normal">{{ $mail->name }}</span>
 												<small class="text-muted">({{ $mail->subject }})</small>
 											</label>

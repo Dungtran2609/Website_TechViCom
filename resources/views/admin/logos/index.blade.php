@@ -9,10 +9,10 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
     <div class="table-responsive">
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
+        <table class="table table-hover align-middle shadow-sm border rounded">
+            <thead class="table-light align-middle">
                 <tr>
-                    <th>ID</th>
+                    <th class="text-center">#</th>
                     <th>Loại</th>
                     <th>Ảnh</th>
                     <th>Alt</th>
@@ -23,16 +23,31 @@
             <tbody>
             @forelse($logos as $logo)
                 <tr>
-                    <td>{{ $logo->id }}</td>
-                    <td><span class="badge bg-info">{{ $logo->type }}</span></td>
-                    <td><img src="{{ asset('storage/' . $logo->path) }}" alt="{{ $logo->alt }}" style="max-height:48px;"></td>
-                    <td>{{ $logo->alt }}</td>
-                    <td>{{ $logo->created_at->format('d/m/Y H:i') }}</td>
+                    <td class="text-center fw-bold">{{ $logo->id }}</td>
+                    <td>
+                        <span class="badge bg-info text-dark px-3 py-2 fs-6">
+                            <i class="bi bi-bookmark-star me-1"></i> {{ ucfirst($logo->type) }}
+                        </span>
+                    </td>
+                    <td>
+                        <img src="{{ asset('storage/' . $logo->path) }}" alt="{{ $logo->alt }}" class="rounded shadow-sm border" style="max-height:48px; max-width:90px; object-fit:contain; background:#f8f9fa;">
+                    </td>
+                    <td>
+                        <span class="d-inline-flex align-items-center">
+                            <i class="bi bi-card-text text-primary me-1"></i> {{ $logo->alt }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border px-2 py-1">
+                            <i class="bi bi-calendar-event text-success me-1"></i>
+                            {{ $logo->created_at->format('d/m/Y H:i') }}
+                        </span>
+                    </td>
                     <td class="text-center">
-                        <a href="{{ route('admin.logos.edit', $logo->id) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Sửa</a>
+                        <a href="{{ route('admin.logos.edit', $logo->id) }}" class="btn btn-outline-warning btn-sm me-1" title="Sửa logo"><i class="bi bi-pencil"></i></a>
                         <form action="{{ route('admin.logos.destroy', $logo->id) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Xoá logo này?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Xoá</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Xoá logo"><i class="bi bi-trash"></i></button>
                         </form>
                     </td>
                 </tr>

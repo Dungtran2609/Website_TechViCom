@@ -38,15 +38,10 @@ class ClientAccountController extends Controller
         $search = trim((string) $request->input('q', ''));
         $status = $request->input('status', 'all');
 
-        // Debug: Log parameters
-        // Log::info('Order filter parameters', [
-        //     'status' => $status,
-        //     'search' => $search,
-        //     'all_params' => $request->all()
-        // ]);
 
-        // Thứ tự trạng thái để ORDER BY FIELD
-        $statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'received', 'cancelled', 'returned'];
+
+        // Thứ tự trạng thái để ORDER BY FIELD (chỉ các trạng thái có thực trong DB)
+        $statusOrder = ['pending', 'shipped', 'delivered', 'received', 'cancelled', 'returned'];
 
         $query = Order::with(['orderItems.productVariant.product', 'returns'])
             ->where('user_id', $user->id);
@@ -88,13 +83,7 @@ class ClientAccountController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Debug: Log query and results
-        // Log::info('Order query results', [
-        //     'total_orders' => $orders->total(),
-        //     'current_page' => $orders->currentPage(),
-        //     'per_page' => $orders->perPage(),
-        //     'status_counts' => $orders->getCollection()->groupBy('status')->map->count()
-        // ]);
+
 
         // (Tuỳ view cần) số lượng theo từng trạng thái cho badge/tabs
         $counts = Order::where('user_id', $user->id)
@@ -103,6 +92,8 @@ class ClientAccountController extends Controller
             ->pluck('total', 'status')
             ->all();
         $counts['all'] = Order::where('user_id', $user->id)->count();
+        
+
 
         return view('client.accounts.orders', [
             'orders' => $orders,

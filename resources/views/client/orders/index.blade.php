@@ -5,7 +5,7 @@
 @push('styles')
 <style>
     .account-sidebar {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
     }
     
     .order-card {
@@ -26,7 +26,7 @@
     }
     
     .avatar-placeholder {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
         width: 80px;
         height: 80px;
         border-radius: 50%;
@@ -298,16 +298,21 @@
                         @endforeach
                     </div>
 
-                    <!-- Pagination -->
-                    <div class="d-flex justify-content-center mt-6">
-                        {{ $orders->links() }}
-                    </div>
+                    <!-- Load More Button -->
+                    @if($orders->hasMorePages())
+                        <div class="text-center mt-8">
+                            <button id="loadMoreBtn" class="btn btn-primary btn-lg px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 border-0 hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                                <i class="fas fa-plus me-3"></i>
+                                Xem thêm đơn hàng
+                            </button>
+                        </div>
+                    @endif
                 @else
                     <div class="bg-white rounded-lg p-8 text-center">
                         <i class="fas fa-shopping-bag text-6xl text-gray-300 mb-4"></i>
                         <h4 class="text-xl font-semibold text-gray-600 mb-2">Chưa có đơn hàng nào</h4>
                         <p class="text-gray-500 mb-6">Hãy khám phá và mua sắm các sản phẩm yêu thích của bạn</p>
-                        <a href="{{ route('products.index') }}" class="btn btn-primary">
+                        <a href="{{ route('products.index') }}" class="btn btn-primary bg-gradient-to-r from-orange-500 to-red-500 border-0 hover:from-orange-600 hover:to-red-600">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Bắt đầu mua sắm
                         </a>
@@ -361,6 +366,23 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+    
+    // Load More Button
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const currentUrl = new URL(window.location);
+            const currentPage = parseInt(currentUrl.searchParams.get('page') || '1');
+            currentUrl.searchParams.set('page', currentPage + 1);
+            
+            // Show loading state
+            loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-3"></i>Đang tải...';
+            loadMoreBtn.disabled = true;
+            
+            // Redirect to next page
+            window.location.href = currentUrl.toString();
+        });
+    }
 });
 
 function cancelOrder(orderId) {

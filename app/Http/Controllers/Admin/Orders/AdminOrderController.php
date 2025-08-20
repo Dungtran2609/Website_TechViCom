@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Schema;
 
 class AdminOrderController extends Controller
 {
@@ -168,7 +169,8 @@ class AdminOrderController extends Controller
             'payment_method_vietnamese' => $paymentMap[$order->payment_method] ?? $order->payment_method,
             'payment_status' => $order->payment_status,
             'payment_status_vietnamese' => $paymentStatusMap[$order->payment_status] ?? $order->payment_status,
-'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
+            'vnpay_cancel_count' => $order->vnpay_cancel_count ?? 0,
+            'shipped_at' => $order->shipped_at ? Carbon::parse($order->shipped_at)->format('d/m/Y H:i') : '',
             'created_at' => Carbon::parse($order->created_at)->format('d/m/Y H:i'),
             'order_items' => $order->orderItems->map(function ($item) {
                 $variant = $item->productVariant;
@@ -276,6 +278,7 @@ $subtotal = $order->orderItems->sum(function ($item) {
             'coupon_discount' => $discountAmount,
             'final_total' => $finalTotal,
             'shipped_at' => $order->shipped_at,
+            'vnpay_cancel_count' => $order->vnpay_cancel_count ?? 0,
             'order_items' => $order->orderItems->map(fn($item) => [
                 'id' => $item->id,
                 'name_product' => $item->productVariant->product->name,
@@ -536,9 +539,64 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
     /* ========================= RETURNS ========================= */
     public function returnsIndex(Request $request)
     {
-        $returns = OrderReturn::with(['order.user', 'order.orderItems.product', 'order.orderItems.productVariant'])
-            ->latest()
-            ->paginate(15);
+        $query = OrderReturn::with(['order.user', 'order.orderItems.product', 'order.orderItems.productVariant']);
+
+        // Tìm kiếm theo từ khóa
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('id', 'like', "%$keyword%")
+                    ->orWhereHas('order', function ($orderQuery) use ($keyword) {
+                        $orderQuery->where('id', 'like', "%$keyword%")
+                            ->orWhereHas('user', function ($userQuery) use ($keyword) {
+                                $userQuery->where('name', 'like', "%$keyword%");
+                            });
+                    })
+                    ->orWhere('reason', 'like', "%$keyword%");
+            });
+        }
+
+        // Lọc theo trạng thái yêu cầu
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Lọc theo loại yêu cầu
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        // Lọc theo trạng thái đơn hàng
+        if ($request->filled('order_status')) {
+            $query->whereHas('order', function ($orderQuery) use ($request) {
+                $orderQuery->where('status', $request->input('order_status'));
+            });
+        }
+
+        // Lọc theo ngày yêu cầu
+        if ($request->filled('date_from')) {
+            $query->whereDate('requested_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('requested_at', '<=', $request->date_to);
+        }
+
+        // Sắp xếp
+        $sortBy = $request->get('sort_by', 'requested_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        if ($sortBy === 'order_id') {
+            $query->orderBy('order_id', $sortOrder);
+        } elseif ($sortBy === 'status') {
+            $query->orderBy('status', $sortOrder);
+        } elseif ($sortBy === 'type') {
+            $query->orderBy('type', $sortOrder);
+        } else {
+            $query->orderBy('requested_at', $sortOrder);
+        }
+
+        $returns = $query->paginate(15);
 
         $data = $returns->getCollection()->map(function ($ret) {
             $order = $ret->order;
@@ -553,7 +611,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
                 'id' => $ret->id,
                 'order_id' => $order->id,
                 'user_name' => $order->user->name ?? 'Khách vãng lai',
-'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
+                'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
                 'type' => $ret->type,
                 'status' => $ret->status,
                 'status_vietnamese' => [
@@ -596,7 +654,12 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
     {
         $ret = OrderReturn::findOrFail($id);
         $action = $request->input('action'); // approve|reject
-        $note = $request->input('admin_note');
+        $note = trim($request->input('admin_note'));
+
+        // Validation bắt buộc nhập ghi chú
+        if (empty($note)) {
+            return back()->withErrors(['admin_note' => 'Vui lòng nhập ghi chú khi xử lý yêu cầu.'])->withInput();
+        }
 
         if (!in_array($action, ['approve', 'reject'])) {
             return back()->with('error', 'Hành động không hợp lệ.');
@@ -621,8 +684,26 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         }
 
         $ret->save();
-$msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
+        $msg = $action === 'approve' ? 'đã được phê duyệt.' : 'đã bị từ chối.';
         return redirect()->route('admin.orders.returns')->with('success', "Yêu cầu $msg");
+    }
+
+    /**
+     * Reset VNPay cancel counter cho đơn hàng
+     */
+    public function resetVnpayCancelCount($id)
+    {
+        try {
+            $order = Order::findOrFail($id);
+            
+            if (Schema::hasColumn('orders', 'vnpay_cancel_count')) {
+                $order->update(['vnpay_cancel_count' => 0]);
+            }
+            
+            return back()->with('success', 'Đã reset VNPay cancel counter cho đơn hàng #' . $order->id);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Có lỗi xảy ra khi reset VNPay cancel counter');
+        }
     }
 }
 

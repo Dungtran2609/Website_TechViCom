@@ -466,6 +466,16 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
 });
 
+// Client Orders Routes
+Route::prefix('client/orders')->name('client.orders.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'index'])->name('index');
+    Route::get('/{id}', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'show'])->name('show');
+    Route::post('/{id}/cancel', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'cancel'])->name('cancel');
+    Route::post('/{id}/confirm-payment', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmPayment'])->name('confirm-payment');
+    Route::post('/{id}/request-return', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'requestReturn'])->name('request-return');
+    Route::post('/{id}/confirm-received', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
+});
+
 
 // =========================================================================
 // === ADMIN ROUTES ===
@@ -517,6 +527,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
         Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
         Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/reset-vnpay-counter', [AdminOrderController::class, 'resetVnpayCancelCount'])->name('reset-vnpay-counter');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)
@@ -700,6 +711,10 @@ Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCa
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
 
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.
 // Gợi ý fix lỗi: View [client.accounts.orders] not found
 // 1. Tạo file: resources/views/client/accounts/orders.blade.php
 // 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);

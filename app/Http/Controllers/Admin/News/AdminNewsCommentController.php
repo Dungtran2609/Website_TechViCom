@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\News;
 use App\Models\User;
 use App\Models\NewsComment;
+use App\Models\NewsCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,45 +20,50 @@ class AdminNewsCommentController extends Controller
             ->distinct()
             ->pluck('news_id');
 
-        // Lấy bài viết có bình luận, sắp xếp theo bình luận mới nhất, có phân trang
-        $allNews = News::whereIn('id', $newsWithCommentsIds)
-            ->select('id', 'title', 'image')
+        // Query bài viết có bình luận
+        $query = News::whereIn('id', $newsWithCommentsIds)
+            ->select('id', 'title', 'image', 'category_id')
             ->withMax(['comments as latest_comment_created_at' => function ($q) {
                 $q->whereNull('parent_id');
-            }], 'created_at')
-            ->orderByDesc('latest_comment_created_at')
-            ->paginate(12);
+            }], 'created_at');
 
-        $query = NewsComment::with(['user', 'news', 'children'])
-            ->withCount('replies')
-            ->whereNull('parent_id')
-            ->whereIn('news_id', $newsWithCommentsIds);
-
-        if ($request->filled('keyword')) {
-            $keyword = $request->input('keyword');
-            $query->where(function ($q) use ($keyword) {
-                $q->where('content', 'like', "%$keyword%")
-                    ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%$keyword%"))
-                    ->orWhereHas('news', fn($q) => $q->where('title', 'like', "%$keyword%"));
-            });
+        // Tìm kiếm theo tiêu đề bài viết
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->filled('news_id')) {
-            $query->where('news_id', $request->news_id);
+        // Lọc theo danh mục
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
         }
 
-        if ($request->filled('is_hidden')) {
-            $query->where('is_hidden', $request->is_hidden);
+        // Lọc theo ngày bình luận
+        if ($request->filled('date_from')) {
+            $query->whereDate('latest_comment_created_at', '>=', $request->date_from);
         }
 
-        $comments = $query
-            ->orderByDesc('likes_count')
-            ->orderByDesc('replies_count')
-            ->orderBy('is_hidden')
-            ->orderByDesc('created_at')
-            ->paginate(15);
+        if ($request->filled('date_to')) {
+            $query->whereDate('latest_comment_created_at', '<=', $request->date_to);
+        }
 
-        return view('admin.news.news_comments.index', compact('comments', 'allNews'));
+        // Sắp xếp
+        $sortBy = $request->get('sort_by', 'latest_comment_created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        if ($sortBy === 'title') {
+            $query->orderBy('title', $sortOrder);
+        } elseif ($sortBy === 'id') {
+            $query->orderBy('id', $sortOrder);
+        } else {
+            $query->orderBy('latest_comment_created_at', $sortOrder);
+        }
+
+        $allNews = $query->paginate(12);
+
+        // Lấy danh sách danh mục cho filter
+        $categories = NewsCategory::orderBy('name')->get();
+
+        return view('admin.news.news_comments.index', compact('allNews', 'categories'));
     }
 
     public function destroy($id)

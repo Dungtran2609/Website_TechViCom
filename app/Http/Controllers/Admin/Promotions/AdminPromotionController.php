@@ -6,13 +6,25 @@ use App\Models\Promotion;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class AdminPromotionController extends Controller
 {
     public function index()
     {
-        $promotions = Promotion::with(['coupons'])->latest()->paginate(15);
+        $query = Promotion::with(['coupons']);
+        if (request('q')) {
+            $q = request('q');
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'like', "%$q%")
+                    ->orWhere('description', 'like', "%$q%")
+                    ->orWhere('slug', 'like', "%$q%")
+                    ->orWhere('id', $q);
+            });
+        }
+        $promotions = $query->latest()->paginate(15)->appends(['q' => request('q')]);
         return view('admin.promotions.index', compact('promotions'));
     }
 
@@ -29,7 +41,7 @@ class AdminPromotionController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:all,category,product',
+            'flash_type' => 'required|in:all,category,flash_sale',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'boolean',
@@ -39,11 +51,30 @@ class AdminPromotionController extends Controller
         $data['slug'] = Str::slug($data['name']);
         $promotion = Promotion::create($data);
         // Gán sản phẩm/danh mục nếu có
-        if ($data['type'] === 'category' && !empty($request->categories)) {
+        if ($data['flash_type'] === 'category' && !empty($request->categories)) {
             $promotion->categories()->sync($request->categories);
         }
-        if ($data['type'] === 'product' && !empty($request->products)) {
-            $promotion->products()->sync($request->products);
+        if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {
+            if ($request->has('sale_prices')) {
+                $syncData = [];
+                foreach ($request->products as $pid) {
+                    $syncData[$pid] = [
+                        'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null
+                    ];
+                    // Lưu giá giảm cũ trước khi cập nhật giá flash sale
+                    \App\Models\ProductVariant::where('product_id', $pid)
+                        ->whereNull('old_sale_price')
+                        ->update(['old_sale_price' => DB::raw('sale_price')]);
+                    // Cập nhật sale_price cho tất cả variant của sản phẩm này
+                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null]);
+                }
+                $promotion->products()->sync($syncData);
+            } else {
+                $promotion->products()->sync($request->products);
+            }
+        } else {
+            // Nếu không phải flash_sale hoặc không kích hoạt thì không cập nhật sale_price, chỉ sync products
+            $promotion->products()->sync($request->products ?? []);
         }
         // Gán coupon cho promotion
         if ($request->coupons) {
@@ -71,7 +102,7 @@ class AdminPromotionController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:all,category,product',
+            'flash_type' => 'required|in:all,category,flash_sale',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'boolean',
@@ -80,14 +111,35 @@ class AdminPromotionController extends Controller
         ]);
         $data['slug'] = Str::slug($data['name']);
         $promotion->update($data);
-        if ($data['type'] === 'category' && !empty($request->categories)) {
+        if ($data['flash_type'] === 'category' && !empty($request->categories)) {
             $promotion->categories()->sync($request->categories);
         } else {
             $promotion->categories()->detach();
         }
-        if ($data['type'] === 'product' && !empty($request->products)) {
-            $promotion->products()->sync($request->products);
+        if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {
+            if ($request->has('sale_prices')) {
+                $syncData = [];
+                foreach ($request->products as $pid) {
+                    $syncData[$pid] = [
+                        'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null
+                    ];
+                    // Lưu giá giảm cũ trước khi cập nhật giá flash sale
+                    \App\Models\ProductVariant::where('product_id', $pid)
+                        ->whereNull('old_sale_price')
+                        ->update(['old_sale_price' => DB::raw('sale_price')]);
+                    // Cập nhật sale_price cho tất cả variant của sản phẩm này
+                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null]);
+                }
+                $promotion->products()->sync($syncData);
+            } else {
+                $promotion->products()->sync($request->products);
+            }
         } else {
+            // Nếu không còn là flash_sale hoặc bị ẩn/hết hạn thì revert sale_price về old_sale_price cho các sản phẩm từng thuộc promotion này
+            $oldProductIds = $promotion->products()->pluck('products.id')->toArray();
+            \App\Models\ProductVariant::whereIn('product_id', $oldProductIds)
+                ->whereNotNull('old_sale_price')
+                ->update(['sale_price' => DB::raw('old_sale_price'), 'old_sale_price' => null]);
             $promotion->products()->detach();
         }
         // Gán coupon cho promotion

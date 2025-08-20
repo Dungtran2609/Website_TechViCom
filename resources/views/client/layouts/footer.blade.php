@@ -5,7 +5,10 @@
             <!-- Logo và thông tin công ty -->
             <div class="col-span-1">
                 <div class="flex items-center mb-4">
-                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom" class="w-12 h-12 rounded-lg mr-3 object-cover">
+                    @php
+                        $clientLogo = \App\Models\Logo::where('type', 'client')->orderByDesc('id')->first();
+                    @endphp
+                    <img src="{{ $clientLogo ? asset('storage/' . $clientLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" alt="{{ $clientLogo->alt ?? 'Techvicom' }}" class="w-12 h-12 rounded-lg mr-3 object-cover">
                     <div>
                         <h2 class="text-xl font-bold text-white">Techvicom</h2>
                     </div>
@@ -14,10 +17,10 @@
                 
                 <!-- Social Icons -->
                 <div class="flex space-x-4">
-                    <a href="#" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-blue-600 transition">
+                    <a href="https://www.facebook.com/profile.php?id=61579355081161" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-blue-600 transition">
                         <i class="fab fa-facebook text-white"></i>
                     </a>
-                    <a href="#" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-[#ff6c2f] transition">
+                    <a href="https://studio.youtube.com/channel/UCgjtfk_OjrfdyQNJphIMxmg" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-[#ff6c2f] transition">
                         <i class="fab fa-youtube text-white"></i>
                     </a>
                     <a href="#" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-black transition">

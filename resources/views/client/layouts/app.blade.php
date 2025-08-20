@@ -160,7 +160,10 @@
         aria-labelledby="contactChatOffcanvasLabel">
         <div class="offcanvas-header">
             <div class="contact-chat-avatar me-3">
-                <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom"
+                @php
+                    $clientLogo = \App\Models\Logo::where('type', 'client')->orderByDesc('id')->first();
+                @endphp
+                <img src="{{ $clientLogo ? asset('storage/' . $clientLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" alt="{{ $clientLogo->alt ?? 'Techvicom' }}"
                     class="w-10 h-10 rounded-lg mr-3 object-cover">
             </div>
             <div>

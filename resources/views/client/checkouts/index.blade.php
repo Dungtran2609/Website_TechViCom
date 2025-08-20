@@ -567,17 +567,42 @@
             msg.textContent = 'Đang kiểm tra...';
             msg.className = 'mt-1 text-xs text-gray-500';
 
-            fetch('/api/apply-coupon', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    body: JSON.stringify({
-                        coupon_code: code,
-                        subtotal
-                    })
+            // Collect product and category info from cart items
+            const cartItems = document.querySelectorAll('.checkout-item');
+            const cartProductIds = Array.from(cartItems)
+                .map(item => {
+                    const itemId = item.getAttribute('data-item-id');
+                    return itemId ? itemId.split(':')[0] : null;
                 })
+                .filter(id => id && id !== '')
+                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
+            const cartProductAmounts = Array.from(cartItems)
+                .map(item => {
+                    const itemId = item.getAttribute('data-item-id');
+                    const productId = itemId ? itemId.split(':')[0] : null;
+                    const amount = parseFloat(item.getAttribute('data-unit-price')) * parseInt(item.getAttribute('data-quantity'));
+                    return productId ? { id: productId, amount } : null;
+                })
+                .filter(x => x);
+            const cartCategoryIds = Array.from(cartItems)
+                .map(item => item.getAttribute('data-category-id'))
+                .filter(id => id && id !== '')
+                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
+
+            fetch('/api/apply-coupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken()
+                },
+                body: JSON.stringify({
+                    coupon_code: code,
+                    subtotal,
+                    cart_product_ids: cartProductIds,
+                    cart_product_amounts: cartProductAmounts,
+                    cart_category_ids: cartCategoryIds
+                })
+            })
                 .then(r => r.json())
                 .then(data => {
                     if (!data.success) {

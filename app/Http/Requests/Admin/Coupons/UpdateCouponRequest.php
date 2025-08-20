@@ -15,7 +15,8 @@ class UpdateCouponRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'status' => (int) $this->status,
+            'code' => trim($this->code),
+            'status' => filter_var($this->status, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
         ]);
     }
 
@@ -24,16 +25,59 @@ class UpdateCouponRequest extends FormRequest
         $couponId = $this->route('coupon') ?? $this->route('id');
 
         return [
-            'code' => ['required', 'string', 'max:20', Rule::unique('coupons', 'code')->ignore($couponId)],
-            'discount_type' => ['required', Rule::in(['percent', 'fixed'])],
-            'value' => ['required', 'numeric', 'min:0'],
-            'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
-            'min_order_value' => ['nullable', 'numeric', 'min:0'],
-            'max_order_value' => ['nullable', 'numeric', 'min:0'],
-            'max_usage_per_user' => ['nullable', 'integer', 'min:1'],
-            'status' => ['required', 'boolean'],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'code' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^[A-Za-z0-9_-]+$/', // no spaces, only letters, numbers, - and _
+                Rule::unique('coupons', 'code')->ignore($couponId)
+            ],
+            'discount_type' => [
+                'required',
+                'string',
+                Rule::in(['percent', 'fixed'])
+            ],
+            'value' => [
+                'required',
+                'numeric',
+                'gt:0'
+            ],
+            'max_discount_amount' => [
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
+            'min_order_value' => [
+                'nullable',
+                'numeric',
+                'min:0'
+            ],
+            'max_order_value' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'gte:min_order_value'
+            ],
+            'max_usage_per_user' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:1000'
+            ],
+            'status' => [
+                'required',
+                'boolean'
+            ],
+            'start_date' => [
+                'required',
+                'date',
+                // 'after_or_equal:today' will be handled in withValidator
+            ],
+            'end_date' => [
+                'required',
+                'date',
+                'after_or_equal:start_date'
+            ],
         ];
     }
 
@@ -44,11 +88,41 @@ class UpdateCouponRequest extends FormRequest
         });
 
         $validator->sometimes('min_order_value', 'required', function ($input) {
-            return !empty($input->max_order_value);
+            return !is_null($input->max_order_value) && $input->max_order_value !== '';
         });
 
         $validator->sometimes('max_order_value', 'required', function ($input) {
-            return !empty($input->min_order_value);
+            return !is_null($input->min_order_value) && $input->min_order_value !== '';
+        });
+
+        $validator->after(function ($validator) {
+            $data = $this->all();
+            if (isset($data['min_order_value'], $data['max_order_value']) && $data['min_order_value'] > $data['max_order_value']) {
+                $validator->errors()->add('max_order_value', 'Giá trị đơn hàng tối đa phải lớn hơn hoặc bằng tối thiểu.');
+            }
+
+            // Custom: only block changing start_date to a past date
+            $routeCoupon = $this->route('coupon');
+            $routeId = $this->route('id');
+            if (!is_null($routeCoupon) || !is_null($routeId)) {
+                $couponId = $routeCoupon ?? $routeId;
+                $oldCoupon = \App\Models\Coupon::find($couponId);
+                if ($oldCoupon) {
+                    $oldStart = $oldCoupon->start_date ? date('Y-m-d', strtotime($oldCoupon->start_date)) : null;
+                    $newStart = $this->input('start_date');
+                    if ($newStart && $newStart !== $oldStart) {
+                        if (strtotime($newStart) < strtotime(date('Y-m-d'))) {
+                            $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
+                        }
+                    }
+                }
+            } else {
+                // Create: always block past date
+                $newStart = $this->input('start_date');
+                if ($newStart && strtotime($newStart) < strtotime(date('Y-m-d'))) {
+                    $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
+                }
+            }
         });
     }
 
@@ -57,13 +131,30 @@ class UpdateCouponRequest extends FormRequest
         return [
             'code.required' => 'Vui lòng nhập mã giảm giá.',
             'code.unique' => 'Mã giảm giá đã tồn tại.',
+            'code.regex' => 'Mã giảm giá chỉ được chứa chữ, số, dấu - hoặc _.',
             'discount_type.required' => 'Vui lòng chọn loại giảm giá.',
             'discount_type.in' => 'Loại giảm giá không hợp lệ.',
+            'apply_type.required' => 'Vui lòng chọn kiểu áp dụng.',
+            'apply_type.in' => 'Kiểu áp dụng không hợp lệ.',
             'value.required' => 'Vui lòng nhập giá trị giảm.',
             'value.numeric' => 'Giá trị giảm phải là số.',
-            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'value.gt' => 'Giá trị giảm phải lớn hơn 0.',
+            'max_discount_amount.required' => 'Vui lòng nhập số tiền giảm tối đa cho loại phần trăm.',
+            'max_discount_amount.numeric' => 'Số tiền giảm tối đa phải là số.',
+            'min_order_value.numeric' => 'Giá trị đơn hàng tối thiểu phải là số.',
+            'max_order_value.numeric' => 'Giá trị đơn hàng tối đa phải là số.',
+            'max_order_value.gte' => 'Giá trị đơn hàng tối đa phải lớn hơn hoặc bằng tối thiểu.',
+            'max_usage_per_user.integer' => 'Số lần sử dụng tối đa mỗi người phải là số nguyên.',
+            'max_usage_per_user.min' => 'Số lần sử dụng tối đa mỗi người phải lớn hơn 0.',
+            'max_usage_per_user.max' => 'Số lần sử dụng tối đa mỗi người không vượt quá 1000.',
             'status.required' => 'Vui lòng chọn trạng thái.',
-            'status.in' => 'Trạng thái không hợp lệ.',
+            'status.boolean' => 'Trạng thái không hợp lệ.',
+            'start_date.required' => 'Vui lòng chọn ngày bắt đầu.',
+            'start_date.date' => 'Ngày bắt đầu không hợp lệ.',
+            'start_date.after_or_equal' => 'Ngày bắt đầu không được trong quá khứ.',
+            'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
+            'end_date.date' => 'Ngày kết thúc không hợp lệ.',
+            'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
         ];
     }
 }

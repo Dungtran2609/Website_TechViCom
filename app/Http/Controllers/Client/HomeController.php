@@ -50,17 +50,33 @@ class HomeController extends Controller
                       ->limit(8)
                       ->get();
 
-        // Lấy 4 bài viết mới nhất
-        $latestNews = \App\Models\News::where('status', 'published')
-            ->orderByDesc('published_at')
-            ->take(4)
-            ->get();
+        // Lấy chương trình flash sale đang diễn ra
+        $now = now();
+        $flashSale = \App\Models\Promotion::where('flash_type', 'flash_sale')
+            ->where('status', 1)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('start_date', 'asc')
+            ->first();
 
-        // Lấy 4 bài viết mới nhất
-        $latestNews = \App\Models\News::where('status', 'published')
-            ->orderByDesc('published_at')
-            ->take(4)
-            ->get();
+        $flashSaleProducts = [];
+        $flashSaleEndTime = null;
+        if ($flashSale) {
+            $flashSaleEndTime = $flashSale->end_date;
+            $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function($product) use ($flashSale) {
+                // Lấy giá flash sale từ pivot
+                $salePrice = $product->pivot->sale_price ?? null;
+                $variant = $product->variants->first();
+                $price = $variant ? $variant->price : null;
+                $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
+                $product->flash_sale_price = $salePrice;
+                $product->discount_percent = $discountPercent;
+                return $product;
+            });
+        }
+
+        // Lấy bài viết mới nhất
+        $latestNews = \App\Models\News::orderByDesc('created_at')->limit(4)->get();
 
         return view('client.home', compact(
             'banners',
@@ -68,7 +84,9 @@ class HomeController extends Controller
             'hotProducts',
             'categories',
             'brands',
-            'latestNews'
+            'latestNews',
+            'flashSaleProducts',
+            'flashSaleEndTime'
         ));
     }
 }

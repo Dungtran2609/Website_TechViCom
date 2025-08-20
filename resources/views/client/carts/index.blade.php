@@ -39,7 +39,7 @@
                   @php
                     // === TÍNH GIÁ ĐÚNG TRƯỜNG HỢP ===
                     $displayPrice = 0;
-
+                    $stock = $item->productVariant->stock ?? $item->product->stock ?? 0;
                     if (!empty($item->productVariant)) {
                       $displayPrice = $item->productVariant->sale_price ?? $item->productVariant->price ?? 0;
                     } elseif (isset($item->price) && $item->price !== null) {
@@ -50,7 +50,6 @@
                       $v = $item->product->variants?->firstWhere('id', $item->variant_id);
                       if ($v) $displayPrice = $v->sale_price ?? $v->price ?? 0;
                     }
-
                     // ẢNH: ưu tiên ảnh biến thể
                     $imagePath = null;
                     if (!empty($item->productVariant?->image)) {
@@ -60,6 +59,7 @@
                       $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
                       if ($imgField) $imagePath = asset('uploads/products/' . ltrim($imgField, '/'));
                     }
+                    $isOutOfStock = ($stock <= 0);
                   @endphp
 
                   <div
@@ -69,7 +69,7 @@
                     data-id="{{ $item->id }}"
                   >
                     <div class="flex items-center space-x-4">
-                      <input type="checkbox" class="item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="{{ $item->id }}">
+                      <input type="checkbox" class="item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="{{ $item->id }}" @if($isOutOfStock) disabled @endif>
                       <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                         @if(!empty($item->productVariant?->image))
                           <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}"
@@ -82,8 +82,9 @@
                       </div>
                       <div>
                         <h3 class="font-medium text-gray-900">{{ $item->product->name }}</h3>
-
-                        @if(!empty($item->productVariant))
+                        @if($isOutOfStock)
+                          <div class="text-sm text-red-600 font-semibold">Hết hàng</div>
+                        @elseif(!empty($item->productVariant))
                           <div class="text-sm text-gray-500">
                             @foreach($item->productVariant->attributeValues as $attrValue)
                               {{ $attrValue->attribute->name }}: {{ $attrValue->value }}{{ !$loop->last ? ', ' : '' }}
@@ -92,7 +93,6 @@
                         @elseif($item->product->variants && $item->product->variants->count() > 0 && $displayPrice == 0)
                           <div class="text-sm text-amber-600">Vui lòng chọn phân loại</div>
                         @endif
-
                         <div class="text-sm text-gray-500">
                           @if($displayPrice > 0)
                             {{ number_format($displayPrice, 0, ',', '.') }}₫
@@ -104,24 +104,29 @@
                     </div>
 
                     <div class="flex items-center space-x-4">
-                      <div class="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          onclick="updateQuantity('{{ $item->id }}', {{ max(1, (int) $item->quantity - 1) }})"
-                          class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int)$item->quantity <= 1 ? 'opacity-50 cursor-not-allowed' : '' }}"
-                          {{ (int)$item->quantity <= 1 ? 'disabled' : '' }}
-                        >
-                          <i class="fas fa-minus text-xs"></i>
-                        </button>
-                        <span class="w-8 text-center">{{ $item->quantity }}</span>
-                        <button
-                          type="button"
-                          onclick="handleIncreaseQuantity('{{ $item->id }}', {{ (int) $item->quantity }}, {{ (int)($item->productVariant?->stock ?? 9999) }})"
-                          class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int)$item->quantity >= (int)($item->productVariant?->stock ?? 9999) ? 'opacity-50 cursor-not-allowed' : '' }}"
-                        >
-                          <i class="fas fa-plus text-xs"></i>
-                        </button>
-                      </div>
+                      @if($isOutOfStock)
+                        <div class="text-red-600 font-bold text-base">Hết hàng</div>
+                      @else
+                        <div class="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onclick="updateQuantity('{{ $item->id }}', {{ max(1, (int) $item->quantity - 1) }})"
+                            class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int)$item->quantity <= 1 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                            @if((int)$item->quantity <= 1) disabled @endif
+                          >
+                            <i class="fas fa-minus text-xs"></i>
+                          </button>
+                          <span class="w-8 text-center">{{ $item->quantity }}</span>
+                          <button
+                            type="button"
+                            onclick="handleIncreaseQuantity('{{ $item->id }}', {{ (int) $item->quantity }}, {{ (int)($item->productVariant?->stock ?? 9999) }})"
+                            class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 {{ (int)$item->quantity >= (int)($item->productVariant?->stock ?? 9999) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                            @if((int)$item->quantity >= (int)($item->productVariant?->stock ?? 9999)) disabled @endif
+                          >
+                            <i class="fas fa-plus text-xs"></i>
+                          </button>
+                        </div>
+                      @endif
                       <button type="button" onclick="removeFromCart('{{ $item->id }}')" class="text-red-500 hover:text-red-700 transition">
                         <i class="fas fa-trash"></i>
                       </button>
@@ -346,20 +351,25 @@ async function deleteSelected(){
 }
 // ===== Thanh toán =====
 function proceedToCheckout(){ // thanh toán tất cả
-  // Lấy tất cả sản phẩm trong giỏ
-  const ids = Array.from(document.querySelectorAll('.cart-item')).map(el => el.dataset.id);
+  // Lấy tất cả sản phẩm trong giỏ còn hàng
+  const ids = Array.from(document.querySelectorAll('.cart-item'))
+    .map(el => el.dataset.id)
+    .filter((id, idx) => {
+      const cb = cbs[idx];
+      return cb && !cb.disabled;
+    });
   if(ids.length === 0){
-    showNotification('Giỏ hàng trống','error');
+    showNotification('Giỏ hàng trống hoặc không có sản phẩm còn hàng','error');
     return;
   }
-  // Lưu toàn bộ id vào localStorage (giống cách thanh toán theo chọn)
   localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
-  // Điều hướng sang trang checkout kèm danh sách id
   window.location.href = '{{ route("checkout.index") }}?selected=' + ids.join(',');
 }
 
 function proceedToCheckoutSelected(){ // thanh toán theo chọn
-  const ids = Array.from(document.querySelectorAll('.item-checkbox:checked')).map(cb => cb.value);
+  const ids = Array.from(document.querySelectorAll('.item-checkbox:checked'))
+    .filter(cb => !cb.disabled)
+    .map(cb => cb.value);
   if(ids.length === 0){
     showNotification('Vui lòng chọn sản phẩm để thanh toán','error');
     return;
@@ -406,7 +416,7 @@ function initSelectionFeatures(){
   }
 
   selectAll.addEventListener('change', ()=>{
-    cbs.forEach(cb=>cb.checked=selectAll.checked);
+    cbs.forEach(cb=>{ if (!cb.disabled) cb.checked=selectAll.checked; });
     refresh();
   });
   cbs.forEach(cb=>cb.addEventListener('change', ()=>{

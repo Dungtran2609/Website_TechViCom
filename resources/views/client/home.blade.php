@@ -708,7 +708,7 @@
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
                                 @endif
                                 <h3 class="font-semibold text-sm mb-1 line-clamp-1">{{ $brand->name }}</h3>
-                                
+
                                 <a href="{{ route('brands.show', $brand->slug) }}"
                                     class="block text-[#ff6c2f] text-sm font-semibold hover:underline">
                                     Xem thương hiệu
@@ -721,35 +721,88 @@
         </div>
     </section>
 
+
+
     <!-- ================= Bài viết mới ================= -->
-    <section class="py-10 bg-gradient-to-b from-gray-50 to-white">
+    <section class="py-12 bg-white">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-8 text-[#ff6c2f]">Bài viết mới</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                @foreach ($latestNews as $item)
-                    <div
-                        class="bg-white border border-[#ff6c2f] rounded-xl shadow-lg flex flex-col overflow-hidden hover:shadow-xl hover:border-[#0052cc] transition-all duration-300 group relative h-[320px] min-w-[260px] max-w-[320px] w-full mx-auto">
-                        <a href="{{ route('client.news.show', $item->id) }}" class="absolute inset-0 z-10"
-                            aria-label="Xem bài viết"></a>
-                        <div class="w-full h-[180px] relative flex items-center justify-center bg-gray-100">
-                            <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
-                                alt="{{ $item->title }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                            <h3
-                                class="text-lg font-bold text-gray-900 group-hover:text-[#ff6c2f] transition-colors duration-200 text-center px-4">
-                                {{ $item->title }}
-                            </h3>
-                        </div>
-                    </div>
-                @endforeach
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800">Bài viết mới</h2>
+                    <a href="{{ route('client.news.index') }}"
+                        class="inline-flex items-center text-[#ff6c2f] font-semibold hover:text-orange-600 transition-colors duration-200">
+                        <span>Xem tất cả</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    @foreach ($latestNews as $item)
+                        <article
+                            class="group bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                            <a href="{{ route('client.news.show', $item->id) }}" class="block">
+                                <!-- Image Container -->
+                                <div class="relative h-48 overflow-hidden bg-gray-100">
+                                    <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
+                                        alt="{{ $item->title }}"
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                </div>
+
+                                <!-- Content -->
+                                <div class="px-4 py-3">
+                                    <h3
+                                        class="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#ff6c2f] transition-colors duration-200 line-clamp-3">
+                                        {{ $item->title }}
+                                    </h3>
+                                </div>
+                            </a>
+                        </article>
+                    @endforeach
+                </div>
             </div>
-            <div class="flex justify-center mt-6">
-                <a href="{{ route('client.news.index') }}"
-                    class="px-6 py-3 bg-[#ff6c2f] text-white rounded-full font-semibold shadow hover:bg-[#e55a28] transition text-lg">
-                    Xem tất cả bài viết
-                </a>
+        </div>
+    </section>
+
+
+    <!-- ================= Dịch vụ ================= -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1: Thương hiệu đảm bảo -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                        <i class="fas fa-shield-alt text-[#ff6c2f] text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2">Thương hiệu đảm bảo</h3>
+                    <p class="text-gray-600 text-sm">Nhập khẩu, bảo hành chính hãng</p>
+                </div>
+
+                <!-- Card 2: Đổi trả dễ dàng -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                        <i class="fas fa-exchange-alt text-[#ff6c2f] text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2">Đổi trả dễ dàng</h3>
+                    <p class="text-gray-600 text-sm">Theo chính sách đổi trả tại TechViCom</p>
+                </div>
+
+                <!-- Card 3: Giao hàng tận nơi -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                        <i class="fas fa-truck text-[#ff6c2f] text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2">Giao hàng tận nơi</h3>
+                    <p class="text-gray-600 text-sm">Trên toàn hà nội</p>
+                </div>
+
+                <!-- Card 4: Sản phẩm chất lượng -->
+                <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                        <i class="fas fa-award text-[#ff6c2f] text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2">Sản phẩm chất lượng</h3>
+                    <p class="text-gray-600 text-sm">Đảm bảo tương thích và độ bền cao</p>
+                </div>
             </div>
         </div>
     </section>

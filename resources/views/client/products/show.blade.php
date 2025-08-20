@@ -86,24 +86,24 @@
             border-radius: 2px;
         }
 
+        /* ===== LONG DESC ===== */
         .pv-longdesc {
+            line-height: 1.75;
+        }
+
+        /* Đồng bộ cỡ chữ trong phần mô tả */
+        .pv-longdesc,
+        .pv-longdesc * {
+            font-size: 1rem !important;
+            /* tất cả chữ bằng nhau */
             line-height: 1.75;
         }
 
         .pv-longdesc h2,
         .pv-longdesc h3 {
-            font-weight: 800;
-            line-height: 1.25;
+            font-weight: 600;
             margin-top: 1.25rem;
             margin-bottom: .75rem;
-        }
-
-        .pv-longdesc h2 {
-            font-size: 1.5rem;
-        }
-
-        .pv-longdesc h3 {
-            font-size: 1.125rem;
         }
 
         .pv-longdesc p {
@@ -147,7 +147,6 @@
 
         .pv-longdesc td,
         .pv-longdesc th {
-            font-size: .95rem;
             padding: .75rem .9rem;
             border-bottom: 1px solid #f3f4f6;
             vertical-align: top;
@@ -158,10 +157,34 @@
         }
 
         .pv-longdesc img {
+            display: block;
+            margin: 10px auto;
             max-width: 100%;
             border-radius: 12px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, .05);
-            margin: 10px 0;
+        }
+
+        /* Thu gọn / Đọc thêm */
+        .pv-desc-collapsed {
+            max-height: 480px;
+            /* chiều cao hiển thị ban đầu */
+            overflow: hidden;
+            position: relative;
+            transition: max-height .35s ease;
+        }
+
+        .pv-desc-collapsed::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 80px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 70%);
+        }
+
+        .pv-desc-expanded {
+            max-height: none;
         }
 
         .rp-card {
@@ -402,14 +425,16 @@
                             <label class="text-sm font-medium">Số lượng:</label>
                             <div class="flex items-center">
                                 <button type="button" id="quantity-minus-btn"
-                                    class="w-8 h-8 border border-gray-300 rounded-l-lg hover:bg-gray-100"><i
-                                        class="fas fa-minus text-xs"></i></button>
+                                    class="w-8 h-8 border border-gray-300 rounded-l-lg hover:bg-gray-100">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
                                 <input id="qty" type="number" value="1" min="1"
                                     class="w-12 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
                                     readonly>
                                 <button type="button" id="quantity-plus-btn"
-                                    class="w-8 h-8 border border-gray-300 rounded-r-lg hover:bg-gray-100"><i
-                                        class="fas fa-plus text-xs"></i></button>
+                                    class="w-8 h-8 border border-gray-300 rounded-r-lg hover:bg-gray-100">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -438,9 +463,21 @@
 
                 <div id="tab-desc" class="pt-5">
                     @if (!empty($product->long_description))
-                        <div class="pv-longdesc">{!! $product->long_description !!}</div>
+                        <div id="product-description" class="pv-longdesc pv-desc-collapsed">{!! $product->long_description !!}</div>
+                        <div class="flex justify-center">
+                            <button id="toggle-desc"
+                                class="mt-3 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-medium">
+                                Đọc thêm
+                            </button>
+                        </div>
                     @elseif (!empty($product->description))
-                        <div class="pv-longdesc">{!! nl2br(e($product->description)) !!}</div>
+                        <div id="product-description" class="pv-longdesc pv-desc-collapsed">{!! nl2br(e($product->description)) !!}</div>
+                        <div class="flex justify-center">
+                            <button id="toggle-desc"
+                                class="mt-3 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-sm font-medium">
+                                Đọc thêm
+                            </button>
+                        </div>
                     @else
                         <div class="text-gray-500">Chưa có mô tả cho sản phẩm này.</div>
                     @endif
@@ -474,8 +511,9 @@
                                                 <input type="radio" id="star{{ $i }}" name="rating"
                                                     value="{{ $i }}" class="sr-only">
                                                 <label for="star{{ $i }}"
-                                                    class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400"><i
-                                                        class="fas fa-star"></i></label>
+                                                    class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400">
+                                                    <i class="fas fa-star"></i>
+                                                </label>
                                             @endfor
                                         </div>
                                     </div>
@@ -656,7 +694,7 @@
             }, 2500);
         };
         const norm = v => (v == null ? '' : String(v)).trim().toLowerCase();
-        const canon = v => norm(v).replace(/\s+/g, ''); // "256 GB" ~ "256GB"
+        const canon = v => norm(v).replace(/\s+/g, '');
         const cmp = (a, b) => canon(a) === canon(b);
         const cssEsc = s => (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, '\\$&');
 
@@ -691,7 +729,6 @@
             return pv < pb ? v : best;
         }, arr[0]);
 
-        /* ——— Tự suy luận nếu 1 nhóm chỉ còn 1 giá trị khả dụng ——— */
         function resolvedSelection() {
             const sel = {
                 ...state.selectedOptions
@@ -706,9 +743,7 @@
                     ...sel,
                     [name]: val
                 }).length > 0);
-                if (possibles.length === 1) {
-                    sel[name] = possibles[0];
-                }
+                if (possibles.length === 1) sel[name] = possibles[0];
             });
             return sel;
         }
@@ -734,7 +769,6 @@
             });
         }
 
-        /* ===== Enable/disable từng option ===== */
         function refreshOptionStates() {
             if (!variantForm) return;
             els('.variant-option-button').forEach(btn => {
@@ -751,7 +785,6 @@
             });
         }
 
-        /* ===== Price / Info / Buttons / Image / Qty ===== */
         function updatePrice() {
             const box = el('#price-display');
             if (!box) return;
@@ -840,19 +873,17 @@
             refreshOptionStates();
             updateSelectedUIFromState();
             updatePrice();
-            updateButtons(); // sets state.activeVariant
+            updateButtons();
             updateInfo();
             updateMainImage();
             updateQtyButtons();
 
-            // lưu biến thể nếu xác định được duy nhất
             const sel = resolvedSelection();
             const cand = scopeFor(sel);
             if (cand.length === 1) localStorage.setItem(STORAGE_KEY, String(cand[0].id));
             else localStorage.removeItem(STORAGE_KEY);
         }
 
-        /* ===== Init: khôi phục hoặc auto chọn biến thể tốt nhất ===== */
         function restoreOrPreselect() {
             if (productData.type !== 'variable' || !variantForm) return;
             const savedId = localStorage.getItem(STORAGE_KEY);
@@ -869,7 +900,6 @@
             }
         }
 
-        /* ===== Events ===== */
         variantForm?.addEventListener('click', e => {
             const btn = e.target.closest('.variant-option-button');
             if (!btn || btn.disabled) return;
@@ -974,8 +1004,38 @@
             like.classList.toggle('active');
         });
 
+        /* ===== Thu gọn / Đọc thêm logic ===== */
+        const descBox = document.getElementById('product-description');
+        const toggleBtn = document.getElementById('toggle-desc');
+
+        function updateToggleVisibility() {
+            if (!descBox || !toggleBtn) return;
+            // nếu nội dung ngắn không cần nút
+            const needToggle = descBox.scrollHeight > 520; // cao hơn ngưỡng ban đầu một chút
+            toggleBtn.style.display = needToggle ? 'inline-flex' : 'none';
+        }
+        toggleBtn?.addEventListener('click', () => {
+            if (!descBox) return;
+            const isCollapsed = descBox.classList.contains('pv-desc-collapsed');
+            if (isCollapsed) {
+                descBox.classList.remove('pv-desc-collapsed');
+                descBox.classList.add('pv-desc-expanded');
+                toggleBtn.textContent = 'Thu gọn';
+            } else {
+                descBox.classList.remove('pv-desc-expanded');
+                descBox.classList.add('pv-desc-collapsed');
+                toggleBtn.textContent = 'Đọc thêm';
+                descBox.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+
         /* ===== Start ===== */
         restoreOrPreselect();
         render();
+        updateToggleVisibility();
+        window.addEventListener('resize', updateToggleVisibility);
     </script>
 @endpush

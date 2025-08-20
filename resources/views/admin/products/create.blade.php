@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -120,38 +121,51 @@
                                         </div>
                                     </div>
                                     <h6 class="mb-3">Thuộc tính sản phẩm</h6>
-                                    @foreach ($attributes as $attribute)
-                                        <div class="mb-3">
-                                            <label class="form-label">{{ $attribute->name }}</label>
-                                            <select
-                                                class="form-select @error('attributes.' . $attribute->id) is-invalid @enderror"
-                                                name="attributes[{{ $attribute->id }}]">
-                                                <option value="">-- Chọn --</option>
-                                                @foreach ($attribute->values as $value)
-                                                    <option value="{{ $value->id }}" @selected(old('attributes.' . $attribute->id) == $value->id)>
-                                                        {{ $value->value }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('attributes.' . $attribute->id)
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                    <div id="attribute-select-wrapper">
+                                        <div class="row align-items-end mb-2">
+                                            <div class="col-md-8">
+                                                <label class="form-label">Chọn thuộc tính</label>
+                                                <select class="form-select" id="attributeDropdown">
+                                                    <option value="">-- Chọn thuộc tính --</option>
+                                                    @foreach ($attributes as $attribute)
+                                                        <option value="{{ $attribute->id }}"
+                                                            data-values='@json($attribute->values)'>
+                                                            {{ $attribute->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    id="btnAddAttribute">Thêm thuộc tính</button>
+                                            </div>
                                         </div>
-                                    @endforeach
+                                        <div id="selectedAttributes" class="mt-2"></div>
+                                    </div>
                                 </div>
                                 <div id="variableProductFields" style="display: none;">
                                     <div class="border p-3 rounded">
                                         <h6 class="mb-3">Thuộc tính sản phẩm</h6>
-                                        @foreach ($attributes as $attribute)
-                                            <div class="mb-3">
-                                                <label class="form-label">{{ $attribute->name }}</label>
-                                                <select class="form-control attribute-select" multiple>
-                                                    @foreach ($attribute->values as $value)
-                                                        <option value="{{ $value->id }}">{{ $value->value }}</option>
-                                                    @endforeach
-                                                </select>
+                                        <div id="variant-attribute-select-wrapper">
+                                            <div class="row align-items-end mb-2">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Chọn thuộc tính</label>
+                                                    <select class="form-select" id="variantAttributeDropdown">
+                                                        <option value="">-- Chọn thuộc tính --</option>
+                                                        @foreach ($attributes as $attribute)
+                                                            <option value="{{ $attribute->id }}"
+                                                                data-values='@json($attribute->values)'>
+                                                                {{ $attribute->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                        id="btnAddVariantAttribute">Thêm thuộc tính</button>
+                                                </div>
                                             </div>
-                                        @endforeach
-                                        <button type="button" class="btn btn-outline-primary"
+                                            <div id="selectedVariantAttributes" class="mt-2"></div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary mt-2"
                                             id="generateVariantsBtn">Tạo biến thể</button>
                                     </div>
                                     <div id="variantsWrapper" class="mt-3"></div>
@@ -260,6 +274,7 @@
     </form>
 @endsection
 
+
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -270,6 +285,7 @@
             const generateBtn = document.getElementById('generateVariantsBtn');
             const variantsWrapper = document.getElementById('variantsWrapper');
 
+
             function toggleFields() {
                 const isSimple = productTypeSelect.value === 'simple';
                 simpleFields.style.display = isSimple ? 'block' : 'none';
@@ -278,6 +294,7 @@
             }
             productTypeSelect.addEventListener('change', toggleFields);
             toggleFields();
+
 
             const getCombinations = (arrays) => {
                 if (!arrays || arrays.length === 0) return [];
@@ -292,6 +309,7 @@
                     return res;
                 }, []);
             };
+
 
             const createVariantHtml = (combo, index) => {
                 const comboName = combo.map(c => c.text).join(' / ');
@@ -341,13 +359,16 @@
             </div>`;
             };
 
+
             if (generateBtn) {
                 generateBtn.addEventListener('click', () => {
-                    const selectedAttributes = Array.from(document.querySelectorAll('.attribute-select'))
-                        .map(select => Array.from(select.selectedOptions).map(option => ({
-                            id: option.value,
-                            text: option.textContent
-                        })))
+                    // Lấy giá trị từ checkbox biến thể
+                    const selectedAttributes = selectedVariantAttributes
+                        .map(attr => (Array.isArray(attr.valIds) && attr.valIds.length > 0) ?
+                            attr.valIds.map(valId => ({
+                                id: valId,
+                                text: (attr.values.find(v => v.id == valId) || {}).value || ''
+                            })) : [])
                         .filter(group => group.length > 0);
                     if (selectedAttributes.length === 0) {
                         alert('Vui lòng chọn ít nhất một giá trị thuộc tính.');
@@ -359,7 +380,140 @@
                     variantsWrapper.innerHTML = `<div class="accordion">${variantsHtml}</div>`;
                 });
             }
+
+
+            // --- Simple product attribute logic ---
+            const attributeDropdown = document.getElementById('attributeDropdown');
+            const btnAddAttribute = document.getElementById('btnAddAttribute');
+            const selectedAttributesDiv = document.getElementById('selectedAttributes');
+            let selectedAttributes = [];
+
+
+            btnAddAttribute?.addEventListener('click', function() {
+                const attrId = attributeDropdown.value;
+                const attrName = attributeDropdown.options[attributeDropdown.selectedIndex]?.text;
+                if (!attrId) return alert('Vui lòng chọn thuộc tính!');
+                if (selectedAttributes.find(a => a.attrId === attrId)) return alert(
+                    'Thuộc tính này đã được chọn!');
+                const selectedOption = attributeDropdown.options[attributeDropdown.selectedIndex];
+                const values = selectedOption && selectedOption.dataset.values ? JSON.parse(selectedOption
+                    .dataset.values) : [];
+                selectedAttributes.push({
+                    attrId,
+                    attrName,
+                    valId: '',
+                    valName: '',
+                    values
+                });
+                renderSelectedAttributes();
+                attributeDropdown.value = '';
+            });
+
+
+            function renderSelectedAttributes() {
+                selectedAttributesDiv.innerHTML = selectedAttributes.map((a, idx) => `
+        <div class="d-flex align-items-center mb-1">
+            <span class="me-2">${a.attrName}:</span>
+            <select class="form-select form-select-sm me-2 attr-value-select" data-idx="${idx}">
+                <option value="">-- Chọn giá trị --</option>
+                ${a.values.map(v => `<option value="${v.id}" ${a.valId == v.id ? 'selected' : ''}>${v.value}</option>`).join('')}
+            </select>
+            <button type="button" class="btn btn-sm btn-danger btnRemoveAttr" data-id="${a.attrId}">Xóa</button>
+            <input type="hidden" name="attributes[${a.attrId}]" value="${a.valId}">
+        </div>
+    `).join('');
+            }
+
+
+            selectedAttributesDiv?.addEventListener('change', function(e) {
+                if (e.target.classList.contains('attr-value-select')) {
+                    const idx = e.target.dataset.idx;
+                    const valId = e.target.value;
+                    const valName = e.target.options[e.target.selectedIndex]?.text;
+                    selectedAttributes[idx].valId = valId;
+                    selectedAttributes[idx].valName = valName;
+                    renderSelectedAttributes();
+                }
+            });
+
+
+            selectedAttributesDiv?.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btnRemoveAttr')) {
+                    const id = e.target.dataset.id;
+                    selectedAttributes = selectedAttributes.filter(a => a.attrId !== id);
+                    renderSelectedAttributes();
+                }
+            });
+
+
+            // --- Variant product attribute logic ---
+            const variantAttributeDropdown = document.getElementById('variantAttributeDropdown');
+            const btnAddVariantAttribute = document.getElementById('btnAddVariantAttribute');
+            const selectedVariantAttributesDiv = document.getElementById('selectedVariantAttributes');
+            let selectedVariantAttributes = [];
+
+
+            btnAddVariantAttribute?.addEventListener('click', function() {
+                const attrId = variantAttributeDropdown.value;
+                const attrName = variantAttributeDropdown.options[variantAttributeDropdown.selectedIndex]
+                    ?.text;
+                if (!attrId) return alert('Vui lòng chọn thuộc tính!');
+                if (selectedVariantAttributes.find(a => a.attrId === attrId)) return alert(
+                    'Thuộc tính này đã được chọn!');
+                const selectedOption = variantAttributeDropdown.options[variantAttributeDropdown
+                    .selectedIndex];
+                const values = selectedOption && selectedOption.dataset.values ? JSON.parse(selectedOption
+                    .dataset.values) : [];
+                selectedVariantAttributes.push({
+                    attrId,
+                    attrName,
+                    valIds: [],
+                    values
+                });
+                renderSelectedVariantAttributes();
+                variantAttributeDropdown.value = '';
+            });
+
+
+            function renderSelectedVariantAttributes() {
+                selectedVariantAttributesDiv.innerHTML = selectedVariantAttributes.map((a, idx) => `
+        <div class="mb-2">
+            <div class="fw-bold mb-1">${a.attrName}:</div>
+            <div class="d-flex flex-wrap gap-2">
+                ${a.values.map(v => `
+                                <label class="form-check form-check-inline mb-0">
+                                    <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
+                                    <span class="form-check-label">${v.value}</span>
+                                </label>
+                            `).join('')}
+                <button type="button" class="btn btn-sm btn-danger ms-2 btnRemoveVariantAttr" data-id="${a.attrId}">Xóa</button>
+            </div>
+            ${(Array.isArray(a.valIds) ? a.valIds : []).map(valId => `<input type="hidden" name="variant_attributes[${a.attrId}][]" value="${valId}">`).join('')}
+        </div>
+    `).join('');
+            }
+
+
+            selectedVariantAttributesDiv?.addEventListener('input', function(e) {
+                if (e.target.classList.contains('variant-attr-value-checkbox')) {
+                    const idx = e.target.dataset.idx;
+                    const checkboxes = selectedVariantAttributesDiv.querySelectorAll(
+                        `.variant-attr-value-checkbox[data-idx='${idx}']`);
+                    const checkedVals = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+                    selectedVariantAttributes[idx].valIds = checkedVals;
+                }
+            });
+
+
+            selectedVariantAttributesDiv?.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btnRemoveVariantAttr')) {
+                    const id = e.target.dataset.id;
+                    selectedVariantAttributes = selectedVariantAttributes.filter(a => a.attrId !== id);
+                    renderSelectedVariantAttributes();
+                }
+            });
         });
+
 
         document.getElementById('btnAddImage').addEventListener('click', function(e) {
             e.preventDefault();
@@ -373,6 +527,7 @@
             wrapper.appendChild(div);
         });
 
+
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('btnRemoveImage')) {
                 e.preventDefault();
@@ -380,6 +535,7 @@
             }
         });
     </script>
+
 
     @section('scripts')
         <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.js"></script>
@@ -389,11 +545,13 @@
                     this.loader = loader;
                 }
 
+
                 upload() {
                     return this.loader.file.then(file => new Promise((resolve, reject) => {
                         const data = new FormData();
                         data.append('upload', file);
                         data.append('_token', '{{ csrf_token() }}');
+
 
                         fetch('{{ route('admin.news.upload-image') }}', {
                                 method: 'POST',
@@ -413,14 +571,17 @@
                     }));
                 }
 
+
                 abort() {}
             }
+
 
             function MyCustomUploadAdapterPlugin(editor) {
                 editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
                     return new MyUploadAdapter(loader);
                 };
             }
+
 
             ClassicEditor
                 .create(document.querySelector('#editor'), {
@@ -451,3 +612,8 @@
         </script>
     @endsection
 @endpush
+
+
+
+
+

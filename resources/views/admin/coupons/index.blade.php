@@ -29,7 +29,8 @@
             <thead class="table-light">
                 <tr>
                     <th>Mã</th>
-                    <th>Kiểu</th>
+                    <th>Kiểu giảm</th>
+                    <th>Kiểu áp dụng</th>
                     <th>Giá trị</th>
                     <th>Ngày bắt đầu</th>
                     <th>Ngày kết thúc</th>
@@ -41,10 +42,17 @@
                 @foreach ($coupons as $coupon)
                     @php
                         $typeMapping = ['percent' => 'Phần trăm', 'fixed' => 'Cố định'];
+                        $applyTypeMapping = [
+                            'all' => 'Tất cả',
+                            'product' => 'Theo sản phẩm',
+                            'category' => 'Theo danh mục',
+                            'user' => 'Theo người dùng',
+                        ];
                     @endphp
                     <tr class="{{ $coupon->trashed() ? 'table-danger' : '' }}">
                         <td>{{ $coupon->code }}</td>
                         <td>{{ $typeMapping[$coupon->discount_type] ?? 'Không xác định' }}</td>
+                        <td>{{ $applyTypeMapping[$coupon->apply_type] ?? $coupon->apply_type }}</td>
                         <td>
                             {{ $coupon->discount_type === 'percent' 
                                 ? $coupon->value . '%' 

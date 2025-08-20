@@ -8,7 +8,7 @@ class Promotion extends Model
 {
     use SoftDeletes;
     protected $fillable = [
-        'name', 'slug', 'description', 'type', 'start_date', 'end_date', 'status'
+        'name', 'slug', 'description', 'flash_type', 'start_date', 'end_date', 'status'
     ];
 
     public function coupons()

@@ -15,6 +15,7 @@ class CouponSeeder extends Seeder
             [
                 'code'                => 'DISCOUNT10',
                 'discount_type'       => 'percent',
+                'apply_type'          => 'all',
                 'value'               => 10.00,
                 'max_discount_amount' => 100000.00,
                 'min_order_value'     => 500000.00,
@@ -28,6 +29,7 @@ class CouponSeeder extends Seeder
             [
                 'code' => 'BIGSALE10',
                 'discount_type' => 'percent',
+                'apply_type'    => 'all',
                 'value' => 10, // 10%
                 'max_discount_amount' => 20000000, // 20 triệu
                 'min_order_value' => 50000000, // 50 triệu
@@ -40,6 +42,7 @@ class CouponSeeder extends Seeder
             [
                 'code' => 'VIPFIXED',
                 'discount_type' => 'fixed',
+                'apply_type'    => 'all',
                 'value' => 50000000, // 50 triệu
                 'max_discount_amount' => null,
                 'min_order_value' => 200000000, // 200 triệu
@@ -52,6 +55,7 @@ class CouponSeeder extends Seeder
             [
                 'code' => 'MEGAVIP',
                 'discount_type' => 'percent',
+                'apply_type'    => 'all',
                 'value' => 50, // 50%
                 'max_discount_amount' => 100000000, // 100 triệu
                 'min_order_value' => 500000000, // 500 triệu
@@ -65,6 +69,7 @@ class CouponSeeder extends Seeder
             [
                 'code' => 'SALE50',
                 'discount_type' => 'percent',
+                'apply_type'    => 'all',
                 'value' => 50,
                 'max_discount_amount' => 100000,
                 'min_order_value' => 200000,
@@ -77,6 +82,7 @@ class CouponSeeder extends Seeder
             [
                 'code' => 'SALE100',
                 'discount_type' => 'percent',
+                'apply_type'    => 'all',
                 'value' => 50,
                 'max_discount_amount' => 100000,
                 'min_order_value' => 200000,

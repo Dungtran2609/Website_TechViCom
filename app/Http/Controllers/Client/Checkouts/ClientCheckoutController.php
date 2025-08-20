@@ -326,22 +326,104 @@ class ClientCheckoutController extends Controller
                 })
                 ->first();
             if ($coupon) {
-                // Kiểm tra điều kiện đơn hàng
-                if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
-                    $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
-                } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
-                    $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
-                } else {
-                    // Tính số tiền giảm
-                    if ($coupon->discount_type === 'percent') {
-                        $discountAmount = $subtotal * ($coupon->value / 100);
-                        if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
-                            $discountAmount = $coupon->max_discount_amount;
-                        }
+                // Lấy danh sách id sản phẩm trong giỏ
+                $cartProductIds = array_map(function($item) { return $item->product->id ?? null; }, $cartItems);
+                // Kiểm tra điều kiện apply_type
+                $valid = true;
+                if ($coupon->apply_type === 'product') {
+                    $couponProductIds = $coupon->products()->pluck('products.id')->toArray();
+                    // Nếu không có sản phẩm nào được chọn cho coupon thì không cho áp dụng mã
+                    if (empty($couponProductIds)) {
+                        $valid = false;
+                        $couponMessage = 'Mã giảm giá này hiện không áp dụng cho sản phẩm nào.';
                     } else {
-                        $discountAmount = $coupon->value;
+                        $valid = false;
+                        foreach ($cartProductIds as $pid) {
+                            if (in_array($pid, $couponProductIds)) {
+                                $valid = true;
+                                break;
+                            }
+                        }
+                        if (!$valid) {
+                            $couponMessage = 'Mã giảm giá này chỉ áp dụng cho một số sản phẩm nhất định.';
+                        }
                     }
-                    $discountAmount = min($discountAmount, $subtotal);
+                } elseif ($coupon->apply_type === 'category') {
+                    $couponCategoryIds = $coupon->categories()->pluck('categories.id')->toArray();
+                    $cartCategoryIds = array_map(function($item) { return $item->product->category_id ?? null; }, $cartItems);
+                    $valid = false;
+                    foreach ($cartCategoryIds as $catId) {
+                        if (in_array($catId, $couponCategoryIds)) {
+                            $valid = true;
+                            break;
+                        }
+                    }
+                    if (!$valid) {
+                        $couponMessage = 'Mã giảm giá này chỉ áp dụng cho một số danh mục sản phẩm nhất định.';
+                    }
+                } elseif ($coupon->apply_type === 'user') {
+                    if (!\Illuminate\Support\Facades\Auth::check()) {
+                        $valid = false;
+                        $couponMessage = 'Bạn cần đăng nhập để sử dụng mã giảm giá này.';
+                    } else {
+                        $allowedUserIds = $coupon->users()->pluck('users.id')->toArray();
+                        if (!in_array(\Illuminate\Support\Facades\Auth::id(), $allowedUserIds)) {
+                            $valid = false;
+                            $couponMessage = 'Tài khoản của bạn không được phép sử dụng mã giảm giá này.';
+                        }
+                    }
+                }
+                if (!$valid) {
+                    // Không hợp lệ, không áp dụng
+                    $discountAmount = 0;
+                } else {
+                    // Tính số tiền giảm chỉ trên sản phẩm hợp lệ nếu apply_type=product
+                    if ($coupon->apply_type === 'product') {
+                        $couponProductIds = $coupon->products()->pluck('products.id')->toArray();
+                        $eligibleSubtotal = 0;
+                        foreach ($cartItems as $item) {
+                            if (in_array($item->product->id ?? null, $couponProductIds)) {
+                                $eligibleSubtotal += ((float)$item->price) * ((int)$item->quantity);
+                            }
+                        }
+                        if ($coupon->discount_type === 'percent') {
+                            $discountAmount = $eligibleSubtotal * ($coupon->value / 100);
+                            if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                                $discountAmount = $coupon->max_discount_amount;
+                            }
+                        } else {
+                            $discountAmount = min($coupon->value, $eligibleSubtotal);
+                        }
+                        $discountAmount = min($discountAmount, $eligibleSubtotal);
+                    } elseif ($coupon->apply_type === 'category') {
+                        $couponCategoryIds = $coupon->categories()->pluck('categories.id')->toArray();
+                        $eligibleSubtotal = 0;
+                        foreach ($cartItems as $item) {
+                            if (in_array($item->product->category_id ?? null, $couponCategoryIds)) {
+                                $eligibleSubtotal += ((float)$item->price) * ((int)$item->quantity);
+                            }
+                        }
+                        if ($coupon->discount_type === 'percent') {
+                            $discountAmount = $eligibleSubtotal * ($coupon->value / 100);
+                            if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                                $discountAmount = $coupon->max_discount_amount;
+                            }
+                        } else {
+                            $discountAmount = min($coupon->value, $eligibleSubtotal);
+                        }
+                        $discountAmount = min($discountAmount, $eligibleSubtotal);
+                    } else {
+                        // apply_type = all/user: giảm trên toàn bộ đơn hàng
+                        if ($coupon->discount_type === 'percent') {
+                            $discountAmount = $subtotal * ($coupon->value / 100);
+                            if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                                $discountAmount = $coupon->max_discount_amount;
+                            }
+                        } else {
+                            $discountAmount = $coupon->value;
+                        }
+                        $discountAmount = min($discountAmount, $subtotal);
+                    }
                     $appliedCoupon = $coupon;
                     $couponMessage = 'Áp dụng mã thành công!';
                 }
@@ -385,6 +467,76 @@ class ClientCheckoutController extends Controller
         }
 
         $subtotal = $request->subtotal;
+
+        // Lấy danh sách sản phẩm trong giỏ hàng (hỗ trợ cả user đăng nhập và guest)
+        $cartProductIds = [];
+        if (\Illuminate\Support\Facades\Auth::check()) {
+            $cartItems = \App\Models\Cart::where('user_id', \Illuminate\Support\Facades\Auth::id())->get();
+            foreach ($cartItems as $item) {
+                if (!empty($item->product_id)) {
+                    $cartProductIds[] = (int)$item->product_id;
+                }
+            }
+        } else {
+            $cart = session()->get('cart', []);
+            foreach ($cart as $ci) {
+                if (!empty($ci['product_id'])) {
+                    $cartProductIds[] = (int)$ci['product_id'];
+                }
+            }
+        }
+
+        // Kiểm tra điều kiện apply_type
+        if ($coupon->apply_type === 'product') {
+            // Chỉ áp dụng nếu giỏ hàng có sản phẩm thuộc coupon->products
+            $couponProductIds = $coupon->products()->pluck('products.id')->toArray();
+            $valid = false;
+            foreach ($cartProductIds as $pid) {
+                if (in_array($pid, $couponProductIds)) {
+                    $valid = true;
+                    break;
+                }
+            }
+            if (!$valid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mã giảm giá này chỉ áp dụng cho một số sản phẩm nhất định.',
+                ]);
+            }
+        } elseif ($coupon->apply_type === 'category') {
+            // Chỉ áp dụng nếu giỏ hàng có sản phẩm thuộc danh mục trong coupon->categories
+            $couponCategoryIds = $coupon->categories()->pluck('categories.id')->toArray();
+            $cartCategoryIds = \App\Models\Product::whereIn('id', $cartProductIds)->pluck('category_id')->toArray();
+            $valid = false;
+            foreach ($cartCategoryIds as $catId) {
+                if (in_array($catId, $couponCategoryIds)) {
+                    $valid = true;
+                    break;
+                }
+            }
+            if (!$valid) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mã giảm giá này chỉ áp dụng cho một số danh mục sản phẩm nhất định.',
+                ]);
+            }
+        } elseif ($coupon->apply_type === 'user') {
+            // Chỉ cho phép user cụ thể sử dụng mã này (dựa vào coupon->users)
+            if (!\Illuminate\Support\Facades\Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn cần đăng nhập để sử dụng mã giảm giá này.',
+                ]);
+            }
+            $allowedUserIds = $coupon->users()->pluck('users.id')->toArray();
+            if (!in_array(\Illuminate\Support\Facades\Auth::id(), $allowedUserIds)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản của bạn không được phép sử dụng mã giảm giá này.',
+                ]);
+            }
+        }
+
         $discountAmount = $this->calculateCouponDiscount($coupon, $subtotal);
 
         if ($discountAmount <= 0) {

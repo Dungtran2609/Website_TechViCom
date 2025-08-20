@@ -63,6 +63,7 @@
                 <table class="table align-middle table-hover">
                     <thead class="bg-light-subtle">
                         <tr>
+                            <th>ID</th>
                             <th>Ảnh</th>
                             <th>Tên sản phẩm</th>
                             <th>Loại</th>
@@ -75,6 +76,7 @@
                     <tbody>
                         @forelse ($products as $product)
                             <tr>
+                                <td>{{ $product->id }}</td>
                                 <td>
                                     @if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail))
                                         <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}"

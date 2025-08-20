@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('product_comments', function (Blueprint $table) {
+            $table->boolean('is_hidden')->default(false)->after('status');
         });
     }
 
@@ -22,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('settings');
+        Schema::table('product_comments', function (Blueprint $table) {
+            $table->dropColumn('is_hidden');
+        });
     }
 };

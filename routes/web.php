@@ -357,6 +357,9 @@ Route::prefix('products')->name('products.')->group(function () {
         Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
         Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
     });
+    
+    // Product comments filter (public access)
+    Route::get('/{productId}/comments/filter', [ClientProductCommentController::class, 'filterComments'])->name('comments.filter');
 });
 
 // Categories routes (public access)
@@ -549,6 +552,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::delete('/{id}', [ProductCommentAdminController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
         Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
+        Route::patch('/{id}/toggle-hidden', [ProductCommentAdminController::class, 'toggleHidden'])->name('toggle-hidden');
     });
 
 

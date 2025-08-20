@@ -34,7 +34,7 @@ class ClientOrderController extends Controller
         }
 
         $order->status = 'received';
-        // Không ghi các cột thời gian không tồn tại (vd: shipped_at)
+        $order->received_at = now(); // Lưu thời gian nhận hàng
         $order->save();
 
         return response()->json(['success' => true, 'message' => 'Đã xác nhận nhận hàng!']);

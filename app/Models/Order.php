@@ -51,7 +51,8 @@ class Order extends Model
         'vnpay_transaction_id',
         'vnpay_bank_code',
         'vnpay_card_type',
-        'vnpay_cancel_count'
+        'vnpay_cancel_count',
+        'received_at'
     ];
 
 
@@ -64,6 +65,7 @@ class Order extends Model
         'deleted_at',
         'shipped_at',
         'paid_at',
+        'received_at',
     ];
 
 

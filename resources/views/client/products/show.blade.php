@@ -356,7 +356,25 @@
 
                         {{-- PRICE --}}
                         <div id="price-display" class="text-4xl font-bold text-[#ff6c2f]">
-                            @if ($product->type === 'variable' && $activeVariants->isNotEmpty())
+                            @if (!empty($flashSaleInfo))
+                                @php
+                                    $v = $activeVariants->first();
+                                    $originalPrice = $v ? $v->price : null;
+                                    $salePrice = $flashSaleInfo['sale_price'] ?? null;
+                                @endphp
+                                @if ($salePrice && $originalPrice && $salePrice < $originalPrice)
+                                    <div class="flex items-end gap-3">
+                                        <span class="text-2xl line-through text-gray-500">{{ number_format($originalPrice, 0, ',', '.') }}₫</span>
+                                        <span>{{ number_format($salePrice, 0, ',', '.') }}₫</span>
+                                    </div>
+                                @elseif($salePrice && $salePrice > 0)
+                                    <span>{{ number_format($salePrice, 0, ',', '.') }}₫</span>
+                                @elseif($originalPrice)
+                                    {{ number_format($originalPrice, 0, ',', '.') }}₫
+                                @else
+                                    <span class="text-3xl text-gray-500">Tạm hết hàng</span>
+                                @endif
+                            @elseif ($product->type === 'variable' && $activeVariants->isNotEmpty())
                                 @php
                                     $minPrice = $activeVariants->min('price');
                                     $maxPrice = $activeVariants->max('price');

@@ -47,12 +47,32 @@ class AdminPromotionController extends Controller
             'status' => 'boolean',
             'categories' => 'array',
             'products' => 'array',
+            'category_discount_value' => 'nullable|numeric|min:1|max:100',
         ]);
         $data['slug'] = Str::slug($data['name']);
+        // Nếu là kiểu category thì lưu discount_value và cập nhật sale_price cho các sản phẩm thuộc danh mục
+        if ($data['flash_type'] === 'category') {
+            $data['discount_type'] = 'percent';
+            $data['discount_value'] = $request->category_discount_value ?? 10;
+        }
         $promotion = Promotion::create($data);
         // Gán sản phẩm/danh mục nếu có
         if ($data['flash_type'] === 'category' && !empty($request->categories)) {
             $promotion->categories()->sync($request->categories);
+            // Tự động cập nhật sale_price cho các sản phẩm thuộc danh mục
+            $categoryIds = $request->categories;
+            $productIds = \App\Models\Product::whereIn('category_id', $categoryIds)->pluck('id')->toArray();
+            $discountPercent = $data['discount_value'];
+            foreach ($productIds as $pid) {
+                $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                foreach ($variants as $variant) {
+                    if (is_null($variant->old_sale_price)) {
+                        $variant->old_sale_price = $variant->sale_price;
+                    }
+                    $variant->sale_price = round($variant->price * (1 - $discountPercent / 100));
+                    $variant->save();
+                }
+            }
         }
         if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {
             if ($request->has('sale_prices')) {
@@ -108,12 +128,52 @@ class AdminPromotionController extends Controller
             'status' => 'boolean',
             'categories' => 'array',
             'products' => 'array',
+            'category_discount_value' => 'nullable|numeric|min:1|max:100',
         ]);
         $data['slug'] = Str::slug($data['name']);
-        $promotion->update($data);
+        if ($data['flash_type'] === 'category') {
+            $data['discount_type'] = 'percent';
+            $data['discount_value'] = $request->category_discount_value ?? 10;
+            // Cập nhật trực tiếp discount_value nếu đã có promotion
+            $promotion->discount_type = 'percent';
+            $promotion->discount_value = $data['discount_value'];
+            $promotion->save();
+            // Cập nhật các trường khác
+            unset($data['discount_type'], $data['discount_value']);
+            $promotion->update($data);
+            // Cập nhật sale_price cho các sản phẩm thuộc danh mục
+            $categoryIds = $request->categories ?? [];
+            $productIds = \App\Models\Product::whereIn('category_id', $categoryIds)->pluck('id')->toArray();
+            $discountPercent = $promotion->discount_value;
+            foreach ($productIds as $pid) {
+                $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                foreach ($variants as $variant) {
+                    if (is_null($variant->old_sale_price)) {
+                        $variant->old_sale_price = $variant->sale_price;
+                    }
+                    $variant->sale_price = round($variant->price * (1 - $discountPercent / 100));
+                    $variant->save();
+                }
+            }
+        } else {
+            $promotion->update($data);
+        }
         if ($data['flash_type'] === 'category' && !empty($request->categories)) {
             $promotion->categories()->sync($request->categories);
         } else {
+            // Nếu không còn là category hoặc bị ẩn/hết hạn thì revert sale_price về old_sale_price cho các sản phẩm từng thuộc promotion này
+            $oldCategoryIds = $promotion->categories()->pluck('categories.id')->toArray();
+            $oldProductIds = \App\Models\Product::whereIn('category_id', $oldCategoryIds)->pluck('id')->toArray();
+            foreach ($oldProductIds as $pid) {
+                $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                foreach ($variants as $variant) {
+                    if (!is_null($variant->old_sale_price)) {
+                        $variant->sale_price = $variant->old_sale_price;
+                        $variant->old_sale_price = null;
+                        $variant->save();
+                    }
+                }
+            }
             $promotion->categories()->detach();
         }
         if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {

@@ -52,13 +52,17 @@
                         <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectAllCategories(true)">Chọn tất cả</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllCategories(false)">Bỏ chọn tất cả</button>
                     </div>
-                    <div class="border rounded p-2" style="max-height:220px;overflow:auto;">
+                    <div class="border rounded p-2 mb-2" style="max-height:220px;overflow:auto;">
                         @foreach($categories as $category)
                             <div class="form-check">
                                 <input class="form-check-input category-checkbox" type="checkbox" name="categories[]" id="category_{{ $category->id }}" value="{{ $category->id }}" {{ $promotion->categories->contains($category->id) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="category_{{ $category->id }}">{{ $category->name }}</label>
                             </div>
                         @endforeach
+                    </div>
+                    <div class="mb-2">
+                        <label for="category_discount_value" class="form-label fw-semibold">Giảm giá (%) cho tất cả sản phẩm thuộc danh mục</label>
+                        <input type="number" min="1" max="100" step="1" class="form-control" name="category_discount_value" id="category_discount_value" value="{{ old('category_discount_value', $promotion->discount_value ?? 10) }}" placeholder="Nhập % giảm giá (ví dụ: 10)">
                     </div>
                 </div>
                 <script>

@@ -182,6 +182,58 @@ class ClientProductController extends Controller
         // Tăng view_count
         $product->increment('view_count');
 
+        // Kiểm tra flash sale đang diễn ra (theo sản phẩm hoặc danh mục)
+        $now = now();
+        $flashSale = \App\Models\Promotion::whereIn('flash_type', ['flash_sale', 'category'])
+            ->where('status', 1)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('start_date', 'asc')
+            ->first();
+
+        $flashSaleInfo = null;
+        if ($flashSale) {
+            if ($flashSale->flash_type === 'flash_sale') {
+                // Kiểm tra sản phẩm có trong promotion_product không
+                $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
+                if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
+                    $flashSaleInfo = [
+                        'sale_price' => $promoProduct->pivot->sale_price,
+                        'discount_percent' => null,
+                        'promotion' => $flashSale
+                    ];
+                }
+            } elseif ($flashSale->flash_type === 'category') {
+                // Kiểm tra sản phẩm thuộc danh mục được áp dụng
+                $categoryIds = $flashSale->categories->pluck('id')->toArray();
+                $allCategoryIds = $categoryIds;
+                foreach ($flashSale->categories as $cat) {
+                    $childIds = $cat->children()->pluck('id')->toArray();
+                    $allCategoryIds = array_merge($allCategoryIds, $childIds);
+                }
+                $allCategoryIds = array_unique($allCategoryIds);
+                if (in_array($product->category_id, $allCategoryIds)) {
+                    // Tính giá giảm theo discount_type/value
+                    $variant = $product->variants->first();
+                    $price = $variant ? $variant->price : null;
+                    $salePrice = null;
+                    if ($price) {
+                        if ($flashSale->discount_type === 'percent') {
+                            $salePrice = $price * (1 - $flashSale->discount_value / 100);
+                        } elseif ($flashSale->discount_type === 'amount') {
+                            $salePrice = max(0, $price - $flashSale->discount_value);
+                        }
+                    }
+                    $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
+                    $flashSaleInfo = [
+                        'sale_price' => $salePrice,
+                        'discount_percent' => $discountPercent,
+                        'promotion' => $flashSale
+                    ];
+                }
+            }
+        }
+
         // Sản phẩm liên quan
         $relatedProducts = Product::with(['brand', 'category', 'productAllImages', 'variants'])
             ->where('category_id', $product->category_id)
@@ -190,6 +242,6 @@ class ClientProductController extends Controller
             ->limit(4)
             ->get();
 
-        return view('client.products.show', compact('product', 'relatedProducts'));
+        return view('client.products.show', compact('product', 'relatedProducts', 'flashSaleInfo'));
     }
 }

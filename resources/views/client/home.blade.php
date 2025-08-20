@@ -571,6 +571,9 @@
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
+                            @if($product->flash_sale_price && $product->discount_percent > 0)
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
+                            @endif
                             <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
                                 <i class="far fa-heart"></i>
@@ -581,29 +584,19 @@
                         </div>
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
                             <div class="flex items-center justify-between mb-2">
-                                @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php $variant = $product->variants->first(); @endphp
-                                    <span
-                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                    @php
-                                        $minPrice = $product->variants->min('price');
-                                        $maxPrice = $product->variants->max('price');
-                                    @endphp
-                                    @if ($minPrice === $maxPrice)
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                @php $variant = $product->variants->first(); @endphp
+                                @if ($variant)
+                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
-                                            {{ number_format($maxPrice) }}₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
-
                             <div class="flex items-center">
                                 <div class="flex text-yellow-400 text-sm">
                                     @for ($i = 1; $i <= 5; $i++)
@@ -634,6 +627,9 @@
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
                             <div class="chip chip-neutral"><i class="fas fa-eye"></i> {{ $product->view_count }}</div>
+                            @if($product->flash_sale_price && $product->discount_percent > 0)
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
+                            @endif
                             <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
                                 <i class="far fa-heart"></i>
@@ -646,29 +642,19 @@
 
                         <div class="p-4">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
                             <div class="flex items-center justify-between mb-2">
-                                @if ($product->type === 'simple' && $product->variants->count() > 0)
-                                    @php $variant = $product->variants->first(); @endphp
-                                    <span
-                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
-                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
-                                    @php
-                                        $minPrice = $product->variants->min('price');
-                                        $maxPrice = $product->variants->max('price');
-                                    @endphp
-                                    @if ($minPrice === $maxPrice)
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                @php $variant = $product->variants->first(); @endphp
+                                @if ($variant)
+                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
-                                            {{ number_format($maxPrice) }}₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
-
                             <div class="flex items-center">
                                 <div class="flex text-yellow-400 text-sm">
                                     @for ($i = 1; $i <= 5; $i++)

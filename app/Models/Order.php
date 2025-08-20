@@ -1,14 +1,18 @@
 <?php
 
+
 namespace App\Models;
+
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
+
 
     /**
      * Các thuộc tính có thể gán hàng loạt
@@ -47,7 +51,9 @@ class Order extends Model
         'vnpay_transaction_id',
         'vnpay_bank_code',
         'vnpay_card_type',
+        'vnpay_cancel_count'
     ];
+
 
     /**
      * Trường kiểu ngày cần được cast sang Carbon
@@ -60,6 +66,7 @@ class Order extends Model
         'paid_at',
     ];
 
+
     /**
      * Mối quan hệ: đơn hàng thuộc về người dùng
      */
@@ -67,6 +74,7 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
 
     /**
      * Mối quan hệ: địa chỉ giao hàng
@@ -76,6 +84,7 @@ class Order extends Model
         return $this->belongsTo(UserAddress::class, 'address_id');
     }
 
+
     /**
      * Mối quan hệ: phương thức vận chuyển
      */
@@ -83,6 +92,7 @@ class Order extends Model
     {
         return $this->belongsTo(ShippingMethod::class, 'shipping_method_id');
     }
+
 
     /**
      * Mối quan hệ: mã giảm giá áp dụng
@@ -92,6 +102,7 @@ class Order extends Model
         return $this->belongsTo(Coupon::class, 'coupon_id');
     }
 
+
     /**
      * Mối quan hệ: các sản phẩm trong đơn hàng
      */
@@ -100,9 +111,12 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+
     /**
      * Mối quan hệ: giao dịch thanh toán (nếu có)
      */
+
+
 
 
     /**
@@ -112,6 +126,7 @@ class Order extends Model
     {
         return $this->hasMany(OrderReturn::class);
     }
+
 
     /**
      * Accessor: dịch phương thức thanh toán sang tiếng Việt
@@ -124,8 +139,10 @@ class Order extends Model
             'cod' => 'Thanh toán khi nhận hàng',
         ];
 
+
         return $methods[$this->payment_method] ?? $this->payment_method;
     }
+
 
     /**
      * Accessor: dịch trạng thái đơn hàng sang tiếng Việt
@@ -142,6 +159,7 @@ class Order extends Model
             'returned' => 'Đã trả hàng',
         ];
 
+
         return $statuses[$this->status] ?? $this->status;
     }
     public const PAYMENT_STATUSES = [
@@ -155,6 +173,7 @@ class Order extends Model
             ?? $this->payment_status;
     }
 
+
     /**
      * Kiểm tra xem đơn hàng có phải của khách vãng lai không
      */
@@ -162,6 +181,7 @@ class Order extends Model
     {
         return $this->user_id === null;
     }
+
 
     /**
      * Lấy tên khách hàng (user hoặc guest)
@@ -173,6 +193,7 @@ class Order extends Model
             : ($this->user->name ?? 'Khách vãng lai');
     }
 
+
     /**
      * Lấy email khách hàng (user hoặc guest)
      */
@@ -182,6 +203,7 @@ class Order extends Model
             ? ($this->guest_email ?? 'N/A')
             : ($this->user->email ?? 'N/A');
     }
+
 
     /**
      * Lấy số điện thoại khách hàng (user hoặc guest)
@@ -193,5 +215,6 @@ class Order extends Model
             : ($this->user->phone_number ?? 'N/A');
     }
     // ...
+
 
 }

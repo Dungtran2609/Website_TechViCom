@@ -49,11 +49,10 @@
                              onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
                         {{-- Icon tim (wishlist) góc phải --}}
                         <button
-                            class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 backdrop-blur shadow flex items-center justify-center hover:bg-white wishlist-btn transition group"
+                            class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/90 backdrop-blur shadow flex items-center justify-center hover:bg-white"
                             aria-label="Yêu thích"
-                            onclick="event.stopPropagation(); toggleWishlist(this, {{ $product->id }})"
-                            data-tooltip="Thêm vào yêu thích">
-                            <i class="far fa-heart text-gray-700 group-hover:text-rose-600 transition-all text-xl"></i>
+                            onclick="event.stopPropagation(); /* TODO: handle wishlist */">
+                            <i class="far fa-heart text-gray-700 group-hover:text-rose-600"></i>
                         </button>
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
@@ -95,43 +94,5 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-<script>
-    function toggleWishlist(btn, productId) {
-        // Toggle trạng thái tim
-        const icon = btn.querySelector('i');
-        const tooltip = btn.querySelector('.wishlist-tooltip');
-        if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            icon.classList.remove('fa-solid', 'text-rose-600');
-            icon.classList.add('fa-regular', 'text-gray-700');
-            if (tooltip) tooltip.classList.add('hidden');
-        } else {
-            btn.classList.add('active');
-            icon.classList.remove('fa-regular', 'text-gray-700');
-            icon.classList.add('fa-solid', 'text-rose-600');
-            if (tooltip) tooltip.classList.remove('hidden');
-            setTimeout(() => { if (tooltip) tooltip.classList.add('hidden'); }, 1200);
-        }
-        // TODO: Gửi AJAX thêm/xóa wishlist nếu muốn
-    }
-    // Tooltip hover
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.wishlist-btn').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                if (!btn.classList.contains('active')) {
-                    btn.querySelector('i').classList.add('text-rose-600');
-                }
-            });
-            btn.addEventListener('mouseleave', function() {
-                if (!btn.classList.contains('active')) {
-                    btn.querySelector('i').classList.remove('text-rose-600');
-                }
-            });
-        });
-    });
-</script>
-@endpush
 
 

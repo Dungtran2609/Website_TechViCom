@@ -37,10 +37,10 @@
                 <h3 class="font-bold text-lg mb-4 text-orange-400">Dịch vụ khách hàng</h3>
                 <ul class="space-y-2 text-sm">
                     <li><a href="#" class="hover:text-orange-400 transition">Hướng dẫn mua hàng</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách bảo hành</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách đổi trả</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách vận chuyển</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Chính sách trả góp</a></li>
+                    <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách bảo hành</a></li>
+                    <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách đổi trả</a></li>
+                    <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách vận chuyển</a></li>
+                    <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách trả góp</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tra cứu bảo hành</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tra cứu hóa đơn</a></li>
                 </ul>
@@ -50,7 +50,7 @@
             <div>
                 <h3 class="font-bold text-lg mb-4 text-orange-400">Về Techvicom</h3>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-orange-400 transition">Giới thiệu công ty</a></li>
+                    <li><a href="about" class="hover:text-orange-400 transition">Giới thiệu công ty</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tin tức & sự kiện</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tuyển dụng</a></li>
                     <li><a href="{{ route('client.contacts.index') }}" class="hover:text-orange-400 transition">Liên hệ</a></li>

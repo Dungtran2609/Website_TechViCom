@@ -97,6 +97,10 @@ Route::get('/test-check-cart', function () {
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Trang giới thiệu và chính sách
+Route::view('/about', 'client.about')->name('about');
+Route::view('/policy', 'client.policy')->name('policy');
+
 
 
 // Test cart functionality
@@ -696,6 +700,10 @@ Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCa
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
 
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.
 // Gợi ý fix lỗi: View [client.accounts.orders] not found
 // 1. Tạo file: resources/views/client/accounts/orders.blade.php
 // 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);

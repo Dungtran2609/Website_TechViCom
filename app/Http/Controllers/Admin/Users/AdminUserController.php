@@ -228,48 +228,78 @@ class AdminUserController extends Controller
     }
 
 
-    public function addresses(User $user)
+    // public function addresses(User $user)
+    // {
+    //     $addresses = $user->addresses;
+    //     return view('admin.users.addresses.index', compact('user', 'addresses'));
+    // }
+
+   public function addresses(User $user)
     {
-        $addresses = $user->addresses;
+        $addresses = $user->addresses()->orderByDesc('is_default')->get();
         return view('admin.users.addresses.index', compact('user', 'addresses'));
     }
 
-
+    /**
+     * Thêm địa chỉ mới cho người dùng từ trang admin.
+     */
     public function addAddress(StoreUserAddressRequest $request, $userId)
     {
         $user = User::findOrFail($userId);
 
+        // Dữ liệu đã được validate bởi StoreUserAddressRequest
+        // Chúng ta lấy tên đầy đủ từ các input ẩn mà JavaScript đã điền vào.
+        $data = $request->only([
+            'recipient_name',
+            'phone',
+            'address_line',
+            'ward',         // Lấy từ input hidden name="ward"
+            'district',     // Lấy từ input hidden name="district"
+            'city',         // Lấy từ input hidden name="city"
+            'is_default'
+        ]);
 
-        if ($request->is_default) {
+        // Xử lý địa chỉ mặc định
+        if (!empty($data['is_default'])) {
             $user->addresses()->update(['is_default' => false]);
+            $data['is_default'] = true;
+        } else {
+            // Đảm bảo rằng is_default luôn là false nếu không được chọn
+            $data['is_default'] = false;
         }
 
+        $user->addresses()->create($data);
 
-        $user->addresses()->create($request->validated());
-        return redirect()->route('admin.users.show', $userId)->with('success', 'Địa chỉ mới đã được thêm.');
+        return redirect()->route('admin.users.show', $userId)->with('success', 'Địa chỉ mới đã được thêm thành công.');
     }
 
-
+    /**
+     * Cập nhật địa chỉ cho người dùng từ trang admin.
+     */
     public function updateAddress(UpdateUserAddressRequest $request, UserAddress $address)
     {
+        // Xử lý địa chỉ mặc định
         if ($request->is_default) {
+            // Bỏ mặc định tất cả các địa chỉ khác của người dùng này
             UserAddress::where('user_id', $address->user_id)->update(['is_default' => false]);
         }
 
-
         $address->update($request->validated());
-        return redirect()->back()->with('success', 'Địa chỉ đã được cập nhật.');
+
+        return redirect()->back()->with('success', 'Địa chỉ đã được cập nhật thành công.');
     }
 
-
+    /**
+     * Xóa địa chỉ của người dùng.
+     */
     public function deleteAddress(UserAddress $address)
     {
         if ($address->is_default) {
             return redirect()->back()->with('error', 'Không thể xóa địa chỉ mặc định.');
         }
 
-
         $address->delete();
-        return redirect()->back()->with('success', 'Địa chỉ đã được xóa.');
+
+        return redirect()->back()->with('success', 'Địa chỉ đã được xóa thành công.');
     }
 }

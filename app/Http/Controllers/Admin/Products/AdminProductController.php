@@ -61,7 +61,7 @@ class AdminProductController extends Controller
             $productData = $this->prepareProductData($request);
             $product = Product::create($productData);
             $this->syncVariants($product, $request);
-           
+
             // Xử lý thư viện ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $image) {
@@ -101,7 +101,7 @@ class AdminProductController extends Controller
             $productData = $this->prepareProductData($request, $product);
             $product->update($productData);
             $this->syncVariants($product, $request);
-           
+
             if ($request->filled('delete_images')) {
                 foreach ($request->delete_images as $id) {
                     $image = $product->allImages()->find($id);
@@ -180,19 +180,19 @@ class AdminProductController extends Controller
             foreach ($request->variants as $key => $variantData) {
                 $variantData['is_active'] = isset($variantData['is_active']);
                 $variantPayload = Arr::except($variantData, ['attributes', 'image']);
-               
+
                 if (empty($variantPayload['sku'])) {
                     $variantPayload['sku'] = $this->generateUniqueSku();
                 }
 
 
                 $variant = $product->variants()->updateOrCreate(['id' => $variantData['id'] ?? null], $variantPayload);
-               
+
                 if ($request->hasFile("variants.{$key}.image")) {
                     $path = $request->file("variants.{$key}.image")->store('products/variants', 'public');
                     $variant->update(['image' => $path]);
                 }
-               
+
                 $variant->attributeValues()->sync($variantData['attributes']);
                 $submittedVariantIds[] = $variant->id;
             }
@@ -223,7 +223,7 @@ class AdminProductController extends Controller
     public function forceDelete($id)
     {
         $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
-       
+
         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
             Storage::disk('public')->delete($product->thumbnail);
         }

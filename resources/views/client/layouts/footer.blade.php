@@ -26,9 +26,6 @@
                     <a href="#" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-pink-600 transition">
                         <i class="fab fa-instagram text-white"></i>
                     </a>
-                    <a href="#" class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center hover:bg-gray-600 transition">
-                        <i class="fab fa-telegram text-white"></i>
-                    </a>
                 </div>
             </div>
 
@@ -36,27 +33,27 @@
             <div>
                 <h3 class="font-bold text-lg mb-4 text-orange-400">Dịch vụ khách hàng</h3>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-orange-400 transition">Hướng dẫn mua hàng</a></li>
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách bảo hành</a></li>
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách đổi trả</a></li>
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách vận chuyển</a></li>
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách trả góp</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Tra cứu bảo hành</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Tra cứu hóa đơn</a></li>
+                    <li><a href="/warranty" class="hover:text-orange-400 transition">Tra cứu bảo hành</a></li>
+                    <li><a href="{{ route('invoice') }}" class="hover:text-orange-400 transition">Tra cứu hóa đơn</a></li>
                 </ul>
             </div>
 
             <!-- Về Techvicom -->
             <div>
+                
                 <h3 class="font-bold text-lg mb-4 text-orange-400">Về Techvicom</h3>
                 <ul class="space-y-2 text-sm">
                     <li><a href="about" class="hover:text-orange-400 transition">Giới thiệu công ty</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Tin tức & sự kiện</a></li>
+                    <li><a href="{{ route('client.news.index') }}" class="hover:text-orange-400 transition">Tin tức & sự kiện</a></li>
                     <li><a href="#" class="hover:text-orange-400 transition">Tuyển dụng</a></li>
                     <li><a href="{{ route('client.contacts.index') }}" class="hover:text-orange-400 transition">Liên hệ</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Hệ thống cửa hàng</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Đại lý ủy quyền</a></li>
-                    <li><a href="#" class="hover:text-orange-400 transition">Dự án doanh nghiệp</a></li>
+                    <li><a href="{{ route('client.store_system') }}" class="hover:text-orange-400 transition">Hệ thống cửa hàng</a></li>
+                    <li><a href="{{ route('authorized_dealer') }}" class="hover:text-orange-400 transition">Đại lý ủy quyền</a></li>
+                    <li><a href="{{ route('enterprise_project') }}" class="hover:text-orange-400 transition">Dự án doanh nghiệp</a></li>
                 </ul>
             </div>
 

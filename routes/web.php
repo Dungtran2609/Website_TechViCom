@@ -98,9 +98,13 @@ Route::get('/test-check-cart', function () {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Trang giới thiệu và chính sách
-Route::view('/about', 'client.about')->name('about');
-Route::view('/policy', 'client.policy')->name('policy');
-
+Route::view('/about', 'client.pages.about')->name('about');
+Route::view('/policy', 'client.pages.policy')->name('policy');
+Route::view('/store-system', 'client.pages.store_system')->name('client.store_system');
+Route::view('/warranty', 'client.pages.warranty')->name('warranty');
+Route::view('/invoice', 'client.pages.invoice')->name('invoice');
+Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('authorized_dealer');
+Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 
 
 // Test cart functionality
@@ -407,6 +411,8 @@ Route::prefix('brands')->name('brands.')->group(function () {
 
 // Routes công khai
 Route::prefix('client')->name('client.')->group(function () {
+
+
     // Đơn hàng
     Route::prefix('orders')->name('orders.')->group(function () {
         // AJAX xác nhận đã nhận hàng

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class OrderItem extends Model
 {
@@ -57,5 +58,20 @@ class OrderItem extends Model
             'variant_id',    // foreignKey trong OrderItem
             'id'             // localKey của ProductVariant
         );
+    }
+
+    /**
+     * Mối quan hệ với attribute values qua product variant
+     */
+    public function attributeValues()
+    {
+        return $this->hasManyThrough(
+            AttributeValue::class,
+            ProductVariant::class,
+            'id',                    // localKey của ProductVariant
+            'variant_id',            // foreignKey trong ProductVariantAttributeValue
+            'variant_id',            // foreignKey trong OrderItem
+            'id'                     // localKey của ProductVariant
+        )->join('product_variant_attribute_values', 'attribute_values.id', '=', 'product_variant_attribute_values.attribute_value_id');
     }
 }

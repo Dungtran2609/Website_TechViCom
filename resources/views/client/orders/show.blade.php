@@ -521,13 +521,65 @@
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="cancelReason" class="form-label">Vui lòng nhập lý do hủy đơn hàng:</label>
-                                <textarea class="form-control" id="cancelReason" name="client_note" rows="3" required></textarea>
+                                <label class="form-label fw-bold">Vui lòng chọn lý do hủy đơn hàng: <span class="text-danger">*</span></label>
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể xác nhận hủy đơn hàng.
+                                </div>
+                                <div class="cancel-reasons-list">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel1" value="Đổi ý không muốn mua nữa" >
+                                        <label class="form-check-label" for="cancel1">
+                                            <i class="fas fa-times-circle text-danger me-2"></i>Đổi ý không muốn mua nữa
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel2" value="Tìm thấy sản phẩm rẻ hơn ở nơi khác" >
+                                        <label class="form-check-label" for="cancel2">
+                                            <i class="fas fa-search-dollar text-warning me-2"></i>Tìm thấy sản phẩm rẻ hơn ở nơi khác
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel3" value="Đặt nhầm sản phẩm" >
+                                        <label class="form-check-label" for="cancel3">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Đặt nhầm sản phẩm
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel4" value="Thời gian giao hàng quá lâu" >
+                                        <label class="form-check-label" for="cancel4">
+                                            <i class="fas fa-clock text-info me-2"></i>Thời gian giao hàng quá lâu
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel5" value="Không còn nhu cầu sử dụng" >
+                                        <label class="form-check-label" for="cancel5">
+                                            <i class="fas fa-ban text-secondary me-2"></i>Không còn nhu cầu sử dụng
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel6" value="Vấn đề về tài chính" >
+                                        <label class="form-check-label" for="cancel6">
+                                            <i class="fas fa-wallet text-danger me-2"></i>Vấn đề về tài chính
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="cancelReason" id="cancel7" value="Lý do khác" >
+                                        <label class="form-check-label" for="cancel7">
+                                            <i class="fas fa-ellipsis-h text-muted me-2"></i>Lý do khác
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3" id="otherReasonDiv" style="display: none;">
+                                    <label for="cancelReasonOther" class="form-label">Vui lòng mô tả lý do khác: <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="cancelReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." required></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                            <button type="button" class="btn btn-danger" id="btn-confirm-cancel" disabled>Xác nhận hủy</button>
                         </div>
                     </div>
                 </form>
@@ -547,13 +599,71 @@
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <label for="returnReason" class="form-label">Vui lòng nhập lý do trả hàng:</label>
-                                <textarea class="form-control" id="returnReason" name="client_note" rows="3" required></textarea>
+                                <label class="form-label fw-bold">Vui lòng chọn lý do trả hàng: <span class="text-danger">*</span></label>
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể gửi yêu cầu trả hàng.
+                                </div>
+                                <div class="return-reasons-list">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return1" value="Sản phẩm bị lỗi/hỏng" >
+                                        <label class="form-check-label" for="return1">
+                                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>Sản phẩm bị lỗi/hỏng
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return2" value="Sản phẩm không đúng mô tả" >
+                                        <label class="form-check-label" for="return2">
+                                            <i class="fas fa-info-circle text-warning me-2"></i>Sản phẩm không đúng mô tả
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return3" value="Kích thước không phù hợp" >
+                                        <label class="form-check-label" for="return3">
+                                            <i class="fas fa-ruler text-info me-2"></i>Kích thước không phù hợp
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return4" value="Màu sắc không như mong đợi" >
+                                        <label class="form-check-label" for="return4">
+                                            <i class="fas fa-palette text-warning me-2"></i>Màu sắc không như mong đợi
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return5" value="Chất lượng không tốt" >
+                                        <label class="form-check-label" for="return5">
+                                            <i class="fas fa-thumbs-down text-danger me-2"></i>Chất lượng không tốt
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return6" value="Giao hàng sai sản phẩm" >
+                                        <label class="form-check-label" for="return6">
+                                            <i class="fas fa-box-open text-warning me-2"></i>Giao hàng sai sản phẩm
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return7" value="Không vừa ý với sản phẩm" >
+                                        <label class="form-check-label" for="return7">
+                                            <i class="fas fa-frown text-secondary me-2"></i>Không vừa ý với sản phẩm
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="returnReason" id="return8" value="Lý do khác" >
+                                        <label class="form-check-label" for="return8">
+                                            <i class="fas fa-ellipsis-h text-muted me-2"></i>Lý do khác
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3" id="otherReturnReasonDiv" style="display: none;">
+                                    <label for="returnReasonOther" class="form-label">Vui lòng mô tả lý do khác: <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="returnReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." required></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận yêu cầu trả hàng</button>
+                            <button type="button" class="btn btn-danger" id="btn-confirm-return" disabled>Xác nhận yêu cầu trả hàng</button>
                         </div>
                     </div>
                 </form>
@@ -561,6 +671,106 @@
         </div>
         @endif
 @endsection
+
+@push('styles')
+<style>
+.cancel-reasons-list .form-check,
+.return-reasons-list .form-check {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.cancel-reasons-list .form-check:hover,
+.return-reasons-list .form-check:hover {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cancel-reasons-list .form-check:has(input:checked),
+.return-reasons-list .form-check:has(input:checked) {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.form-check-input:checked {
+    background-color: #ff6c2f;
+    border-color: #ff6c2f;
+}
+
+.form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    color: #495057;
+}
+
+.form-check-label i {
+    width: 16px;
+    text-align: center;
+}
+
+#otherReasonDiv,
+#otherReturnReasonDiv {
+    border-top: 1px solid #dee2e6;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Style cho button disabled */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-danger:disabled {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    opacity: 0.6;
+}
+
+/* Animation cho button khi enable */
+.btn:not(:disabled) {
+    transition: all 0.3s ease;
+}
+
+.btn:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Style cho form validation */
+.form-check-input:invalid {
+    border-color: #dc3545;
+}
+
+.form-control:invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Hiệu ứng khi chọn radio button */
+.form-check:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check:has(input:checked) {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -577,101 +787,235 @@ document.addEventListener('DOMContentLoaded', function() {
         }, index * 100);
     });
 
-    // Xử lý submit modal hủy đơn hàng
-    var cancelOrderForm = document.getElementById('cancelOrderForm');
-    if (cancelOrderForm) {
-        cancelOrderForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var clientNote = document.getElementById('cancelReason').value.trim();
-            if (!clientNote) {
-                alert('Vui lòng nhập lý do hủy đơn hàng');
-                document.getElementById('cancelReason').focus();
-                return;
-            }
+
+
+
+
+    // Xử lý radio buttons cho hủy đơn hàng - kiểm tra validation
+    document.querySelectorAll('input[name="cancelReason"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var otherReasonDiv = document.getElementById('otherReasonDiv');
+            var otherReasonTextarea = document.getElementById('cancelReasonOther');
+            var confirmButton = document.getElementById('btn-confirm-cancel');
             
-            var orderId = {{ $order->id }};
-            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            
-            var formData = new FormData();
-            formData.append('client_note', clientNote);
-            
-            fetch(`/client/orders/${orderId}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message || 'Hủy đơn hàng thành công!');
-                    // Đóng modal
-                    var modalEl = document.getElementById('cancelOrderModal');
-                    if (modalEl && window.bootstrap && bootstrap.Modal) {
-                        var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        instance.hide();
-                    }
-                    location.reload();
+            if (this.value === 'Lý do khác') {
+                otherReasonDiv.style.display = 'block';
+                otherReasonTextarea.required = true;
+                // Kiểm tra nếu đã có text trong textarea thì enable button
+                if (otherReasonTextarea.value.trim()) {
+                    confirmButton.disabled = false;
                 } else {
-                    alert(data.message || 'Có lỗi xảy ra khi hủy đơn hàng');
+                    confirmButton.disabled = true;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi hủy đơn hàng');
-            });
+            } else {
+                otherReasonDiv.style.display = 'none';
+                otherReasonTextarea.required = false;
+                otherReasonTextarea.value = '';
+                // Nếu chọn lý do khác "Lý do khác" thì enable button
+                confirmButton.disabled = false;
+            }
+        });
+    });
+
+    // Xử lý textarea cho lý do khác
+    var cancelReasonOther = document.getElementById('cancelReasonOther');
+    if (cancelReasonOther) {
+        cancelReasonOther.addEventListener('input', function() {
+            var confirmButton = document.getElementById('btn-confirm-cancel');
+            var selectedReason = document.querySelector('input[name="cancelReason"]:checked');
+            
+            if (selectedReason && selectedReason.value === 'Lý do khác') {
+                confirmButton.disabled = !this.value.trim();
+            }
         });
     }
 
-    // Xử lý submit modal trả hàng
-    var returnOrderForm = document.getElementById('returnOrderForm');
-    if (returnOrderForm) {
-        returnOrderForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var clientNote = document.getElementById('returnReason').value.trim();
-            if (!clientNote) {
-                alert('Vui lòng nhập lý do trả hàng');
-                document.getElementById('returnReason').focus();
+    // Xử lý modal hủy đơn hàng khi mở
+    var cancelOrderModal = document.getElementById('cancelOrderModal');
+    if (cancelOrderModal) {
+        cancelOrderModal.addEventListener('show.bs.modal', function() {
+            // Reset form khi mở modal
+            document.getElementById('cancelOrderForm').reset();
+            document.getElementById('btn-confirm-cancel').disabled = true;
+            document.getElementById('otherReasonDiv').style.display = 'none';
+        });
+    }
+
+    // Xử lý nút xác nhận hủy đơn hàng
+    var btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+    if (btnConfirmCancel) {
+        btnConfirmCancel.addEventListener('click', function() {
+            // Kiểm tra validation
+            var selectedReason = document.querySelector('input[name="cancelReason"]:checked');
+            if (!selectedReason) {
+                alert('Vui lòng chọn lý do hủy đơn hàng');
                 return;
             }
             
-            var orderId = {{ $order->id }};
-            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            var clientNote = selectedReason.value;
             
-            var formData = new FormData();
-            formData.append('client_note', clientNote);
-            
-            fetch(`/client/orders/${orderId}/request-return`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message || 'Yêu cầu trả hàng đã được gửi!');
-                    // Đóng modal
-                    var modalEl = document.getElementById('returnOrderModal');
-                    if (modalEl && window.bootstrap && bootstrap.Modal) {
-                        var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-                        instance.hide();
-                    }
-                    location.reload();
-                } else {
-                    alert(data.message || 'Có lỗi xảy ra khi gửi yêu cầu trả hàng');
+            // Nếu chọn "Lý do khác", lấy nội dung từ textarea
+            if (clientNote === 'Lý do khác') {
+                var otherReason = document.getElementById('cancelReasonOther').value.trim();
+                if (!otherReason) {
+                    alert('Vui lòng nhập lý do cụ thể');
+                    document.getElementById('cancelReasonOther').focus();
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi gửi yêu cầu trả hàng');
-            });
+                clientNote = otherReason;
+            }
+            
+            // Hiển thị xác nhận cuối cùng
+            if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?\n\nLý do: ' + clientNote + '\n\nHành động này không thể hoàn tác!')) {
+                var orderId = {{ $order->id }};
+                var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                var formData = new FormData();
+                formData.append('client_note', clientNote);
+                
+                fetch(`/client/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || 'Hủy đơn hàng thành công!');
+                        // Đóng modal
+                        var modalEl = document.getElementById('cancelOrderModal');
+                        if (modalEl && window.bootstrap && bootstrap.Modal) {
+                            var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            instance.hide();
+                        }
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi hủy đơn hàng');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi hủy đơn hàng');
+                });
+            }
+        });
+    }
+
+    // Xử lý radio buttons cho trả hàng - kiểm tra validation
+    document.querySelectorAll('input[name="returnReason"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var otherReasonDiv = document.getElementById('otherReturnReasonDiv');
+            var otherReasonTextarea = document.getElementById('returnReasonOther');
+            var confirmButton = document.getElementById('btn-confirm-return');
+            
+            if (this.value === 'Lý do khác') {
+                otherReasonDiv.style.display = 'block';
+                otherReasonTextarea.required = true;
+                // Kiểm tra nếu đã có text trong textarea thì enable button
+                if (otherReasonTextarea.value.trim()) {
+                    confirmButton.disabled = false;
+                } else {
+                    confirmButton.disabled = true;
+                }
+            } else {
+                otherReasonDiv.style.display = 'none';
+                otherReasonTextarea.required = false;
+                otherReasonTextarea.value = '';
+                // Nếu chọn lý do khác "Lý do khác" thì enable button
+                confirmButton.disabled = false;
+            }
+        });
+    });
+
+    // Xử lý textarea cho lý do khác (trả hàng)
+    var returnReasonOther = document.getElementById('returnReasonOther');
+    if (returnReasonOther) {
+        returnReasonOther.addEventListener('input', function() {
+            var confirmButton = document.getElementById('btn-confirm-return');
+            var selectedReason = document.querySelector('input[name="returnReason"]:checked');
+            
+            if (selectedReason && selectedReason.value === 'Lý do khác') {
+                confirmButton.disabled = !this.value.trim();
+            }
+        });
+    }
+
+    // Xử lý modal trả hàng khi mở
+    var returnOrderModal = document.getElementById('returnOrderModal');
+    if (returnOrderModal) {
+        returnOrderModal.addEventListener('show.bs.modal', function() {
+            // Reset form khi mở modal
+            document.getElementById('returnOrderForm').reset();
+            document.getElementById('btn-confirm-return').disabled = true;
+            document.getElementById('otherReturnReasonDiv').style.display = 'none';
+        });
+    }
+
+    // Xử lý nút xác nhận trả hàng
+    var btnConfirmReturn = document.getElementById('btn-confirm-return');
+    if (btnConfirmReturn) {
+        btnConfirmReturn.addEventListener('click', function() {
+            // Kiểm tra validation
+            var selectedReason = document.querySelector('input[name="returnReason"]:checked');
+            if (!selectedReason) {
+                alert('Vui lòng chọn lý do trả hàng');
+                return;
+            }
+            
+            var clientNote = selectedReason.value;
+            
+            // Nếu chọn "Lý do khác", lấy nội dung từ textarea
+            if (clientNote === 'Lý do khác') {
+                var otherReason = document.getElementById('returnReasonOther').value.trim();
+                if (!otherReason) {
+                    alert('Vui lòng nhập lý do cụ thể');
+                    document.getElementById('returnReasonOther').focus();
+                    return;
+                }
+                clientNote = otherReason;
+            }
+            
+            // Hiển thị xác nhận cuối cùng
+            if (confirm('Bạn có chắc chắn muốn gửi yêu cầu trả hàng này không?\n\nLý do: ' + clientNote + '\n\nYêu cầu sẽ được gửi đến admin để xử lý!')) {
+                var orderId = {{ $order->id }};
+                var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
+                var formData = new FormData();
+                formData.append('client_note', clientNote);
+                
+                fetch(`/client/orders/${orderId}/request-return`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || 'Yêu cầu trả hàng đã được gửi!');
+                        // Đóng modal
+                        var modalEl = document.getElementById('returnOrderModal');
+                        if (modalEl && window.bootstrap && bootstrap.Modal) {
+                            var instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                            instance.hide();
+                        }
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi gửi yêu cầu trả hàng');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi gửi yêu cầu trả hàng');
+                });
+            }
         });
     }
 });

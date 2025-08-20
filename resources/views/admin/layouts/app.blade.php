@@ -62,8 +62,7 @@
     <script src="{{ asset('admin_css/vendor/jsvectormap/maps/world.js') }}"></script>
 
 
-    <!-- Dashboard Js removed - not used -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
 
     @stack('scripts')
 

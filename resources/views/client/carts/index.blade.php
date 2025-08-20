@@ -50,14 +50,26 @@
                       $v = $item->product->variants?->firstWhere('id', $item->variant_id);
                       if ($v) $displayPrice = $v->sale_price ?? $v->price ?? 0;
                     }
-                    // ẢNH: ưu tiên ảnh biến thể
+                    // ẢNH: ưu tiên ảnh biến thể, fallback về ảnh sản phẩm chính
                     $imagePath = null;
+                    $imageSource = 'none'; // Debug: để biết ảnh lấy từ đâu
+                    
                     if (!empty($item->productVariant?->image)) {
                       $imagePath = asset('storage/' . ltrim($item->productVariant->image, '/'));
+                      $imageSource = 'variant';
+                    } elseif (!empty($item->product->image)) {
+                      $imagePath = asset('uploads/products/' . ltrim($item->product->image, '/'));
+                      $imageSource = 'product_main';
                     } elseif (!empty($item->product->productAllImages) && $item->product->productAllImages->count() > 0) {
                       $imgObj   = $item->product->productAllImages->first();
                       $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
-                      if ($imgField) $imagePath = asset('uploads/products/' . ltrim($imgField, '/'));
+                      if ($imgField) {
+                        $imagePath = asset('uploads/products/' . ltrim($imgField, '/'));
+                        $imageSource = 'product_all_images';
+                      }
+                    } elseif (!empty($item->product->thumbnail)) {
+                      $imagePath = asset('uploads/products/' . ltrim($item->product->thumbnail, '/'));
+                      $imageSource = 'product_thumbnail';
                     }
                     $isOutOfStock = ($stock <= 0);
                   @endphp
@@ -70,14 +82,23 @@
                   >
                     <div class="flex items-center space-x-4">
                       <input type="checkbox" class="item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="{{ $item->id }}" @if($isOutOfStock) disabled @endif>
-                      <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        @if(!empty($item->productVariant?->image))
-                          <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}"
+                      <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative" 
+                           title="Ảnh: {{ $imageSource }} - {{ $imagePath ? 'Có' : 'Không có' }}">
+                        @if($imagePath)
+                          <img src="{{ $imagePath }}"
                                alt="{{ $item->product->name }}"
-                               class="w-full h-full object-cover"
-                               onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                               class="w-full h-full object-cover transition-opacity duration-200"
+                               loading="lazy"
+                               onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}';this.classList.add('opacity-50');">
                         @else
-                          <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="No image" class="w-full h-full object-cover">
+                          <img src="{{ asset('client_css/images/placeholder.svg') }}" 
+                               alt="No image" 
+                               class="w-full h-full object-cover opacity-50">
+                        @endif
+                        @if($isOutOfStock)
+                          <div class="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
+                            <span class="text-red-600 text-xs font-bold">Hết hàng</span>
+                          </div>
                         @endif
                       </div>
                       <div>

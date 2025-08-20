@@ -137,9 +137,6 @@
                                         Mã đơn</th>
                                     <th
                                         class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Sản phẩm</th>
-                                    <th
-                                        class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
                                         Ngày đặt</th>
                                     <th
                                         class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
@@ -173,88 +170,6 @@
                                             <div class="text-sm font-semibold text-gray-900">
                                                 {{ $order->random_code ?? ($order->code ?? 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}
                                             </div>
-                                        </td>
-
-                                        <td class="px-6 py-4">
-                                            @php
-                                                $firstItem = $order->orderItems->first();
-                                                $totalItems = $order->orderItems->count();
-                                                $thumbnail = null;
-                                                if ($firstItem && $firstItem->product && $firstItem->product->thumbnail) {
-                                                    $thumbnail = asset('storage/' . ltrim($firstItem->product->thumbnail, '/'));
-                                                } elseif ($firstItem && $firstItem->product && $firstItem->product->productAllImages && $firstItem->product->productAllImages->count() > 0) {
-                                                    $imgObj = $firstItem->product->productAllImages->first();
-                                                    $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
-                                                    if ($imgField) $thumbnail = asset('uploads/products/' . ltrim($imgField, '/'));
-                                                }
-                                            @endphp
-
-                                            @if ($firstItem)
-                                                <div class="flex items-center mb-3">
-                                                    <div class="flex-shrink-0 w-12 h-12 mr-3">
-                                                        @if ($thumbnail)
-                                                            <img src="{{ $thumbnail }}"
-                                                                alt="{{ $firstItem->name_product }}"
-                                                                class="w-full h-full object-cover rounded-lg shadow-sm"
-                                                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                                        @else
-                                                            <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                                                                <i class="fas fa-image text-gray-400"></i>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <div class="text-sm font-medium text-gray-900 truncate max-w-xs">
-                                                            {{ $firstItem->name_product }}
-                                                        </div>
-                                                        <div class="text-xs text-gray-500">
-                                                            SL: {{ $firstItem->quantity }}
-                                                            @if ($totalItems > 1)
-                                                                <span class="text-orange-600 font-medium">+{{ $totalItems - 1 }} sản phẩm khác</span>
-                                                                <button class="ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors duration-200 toggle-order-details" data-order-id="{{ $order->id }}">
-                                                                    Đọc thêm
-                                                                </button>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                @if ($totalItems > 1)
-                                                    <div class="hidden order-details-{{ $order->id }}"
-                                                        id="orderDetails{{ $order->id }}">
-                                                        @foreach ($order->orderItems->skip(1) as $item)
-                                                            <div
-                                                                class="flex items-center mb-2 ml-4 border-l-2 border-gray-200 pl-3">
-                                                                <div class="flex-shrink-0 w-8 h-8 mr-2">
-                                                                    @if ($item->variant_id && $item->variant && $item->variant->image)
-                                                                        <img src="{{ asset('storage/' . $item->variant->image) }}"
-                                                                            alt="{{ $item->name_product }}"
-                                                                            class="w-full h-full object-cover rounded shadow-sm">
-                                                                    @elseif($item->image_product)
-                                                                        <img src="{{ asset('storage/' . $item->image_product) }}"
-                                                                            alt="{{ $item->name_product }}"
-                                                                            class="w-full h-full object-cover rounded shadow-sm">
-                                                                    @else
-                                                                        <div
-                                                                            class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded flex items-center justify-center">
-                                                                            <i
-                                                                                class="fas fa-image text-gray-400 text-xs"></i>
-                                                                        </div>
-                                                                    @endif
-                                                                </div>
-                                                                <div class="flex-1 min-w-0">
-                                                                    <div
-                                                                        class="text-xs font-medium text-gray-700 truncate max-w-xs">
-                                                                        {{ $item->name_product }}
-                                                                    </div>
-                                                                    <div class="text-xs text-gray-500">SL:
-                                                                        {{ $item->quantity }}</div>
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            @endif
                                         </td>
 
                                         <td class="px-6 py-4">
@@ -543,28 +458,7 @@
                 });
             }
 
-            // Toggle Order Details
-            const toggleButtons = document.querySelectorAll('.toggle-order-details');
-            toggleButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const orderId = this.getAttribute('data-order-id');
-                    const detailsContainer = document.getElementById('orderDetails' + orderId);
 
-                    if (detailsContainer) {
-                        if (detailsContainer.classList.contains('hidden')) {
-                            // Show details
-                            detailsContainer.classList.remove('hidden');
-                            this.textContent = 'Thu gọn';
-                            this.classList.add('bg-orange-100', 'text-orange-700');
-                        } else {
-                            // Hide details
-                            detailsContainer.classList.add('hidden');
-                            this.textContent = 'Đọc thêm';
-                            this.classList.remove('bg-orange-100', 'text-orange-700');
-                        }
-                    }
-                });
-            });
 
             // Debug: Log current URL parameters
             // const urlParams = new URLSearchParams(window.location.search);

@@ -42,6 +42,16 @@
         font-weight: bold;
     }
     
+    .avatar-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-image {
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
     @media (max-width: 768px) {
         .account-container {
             padding: 1rem;
@@ -58,8 +68,17 @@
             <div class="col-lg-3 mb-4">
                 <div class="account-sidebar rounded-lg p-6 text-white mb-4">
                     <div class="text-center mb-6">
-                        <div class="avatar-placeholder mx-auto mb-3">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        <div class="avatar-container mx-auto mb-3 position-relative">
+                            @if(Auth::user()->image_profile)
+                                <img src="{{ asset('storage/' . Auth::user()->image_profile) }}" 
+                                     alt="Ảnh đại diện" 
+                                     class="avatar-image rounded-circle"
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            @else
+                                <div class="avatar-placeholder">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                            @endif
                         </div>
                         <h4 class="font-bold text-lg">{{ Auth::user()->name }}</h4>
                         <p class="text-white/80 text-sm">{{ Auth::user()->email }}</p>

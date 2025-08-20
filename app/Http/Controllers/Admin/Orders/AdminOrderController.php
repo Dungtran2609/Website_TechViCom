@@ -338,23 +338,24 @@ $subtotal = $order->orderItems->sum(function ($item) {
             'order_items' => 'nullable|array',
             'order_items.*.id' => 'required|integer|exists:order_items,id',
             'order_items.*.quantity' => 'nullable|integer|min:1',
-            'order_items.*.price' => 'nullable|numeric|min:0',
+            // 'order_items.*.price' => 'nullable|numeric|min:0', // KHÔNG CHO SỬA GIÁ
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
 
-        // Cập nhật từng item nếu có
+        // Cập nhật từng item nếu có (CHỈ CHO PHÉP SỬA SỐ LƯỢNG, KHÔNG CHO SỬA GIÁ)
         if (!empty($data['order_items'])) {
             foreach ($data['order_items'] as $itm) {
                 /** @var OrderItem|null $oi */
                 $oi = $order->orderItems()->find($itm['id']);
                 if ($oi) {
                     $newQty = $itm['quantity'] ?? $oi->quantity;
-                    $newPrice = $itm['price'] ?? ($oi->price ?? ($oi->productVariant->sale_price ?? $oi->productVariant->price ?? 0));
+                    // KHÔNG CHO SỬA GIÁ - GIỮ NGUYÊN GIÁ GỐC
+                    $originalPrice = $oi->price ?? ($oi->productVariant->sale_price ?? $oi->productVariant->price ?? 0);
                     $oi->quantity = (int) $newQty;
-                    $oi->price = (float) $newPrice;
-                    $oi->total_price = (float) $newPrice * (int) $newQty;
+                    $oi->price = (float) $originalPrice; // GIỮ NGUYÊN GIÁ
+                    $oi->total_price = (float) $originalPrice * (int) $newQty;
                     $oi->save();
                 }
             }

@@ -13,9 +13,47 @@
     </div>
 </div>
 
-<form method="GET" action="{{ route('admin.news.index') }}" class="mb-4 d-flex gap-2">
-    <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25" placeholder="Tìm bài viết...">
-    <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
+<form method="GET" action="{{ route('admin.news.index') }}" class="mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Tìm bài viết...">
+        </div>
+        <div class="col-md-2">
+            <select name="category" class="form-select">
+                <option value="">Tất cả danh mục</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                        {{ $category->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Đã đăng</option>
+                <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Nháp</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control" placeholder="Từ ngày">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" placeholder="Đến ngày">
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-outline-primary w-100">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    @if(request('search') || request('category') || request('status') || request('date_from') || request('date_to'))
+        <div class="mt-2">
+            <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i> Xóa bộ lọc
+            </a>
+        </div>
+    @endif
 </form>
 
 @if (session('success'))

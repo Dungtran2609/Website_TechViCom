@@ -97,6 +97,10 @@ Route::get('/test-check-cart', function () {
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Trang giới thiệu và chính sách
+Route::view('/about', 'client.about')->name('about');
+Route::view('/policy', 'client.policy')->name('policy');
+
 
 
 // Test cart functionality
@@ -473,6 +477,7 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::get('/addresses/{id}/edit', [ClientAccountController::class, 'editAddress'])->name('edit-address');
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
+    Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
 });
 
 
@@ -526,6 +531,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
         Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
         Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/reset-vnpay-counter', [AdminOrderController::class, 'resetVnpayCancelCount'])->name('reset-vnpay-counter');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)
@@ -725,6 +731,10 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('logos', \App\Http\Controllers\Admin\Logo\AdminLogoController::class)->names('logos');
 });
 
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
 // 1. Tạo file: resources/views/client/accounts/orders.blade.php
 // 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
 // 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.

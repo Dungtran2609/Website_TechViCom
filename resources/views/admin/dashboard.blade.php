@@ -67,7 +67,7 @@
                             <h3 class="fw-bold text-success mb-0">{{ number_format($totalRevenue) }}₫</h3>
                             <small class="text-success">
                                 <i class="fas fa-chart-line me-1"></i>
-                                Đã thanh toán
+                                khi Khách đã nhận hàng
                             </small>
                         </div>
                     </div>
@@ -128,7 +128,7 @@
                 <div class="card-header bg-transparent border-0 p-4">
                     <h5 class="fw-bold mb-0">
                         <i class="fas fa-chart-line me-2 text-primary"></i>
-                        Doanh thu 7 ngày gần đây
+                        Doanh thu 7 ngày gần đây (đã nhận hàng)
                     </h5>
                 </div>
                 <div class="card-body">
@@ -149,8 +149,41 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" style="height: 250px;">
+                    <div class="chart-wrapper" style="height: 180px;">
                         <canvas id="orderStatusChart"></canvas>
+                    </div>
+                    <!-- Legend -->
+                    <div class="mt-2">
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #ffc107; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Chờ xử lý</small>
+                                </div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #17a2b8; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Đang xử lý</small>
+                                </div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #007bff; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Đang giao</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #28a745; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Hoàn thành</small>
+                                </div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #dc3545; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Đã hủy</small>
+                                </div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #6c757d; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Đã trả</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -503,11 +536,18 @@
         }
 
         /* Fix chart canvas sizing */
-        #revenueChart, #orderStatusChart {
+        #revenueChart {
             max-width: 100% !important;
             max-height: 300px !important;
             width: 100% !important;
             height: 300px !important;
+        }
+        
+        #orderStatusChart {
+            max-width: 100% !important;
+            max-height: 180px !important;
+            width: 100% !important;
+            height: 180px !important;
         }
 
         /* Custom scrollbar */
@@ -541,23 +581,33 @@
             }
 
             .chart-wrapper {
-                height: 250px !important;
+                height: 200px !important;
             }
 
-            #revenueChart, #orderStatusChart {
-                max-height: 250px !important;
-                height: 250px !important;
+            #revenueChart {
+                max-height: 200px !important;
+                height: 200px !important;
+            }
+            
+            #orderStatusChart {
+                max-height: 150px !important;
+                height: 150px !important;
             }
         }
 
         @media (max-width: 576px) {
             .chart-wrapper {
-                height: 200px !important;
+                height: 180px !important;
             }
 
-            #revenueChart, #orderStatusChart {
-                max-height: 200px !important;
-                height: 200px !important;
+            #revenueChart {
+                max-height: 180px !important;
+                height: 180px !important;
+            }
+            
+            #orderStatusChart {
+                max-height: 120px !important;
+                height: 120px !important;
             }
         }
 
@@ -591,7 +641,7 @@
             // Thiết lập kích thước cố định cho container
             revenueContainer.style.height = '300px';
             revenueContainer.style.position = 'relative';
-            orderStatusContainer.style.height = '250px';
+            orderStatusContainer.style.height = '180px';
             orderStatusContainer.style.position = 'relative';
 
             // Revenue Chart
@@ -704,14 +754,7 @@
                     },
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 15,
-                                usePointStyle: true,
-                                font: {
-                                    size: 11
-                                }
-                            }
+                            display: false // Ẩn legend mặc định vì đã có legend tùy chỉnh
                         }
                     }
                 }

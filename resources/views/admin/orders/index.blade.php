@@ -82,7 +82,6 @@
                     <thead class="bg-light-subtle">
                         <tr>
                             <th>STT</th>
-                            <th>Ảnh</th>
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
                             <th>Tổng tiền</th>
@@ -96,17 +95,6 @@
                             @php $orderModel = \App\Models\Order::find($order['id']); @endphp
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>
-                                    @if ($order['image'])
-                                        <img src="{{ $order['image'] }}" alt="Ảnh sản phẩm" 
-                                             class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
-                                    @else
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                             style="width: 50px; height: 50px;">
-                                            <span class="text-muted small">Không có ảnh</span>
-                                        </div>
-                                    @endif
-                                </td>
                                 <td>
                                     <span class="badge bg-secondary">{{ $order['id'] }}</span>
                                 </td>

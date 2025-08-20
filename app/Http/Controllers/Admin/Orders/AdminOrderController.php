@@ -181,7 +181,9 @@ class AdminOrderController extends Controller
                     $prod = $item->product;
                 }
                 $price = $item->price ?? ($variant->sale_price ?? $variant->price ?? 0);
+                // Lấy ảnh: ưu tiên ảnh biến thể, nếu không có thì lấy thumbnail sản phẩm đơn thể
                 $imgPath = $variant?->image
+                    ?: ($prod && $prod->thumbnail ? $prod->thumbnail : null)
                     ?: $item->image_product
                     ?: null;
 

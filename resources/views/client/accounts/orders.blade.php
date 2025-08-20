@@ -112,25 +112,6 @@
                 </div>
             </div>
 
-            {{-- Debug info --}}
-            @if(config('app.debug'))
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4 text-sm">
-                    <strong>Debug Info:</strong>
-                    <br>Current Status: <strong>{{ $currentStatus }}</strong>
-                    <br>Total Orders: <strong>{{ $orders->total() }}</strong>
-                    <br>Orders with multiple items:
-                    @php
-                        $multiItemOrders = 0;
-                        foreach($orders as $order) {
-                            if($order->orderItems->count() > 1) {
-                                $multiItemOrders++;
-                            }
-                        }
-                    @endphp
-                    <strong>{{ $multiItemOrders }}</strong> orders
-                </div>
-            @endif
-
             @if ($orders->count() === 0)
                 <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
                     <div
@@ -198,22 +179,26 @@
                                             @php
                                                 $firstItem = $order->orderItems->first();
                                                 $totalItems = $order->orderItems->count();
+                                                $thumbnail = null;
+                                                if ($firstItem && $firstItem->product && $firstItem->product->thumbnail) {
+                                                    $thumbnail = asset('storage/' . ltrim($firstItem->product->thumbnail, '/'));
+                                                } elseif ($firstItem && $firstItem->product && $firstItem->product->productAllImages && $firstItem->product->productAllImages->count() > 0) {
+                                                    $imgObj = $firstItem->product->productAllImages->first();
+                                                    $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
+                                                    if ($imgField) $thumbnail = asset('uploads/products/' . ltrim($imgField, '/'));
+                                                }
                                             @endphp
 
                                             @if ($firstItem)
                                                 <div class="flex items-center mb-3">
                                                     <div class="flex-shrink-0 w-12 h-12 mr-3">
-                                                        @if ($firstItem->variant_id && $firstItem->variant && $firstItem->variant->image)
-                                                            <img src="{{ asset('storage/' . $firstItem->variant->image) }}"
+                                                        @if ($thumbnail)
+                                                            <img src="{{ $thumbnail }}"
                                                                 alt="{{ $firstItem->name_product }}"
-                                                                class="w-full h-full object-cover rounded-lg shadow-sm">
-                                                        @elseif($firstItem->image_product)
-                                                            <img src="{{ asset('storage/' . $firstItem->image_product) }}"
-                                                                alt="{{ $firstItem->name_product }}"
-                                                                class="w-full h-full object-cover rounded-lg shadow-sm">
+                                                                class="w-full h-full object-cover rounded-lg shadow-sm"
+                                                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                                         @else
-                                                            <div
-                                                                class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+                                                            <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                                                                 <i class="fas fa-image text-gray-400"></i>
                                                             </div>
                                                         @endif
@@ -225,9 +210,7 @@
                                                         <div class="text-xs text-gray-500">
                                                             SL: {{ $firstItem->quantity }}
                                                             @if ($totalItems > 1)
-                                                                <span
-                                                                    class="text-orange-600 font-medium">+{{ $totalItems - 1 }}
-                                                                    sản phẩm khác</span>
+                                                                <span class="text-orange-600 font-medium">+{{ $totalItems - 1 }} sản phẩm khác</span>
                                                                 <button class="ml-2 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition-colors duration-200 toggle-order-details" data-order-id="{{ $order->id }}">
                                                                     Đọc thêm
                                                                 </button>

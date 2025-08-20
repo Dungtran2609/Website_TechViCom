@@ -25,6 +25,11 @@ class UpdateCouponRequest extends FormRequest
         $couponId = $this->route('coupon') ?? $this->route('id');
 
         return [
+            'apply_type' => [
+                'required',
+                'string',
+                Rule::in(['all', 'product', 'category', 'user'])
+            ],
             'code' => [
                 'required',
                 'string',

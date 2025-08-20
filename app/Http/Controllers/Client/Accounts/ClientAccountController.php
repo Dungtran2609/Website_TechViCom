@@ -8,44 +8,107 @@ use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class ClientAccountController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        
+
         // Lấy đơn hàng gần đây
         $recentOrders = Order::where('user_id', $user->id)
-                            ->orderBy('created_at', 'desc')
-                            ->limit(5)
-                            ->get();
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
         // Lấy địa chỉ
         $addresses = UserAddress::where('user_id', $user->id)
-                                ->orderBy('is_default', 'desc')
-                                ->get();
+            ->orderBy('is_default', 'desc')
+            ->get();
 
         return view('client.accounts.index', compact('user', 'recentOrders', 'addresses'));
     }
 
-    public function orders()
+    public function orders(Request $request)
     {
-        $orders = Order::with(['orderItems.product'])
-                      ->where('user_id', Auth::id())
-                      ->orderBy('created_at', 'desc')
-                      ->paginate(10);
+        $user   = Auth::user();
+        $search = trim((string) $request->input('q', ''));
+        $status = $request->input('status', 'all');
 
-        return view('client.accounts.orders', compact('orders'));
+
+
+        // Thứ tự trạng thái để ORDER BY FIELD (chỉ các trạng thái có thực trong DB)
+        $statusOrder = ['pending', 'shipped', 'delivered', 'received', 'cancelled', 'returned'];
+
+        $query = Order::with(['orderItems.productVariant.product', 'returns'])
+            ->where('user_id', $user->id);
+
+        // Lọc theo trạng thái (DB-side)
+        if ($status !== 'all' && in_array($status, $statusOrder, true)) {
+            $query->where('status', $status);
+            // Log::info('Filtering by status', ['status' => $status]);
+        } else {
+            // Log::info('No status filter applied', ['status' => $status]);
+        }
+
+        // Tìm kiếm: DH000123 / ID / tên sản phẩm
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                // "DH000123" -> lấy 123
+                if (preg_match('/^DH0*([0-9]+)$/i', $search, $m)) {
+                    $q->where('id', (int) $m[1]);
+                    return;
+                }
+
+                // Toàn số: id chính xác hoặc prefix id
+                if (ctype_digit($search)) {
+                    $q->where('id', (int) $search)
+                        ->orWhereRaw('CAST(id AS CHAR) LIKE ?', [$search . '%']);
+                    return;
+                }
+
+                // Tên sản phẩm: tìm theo name_product trong order_items
+                $q->orWhereHas('orderItems', function ($oi) use ($search) {
+                    $oi->where('name_product', 'LIKE', '%' . $search . '%');
+                });
+            });
+        }
+
+        // Sắp xếp theo trạng thái rồi thời gian tạo (DB-side)
+        $orders = $query
+            ->orderByRaw("FIELD(status, '" . implode("','", $statusOrder) . "'), created_at DESC")
+            ->paginate(10)
+            ->withQueryString();
+
+
+
+        // (Tuỳ view cần) số lượng theo từng trạng thái cho badge/tabs
+        $counts = Order::where('user_id', $user->id)
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+        $counts['all'] = Order::where('user_id', $user->id)->count();
+        
+
+
+        return view('client.accounts.orders', [
+            'orders' => $orders,
+            'status' => $status,
+            'search' => $search,
+            'counts' => $counts, // nếu muốn hiển thị badge số lượng ở tab
+        ]);
     }
 
     public function orderDetail($id)
     {
         $order = Order::with(['orderItems.product.productAllImages', 'orderItems.productVariant.attributeValues.attribute'])
-                     ->where('user_id', Auth::id())
-                     ->where('id', $id)
-                     ->firstOrFail();
+            ->where('user_id', Auth::id())
+            ->where('id', $id)
+            ->firstOrFail();
 
         return view('client.orders.show', compact('order'));
     }
@@ -74,7 +137,6 @@ class ClientAccountController extends Controller
                 'status' => 'pending',
                 'requested_at' => now(),
             ]);
-
         } catch (\Exception $e) {
             // Trả về lỗi server dưới dạng JSON
             return response()->json([
@@ -91,7 +153,7 @@ class ClientAccountController extends Controller
     }
 
 
-    
+
 
     public function profile()
     {
@@ -116,7 +178,7 @@ class ClientAccountController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         User::where('id', $user->id)->update($request->only(['name', 'email', 'phone_number', 'birthday', 'gender']));
 
         return redirect()->back()->with('success', 'Cập nhật thông tin thành công');
@@ -150,10 +212,10 @@ class ClientAccountController extends Controller
     public function addresses()
     {
         $addresses = UserAddress::where('user_id', Auth::id())
-                                ->orderBy('is_default', 'desc')
-                                ->get();
-
-        return view('client.accounts.addresses', compact('addresses'));
+            ->orderBy('is_default', 'desc')
+            ->get();
+        $defaultAddress = $addresses->first();
+        return view('client.accounts.addresses', compact('addresses', 'defaultAddress'));
     }
 
     public function storeAddress(Request $request)
@@ -161,21 +223,37 @@ class ClientAccountController extends Controller
         $request->validate([
             'recipient_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:500',
+            'address_line' => 'required|string|max:500',
+            'city' => 'required|string|max:255',
+            'district' => 'required|string|max:255',
+            'ward' => 'required|string|max:255',
             'is_default' => 'boolean'
+        ], [
+            'recipient_name.required' => 'Vui lòng nhập tên người nhận.',
+            'recipient_name.max' => 'Tên người nhận tối đa 255 ký tự.',
+            'phone.required' => 'Vui lòng nhập số điện thoại.',
+            'phone.max' => 'Số điện thoại tối đa 20 ký tự.',
+            'address_line.required' => 'Vui lòng nhập địa chỉ chi tiết.',
+            'address_line.max' => 'Địa chỉ chi tiết tối đa 500 ký tự.',
+            'city.required' => 'Vui lòng chọn tỉnh/thành phố.',
+            'district.required' => 'Vui lòng chọn quận/huyện.',
+            'ward.required' => 'Vui lòng chọn phường/xã.',
         ]);
 
         if ($request->is_default) {
             // Bỏ default của địa chỉ khác
             UserAddress::where('user_id', Auth::id())
-                       ->update(['is_default' => false]);
+                ->update(['is_default' => false]);
         }
 
         UserAddress::create([
             'user_id' => Auth::id(),
             'recipient_name' => $request->recipient_name,
             'phone' => $request->phone,
-            'address' => $request->address,
+            'address_line' => $request->address_line,
+            'city' => $request->city, // lấy từ input hidden city_name
+            'district' => $request->district, // lấy từ input hidden district_name
+            'ward' => $request->ward, // lấy từ input hidden ward_name
             'is_default' => $request->is_default ?? false
         ]);
 
@@ -184,34 +262,49 @@ class ClientAccountController extends Controller
 
     public function updateAddress(Request $request, $id)
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'recipient_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:500',
+            'address_line' => 'required|string|max:500',
+            'city' => 'required|string|max:255',
+            'district' => 'required|string|max:255',
+            'ward' => 'required|string|max:255',
             'is_default' => 'boolean'
         ]);
-
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
         $address = UserAddress::where('user_id', Auth::id())
-                              ->where('id', $id)
-                              ->firstOrFail();
-
+            ->where('id', $id)
+            ->firstOrFail();
         if ($request->is_default) {
             // Bỏ default của địa chỉ khác
             UserAddress::where('user_id', Auth::id())
-                       ->where('id', '!=', $id)
-                       ->update(['is_default' => false]);
+                ->where('id', '!=', $id)
+                ->update(['is_default' => false]);
         }
-
-        $address->update($request->only(['recipient_name', 'phone', 'address', 'is_default']));
-
+        $address->update($request->only(['recipient_name', 'phone', 'address_line', 'city', 'district', 'ward', 'is_default']));
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật địa chỉ thành công'
+            ]);
+        }
         return redirect()->back()->with('success', 'Cập nhật địa chỉ thành công');
     }
 
     public function editAddress($id)
     {
         $address = UserAddress::where('user_id', Auth::id())
-                              ->where('id', $id)
-                              ->firstOrFail();
+            ->where('id', $id)
+            ->firstOrFail();
 
         return response()->json([
             'success' => true,
@@ -222,8 +315,8 @@ class ClientAccountController extends Controller
     public function deleteAddress($id)
     {
         $address = UserAddress::where('user_id', Auth::id())
-                              ->where('id', $id)
-                              ->first();
+            ->where('id', $id)
+            ->first();
 
         if (!$address) {
             return response()->json([
@@ -237,6 +330,27 @@ class ClientAccountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Xóa địa chỉ thành công'
+        ]);
+    }
+
+    public function setDefaultAddress($id)
+    {
+        $userId = Auth::id();
+        $address = \App\Models\UserAddress::where('user_id', $userId)->where('id', $id)->first();
+        if (!$address) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Địa chỉ không tồn tại.'
+            ], 404);
+        }
+        // Bỏ mặc định các địa chỉ khác
+        \App\Models\UserAddress::where('user_id', $userId)->update(['is_default' => false]);
+        // Đặt địa chỉ này làm mặc định
+        $address->is_default = true;
+        $address->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã đặt địa chỉ làm mặc định.'
         ]);
     }
 }

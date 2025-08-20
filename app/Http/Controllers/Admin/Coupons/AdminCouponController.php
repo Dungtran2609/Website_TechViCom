@@ -28,12 +28,26 @@ class AdminCouponController extends Controller
 
     public function create()
     {
-        return view('admin.coupons.create');
+    $categories = \App\Models\Category::all();
+    $products = \App\Models\Product::all();
+    $users = \App\Models\User::all();
+    return view('admin.coupons.create', compact('categories', 'products', 'users'));
     }
 
     public function store(StoreCouponRequest $request)
 {
-    Coupon::create($request->validated());
+    $coupon = Coupon::create($request->validated());
+
+    // Sync pivot tables
+    if ($request->has('product_ids')) {
+        $coupon->products()->sync($request->product_ids);
+    }
+    if ($request->has('category_ids')) {
+        $coupon->categories()->sync($request->category_ids);
+    }
+    if ($request->has('user_ids')) {
+        $coupon->users()->sync($request->user_ids);
+    }
 
     return redirect()->route('admin.coupons.index')
         ->with('success', 'Tạo mã giảm giá thành công!');
@@ -41,8 +55,11 @@ class AdminCouponController extends Controller
 
     public function edit($id)
     {
-        $coupon = Coupon::withTrashed()->findOrFail($id);
-        return view('admin.coupons.edit', compact('coupon'));
+    $coupon = Coupon::withTrashed()->findOrFail($id);
+    $categories = \App\Models\Category::all();
+    $products = \App\Models\Product::all();
+    $users = \App\Models\User::all();
+    return view('admin.coupons.edit', compact('coupon', 'categories', 'products', 'users'));
     }
 
 
@@ -51,6 +68,23 @@ public function update(UpdateCouponRequest $request, $id)
     try {
         $coupon = Coupon::findOrFail($id);
         $coupon->update($request->validated());
+
+        // Sync pivot tables
+        if ($request->has('product_ids')) {
+            $coupon->products()->sync($request->product_ids);
+        } else {
+            $coupon->products()->detach();
+        }
+        if ($request->has('category_ids')) {
+            $coupon->categories()->sync($request->category_ids);
+        } else {
+            $coupon->categories()->detach();
+        }
+        if ($request->has('user_ids')) {
+            $coupon->users()->sync($request->user_ids);
+        } else {
+            $coupon->users()->detach();
+        }
 
         return redirect()
             ->route('admin.coupons.edit', $coupon->id)

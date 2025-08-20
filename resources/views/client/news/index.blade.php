@@ -114,18 +114,23 @@
                     </ul>
 
                 </div>
-                <div class="bg-gray-50 rounded-xl p-5 shadow">
-                    <h2 class="text-lg font-bold mb-4 text-gray-700">Tin tức nổi bật</h2>
-                    <ul class="space-y-3">
+                <div class="bg-white rounded-xl p-5 shadow-md">
+                    <h2 class="text-lg font-bold mb-4 text-gray-800">Tin tức nổi bật</h2>
+                    <ul class="space-y-4">
                         @foreach ($featuredNews as $fitem)
-                            <li class="flex items-center gap-3">
+                            <li class="flex items-start gap-3 group">
                                 <a href="{{ route('client.news.show', $fitem->id) }}"
-                                    class="block w-16 h-12 overflow-hidden rounded-lg">
+                                    class="block w-20 h-16 overflow-hidden rounded-lg flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow duration-200">
                                     <img src="{{ asset($fitem->image ?? 'client_css/images/placeholder.svg') }}"
-                                        alt="{{ $fitem->title }}" class="w-full h-full object-cover">
+                                        alt="{{ $fitem->title }}" 
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 </a>
-                                <a href="{{ route('client.news.show', $fitem->id) }}"
-                                    class="text-sm font-semibold text-gray-800 hover:text-[#ff6c2f] line-clamp-2">{{ $fitem->title }}</a>
+                                <div class="flex-1 min-w-0">
+                                    <a href="{{ route('client.news.show', $fitem->id) }}"
+                                        class="text-sm font-semibold text-gray-800 hover:text-[#ff6c2f] line-clamp-3 transition-colors duration-200 leading-tight">
+                                        {{ $fitem->title }}
+                                    </a>
+                                </div>
                             </li>
                         @endforeach
                     </ul>

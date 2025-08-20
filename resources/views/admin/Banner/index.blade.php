@@ -138,8 +138,11 @@
                         <tr>
                             <td>{{ ($banners->currentPage() - 1) * $banners->perPage() + $index + 1 }}</td>
                             <td>
-                                <img src="{{ asset('storage/' . $banner->image) }}" class="banner-img"
-                                    onerror="this.src='https://via.placeholder.com/120x70?text=No+Image';">
+                                @if ($banner->image)
+                                    <img src="{{ asset('storage/' . $banner->image) }}" class="banner-img" onerror="this.style.display='none';">
+                                @else
+                                    -
+                                @endif
                             </td>
                             <td>
                                 @if ($banner->link)

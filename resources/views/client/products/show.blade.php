@@ -356,7 +356,25 @@
 
                         {{-- PRICE --}}
                         <div id="price-display" class="text-4xl font-bold text-[#ff6c2f]">
-                            @if ($product->type === 'variable' && $activeVariants->isNotEmpty())
+                            @if (!empty($flashSaleInfo))
+                                @php
+                                    $v = $activeVariants->first();
+                                    $originalPrice = $v ? $v->price : null;
+                                    $salePrice = $flashSaleInfo['sale_price'] ?? null;
+                                @endphp
+                                @if ($salePrice && $originalPrice && $salePrice < $originalPrice)
+                                    <div class="flex items-end gap-3">
+                                        <span class="text-2xl line-through text-gray-500">{{ number_format($originalPrice, 0, ',', '.') }}₫</span>
+                                        <span>{{ number_format($salePrice, 0, ',', '.') }}₫</span>
+                                    </div>
+                                @elseif($salePrice && $salePrice > 0)
+                                    <span>{{ number_format($salePrice, 0, ',', '.') }}₫</span>
+                                @elseif($originalPrice)
+                                    {{ number_format($originalPrice, 0, ',', '.') }}₫
+                                @else
+                                    <span class="text-3xl text-gray-500">Tạm hết hàng</span>
+                                @endif
+                            @elseif ($product->type === 'variable' && $activeVariants->isNotEmpty())
                                 @php
                                     $minPrice = $activeVariants->min('price');
                                     $maxPrice = $activeVariants->max('price');
@@ -488,6 +506,7 @@
                         $approvedComments = $product
                             ->productComments()
                             ->where('status', 'approved')
+                            ->where('is_hidden', false)
                             ->whereNull('parent_id')
                             ->with(['user', 'replies.user'])
                             ->latest()
@@ -496,20 +515,26 @@
 
                     @auth
                         @php
-                            $commentController = new \App\Http\Controllers\Client\Products\ClientProductCommentController();
-                            $canComment = $commentController->canComment($product->id);
+                            $reviewStatus = \App\Helpers\CommentHelper::getReviewStatus($product->id);
+                            $remainingDays = \App\Helpers\CommentHelper::getRemainingDaysToReview($product->id);
                         @endphp
-                        @if ($canComment)
+                        @if ($reviewStatus['can_review'])
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
-                                <h3 class="font-semibold text-gray-900 mb-3">Viết đánh giá của bạn</h3>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-semibold text-gray-900">Viết đánh giá của bạn</h3>
+                                    <div class="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Còn {{ $remainingDays }} ngày để đánh giá
+                                    </div>
+                                </div>
                                 <form action="{{ route('products.comments.store', $product->id) }}" method="POST">
                                     @csrf
                                     <div class="mb-3">
-                                        <label class="block text-sm font-medium mb-1">Đánh giá</label>
+                                        <label class="block text-sm font-medium mb-1">Đánh giá <span class="text-red-500">*</span></label>
                                         <div class="flex items-center space-x-1">
                                             @for ($i = 1; $i <= 5; $i++)
                                                 <input type="radio" id="star{{ $i }}" name="rating"
-                                                    value="{{ $i }}" class="sr-only">
+                                                    value="{{ $i }}" class="sr-only" required>
                                                 <label for="star{{ $i }}"
                                                     class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400">
                                                     <i class="fas fa-star"></i>
@@ -518,33 +543,67 @@
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="block text-sm font-medium mb-1">Nội dung</label>
-                                        <textarea name="content" rows="4"
-                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f]"></textarea>
+                                        <label class="block text-sm font-medium mb-1">Nội dung <span class="text-red-500">*</span></label>
+                                        <textarea name="content" rows="4" maxlength="3000"
+                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f]" 
+                                            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <span id="charCount">0</span>/3000 ký tự
+                                        </div>
                                     </div>
-                                    <button class="btn-primary px-5 py-2 rounded-md">Gửi đánh giá</button>
+                                    <button type="submit" class="btn-primary px-5 py-2 rounded-md">
+                                        <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá
+                                    </button>
                                 </form>
                             </div>
                         @else
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                <b class="text-blue-800">Thông báo</b>
-                                <p class="text-blue-700 text-sm mt-1">
-                                    @if (!auth()->check())
-                                        Bạn cần đăng nhập để bình luận.
-                                    @else
-                                        Bạn cần mua sản phẩm này trước khi bình luận hoặc đã bình luận rồi.
-                                    @endif
-                                </p>
+                                <div class="flex items-start gap-3">
+                                    <div class="text-blue-600 mt-1">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div>
+                                        <b class="text-blue-800">Thông báo</b>
+                                        <p class="text-blue-700 text-sm mt-1">{{ $reviewStatus['message'] }}</p>
+                                        @if ($remainingDays > 0 && $remainingDays <= 15)
+                                            <p class="text-orange-600 text-sm mt-1">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                Còn {{ $remainingDays }} ngày để đánh giá
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         @endif
                     @else
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                            <b class="text-blue-800">Thông báo</b>
-                            <p class="text-blue-700 text-sm mt-1">Bạn cần đăng nhập để bình luận.</p>
+                            <div class="flex items-start gap-3">
+                                <div class="text-blue-600 mt-1">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div>
+                                    <b class="text-blue-800">Thông báo</b>
+                                    <p class="text-blue-700 text-sm mt-1">Bạn cần đăng nhập để đánh giá sản phẩm.</p>
+                                </div>
+                            </div>
                         </div>
                     @endauth
 
-                    <div class="space-y-5">
+                    <!-- Rating Filter Buttons -->
+                    <div class="mb-6">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="rating-filter-btn px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-rating="all">
+                                Tất cả
+                            </button>
+                            @for ($i = 5; $i >= 1; $i--)
+                                <button class="rating-filter-btn px-4 py-2 rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors" data-rating="{{ $i }}">
+                                    {{ $i }} ☆
+                                </button>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <div id="comments-container" class="space-y-5">
                         @forelse($approvedComments as $cmt)
                             <div class="bg-white rounded-lg border border-gray-200 p-5">
                                 <div class="flex items-start gap-3">
@@ -572,7 +631,7 @@
                                         @if ($cmt->replies->count() > 0)
                                             <div class="mt-3 space-y-3">
                                                 @foreach ($cmt->replies as $rep)
-                                                    @if ($rep->status === 'approved')
+                                                    @if ($rep->status === 'approved' && !$rep->is_hidden)
                                                         <div class="bg-gray-50 rounded-md p-3 ml-4">
                                                             <div class="flex items-center gap-2">
                                                                 <b class="text-sm">{{ $rep->user->name }}</b>
@@ -1037,5 +1096,127 @@
         render();
         updateToggleVisibility();
         window.addEventListener('resize', updateToggleVisibility);
+
+        /* ===== Review Form ===== */
+        // Star rating functionality
+        const starInputs = document.querySelectorAll('input[name="rating"]');
+        const starLabels = document.querySelectorAll('label[for^="star"]');
+        
+        starLabels.forEach((label, index) => {
+            label.addEventListener('click', () => {
+                // Reset all stars
+                starLabels.forEach(l => l.querySelector('i').classList.remove('text-yellow-400'));
+                starLabels.forEach(l => l.querySelector('i').classList.add('text-gray-300'));
+                
+                // Fill stars up to clicked one
+                for (let i = 0; i <= index; i++) {
+                    starLabels[i].querySelector('i').classList.remove('text-gray-300');
+                    starLabels[i].querySelector('i').classList.add('text-yellow-400');
+                }
+            });
+        });
+
+        // Character count for review textarea
+        const reviewTextarea = document.querySelector('textarea[name="content"]');
+        const charCount = document.getElementById('charCount');
+        
+        if (reviewTextarea && charCount) {
+            reviewTextarea.addEventListener('input', () => {
+                const count = reviewTextarea.value.length;
+                charCount.textContent = count;
+                
+                if (count > 2800) {
+                    charCount.classList.add('text-red-500');
+                    charCount.classList.remove('text-gray-500');
+                } else {
+                    charCount.classList.remove('text-red-500');
+                    charCount.classList.add('text-gray-500');
+                }
+            });
+        }
+
+        /* ===== Rating Filter ===== */
+        const ratingFilterBtns = document.querySelectorAll('.rating-filter-btn');
+        const commentsContainer = document.getElementById('comments-container');
+        const productId = {{ $product->id }};
+
+        ratingFilterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const rating = btn.dataset.rating;
+                
+                // Update active button
+                ratingFilterBtns.forEach(b => {
+                    b.classList.remove('border-red-500', 'text-red-500');
+                    b.classList.add('border-gray-300', 'text-gray-700');
+                });
+                btn.classList.remove('border-gray-300', 'text-gray-700');
+                btn.classList.add('border-red-500', 'text-red-500');
+
+                // Show loading
+                commentsContainer.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i><p class="text-gray-500 mt-2">Đang tải...</p></div>';
+
+                // Fetch filtered comments
+                fetch(`/products/${productId}/comments/filter?rating=${rating}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.comments.length === 0) {
+                            commentsContainer.innerHTML = '<div class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500">Không có bình luận nào cho đánh giá này.</div>';
+                            return;
+                        }
+
+                        let html = '';
+                        data.comments.forEach(comment => {
+                            html += `
+                                <div class="bg-white rounded-lg border border-gray-200 p-5">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#ff6c2f] text-white flex items-center justify-center font-semibold">
+                                            ${comment.user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <b class="text-gray-900">${comment.user.name}</b>
+                                                <span class="text-gray-500 text-sm">${new Date(comment.created_at).toLocaleDateString('vi-VN')} ${new Date(comment.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
+                                            </div>
+                                            ${comment.rating ? `
+                                                <div class="text-yellow-400 mb-1">
+                                                    ${Array.from({length: 5}, (_, i) => 
+                                                        `<i class="fas fa-star ${i < comment.rating ? '' : 'text-gray-300'}"></i>`
+                                                    ).join('')}
+                                                    <span class="text-sm text-gray-600 ml-1">${comment.rating}/5</span>
+                                                </div>
+                                            ` : ''}
+                                            <p class="text-gray-800">${comment.content}</p>
+                                            ${comment.replies && comment.replies.length > 0 ? `
+                                                <div class="mt-3 space-y-3">
+                                                    ${comment.replies.map(reply => 
+                                                        reply.status === 'approved' && !reply.is_hidden ? `
+                                                            <div class="bg-gray-50 rounded-md p-3 ml-4">
+                                                                <div class="flex items-center gap-2">
+                                                                    <b class="text-sm">${reply.user.name}</b>
+                                                                    <span class="text-xs text-gray-500">${new Date(reply.created_at).toLocaleDateString('vi-VN')} ${new Date(reply.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
+                                                                </div>
+                                                                <div class="text-sm text-gray-700">${reply.content}</div>
+                                                            </div>
+                                                        ` : ''
+                                                    ).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        commentsContainer.innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        commentsContainer.innerHTML = '<div class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500">Có lỗi xảy ra khi tải bình luận.</div>';
+                    });
+            });
+        });
+
+        // Set "Tất cả" as default active
+        document.querySelector('[data-rating="all"]').classList.add('border-red-500', 'text-red-500');
+        document.querySelector('[data-rating="all"]').classList.remove('border-gray-300', 'text-gray-700');
     </script>
 @endpush

@@ -332,19 +332,21 @@
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0 me-4">
                                         @php
-                                            $imageUrl = '';
+                                            $imageUrl = null;
                                             if ($item->productVariant && $item->productVariant->image) {
-                                                $imageUrl = $item->productVariant->image;
+                                                $imageUrl = asset('storage/' . ltrim($item->productVariant->image, '/'));
                                             } elseif ($item->product && $item->product->thumbnail) {
-                                                $imageUrl = $item->product->thumbnail;
-                                            } elseif ($item->product && $item->product->productAllImages->count() > 0) {
-                                                $imageUrl = $item->product->productAllImages->first()->image_path;
+                                                $imageUrl = asset('storage/' . ltrim($item->product->thumbnail, '/'));
+                                            } elseif ($item->product && $item->product->productAllImages && $item->product->productAllImages->count() > 0) {
+                                                $imgObj = $item->product->productAllImages->first();
+                                                $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
+                                                if ($imgField) $imageUrl = asset('uploads/products/' . ltrim($imgField, '/'));
                                             }
                                         @endphp
 
                                         @if($imageUrl)
-                                            <img src="{{ asset('storage/' . $imageUrl) }}" 
-                                                 alt="{{ $item->name_product }}" 
+                                            <img src="{{ $imageUrl }}"
+                                                 alt="{{ $item->name_product }}"
                                                  class="w-20 h-20 object-cover rounded-lg"
                                                  onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                         @else

@@ -145,19 +145,22 @@
                                                      alt="{{ $product->name }}" 
                                                      class="w-full h-48 object-cover rounded-t-lg">
                                             @endif
-                                            
-                                            {{-- Discount badge will be added later based on variants --}}
-                                            
+                                            @php
+                                                $variant = $product->variants->first();
+                                                $hasSale = $variant && $variant->sale_price && $variant->sale_price < $variant->price;
+                                                $discountPercent = $hasSale ? round(100 * ($variant->price - $variant->sale_price) / $variant->price) : 0;
+                                            @endphp
+                                            @if($hasSale)
+                                                <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">-{{ $discountPercent }}%</div>
+                                            @endif
                                             <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
                                                 <button class="bg-white rounded-full p-2 shadow-md hover:bg-gray-50">
                                                     <i class="fas fa-heart text-gray-400 hover:text-red-500"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        
                                         <div class="p-4">
                                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-                                            
                                             <div class="flex items-center mb-2">
                                                 <div class="flex text-yellow-400 text-sm">
                                                     @for($i = 1; $i <= 5; $i++)
@@ -166,29 +169,29 @@
                                                 </div>
                                                 <span class="text-gray-500 text-sm ml-2">(0)</span>
                                             </div>
-                                            
                                             <div class="flex items-center justify-between">
                                                 <div>
-                                                    @if($product->type === 'simple' && $product->variants->count() > 0)
-                                                        @php
-                                                            $variant = $product->variants->first();
-                                                        @endphp
-                                                        <span class="text-lg font-bold text-gray-900">{{ number_format($variant->price) }}₫</span>
+                                                    @if($product->type === 'simple' && $variant)
+                                                        @if($hasSale)
+                                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->sale_price) }}₫</span>
+                                                            <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                                        @else
+                                                            <span class="text-lg font-bold text-gray-900">{{ number_format($variant->price) }}₫</span>
+                                                        @endif
                                                     @elseif($product->type === 'variable' && $product->variants->count() > 0)
                                                         @php
-                                                            $minPrice = $product->variants->min('price');
-                                                            $maxPrice = $product->variants->max('price');
+                                                            $minPrice = $product->variants->min(function($v){ return $v->sale_price && $v->sale_price < $v->price ? $v->sale_price : $v->price; });
+                                                            $maxPrice = $product->variants->max(function($v){ return $v->sale_price && $v->sale_price < $v->price ? $v->sale_price : $v->price; });
                                                         @endphp
                                                         @if($minPrice === $maxPrice)
-                                                            <span class="text-lg font-bold text-gray-900">{{ number_format($minPrice) }}₫</span>
+                                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
                                                         @else
-                                                            <span class="text-lg font-bold text-gray-900">{{ number_format($minPrice) }} - {{ number_format($maxPrice) }}₫</span>
+                                                            <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} - {{ number_format($maxPrice) }}₫</span>
                                                         @endif
                                                     @else
                                                         <span class="text-lg font-bold text-gray-900">Liên hệ</span>
                                                     @endif
                                                 </div>
-                                                
                                                 <button class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition text-sm"
                                                         onclick="event.stopPropagation(); addToCart({{ $product->id }}, null, 1)">
                                                     <i class="fas fa-cart-plus"></i>

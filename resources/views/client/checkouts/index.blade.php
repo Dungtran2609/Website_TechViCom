@@ -60,9 +60,15 @@
 @endpush
 
 @section('content')
-    @if(session('notification'))
-        <div class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transition-all duration-300
-            @if(session('notification.type') === 'success') bg-green-500
+    @php
+        // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
+        $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
+    @endphp
+
+    @if (session('notification'))
+        <div
+            class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transition-all duration-300
+            @if (session('notification.type') === 'success') bg-green-500
             @elseif(session('notification.type') === 'error') bg-red-500
             @else bg-yellow-500 @endif">
             {{ session('notification.message') }}
@@ -159,79 +165,119 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" required value="{{ old('recipient_name', $currentUser->name ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                    <input type="text" id="fullname" name="recipient_name" required
+                                        value="{{ old('recipient_name', $currentUser->name ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="fullname-error" class="text-xs text-red-500"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" required value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                    <input type="tel" id="phone" name="recipient_phone" required
+                                        value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="phone-error" class="text-xs text-red-500"></span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" required value="{{ old('recipient_email', $currentUser->email ?? '') }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                <input type="email" id="email" name="recipient_email" required
+                                    value="{{ old('recipient_email', $currentUser->email ?? '') }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                 <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
-                                        <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã lưu</label>
+                                        <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
+                                            lưu</label>
                                         <div class="space-y-2">
                                             @foreach ($addresses as $address)
                                                 <label class="flex items-center space-x-2 cursor-pointer">
-                                                    <input type="radio" name="selected_address" value="{{ $address->id }}" @if ($loop->first) checked @endif onchange="toggleAddressForm(false)"
-                                                        data-ward="{{ $address->ward }}" data-district="{{ $address->district }}" data-city="{{ $address->city }}" data-address="{{ $address->address_line }}">
+                                                    <input type="radio" name="selected_address"
+                                                        value="{{ $address->id }}"
+                                                        @if ($loop->first) checked @endif
+                                                        onchange="toggleAddressForm(false)"
+                                                        data-ward="{{ $address->ward }}"
+                                                        data-district="{{ $address->district }}"
+                                                        data-city="{{ $address->city }}"
+                                                        data-address="{{ $address->address_line }}" data-province-code="01"
+                                                        data-district-code="{{ $address->district_code ?? '' }}"
+                                                        data-ward-code="{{ $address->ward_code ?? '' }}">
                                                     <span>
-                                                        {{ $address->address_line }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
+                                                        {{ $address->address_line }}, {{ $address->ward }},
+                                                        {{ $address->district }}, {{ $address->city }}
                                                         @if ($address->is_default)
-                                                            <span class="text-xs text-orange-500 font-semibold">(Mặc định)</span>
+                                                            <span class="text-xs text-orange-500 font-semibold">(Mặc
+                                                                định)</span>
                                                         @endif
                                                     </span>
                                                 </label>
                                             @endforeach
                                             <label class="flex items-center space-x-2 cursor-pointer mt-2">
-                                                <input type="radio" name="selected_address" value="new" onchange="toggleAddressForm(true)">
+                                                <input type="radio" name="selected_address" value="new"
+                                                    onchange="toggleAddressForm(true)">
                                                 <span>Thêm địa chỉ mới</span>
                                             </label>
                                         </div>
                                     </div>
                                 @endif
-                                <div id="add-address-form" style="display: {{ isset($addresses) && count($addresses) > 0 ? 'none' : 'block' }};">
+                                <div id="add-address-form"
+                                    style="display: {{ isset($addresses) && count($addresses) > 0 ? 'none' : 'block' }};">
                                     <div class="form-group">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng
+                                            *</label>
                                         <div class="grid md:grid-cols-3 gap-4">
                                             <div class="form-group">
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố *</label>
-                                                <select id="province" name="province_code" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500" data-default-city="{{ $defaultAddress?->city ?? '' }}" @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif @if ($defaultAddress?->city_code) data-default-city-code="{{ $defaultAddress->city_code }}" @endif>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
+                                                    *</label>
+                                                <select id="province" name="province_code" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+                                                    data-default-city="{{ $defaultAddress?->city ?? '' }}"
+                                                    @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
+                                                    @if ($defaultAddress?->city_code) data-default-city-code="{{ $defaultAddress->city_code }}" @endif>
                                                     <option value="">Đang tải...</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện *</label>
-                                                <select id="district" name="district_code" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500" data-default-district="{{ $defaultAddress?->district ?? '' }}" @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif @if ($defaultAddress?->district_code) data-default-district-code="{{ $defaultAddress->district_code }}" @endif>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
+                                                    *</label>
+                                                <select id="district" name="district_code" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+                                                    data-default-district="{{ $defaultAddress?->district ?? '' }}"
+                                                    @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
+                                                    @if ($defaultAddress?->district_code) data-default-district-code="{{ $defaultAddress->district_code }}" @endif>
                                                     <option value="">Chọn quận/huyện</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã *</label>
-                                                <select id="ward" name="ward_code" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500" data-default-ward="{{ $defaultAddress?->ward ?? '' }}" @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif @if ($defaultAddress?->ward_code) data-default-ward-code="{{ $defaultAddress->ward_code }}" @endif>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
+                                                    *</label>
+                                                <select id="ward" name="ward_code" required
+                                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+                                                    data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
+                                                    @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
+                                                    @if ($defaultAddress?->ward_code) data-default-ward-code="{{ $defaultAddress->ward_code }}" @endif>
                                                     <option value="">Chọn phường/xã</option>
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
+                                        <textarea id="address" name="recipient_address" required rows="3"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+                                            placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú đơn hàng</label>
-                                <textarea id="order-notes" name="order_notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500" placeholder="Ghi chú thêm về đơn hàng (tùy chọn)"></textarea>
+                                <textarea id="order-notes" name="order_notes" rows="2"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
+                                    placeholder="Ghi chú thêm về đơn hàng (tùy chọn)"></textarea>
                             </div>
                         </div>
                         <div id="step1-next-btn-wrapper" class="mt-8 flex justify-end">
-                            <button type="button" id="next-step-1" class="px-8 py-3 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-full font-bold shadow-lg hover:from-orange-500 hover:to-orange-700 transition-all duration-200 flex items-center gap-2 text-lg border-2 border-orange-400 hover:border-orange-600">
+                            <button type="button" id="next-step-1"
+                                class="px-8 py-3 bg-gradient-to-r from-orange-400 to-orange-600 text-white rounded-full font-bold shadow-lg hover:from-orange-500 hover:to-orange-700 transition-all duration-200 flex items-center gap-2 text-lg border-2 border-orange-400 hover:border-orange-600">
                                 <span class="inline-block"><i class="fas fa-arrow-right"></i></span>
                                 <span>Bước tiếp theo</span>
                             </button>
@@ -242,11 +288,15 @@
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-xl font-semibold mb-6">Phương thức vận chuyển</h3>
                             <div class="space-y-4 mb-8">
-                                @foreach ($shippingMethods->whereIn('id', [1,2]) as $method)
-                                    <div class="payment-option border-2 border-gray-300 rounded-lg p-4 {{ $loop->first ? 'selected' : '' }} flex items-center" data-shipping="{{ $method->id }}">
-                                        <input type="radio" id="shipping{{ $method->id }}" name="shipping_method_id" value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }} class="mr-3 accent-orange-500">
+                                @foreach ($shippingMethods->whereIn('id', [1, 2]) as $method)
+                                    <div class="payment-option border-2 border-gray-300 rounded-lg p-4 {{ $loop->first ? 'selected' : '' }} flex items-center"
+                                        data-shipping="{{ $method->id }}">
+                                        <input type="radio" id="shipping{{ $method->id }}" name="shipping_method_id"
+                                            value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }}
+                                            class="mr-3 accent-orange-500">
                                         <div class="flex-1">
-                                            <label for="shipping{{ $method->id }}" class="font-medium cursor-pointer">{{ $method->name }}</label>
+                                            <label for="shipping{{ $method->id }}"
+                                                class="font-medium cursor-pointer">{{ $method->name }}</label>
                                             <p class="text-sm text-gray-600">{{ $method->description }}</p>
                                         </div>
                                         <i class="fas fa-truck text-orange-600 text-xl"></i>
@@ -255,27 +305,45 @@
                             </div>
                             <h3 class="text-xl font-semibold mb-6">Phương thức thanh toán</h3>
                             <div class="space-y-4">
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 selected flex items-center" data-payment="cod">
-                                    <input type="radio" id="cod" name="payment_method" value="cod" checked class="mr-3 accent-orange-500">
+                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 selected flex items-center"
+                                    data-payment="cod">
+                                    <input type="radio" id="cod" name="payment_method" value="cod" checked
+                                        class="mr-3 accent-orange-500">
                                     <div class="flex-1">
-                                        <label for="cod" class="font-medium cursor-pointer">Thanh toán khi nhận hàng (COD)</label>
+                                        <label for="cod" class="font-medium cursor-pointer">Thanh toán khi nhận hàng
+                                            (COD)</label>
                                         <p class="text-sm text-gray-600">Thanh toán bằng tiền mặt khi nhận được hàng</p>
                                     </div>
                                     <i class="fas fa-money-bill-wave text-orange-600 text-xl"></i>
                                 </div>
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center" data-payment="bank_transfer">
-                                    <input type="radio" id="banking" name="payment_method" value="bank_transfer" class="mr-3 accent-orange-500">
+
+                                {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
+                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
+                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                    data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
+                                    data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
+                                    <input type="radio" id="banking" name="payment_method" value="bank_transfer"
+                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
+                                        @if ($vnpayLocked)
+                                            <p class="text-xs text-red-600 mt-1">
+                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 2 phút.
+                                            </p>
+                                        @endif
                                     </div>
                                     <i class="fas fa-university text-orange-600 text-xl"></i>
                                 </div>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow-md p-6 mt-6 flex justify-between">
-                            <button type="button" id="prev-step-2" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i class="fas fa-arrow-left mr-2"></i>Quay lại</button>
-                            <button type="button" id="next-step-2" class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Bước tiếp theo<i class="fas fa-arrow-right ml-2"></i></button>
+                            <button type="button" id="prev-step-2"
+                                class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
+                                    class="fas fa-arrow-left mr-2"></i>Quay lại</button>
+                            <button type="button" id="next-step-2"
+                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Bước
+                                tiếp theo<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
                     {{-- STEP 3 --}}
@@ -296,12 +364,18 @@
                             </div>
                             <div class="flex items-center mb-6">
                                 <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
-                                <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#" class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của website</label>
+                                <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
+                                        class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
+                                    website</label>
                             </div>
                         </div>
                         <div class="bg-white rounded-lg shadow-md p-6 mt-6 flex justify-between">
-                            <button type="button" id="prev-step-3" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i class="fas fa-arrow-left mr-2"></i>Quay lại</button>
-                            <button type="button" id="confirm-order" class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Xác nhận<i class="fas fa-arrow-right ml-2"></i></button>
+                            <button type="button" id="prev-step-3"
+                                class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
+                                    class="fas fa-arrow-left mr-2"></i>Quay lại</button>
+                            <button type="button" id="confirm-order"
+                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Xác
+                                nhận<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
                 </form>
@@ -317,11 +391,19 @@
                                     $product = $item->product ?? null;
                                     $variant = $item->productVariant ?? null;
                                     $qty = (int) ($item->quantity ?? 1);
-                                    $safeId = $item->cart_item_id ?? ($product?->id ? $product->id : $loop->index) . ':' . ($variant?->id ?? 0);
+                                    $safeId =
+                                        $item->cart_item_id ??
+                                        ($product?->id ? $product->id : $loop->index) . ':' . ($variant?->id ?? 0);
                                     $productName = $item->product_name ?? ($product?->name ?? 'Sản phẩm');
                                     $imagePath = $item->image ?? null;
-                                    if (!$imagePath && $product && $product->productAllImages && $product->productAllImages->count() > 0) {
-                                        $imagePath = 'uploads/products/' . $product->productAllImages->first()->image_path;
+                                    if (
+                                        !$imagePath &&
+                                        $product &&
+                                        $product->productAllImages &&
+                                        $product->productAllImages->count() > 0
+                                    ) {
+                                        $imagePath =
+                                            'uploads/products/' . $product->productAllImages->first()->image_path;
                                     }
                                     $isAbsolute = $imagePath ? preg_match('~^https?://|^//~', $imagePath) : false;
                                     if (isset($item->price)) {
@@ -335,7 +417,9 @@
                                         $displayPrice = $product?->sale_price ?? ($product?->price ?? 0);
                                     }
                                 @endphp
-                                <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item" data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}" data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
+                                <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item"
+                                    data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}"
+                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @php
@@ -347,7 +431,9 @@
                                                 }
                                             @endphp
                                             @if ($imageUrl)
-                                                <img src="{{ $imageUrl }}" alt="{{ $productName }}" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                                <img src="{{ $imageUrl }}" alt="{{ $productName }}"
+                                                    class="w-full h-full object-cover"
+                                                    onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                             @else
                                                 <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                                                     <i class="fas fa-image text-gray-400"></i>
@@ -359,18 +445,22 @@
                                             @if (!empty($variant) && method_exists($variant, 'attributeValues'))
                                                 <p class="text-xs text-gray-500">
                                                     @foreach ($variant->attributeValues as $value)
-                                                        {{ $value->attribute->name }}: {{ $value->value }}@if (!$loop->last), @endif
+                                                        {{ $value->attribute->name }}: {{ $value->value }}@if (!$loop->last)
+                                                            ,
+                                                        @endif
                                                     @endforeach
                                                 </p>
-                                            @endif
+                                            @endif>
                                             <div class="flex items-center space-x-2 mt-1">
-                                                <span class="text-orange-500 font-semibold text-sm">{{ number_format($displayPrice) }}₫</span>
+                                                <span
+                                                    class="text-orange-500 font-semibold text-sm">{{ number_format($displayPrice) }}₫</span>
                                                 <span class="text-gray-500 text-sm">x {{ $qty }}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <span class="font-medium text-gray-900">{{ number_format($displayPrice * $qty) }}₫</span>
+                                        <span
+                                            class="font-medium text-gray-900">{{ number_format($displayPrice * $qty) }}₫</span>
                                     </div>
                                 </div>
                             @endforeach
@@ -384,23 +474,40 @@
                     {{-- MÃ GIẢM GIÁ --}}
                     <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
                         <div class="flex items-center justify-between mb-2">
-                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm giá</label>
-                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()" class="text-xs text-orange-600 underline">Danh sách</button>
+                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
+                                giá</label>
+                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
+                                class="text-xs text-orange-600 underline">Danh sách</button>
                         </div>
                         <div class="flex space-x-2 mb-1">
-                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã" class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
-                            <button type="button" onclick="applyCheckoutCoupon()" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp dụng</button>
-                            <button type="button" onclick="clearCheckoutCoupon()" class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm" title="Hủy">×</button>
+                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
+                            <button type="button" onclick="applyCheckoutCoupon()"
+                                class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
+                                dụng</button>
+                            <button type="button" onclick="clearCheckoutCoupon()"
+                                class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
+                                title="Hủy">×</button>
                         </div>
                         <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
-                        <div id="checkout-available-coupons" class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs"></div>
+                        <div id="checkout-available-coupons"
+                            class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+                        </div>
                     </div>
                     {{-- TỔNG TIỀN --}}
                     <div class="border-t pt-4 space-y-2">
-                        <div class="flex justify-between"><span>Tạm tính:</span><span id="subtotal">{{ number_format($subtotal) }}₫</span></div>
-                        <div class="flex justify-between"><span>Phí vận chuyển:</span><span id="shipping-fee">{{ number_format(($subtotal ?? 0) >= 3000000 ? 0 : 50000) }}₫</span></div>
-                        <div class="flex justify-between text-green-600" id="discount-row" style="display:none"><span>Giảm giá:</span><span id="discount-amount">-0₫</span></div>
-                        <div class="flex justify-between text-lg font-semibold border-t pt-2"><span>Tổng cộng:</span><span id="total-amount" class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span></div>
+                        <div class="flex justify-between"><span>Tạm tính:</span><span
+                                id="subtotal">{{ number_format($subtotal) }}₫</span></div>
+                        <div class="flex justify-between"><span>Phí vận chuyển:</span><span
+                                id="shipping-fee">{{ number_format(($subtotal ?? 0) >= 3000000 ? 0 : 50000) }}₫</span>
+                        </div>
+                        <div class="flex justify-between text-green-600" id="discount-row" style="display:none">
+                            <span>Giảm giá:</span><span id="discount-amount">-0₫</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-semibold border-t pt-2"><span>Tổng cộng:</span><span
+                                id="total-amount"
+                                class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -415,6 +522,7 @@
 
     <script>
         window.shippingMethods = @json($shippingMethods->pluck('name', 'id'));
+        window.vnpayLocked = {!! $vnpayLocked ? 'true' : 'false' !!};
     </script>
 
     <script>
@@ -426,7 +534,6 @@
                 form.style.display = 'block';
             } else {
                 form.style.display = 'none';
-                // Reset các trường nhập khi ẩn để tránh gửi dữ liệu thừa
                 var inputs = form.querySelectorAll('input, select, textarea');
                 inputs.forEach(function(input) {
                     if (input.type === 'radio' || input.type === 'checkbox') input.checked = false;
@@ -460,17 +567,42 @@
             msg.textContent = 'Đang kiểm tra...';
             msg.className = 'mt-1 text-xs text-gray-500';
 
-            fetch('/api/apply-coupon', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    body: JSON.stringify({
-                        coupon_code: code,
-                        subtotal
-                    })
+            // Collect product and category info from cart items
+            const cartItems = document.querySelectorAll('.checkout-item');
+            const cartProductIds = Array.from(cartItems)
+                .map(item => {
+                    const itemId = item.getAttribute('data-item-id');
+                    return itemId ? itemId.split(':')[0] : null;
                 })
+                .filter(id => id && id !== '')
+                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
+            const cartProductAmounts = Array.from(cartItems)
+                .map(item => {
+                    const itemId = item.getAttribute('data-item-id');
+                    const productId = itemId ? itemId.split(':')[0] : null;
+                    const amount = parseFloat(item.getAttribute('data-unit-price')) * parseInt(item.getAttribute('data-quantity'));
+                    return productId ? { id: productId, amount } : null;
+                })
+                .filter(x => x);
+            const cartCategoryIds = Array.from(cartItems)
+                .map(item => item.getAttribute('data-category-id'))
+                .filter(id => id && id !== '')
+                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
+
+            fetch('/api/apply-coupon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken()
+                },
+                body: JSON.stringify({
+                    coupon_code: code,
+                    subtotal,
+                    cart_product_ids: cartProductIds,
+                    cart_product_amounts: cartProductAmounts,
+                    cart_category_ids: cartCategoryIds
+                })
+            })
                 .then(r => r.json())
                 .then(data => {
                     if (!data.success) {
@@ -616,11 +748,7 @@
             const discount = Number(window.checkoutDiscount || 0);
             const method = document.querySelector('input[name="shipping_method_id"]:checked')?.value || '1';
             let shipping = 0;
-            if (method == '1') {
-                shipping = subtotal >= 3000000 ? 0 : 50000;
-            } else {
-                shipping = 0;
-            }
+            if (method == '1') shipping = subtotal >= 3000000 ? 0 : 50000;
             const total = Math.max(0, subtotal + shipping - discount);
             const subtotalEl = document.getElementById('subtotal');
             const shippingEl = document.getElementById('shipping-fee');
@@ -679,15 +807,11 @@
                                 `<span class="text-green-600"><i class="fas fa-check mr-1"></i>Mã "${restoredCoupon.code}" đã được khôi phục</span>`;
                             msg.className = 'mt-1 text-xs text-green-600';
                         }
-
-                        // Lưu vào localStorage để duy trì trạng thái
                         localStorage.setItem('appliedDiscount', JSON.stringify({
                             code: restoredCoupon.code,
                             amount: restoredCoupon.amount,
                             details: restoredCoupon.details
                         }));
-
-                        // Xóa session để tránh hiển thị lại khi refresh
                         fetch('{{ route('checkout.index') }}?clear_restored_coupon=1', {
                             method: 'GET'
                         });
@@ -724,7 +848,7 @@
                     if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
                     updateStepIndicators(step);
                     window.currentStep = step;
-                    updateStep1NextBtnVisibility(step); // Ensure button visibility syncs with step
+                    updateStep1NextBtnVisibility(step);
                     window.scrollTo({
                         top: 0,
                         behavior: 'smooth'
@@ -765,12 +889,9 @@
                 }
 
                 function validateStep1() {
-                    // Nếu chọn địa chỉ đã lưu thì không cần validate form nhập mới
                     var selected = document.querySelector('input[name="selected_address"]:checked');
-                    if (selected && selected.value !== 'new') {
-                        return true;
-                    }
-                    // Nếu chọn thêm địa chỉ mới thì validate như cũ
+                    if (selected && selected.value !== 'new') return true;
+
                     const required = ['fullname', 'phone', 'address', 'province', 'district', 'ward'];
                     let ok = true,
                         msgs = [];
@@ -842,7 +963,9 @@
                     const fullname = document.getElementById('fullname').value;
                     const phone = document.getElementById('phone').value;
                     let address = document.getElementById('address').value;
-                    let province = '', district = '', ward = '';
+                    let province = '',
+                        district = '',
+                        ward = '';
                     const selectedAddressRadio = document.querySelector('input[name="selected_address"]:checked');
                     if (selectedAddressRadio && selectedAddressRadio.value !== 'new') {
                         ward = selectedAddressRadio.dataset.ward || '';
@@ -862,9 +985,7 @@
                     const shipping = document.getElementById('shipping-summary');
                     const sm = document.querySelector('input[name="shipping_method_id"]:checked');
                     let shippingText = 'Chưa chọn';
-                    if (sm && window.shippingMethods) {
-                        shippingText = window.shippingMethods[sm.value] || 'Chưa chọn';
-                    }
+                    if (sm && window.shippingMethods) shippingText = window.shippingMethods[sm.value] || 'Chưa chọn';
                     shipping.innerHTML = `<div><strong>Phương thức:</strong> ${shippingText}</div>`;
 
                     const pay = document.getElementById('payment-summary');
@@ -876,11 +997,20 @@
                 function setupPaymentOptions() {
                     const opts = document.querySelectorAll('.payment-option');
                     opts.forEach(op => {
-                        op.addEventListener('click', function() {
+                        op.addEventListener('click', function(e) {
+                            // Nếu option bị disable (VNPay sau 3 lần hủy) => chặn
+                            if (this.dataset.disabled === 'true') {
+                                const reason = this.dataset.reason ||
+                                    'Phương thức này đã bị khóa. Vui lòng chọn COD.';
+                                alert(reason);
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return;
+                            }
                             opts.forEach(o => o.classList.remove('selected'));
                             this.classList.add('selected');
                             const radio = this.querySelector('input[type="radio"]');
-                            if (radio) {
+                            if (radio && !radio.disabled) {
                                 radio.checked = true;
                                 radio.dispatchEvent(new Event('change'));
                             }
@@ -909,7 +1039,7 @@
                                 const userCity = @json($defaultAddress?->city);
                                 if (userCity) {
                                     const opt = [...provinceSelect.options].find(o => o.text.trim()
-                                    .toLowerCase() === userCity.trim().toLowerCase());
+                                        .toLowerCase() === userCity.trim().toLowerCase());
                                     if (opt) {
                                         provinceSelect.value = opt.value;
                                         provinceSelect.dispatchEvent(new Event('change'));
@@ -1014,7 +1144,6 @@
                     }
                 });
             }
-
             const emailField = document.getElementById('email');
             if (emailField) {
                 emailField.addEventListener('input', function() {
@@ -1030,6 +1159,7 @@
                 });
             }
         }
+        });
 
         function validateFullname() {
             const fullname = document.getElementById('fullname');
@@ -1059,14 +1189,12 @@
                 email.classList.add('border-red-500');
                 return false;
             }
-            // Chỉ cho phép 1 dấu chấm cuối cùng và sau đó là 2-6 ký tự, không có gì sau đó
             const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
             if (!emailRegex.test(val)) {
                 msg.textContent = 'Email không đúng định dạng (VD: example@gmail.com)';
                 email.classList.add('border-red-500');
                 return false;
             }
-            // Không cho phép thêm ký tự sau đuôi domain
             const lastDot = val.lastIndexOf('.');
             if (lastDot === -1 || lastDot === val.length - 1) {
                 msg.textContent = 'Email không đúng định dạng (VD: example@gmail.com)';
@@ -1079,13 +1207,11 @@
                 email.classList.add('border-red-500');
                 return false;
             }
-            // Không cho phép ký tự nào sau đuôi domain
             if (val.length !== lastDot + afterDot.length + 1) {
                 msg.textContent = 'Email không đúng định dạng (VD: example@gmail.com)';
                 email.classList.add('border-red-500');
                 return false;
             }
-            // Không cho phép nhiều dấu chấm liên tiếp ở cuối
             if (/\.{2,}/.test(val.substring(lastDot))) {
                 msg.textContent = 'Email không đúng định dạng (VD: example@gmail.com)';
                 email.classList.add('border-red-500');
@@ -1122,6 +1248,12 @@
             if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
             if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
 
+            // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 3 trở đi)
+            if (window.vnpayLocked && paymentEl.value === 'bank_transfer') {
+                alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
+                return;
+            }
+
             const btn = document.getElementById('confirm-order');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
             btn.disabled = true;
@@ -1131,44 +1263,48 @@
 
             if (selected && selected.value !== 'new') {
                 formData.append('selected_address', selected.value);
-                formData.append('province', selected.dataset.city || '');
-                formData.append('district', selected.dataset.district || '');
-                formData.append('ward', selected.dataset.ward || '');
+                formData.append('province_code', selected.dataset.city || '');
+                formData.append('district_code', selected.dataset.district || '');
+                formData.append('ward_code', selected.dataset.ward || '');
                 formData.append('recipient_address', selected.dataset.address || '');
             } else {
                 const fullname = document.getElementById('fullname').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const emailVal = (document.getElementById('email').value || '').trim();
                 const address = document.getElementById('address').value.trim();
-                const province = document.getElementById('province').selectedOptions[0]?.text || '';
-                const district = document.getElementById('district').selectedOptions[0]?.text || '';
-                const ward = document.getElementById('ward').selectedOptions[0]?.text || '';
+                const provinceCode = document.getElementById('province').value;
+                const districtCode = document.getElementById('district').value;
+                const wardCode = document.getElementById('ward').value;
                 formData.append('recipient_name', fullname);
                 formData.append('recipient_phone', phone);
                 formData.append('recipient_email', emailVal);
-                formData.append('recipient_address', address);
-                formData.append('province', province);
-                formData.append('district', district);
-                formData.append('ward', ward);
+                const wardName = document.getElementById('ward').selectedOptions[0]?.text || '';
+                const districtName = document.getElementById('district').selectedOptions[0]?.text || '';
+                const provinceName = document.getElementById('province').selectedOptions[0]?.text || '';
+                const fullAddress = [address, wardName, districtName, provinceName].filter(Boolean).join(', ');
+                formData.append('recipient_address', fullAddress);
+                formData.append('province_code', provinceCode);
+                formData.append('district_code', districtCode);
+                formData.append('ward_code', wardCode);
             }
-            formData.append('shipping_method_id', shippingEl.value); // value là id (1 hoặc 2)
+            formData.append('shipping_method_id', shippingEl.value);
             formData.append('payment_method', paymentEl.value);
             formData.append('order_notes', document.getElementById('order-notes').value || '');
             const couponInput = document.getElementById('checkout-coupon-code');
-            if (couponInput && couponInput.value.trim()) {
-                formData.append('coupon_code', couponInput.value.trim());
-            }
+            if (couponInput && couponInput.value.trim()) formData.append('coupon_code', couponInput.value.trim());
+
             let selectedVal = document.getElementById('selected-input')?.value || '';
             if (!selectedVal) {
                 const domItems = Array.from(document.querySelectorAll('.checkout-item'));
                 if (domItems.length) {
                     const hasCartId = domItems.some(el => el.getAttribute('data-cart-id'));
                     selectedVal = domItems.map(el => hasCartId ? (el.getAttribute('data-cart-id') || '') :
-                        (el.getAttribute('data-item-id') || ''))
+                            (el.getAttribute('data-item-id') || ''))
                         .filter(Boolean).join(',');
                 }
             }
             formData.append('selected', selectedVal);
+
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = '{{ route('checkout.process') }}';
@@ -1182,7 +1318,6 @@
             document.body.appendChild(form);
             form.submit();
         }
-        });
 
         // Filter sản phẩm đã chọn
         function filterSelectedItems() {
@@ -1216,19 +1351,16 @@
                         }
                     }
                 }
-
                 if (selectedIds.length === 0) {
                     try {
                         const savedState = localStorage.getItem('checkout_state');
                         if (savedState) {
                             const state = JSON.parse(savedState);
-                            if (state.selected) {
-                                selectedIds = state.selected.split(',').map(id => id.trim()).filter(id => id);
-                            }
+                            if (state.selected) selectedIds = state.selected.split(',').map(id => id.trim()).filter(id =>
+                                id);
                         }
                     } catch {}
                 }
-
                 if (selectedIds.length === 0) return;
 
                 const checkoutItems = document.querySelectorAll('.checkout-item');
@@ -1308,17 +1440,16 @@
             }
         }
 
-        // --- Thay đổi đoạn JS tự động chọn địa chỉ ---
+        // --- Tự động chọn địa chỉ ---
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 const provinceSelect = document.getElementById('province');
                 const districtSelect = document.getElementById('district');
                 const wardSelect = document.getElementById('ward');
-                // Lấy tên từ data attribute
                 const defaultCity = provinceSelect?.getAttribute('data-default-city-name');
                 const defaultDistrict = districtSelect?.getAttribute('data-default-district-name');
                 const defaultWard = wardSelect?.getAttribute('data-default-ward-name');
-                // Chọn tỉnh/thành phố theo tên
+
                 if (provinceSelect && defaultCity) {
                     const opt = [...provinceSelect.options].find(o => o.text.trim().toLowerCase() ===
                         defaultCity.trim().toLowerCase());
@@ -1330,7 +1461,7 @@
                 setTimeout(function() {
                     if (districtSelect && defaultDistrict) {
                         const opt = [...districtSelect.options].find(o => o.text.trim()
-                        .toLowerCase() === defaultDistrict.trim().toLowerCase());
+                            .toLowerCase() === defaultDistrict.trim().toLowerCase());
                         if (opt) {
                             districtSelect.value = opt.value;
                             districtSelect.dispatchEvent(new Event('change'));
@@ -1358,7 +1489,7 @@
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken(),
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
             }).then(() => {
                 const messageDiv = document.querySelector('[data-message="payment-cancelled"]');
@@ -1366,15 +1497,13 @@
             });
         }
 
-        // Hide the step 1 next button except when on step 1
+        // Ẩn nút bước 1 khi không ở step 1
         function updateStep1NextBtnVisibility(currentStep) {
             var btnWrapper = document.getElementById('step1-next-btn-wrapper');
             if (btnWrapper) {
                 btnWrapper.style.display = (currentStep === 1) ? '' : 'none';
             }
         }
-        // Initial call
         updateStep1NextBtnVisibility(window.currentStep || 1);
-
     </script>
 @endpush

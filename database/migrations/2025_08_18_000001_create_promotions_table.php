@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->enum('type', ['all', 'category', 'product'])->default('all');
+            $table->enum('flash_type', ['all', 'category', 'product', 'flash_sale'])->default('all');
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
             $table->boolean('status')->default(true);

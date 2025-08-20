@@ -121,8 +121,10 @@
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
                 <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom"
-                        class="w-10 h-10 rounded-lg mr-3 object-cover">
+                    @php
+                        $clientLogo = \App\Models\Logo::where('type', 'client')->orderByDesc('id')->first();
+                    @endphp
+                    <img src="{{ $clientLogo ? asset('storage/' . $clientLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" alt="{{ $clientLogo->alt ?? 'Techvicom' }}" class="w-10 h-10 rounded-lg mr-3 object-cover">
                     <span class="text-xl font-bold text-gray-800">Techvicom</span>
                 </a>
             </div>
@@ -295,7 +297,6 @@
                                         </div>
                                         <div>
                                             <p class="font-semibold text-gray-800">{{ Auth::user()->name }}</p>
-                                            <p class="text-sm text-gray-500">Khách hàng thân thiết</p>
                                         </div>
                                     </div>
                                 </div>
@@ -571,18 +572,23 @@
                 variantHtml =
                     `<div class="text-xs text-gray-500">${item.attributes.map(a=>`${a.name}: ${a.value}`).join(', ')}</div>`;
             }
+            const isOutOfStock = (item.stock !== undefined && item.stock <= 0);
             return `<div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
-      <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}">
+      <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
       <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
         <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
         ${variantHtml}
         <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
-        <div class="flex items-center space-x-2 mt-1">
-          <button onclick="changeSidebarQuantity('${item.id}',-1)" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">-</button>
-          <span class="text-sm sidebar-qty" data-id="${item.id}">${item.quantity}</span>
-          <button onclick="changeSidebarQuantity('${item.id}',1)" class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100">+</button>
-        </div>
+        ${
+          isOutOfStock
+            ? `<div class=\"text-red-600 font-bold text-sm\">Hết hàng</div>`
+            : `<div class=\"flex items-center space-x-2 mt-1\">
+                <button onclick=\"changeSidebarQuantity('${item.id}',-1)\" class=\"w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100\">-</button>
+                <span class=\"text-sm sidebar-qty\" data-id=\"${item.id}\">${item.quantity}</span>
+                <button onclick=\"changeSidebarQuantity('${item.id}',1)\" class=\"w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100\">+</button>
+              </div>`
+        }
       </div>
       <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash text-sm"></i></button>
     </div>`;
@@ -616,7 +622,9 @@
         }
 
         selectAll.addEventListener('change', () => {
-            boxes.forEach(c => c.checked = selectAll.checked);
+            boxes.forEach(c => {
+                if (!c.disabled) c.checked = selectAll.checked;
+            });
             update();
         });
         boxes.forEach(c => c.addEventListener('change', update));
@@ -640,7 +648,9 @@
         });
 
         buyBtn.addEventListener('click', () => {
-            const ids = Array.from(boxes).filter(c => c.checked).map(c => c.value);
+            const ids = Array.from(boxes)
+                .filter(c => c.checked && !c.disabled)
+                .map(c => c.value);
             if (!ids.length) return;
             localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
             window.location.href = '{{ route('checkout.index') }}?selected=' + ids.join(',');
@@ -960,7 +970,9 @@
 
     /* Checkout */
     function handleSidebarCheckout() {
-        const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked')).map(c => c.value);
+        const selected = Array.from(document.querySelectorAll('.sidebar-item-checkbox:checked'))
+            .filter(c => !c.disabled)
+            .map(c => c.value);
         if (selected.length > 0) {
             localStorage.setItem('checkout_selected_items', JSON.stringify(selected));
             window.location.href = '{{ route('checkout.index') }}?selected=' + selected.join(',');

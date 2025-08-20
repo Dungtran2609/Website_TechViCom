@@ -97,6 +97,10 @@ Route::get('/test-check-cart', function () {
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Trang giới thiệu và chính sách
+Route::view('/about', 'client.about')->name('about');
+Route::view('/policy', 'client.policy')->name('policy');
+
 
 
 // Test cart functionality
@@ -181,6 +185,20 @@ Route::get('/debug-cart-data', function () {
         'cart_items' => $cartItems,
         'session_cart' => session()->get('cart', [])
     ]);
+});
+
+// Route resource cho promotions và mails (trong group admin)
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
+    // Quản lý mail động
+    Route::get('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendForm'])->name('mails.send');
+    Route::post('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'send'])->name('mails.send');
+    Route::get('mails/trash', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'trash'])->name('mails.trash');
+    Route::post('mails/{mail}/restore', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'restore'])->name('mails.restore');
+    Route::delete('mails/{mail}/force-delete', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'forceDelete'])->name('mails.forceDelete');
+    Route::post('mails/{mail}/toggle-auto-send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'toggleAutoSend'])->name('mails.toggleAutoSend');
+    Route::post('mails/{mail}/send-test', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendTest'])->name('mails.sendTest');
+    Route::resource('mails', App\Http\Controllers\Admin\Mails\AdminMailController::class)->names('mails');
 });
 
 // Test cart operations with debug
@@ -353,6 +371,9 @@ Route::prefix('products')->name('products.')->group(function () {
         Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
         Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
     });
+    
+    // Product comments filter (public access)
+    Route::get('/{productId}/comments/filter', [ClientProductCommentController::class, 'filterComments'])->name('comments.filter');
 });
 
 // Categories routes (public access)
@@ -367,6 +388,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/apply-coupon', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
     Route::post('/process', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'process'])->name('process');
     Route::get('/success/{orderId}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'success'])->name('success');
+    Route::get('/fail', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'fail'])->name('fail');
     
 });
 
@@ -459,6 +481,17 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::get('/addresses/{id}/edit', [ClientAccountController::class, 'editAddress'])->name('edit-address');
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
+    Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
+});
+
+// Client Orders Routes
+Route::prefix('client/orders')->name('client.orders.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'index'])->name('index');
+    Route::get('/{id}', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'show'])->name('show');
+    Route::post('/{id}/cancel', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'cancel'])->name('cancel');
+    Route::post('/{id}/confirm-payment', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmPayment'])->name('confirm-payment');
+    Route::post('/{id}/request-return', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'requestReturn'])->name('request-return');
+    Route::post('/{id}/confirm-received', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
 });
 
 
@@ -512,6 +545,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
         Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
         Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/reset-vnpay-counter', [AdminOrderController::class, 'resetVnpayCancelCount'])->name('reset-vnpay-counter');
     });
 
     // ... (Thêm lại các khối route admin khác của bạn vào đây)
@@ -532,6 +566,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::delete('/{id}', [ProductCommentAdminController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
         Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
+        Route::patch('/{id}/toggle-hidden', [ProductCommentAdminController::class, 'toggleHidden'])->name('toggle-hidden');
     });
 
 
@@ -695,6 +730,25 @@ Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCa
 // Yêu cầu file chứa các route xác thực (login, register...) của Laravel Breeze/UI
 require __DIR__ . '/auth.php';
 
+// Gợi ý fix lỗi: View [client.accounts.orders] not found
+
+// Route quản lý logo admin phải nằm trong group admin
+
+
+
+// =========================================================================
+// === ADMIN ROUTES ===
+// =========================================================================
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // ...existing admin routes...
+
+    // Quản lý logo admin
+    Route::resource('logos', \App\Http\Controllers\Admin\Logo\AdminLogoController::class)->names('logos');
+});
+
+// 1. Tạo file: resources/views/client/accounts/orders.blade.php
+// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
+// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.
 // Gợi ý fix lỗi: View [client.accounts.orders] not found
 // 1. Tạo file: resources/views/client/accounts/orders.blade.php
 // 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);

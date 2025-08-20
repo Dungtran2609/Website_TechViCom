@@ -95,7 +95,8 @@ class ClientCartController extends Controller
                     'price' => $price,
                     'quantity' => $quantity,
                     'image' => $image,
-                    'variant' => is_object($cartItem) ? $cartItem->productVariant : null
+                    'variant' => is_object($cartItem) ? $cartItem->productVariant : null,
+                    'stock' => isset($cartItem->productVariant) && $cartItem->productVariant ? $cartItem->productVariant->stock : ($product->stock ?? 0),
                 ];
             }
             return response()->json([

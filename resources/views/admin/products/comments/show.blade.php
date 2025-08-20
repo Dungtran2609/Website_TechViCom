@@ -10,6 +10,14 @@
         <div class="card-body">
             <p><strong>Sản phẩm:</strong> {{ $comment->product->name ?? '-' }}</p>
             <p><strong>Người dùng:</strong> {{ $comment->user->name ?? '-' }}</p>
+            <p><strong>Đơn hàng:</strong> 
+                @if($comment->order)
+                    {{ $comment->order->random_code ?? $comment->order->code ?? ('DH' . str_pad($comment->order->id, 6, '0', STR_PAD_LEFT)) }}
+                    <span class="badge bg-success ms-2">Đã nhận hàng</span>
+                @else
+                    <span class="text-muted">Không có thông tin đơn hàng</span>
+                @endif
+            </p>
             <p><strong>Ngày gửi:</strong> {{ $comment->created_at->format('d/m/Y - H:i') }}</p>
             <p><strong>Đánh giá:</strong>
                 @if($comment->rating)

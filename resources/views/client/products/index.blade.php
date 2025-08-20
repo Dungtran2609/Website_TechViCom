@@ -44,12 +44,11 @@
             overflow: hidden;
         }
 
-        /* Ảnh sản phẩm kiểu FPT: ô vuông, nét; phù hợp ảnh lớn/4K nếu có */
+        /* Ảnh sản phẩm kiểu FPT */
         .product-image-wrap {
             position: relative;
             width: 100%;
             aspect-ratio: 1/1;
-            /* khung vuông */
             background: #fff;
             overflow: hidden;
             border-top-left-radius: 0.5rem;
@@ -60,12 +59,10 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* cắt đều */
             image-rendering: auto;
-            /* hiển thị nét */
         }
 
-        /* Trái tim yêu thích luôn hiện */
+        /* Tim yêu thích: luôn hiện và giữ trạng thái bằng class is-active */
         .fav-btn {
             position: absolute;
             top: .5rem;
@@ -76,7 +73,18 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
         }
 
-        /* Swiper arrows/pagination */
+        .fav-btn i {
+            transition: transform .15s;
+        }
+
+        .fav-btn.is-active i {
+            color: #ff6c2f !important;
+        }
+
+        .fav-btn:not(.is-active) i {
+            color: #9ca3af !important;
+        }
+
         .swiper-button-next,
         .swiper-button-prev {
             color: #fff;
@@ -92,7 +100,6 @@
             opacity: 1;
         }
 
-        /* Danh mục slider */
         .cat-swiper .swiper-slide {
             width: auto;
         }
@@ -118,7 +125,7 @@
         </div>
     </nav>
 
-    <!-- Page Header with Banner Slider (thay ô tìm kiếm) -->
+    <!-- Page Header với Banner Slider -->
     <section class="bg-gradient-to-r from-[#ff6c2f] to-[#e55a28] text-white pt-6 pb-10">
         <div class="container mx-auto px-4">
             <div class="text-center mb-4">
@@ -146,7 +153,6 @@
                                     loading="eager" decoding="async" fetchpriority="high">
                             </div>
                         @empty
-                            {{-- Fallback nếu chưa có banner trong DB --}}
                             <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
                                     src="{{ asset('client_css/images/banners/banner1.jpg') }}" alt="Banner 1"></div>
                             <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
@@ -220,18 +226,12 @@
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Thương hiệu</h4>
                             <div class="space-y-2">
-                                <label class="flex items-center"><input type="checkbox" value="apple"
-                                        class="mr-2 brand-filter"><span>Apple</span></label>
-                                <label class="flex items-center"><input type="checkbox" value="samsung"
-                                        class="mr-2 brand-filter"><span>Samsung</span></label>
-                                <label class="flex items-center"><input type="checkbox" value="xiaomi"
-                                        class="mr-2 brand-filter"><span>Xiaomi</span></label>
-                                <label class="flex items-center"><input type="checkbox" value="oppo"
-                                        class="mr-2 brand-filter"><span>OPPO</span></label>
-                                <label class="flex items-center"><input type="checkbox" value="vivo"
-                                        class="mr-2 brand-filter"><span>Vivo</span></label>
-                                <label class="flex items-center"><input type="checkbox" value="huawei"
-                                        class="mr-2 brand-filter"><span>Huawei</span></label>
+                                @foreach ($brands as $b)
+                                    <label class="flex items-center">
+                                        <input type="checkbox" value="{{ $b->slug }}" class="mr-2 brand-filter">
+                                        <span>{{ $b->name }}</span>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
 
@@ -269,39 +269,31 @@
                             </div>
                         </div>
 
-                        <!-- Rating Filter -->
+                        <!-- Rating Filter: 1–5 sao -->
                         <div class="mb-6">
                             <h4 class="font-semibold text-gray-700 mb-3">Đánh giá</h4>
                             <div class="space-y-2">
                                 <label class="flex items-center"><input type="radio" name="rating" value=""
                                         class="mr-2 rating-filter" checked><span>Tất cả</span></label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="5" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2"><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                                        <span>5 sao</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="4" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2"><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="far fa-star"></i></div>
-                                        <span>4 sao trở lên</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="radio" name="rating" value="3" class="mr-2 rating-filter">
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm mr-2"><i class="fas fa-star"></i><i
-                                                class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                                class="far fa-star"></i><i class="far fa-star"></i></div>
-                                        <span>3 sao trở lên</span>
-                                    </div>
-                                </label>
+
+                                @for ($r = 1; $r <= 5; $r++)
+                                    <label class="flex items-center">
+                                        <input type="radio" name="rating" value="{{ $r }}"
+                                            class="mr-2 rating-filter">
+                                        <div class="flex items-center">
+                                            <div class="flex text-yellow-400 text-sm mr-2">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <= $r)
+                                                        <i class="fas fa-star"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <span>{{ $r }} sao</span>
+                                        </div>
+                                    </label>
+                                @endfor
                             </div>
                         </div>
 
@@ -343,10 +335,80 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-grid">
                         @forelse($products as $product)
                             @php
-                                // FIX: đảm bảo $activeVariants luôn tồn tại
-                                $activeVariants = $product->variants ?? collect();
                                 $minFilter = request('min_price');
                                 $maxFilter = request('max_price');
+                                $selectedRams = collect(explode(',', request('ram', '')))
+                                    ->filter()
+                                    ->values();
+                                $selectedStorages = collect(explode(',', request('storage', '')))
+                                    ->filter()
+                                    ->values();
+
+                                $variants = $product->variants ?? collect();
+
+                                // Lọc theo RAM & Storage (trên cùng 1 biến thể)
+                                $variants = $variants->filter(function ($v) use ($selectedRams, $selectedStorages) {
+                                    $ok = true;
+                                    if ($selectedRams->count()) {
+                                        $ok =
+                                            $ok &&
+                                            $v->attributeValues->contains(function ($av) use ($selectedRams) {
+                                                if ((int) $av->attribute_id !== 2) {
+                                                    return false;
+                                                }
+                                                $val = strtolower((string) $av->value);
+                                                $val = (int) str_replace('gb', '', $val);
+                                                return in_array($val, $selectedRams->map(fn($x) => (int) $x)->all());
+                                            });
+                                    }
+                                    if ($ok && $selectedStorages->count()) {
+                                        $ok =
+                                            $ok &&
+                                            $v->attributeValues->contains(function ($av) use ($selectedStorages) {
+                                                if ((int) $av->attribute_id !== 3) {
+                                                    return false;
+                                                }
+                                                $val = strtolower((string) $av->value);
+                                                $gb = str_contains($val, 'tb')
+                                                    ? (int) str_replace('tb', '', $val) * 1024
+                                                    : (int) str_replace('gb', '', $val);
+                                                return in_array($gb, $selectedStorages->map(fn($x) => (int) $x)->all());
+                                            });
+                                    }
+                                    return $ok;
+                                });
+
+                                // Lọc theo GIÁ hiệu lực
+                                $variants = $variants->filter(function ($v) use ($minFilter, $maxFilter) {
+                                    $price = $v->sale_price && $v->sale_price < $v->price ? $v->sale_price : $v->price;
+                                    if ($minFilter && $price < $minFilter) {
+                                        return false;
+                                    }
+                                    if ($maxFilter && $price > $maxFilter) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+
+                                // Tính min/max
+                                if ($product->flash_sale_price && $variants->count()) {
+                                    // Nếu có giá flash sale, dùng giá này cho tất cả biến thể (giả định chỉ có 1 biến thể)
+                                    $minPrice = $maxPrice = $product->flash_sale_price;
+                                } elseif ($variants->count()) {
+                                    $prices = $variants->map(
+                                        fn($v) => $v->sale_price && $v->sale_price < $v->price
+                                            ? $v->sale_price
+                                            : $v->price,
+                                    );
+                                    $minPrice = $prices->min();
+                                    $maxPrice = $prices->max();
+                                } else {
+                                    $minPrice = null;
+                                    $maxPrice = null;
+                                }
+
+                                $stars = (int) round($product->avg_rating ?? 0);
+                                $reviewsCount = (int) ($product->reviews_count ?? 0);
                             @endphp
 
                             <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group product-card"
@@ -358,122 +420,58 @@
                                             : asset('client_css/images/placeholder.svg');
                                     @endphp
                                     <img src="{{ $thumb }}" alt="{{ $product->name }}" class="product-image"
-                                        loading="lazy" decoding="async"
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
 
-                                    {{-- Giảm giá --}}
-                                    @if ($product->sale_price && $product->sale_price < $product->price)
-                                        @php $discount = round((($product->price - $product->sale_price) / $product->price) * 100); @endphp
-                                        <div
-                                            class="absolute top-2 left-2 bg-[#ff6c2f] text-white px-2 py-1 rounded text-sm font-bold">
-                                            -{{ $discount }}%</div>
-                                    @endif
-
-                                    {{-- Tim yêu thích cố định góc trên phải --}}
-                                    <button onclick="event.stopPropagation()" class="fav-btn">
-                                        <i class="fas fa-heart text-gray-400 hover:text-[#ff6c2f]"></i>
+                                    {{-- Tim yêu thích: một chiều --}}
+                                    <button onclick="event.stopPropagation()" class="fav-btn favorite-once"
+                                        aria-label="Yêu thích" data-product-id="{{ $product->id }}">
+                                        <i class="far fa-heart"></i>
                                     </button>
                                 </div>
 
                                 <div class="p-4">
                                     <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
 
-                                    {{-- GIÁ (trước) + Lượt xem (phải) --}}
+                                    {{-- GIÁ + Lượt xem --}}
                                     <div class="flex items-center justify-between mb-2">
                                         <div>
-                                            @php
-                                                $displayPrice = null;
-
-                                                if ($product->type === 'variable' && $activeVariants->count()) {
-                                                    $filtered = $activeVariants->filter(function ($v) use (
-                                                        $minFilter,
-                                                        $maxFilter,
-                                                    ) {
-                                                        if ($minFilter && $v->price < $minFilter) {
-                                                            return false;
-                                                        }
-                                                        if ($maxFilter && $v->price > $maxFilter) {
-                                                            return false;
-                                                        }
-                                                        return true;
-                                                    });
-                                                    if ($filtered->count()) {
-                                                        $minPrice = $filtered->min('price');
-                                                        $maxPrice = $filtered->max('price');
-                                                        $displayPrice =
-                                                            $minPrice == $maxPrice
-                                                                ? number_format($minPrice) . '₫'
-                                                                : number_format($minPrice) .
-                                                                    '₫ - ' .
-                                                                    number_format($maxPrice) .
-                                                                    '₫';
-                                                    } else {
-                                                        $displayPrice =
-                                                            '<span class="text-lg font-bold text-[#ff6c2f]">0₫</span>';
-                                                    }
-                                                } else {
-                                                    // simple
-                                                    $variant = $activeVariants->first();
-                                                    $price = $variant ? $variant->price : 0;
-                                                    $sale_price =
-                                                        $variant &&
-                                                        $variant->sale_price &&
-                                                        $variant->sale_price < $variant->price
-                                                            ? $variant->sale_price
-                                                            : null;
-                                                    $priceToCheck = $sale_price ?? $price;
-                                                    $show = true;
-                                                    if ($minFilter && $priceToCheck < $minFilter) {
-                                                        $show = false;
-                                                    }
-                                                    if ($maxFilter && $priceToCheck > $maxFilter) {
-                                                        $show = false;
-                                                    }
-                                                    if ($show && $variant) {
-                                                        if ($sale_price) {
-                                                            $displayPrice =
-                                                                '<span class="text-lg font-bold text-[#ff6c2f]">' .
-                                                                number_format($sale_price) .
-                                                                '₫</span>';
-                                                            $displayPrice .=
-                                                                '<span class="text-sm text-gray-500 line-through ml-2">' .
-                                                                number_format($price) .
-                                                                '₫</span>';
-                                                        } else {
-                                                            $displayPrice =
-                                                                '<span class="text-lg font-bold text-[#ff6c2f]">' .
-                                                                number_format($price) .
-                                                                '₫</span>';
-                                                        }
-                                                    } else {
-                                                        $displayPrice =
-                                                            '<span class="text-lg font-bold text-[#ff6c2f]">0₫</span>';
-                                                    }
-                                                }
-                                            @endphp
-                                            {!! $displayPrice !!}
+                                            @if ($product->flash_sale_price && $variants->count())
+                                                <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                                @php $variant = $variants->first(); @endphp
+                                                @if($variant && $variant->price > $product->flash_sale_price)
+                                                    <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                                @endif
+                                                @if($product->discount_percent > 0)
+                                                    <span class="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded">-{{ $product->discount_percent }}%</span>
+                                                @endif
+                                            @elseif (!is_null($minPrice) && !is_null($maxPrice))
+                                                @if ($minPrice == $maxPrice)
+                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
+                                                @else
+                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫ - {{ number_format($maxPrice) }}₫</span>
+                                                @endif
+                                            @else
+                                                <span class="text-lg font-bold text-[#ff6c2f]">0₫</span>
+                                            @endif
                                         </div>
-
-                                        {{-- Lượt xem --}}
                                         <div class="flex items-center text-gray-500 text-sm">
                                             <i class="far fa-eye mr-1"></i>
-                                            <span>{{ number_format($product->views ?? 0) }}</span>
+                                            <span>{{ number_format($product->view_count ?? 0) }}</span>
                                         </div>
                                     </div>
 
-                                    {{-- ĐÁNH GIÁ chuyển xuống dưới giá --}}
+                                    {{-- Đánh giá dưới giá --}}
                                     <div class="flex items-center">
                                         <div class="flex text-yellow-400 text-sm">
                                             @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <= ($product->rating ?? 4))
+                                                @if ($i <= $stars)
                                                     <i class="fas fa-star"></i>
                                                 @else
                                                     <i class="far fa-star"></i>
                                                 @endif
                                             @endfor
                                         </div>
-                                        <span
-                                            class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                                        <span class="text-gray-500 text-sm ml-2">({{ $reviewsCount }})</span>
                                     </div>
                                 </div>
                             </div>
@@ -488,56 +486,9 @@
                             </div>
                         @endforelse
 
-                        <!-- Pagination -->
                         @if ($products->hasPages())
                             <div class="mt-8">{{ $products->links() }}</div>
                         @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Brands -->
-    <section class="py-12 bg-white">
-        <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu nổi bật</h2>
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-6">
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/apple.png" alt="Apple" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/samsung.png" alt="Samsung"
-                            class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/xiaomi.png" alt="Xiaomi" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('uploads/products/') }}brands/oppo.png" alt="Oppo" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('uploads/products/') }}placeholder.svg'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('admin_css/images/brands/vivo.png') }}" alt="Vivo" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('admin_css/images/placeholder.svg') }}'">
-                    </div>
-                </div>
-                <div class="text-center group cursor-pointer">
-                    <div class="bg-gray-50 rounded-lg p-6 hover:shadow-lg transition group-hover:scale-105">
-                        <img src="{{ asset('admin_css/images/brands/huawei.png') }}" alt="Huawei" class="mx-auto h-12"
-                            onerror="this.onerror=null; this.src='{{ asset('admin_css/images/placeholder.svg') }}'">
                     </div>
                 </div>
             </div>
@@ -563,7 +514,7 @@
             },
             navigation: {
                 nextEl: '.banner-swiper .swiper-button-next',
-                prevEl: '.banner-swiper .swiper-button-prev',
+                prevEl: '.banner-swiper .swiper-button-prev'
             }
         });
 
@@ -574,43 +525,37 @@
             freeMode: true,
             navigation: {
                 nextEl: '.cat-swiper .swiper-button-next',
-                prevEl: '.cat-swiper .swiper-button-prev',
+                prevEl: '.cat-swiper .swiper-button-prev'
             },
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            // ====== Auto-check filters from URL ======
+            // --- Auto-check filters from URL ---
             const urlParams = new URLSearchParams(window.location.search);
-
-            // Brand
             if (urlParams.has('brands')) {
                 const brands = urlParams.get('brands').split(',');
                 document.querySelectorAll('.brand-filter').forEach(cb => {
                     if (brands.includes(cb.value)) cb.checked = true;
                 });
             }
-            // RAM
             if (urlParams.has('ram')) {
                 const rams = urlParams.get('ram').split(',');
                 document.querySelectorAll('.ram-filter').forEach(cb => {
                     if (rams.includes(cb.value)) cb.checked = true;
                 });
             }
-            // Storage
             if (urlParams.has('storage')) {
                 const storages = urlParams.get('storage').split(',');
                 document.querySelectorAll('.storage-filter').forEach(cb => {
                     if (storages.includes(cb.value)) cb.checked = true;
                 });
             }
-            // Rating
             if (urlParams.has('rating')) {
                 const rating = urlParams.get('rating');
                 document.querySelectorAll('.rating-filter').forEach(cb => {
                     cb.checked = (cb.value === rating);
                 });
             }
-            // Price
             if (urlParams.has('min_price') || urlParams.has('max_price')) {
                 const min = urlParams.get('min_price') ? parseInt(urlParams.get('min_price')) : null;
                 const max = urlParams.get('max_price') ? parseInt(urlParams.get('max_price')) : null;
@@ -627,35 +572,33 @@
                 });
             }
 
-            // ====== Category buttons functionality ======
+            // Category buttons
             document.querySelectorAll('.category-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const category = this.dataset.category;
                     const url = new URL(window.location);
                     if (category) url.searchParams.set('category', category);
                     else url.searchParams.delete('category');
-                    url.searchParams.delete('page'); // Reset page
+                    url.searchParams.delete('page');
                     window.location.href = url.toString();
                 });
             });
 
-            // ====== Sort functionality ======
+            // Sort change
             const sortFilter = document.getElementById('sort-filter');
             if (sortFilter) {
                 sortFilter.addEventListener('change', function() {
                     const url = new URL(window.location);
                     if (this.value && this.value !== 'latest') url.searchParams.set('sort', this.value);
                     else url.searchParams.delete('sort');
-                    url.searchParams.delete('page'); // Reset page
+                    url.searchParams.delete('page');
                     window.location.href = url.toString();
                 });
             }
 
-            // ====== Filter functionality ======
+            // Filters change
             document.querySelectorAll('.price-filter, .brand-filter, .ram-filter, .storage-filter, .rating-filter')
-                .forEach(filter => {
-                    filter.addEventListener('change', applyFilters);
-                });
+                .forEach(filter => filter.addEventListener('change', applyFilters));
 
             // Clear filters
             const clearFiltersBtn = document.getElementById('clear-filters');
@@ -678,7 +621,7 @@
             function applyFilters() {
                 const url = new URL(window.location);
 
-                // Price
+                // Price (triệu -> VND)
                 const priceFilter = document.querySelector('input[name="price"]:checked');
                 if (priceFilter && priceFilter.value) {
                     const priceRange = priceFilter.value.split('-');
@@ -709,19 +652,72 @@
                 if (storageFilters.length > 0) url.searchParams.set('storage', storageFilters.join(','));
                 else url.searchParams.delete('storage');
 
-                // Rating
+                // Rating: 1..5
                 const ratingFilter = document.querySelector('input[name="rating"]:checked');
                 if (ratingFilter && ratingFilter.value) url.searchParams.set('rating', ratingFilter.value);
                 else url.searchParams.delete('rating');
 
-                // Reset page
                 url.searchParams.delete('page');
-
                 window.location.href = url.toString();
+            }
+
+            // Yêu thích: một chiều, lưu localStorage
+            const FAVORITES_KEY = 'favorites';
+            const favBtns = document.querySelectorAll('.favorite-once');
+
+            function readFavs() {
+                try {
+                    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function writeFavs(arr) {
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(arr));
+            }
+
+            function setHeart(btn, on) {
+                const icon = btn.querySelector('i');
+                btn.classList.toggle('is-active', !!on);
+                if (icon) {
+                    icon.classList.toggle('fas', !!on);
+                    icon.classList.toggle('far', !on);
+                }
+                if (on) btn.dataset.locked = '1';
+            }
+
+            const favInit = readFavs();
+            favBtns.forEach(btn => {
+                const id = parseInt(btn.dataset.productId);
+                setHeart(btn, favInit.includes(id));
+            });
+
+            favBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const id = parseInt(this.dataset.productId);
+                    if (this.dataset.locked === '1') return; // đã thích -> không tắt
+                    setHeart(this, true);
+                    let favs = readFavs();
+                    if (!favs.includes(id)) {
+                        favs.push(id);
+                        writeFavs(favs);
+                    }
+                    toast('Đã thêm vào yêu thích');
+                });
+            });
+
+            function toast(msg) {
+                const node = document.createElement('div');
+                node.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white';
+                node.style.backgroundColor = '#10b981';
+                node.textContent = msg;
+                document.body.appendChild(node);
+                setTimeout(() => node.remove(), 1500);
             }
         });
 
-        // Điều hướng tới chi tiết
         function goToProductDetail(productId) {
             window.location.href = `/products/${productId}`;
         }

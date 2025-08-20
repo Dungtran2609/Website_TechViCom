@@ -15,13 +15,36 @@ class AdminNewsController extends Controller
     {
         $query = News::with(['category', 'author']);
 
+        // Tìm kiếm theo tiêu đề
         if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-    $news = $query->orderByDesc('published_at')->paginate(12);
+        // Lọc theo danh mục
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
 
-        return view('admin.news.index', compact('news'));
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Lọc theo ngày đăng
+        if ($request->filled('date_from')) {
+            $query->whereDate('published_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('published_at', '<=', $request->date_to);
+        }
+
+        $news = $query->orderByDesc('published_at')->paginate(12);
+
+        // Lấy danh sách danh mục cho filter
+        $categories = NewsCategory::all();
+
+        return view('admin.news.index', compact('news', 'categories'));
     }
 
 

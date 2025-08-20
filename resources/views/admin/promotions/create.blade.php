@@ -1,8 +1,15 @@
+                // ...existing code...
 @extends('admin.layouts.app')
 @section('title', 'Tạo chương trình khuyến mãi')
 
 @section('content')
 <div class="container py-4">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Thành công!</strong> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+        </div>
+    @endif
     <h1 class="h4 fw-bold mb-4 text-dark">➕ Tạo chương trình khuyến mãi</h1>
 
     <div class="card shadow-sm border-0">
@@ -10,29 +17,7 @@
             <form action="{{ route('admin.promotions.store') }}" method="POST">
                 @csrf
 
-                {{-- Chọn mã giảm giá (coupon) --}}
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Chọn mã giảm giá áp dụng cho chương trình</label>
-                    <div class="mb-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectAllCoupons(true)">Chọn tất cả</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllCoupons(false)">Bỏ chọn tất cả</button>
-                    </div>
-                    <div class="border rounded p-2" style="max-height:220px;overflow:auto;">
-                        @foreach($coupons as $coupon)
-                            <div class="form-check">
-                                <input class="form-check-input coupon-checkbox" type="checkbox" name="coupons[]" id="coupon_{{ $coupon->id }}" value="{{ $coupon->id }}">
-                                <label class="form-check-label" for="coupon_{{ $coupon->id }}">
-                                    {{ $coupon->code }} ({{ $coupon->discount_type }}: {{ $coupon->value }})
-                                </label>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                <script>
-                function selectAllCoupons(checked) {
-                    document.querySelectorAll('.coupon-checkbox').forEach(cb => cb.checked = checked);
-                }
-                </script>
+                {{-- Coupon selection removed --}}
 
                 {{-- Tên chương trình --}}
                 <div class="mb-3">
@@ -63,13 +48,17 @@
                         <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectAllCategories(true)">Chọn tất cả</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllCategories(false)">Bỏ chọn tất cả</button>
                     </div>
-                    <div class="border rounded p-2" style="max-height:220px;overflow:auto;">
+                    <div class="border rounded p-2 mb-2" style="max-height:220px;overflow:auto;">
                         @foreach($categories as $category)
                             <div class="form-check">
                                 <input class="form-check-input category-checkbox" type="checkbox" name="categories[]" id="category_{{ $category->id }}" value="{{ $category->id }}">
                                 <label class="form-check-label" for="category_{{ $category->id }}">{{ $category->name }}</label>
                             </div>
                         @endforeach
+                    </div>
+                    <div class="mb-2">
+                        <label for="category_discount_value" class="form-label fw-semibold">Giảm giá (%) cho tất cả sản phẩm thuộc danh mục</label>
+                        <input type="number" min="1" max="100" step="1" class="form-control" name="category_discount_value" id="category_discount_value" value="{{ old('category_discount_value', 10) }}" placeholder="Nhập % giảm giá (ví dụ: 10)">
                     </div>
                 </div>
                 <script>
@@ -87,17 +76,99 @@
                     </div>
                     <div class="border rounded p-2" style="max-height:220px;overflow:auto;">
                         @foreach($products as $product)
-                            <div class="form-check">
-                                <input class="form-check-input product-checkbox" type="checkbox" name="products[]" id="product_{{ $product->id }}" value="{{ $product->id }}">
-                                <label class="form-check-label" for="product_{{ $product->id }}">{{ $product->name }}</label>
+                            <div class="form-check d-flex align-items-center mb-2">
+                                <input class="form-check-input product-checkbox me-2" type="checkbox" name="products[]" id="product_{{ $product->id }}" value="{{ $product->id }}">
+                                <label class="form-check-label me-3" for="product_{{ $product->id }}">{{ $product->name }}</label>
+                                <input type="number" step="1000" min="0" class="form-control form-control-sm sale-price-input" name="sale_prices[{{ $product->id }}]" placeholder="Giá flash sale" style="width:130px; display:none;">
                             </div>
                         @endforeach
                     </div>
                 </div>
                 <script>
                 function selectAllProducts(checked) {
-                    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = checked);
+                    document.querySelectorAll('.product-checkbox').forEach(cb => {
+                        cb.checked = checked;
+                        cb.dispatchEvent(new Event('change'));
+                    });
                 }
+                // Show sale price input if flash_type is flash_sale
+                function updateSalePriceInputs() {
+                    let flashType = document.getElementById('flash_type') ? document.getElementById('flash_type').value : '';
+                    document.querySelectorAll('.sale-price-input').forEach(function(input) {
+                        input.style.display = (flashType === 'flash_sale') ? 'inline-block' : 'none';
+                    });
+                }
+                // Hiển thị danh sách sản phẩm đã chọn
+                function updateSelectedProductsList() {
+                    let checked = Array.from(document.querySelectorAll('.product-checkbox:checked'));
+                    let ul = document.getElementById('selected-products-ul');
+                    let listDiv = document.getElementById('selected-products-list');
+                    ul.innerHTML = '';
+                    if (checked.length > 0) {
+                        checked.forEach(cb => {
+                            let name = cb.closest('.form-check').querySelector('label').innerText;
+                            let li = document.createElement('li');
+                            li.className = 'list-group-item';
+                            li.innerText = name;
+                            ul.appendChild(li);
+                        });
+                        listDiv.style.display = 'block';
+                    } else {
+                        listDiv.style.display = 'none';
+                    }
+                }
+                // Hiển thị sản phẩm thuộc danh mục đã chọn
+                function updateCategoryProductsList() {
+                    let checked = Array.from(document.querySelectorAll('.category-checkbox:checked'));
+                    let ul = document.getElementById('category-products-ul');
+                    let listDiv = document.getElementById('category-products-list');
+                    ul.innerHTML = '';
+                    if (checked.length > 0) {
+                        // Lấy id danh mục
+                        let categoryIds = checked.map(cb => cb.value);
+                        // Gọi ajax lấy sản phẩm theo danh mục
+                        fetch('/admin/ajax/products-by-categories?ids=' + categoryIds.join(','))
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data && data.length > 0) {
+                                    data.forEach(prod => {
+                                        let li = document.createElement('li');
+                                        li.className = 'list-group-item';
+                                        li.innerText = prod.name;
+                                        ul.appendChild(li);
+                                    });
+                                    listDiv.style.display = 'block';
+                                } else {
+                                    listDiv.style.display = 'none';
+                                }
+                            });
+                    } else {
+                        listDiv.style.display = 'none';
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', function() {
+                    // If you have a flash_type select, listen to its change
+                    let flashTypeSelect = document.getElementById('flash_type');
+                    if (flashTypeSelect) {
+                        flashTypeSelect.addEventListener('change', updateSalePriceInputs);
+                        updateSalePriceInputs();
+                    }
+                    // Show/hide sale price input only for checked products
+                    document.querySelectorAll('.product-checkbox').forEach(function(cb) {
+                        cb.addEventListener('change', function() {
+                            updateSelectedProductsList();
+                            let saleInput = this.closest('.form-check').querySelector('.sale-price-input');
+                            if (saleInput) {
+                                saleInput.style.display = (this.checked && (flashTypeSelect && flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
+                            }
+                        });
+                    });
+                    document.querySelectorAll('.category-checkbox').forEach(function(cb) {
+                        cb.addEventListener('change', function() {
+                            updateCategoryProductsList();
+                        });
+                    });
+                });
                 </script>
 
                 {{-- Ngày bắt đầu / kết thúc --}}

@@ -23,8 +23,12 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalProducts = Product::count();
         $totalOrders = Order::count();
-        $totalRevenue = Order::where('status', 'delivered')
-                            ->where('payment_status', 'paid')
+        // Tính doanh thu: đơn hàng khách đã xác nhận nhận hàng (bao gồm cả COD và online đã thanh toán)
+        $totalRevenue = Order::where('status', 'received')
+                            ->where(function($query) {
+                                $query->where('payment_status', 'paid')
+                                      ->orWhere('payment_method', 'cod');
+                            })
                             ->sum('final_total');
 
         // Thống kê đơn hàng theo trạng thái
@@ -37,13 +41,16 @@ class AdminController extends Controller
             'returned' => Order::where('status', 'returned')->count(),
         ];
 
-        // Doanh thu 7 ngày gần đây
+        // Doanh thu 7 ngày gần đây (bao gồm cả COD và online đã thanh toán)
         $revenueLastWeek = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $revenue = Order::whereDate('created_at', $date)
-                           ->where('status', 'delivered')
-                           ->where('payment_status', 'paid')
+                           ->where('status', 'received')
+                           ->where(function($query) {
+                               $query->where('payment_status', 'paid')
+                                     ->orWhere('payment_method', 'cod');
+                           })
                            ->sum('final_total');
             $revenueLastWeek[] = [
                 'date' => $date->format('d/m'),

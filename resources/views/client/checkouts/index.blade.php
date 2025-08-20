@@ -329,7 +329,7 @@
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
                                         @if ($vnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn COD hoặc thử lại sau 24 giờ.
+                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 2 phút.
                                             </p>
                                         @endif
                                     </div>
@@ -1223,9 +1223,9 @@
             if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
             if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
 
-            // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 4 trở đi)
+            // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 3 trở đi)
             if (window.vnpayLocked && paymentEl.value === 'bank_transfer') {
-                alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng đổi sang COD để tiếp tục.');
+                alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                 return;
             }
 

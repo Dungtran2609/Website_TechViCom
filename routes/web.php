@@ -371,6 +371,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/apply-coupon', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'applyCoupon'])->name('apply-coupon');
     Route::post('/process', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'process'])->name('process');
     Route::get('/success/{orderId}', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'success'])->name('success');
+    Route::get('/fail', [App\Http\Controllers\Client\Checkouts\ClientCheckoutController::class, 'fail'])->name('fail');
     
 });
 
@@ -464,6 +465,16 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
     Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
+});
+
+// Client Orders Routes
+Route::prefix('client/orders')->name('client.orders.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'index'])->name('index');
+    Route::get('/{id}', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'show'])->name('show');
+    Route::post('/{id}/cancel', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'cancel'])->name('cancel');
+    Route::post('/{id}/confirm-payment', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmPayment'])->name('confirm-payment');
+    Route::post('/{id}/request-return', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'requestReturn'])->name('request-return');
+    Route::post('/{id}/confirm-received', [App\Http\Controllers\Client\Orders\ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
 });
 
 

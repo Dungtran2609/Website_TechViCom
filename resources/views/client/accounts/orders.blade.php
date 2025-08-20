@@ -24,55 +24,60 @@
     </h1>
 
     {{-- Tabs trạng thái --}}
-    <ul class="nav nav-pills gap-2 flex-wrap mb-3">
+    <div class="btn-group mb-3" role="group">
         @foreach($statusList as $key => $label)
             @php
                 $qs = array_filter(['status' => $key, 'q' => $search]);
                 $href = url()->current() . (count($qs) ? ('?' . http_build_query($qs)) : '');
+                $isActive = $currentStatus === $key;
             @endphp
-            <li class="nav-item">
-                <a href="{{ $href }}" class="nav-link {{ $currentStatus === $key ? 'active' : 'btn-outline-primary' }}">
-                    {{ $label }}
-                    @isset($counts[$key])
-                        <span class="badge bg-light text-dark ms-1">{{ $counts[$key] }}</span>
-                    @endisset
-                    @if($key === 'all' && isset($counts['all']))
-                        <span class="badge bg-light text-dark ms-1">{{ $counts['all'] }}</span>
-                    @endif
-                </a>
-            </li>
+            <input type="radio" class="btn-check" name="orderFilter" id="{{ $key }}" value="{{ $key }}" {{ $isActive ? 'checked' : '' }}>
+            <label class="btn btn-outline-primary btn-sm" for="{{ $key }}">
+                {{ $label }}
+                @isset($counts[$key])
+                    <span class="badge bg-light text-dark ms-1">{{ $counts[$key] }}</span>
+                @endisset
+                @if($key === 'all' && isset($counts['all']))
+                    <span class="badge bg-light text-dark ms-1">{{ $counts['all'] }}</span>
+                @endif
+            </label>
         @endforeach
-    </ul>
+    </div>
 
     {{-- Tìm kiếm + lọc --}}
-    <form method="GET" action="{{ url()->current() }}" class="row g-2 mb-4">
+    <div class="row g-2 mb-4">
         <div class="col-lg-6">
             <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                <input name="q" value="{{ $search }}" type="text" class="form-control"
+                <input id="searchInput" value="{{ $search }}" type="text" class="form-control"
                        placeholder="Tìm theo mã đơn (VD: DH000123 hoặc ID) hoặc tên sản phẩm">
+                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
         </div>
 
         <div class="col-lg-3">
-            <select name="status" class="form-select">
+            <select id="statusFilter" class="form-select">
+                <option value="">Tất cả trạng thái</option>
                 @foreach($statusList as $key => $label)
-                    <option value="{{ $key }}" {{ $currentStatus === $key ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
+                    @if($key !== 'all')
+                        <option value="{{ $key }}" {{ $currentStatus === $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endif
                 @endforeach
             </select>
         </div>
 
         <div class="col-lg-3 d-flex gap-2">
-            <button class="btn btn-primary" type="submit">
+            <button class="btn btn-primary" type="button" id="filterBtn">
                 <i class="fas fa-filter me-1"></i>Lọc
             </button>
             @if($search || ($currentStatus && $currentStatus !== 'all'))
-                <a class="btn btn-outline-secondary" href="{{ url()->current() }}">Xóa lọc</a>
+                <a class="btn btn-outline-secondary" href="{{ url()->current() }}" id="clearFilterBtn">Xóa lọc</a>
             @endif
         </div>
-    </form>
+    </div>
 
     @if($orders->count() === 0)
         <div class="alert alert-info rounded shadow-sm">
@@ -94,13 +99,13 @@
                 <tbody>
                 @php
                     $statusColor = [
-                        'pending' => 'secondary',
+                        'pending' => 'warning',
                         'processing' => 'info',
-                        'shipped' => 'warning',
+                        'shipped' => 'primary',
                         'delivered' => 'success',
                         'received' => 'success',
                         'cancelled' => 'danger',
-                        'returned' => 'dark',
+                        'returned' => 'secondary',
                     ];
                 @endphp
 
@@ -148,16 +153,15 @@
                         <td>
                             @php $key = $order->status ?? 'pending'; @endphp
                             <span class="badge bg-{{ $statusColor[$key] ?? 'secondary' }} px-3 py-2">
-                                <i class="fas fa-circle me-1"></i>
                                 @switch($order->status)
-                                    @case('pending')    Chờ xử lý   @break
-                                    @case('processing') Đang xử lý   @break
-                                    @case('shipped')    Đang giao    @break
-                                    @case('delivered')  Đã giao      @break
-                                    @case('received')   Đã nhận hàng @break
-                                    @case('cancelled')  Đã hủy       @break
-                                    @case('returned')   Trả hàng     @break
-                                    @default {{ $order->status }}
+                                    @case('pending')    <i class="fas fa-clock me-1"></i>Chờ xử lý   @break
+                                    @case('processing') <i class="fas fa-cog me-1"></i>Đang xử lý   @break
+                                    @case('shipped')    <i class="fas fa-truck me-1"></i>Đang giao    @break
+                                    @case('delivered')  <i class="fas fa-check-circle me-1"></i>Đã giao      @break
+                                    @case('received')   <i class="fas fa-check-double me-1"></i>Đã nhận hàng @break
+                                    @case('cancelled')  <i class="fas fa-times-circle me-1"></i>Đã hủy       @break
+                                    @case('returned')   <i class="fas fa-undo me-1"></i>Trả hàng     @break
+                                    @default <i class="fas fa-question me-1"></i>{{ $order->status }}
                                 @endswitch
                             </span>
 
@@ -174,7 +178,7 @@
                         </td>
 
                         <td class="text-center">
-                            <a href="{{ route('accounts.order-detail', $order->id) }}"
+                            <a href="{{ route('client.orders.show', $order->id) }}"
                                class="btn btn-outline-primary btn-sm rounded-pill">
                                 <i class="fas fa-eye"></i> Xem
                             </a>
@@ -201,6 +205,109 @@
 .btn-outline-primary:hover{box-shadow:0 2px 8px rgba(0,123,255,.15);}
 .nav-pills .nav-link{border-radius:999px;}
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all filter controls
+    const filterButtons = document.querySelectorAll('input[name="orderFilter"]');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const filterBtn = document.getElementById('filterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    
+    // Function to update URL and redirect
+    function updateUrlAndRedirect() {
+        const currentUrl = new URL(window.location);
+        
+        // Get current values
+        const searchTerm = searchInput ? searchInput.value.trim() : '';
+        const statusValue = statusFilter ? statusFilter.value : '';
+        
+        // Update URL parameters
+        if (searchTerm) {
+            currentUrl.searchParams.set('q', searchTerm);
+        } else {
+            currentUrl.searchParams.delete('q');
+        }
+        
+        if (statusValue) {
+            currentUrl.searchParams.set('status', statusValue);
+        } else {
+            currentUrl.searchParams.delete('status');
+        }
+        
+                    window.location.href = currentUrl.toString();
+    }
+    
+    // Filter buttons event - Server-side filtering
+    filterButtons.forEach((button, index) => {
+        button.addEventListener('change', function() {
+            const filterValue = this.value;
+            
+            // Update status filter dropdown to match
+            if (statusFilter) {
+                statusFilter.value = filterValue === 'all' ? '' : filterValue;
+            }
+            
+            updateUrlAndRedirect();
+        });
+    });
+    
+    // Search button event
+    if (searchBtn) {
+        searchBtn.addEventListener('click', updateUrlAndRedirect);
+    }
+    
+    // Search input enter key
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateUrlAndRedirect();
+            }
+        });
+    }
+    
+    // Status filter change
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            const filterValue = this.value;
+            
+            // Update radio buttons to match
+            filterButtons.forEach(button => {
+                if (filterValue === '' && button.value === 'all') {
+                    button.checked = true;
+                } else if (button.value === filterValue) {
+                    button.checked = true;
+                } else {
+                    button.checked = false;
+                }
+            });
+            
+            updateUrlAndRedirect();
+        });
+    }
+    
+    // Filter button event
+    if (filterBtn) {
+        filterBtn.addEventListener('click', updateUrlAndRedirect);
+    }
+    
+    // Clear filter button
+    if (clearFilterBtn) {
+        clearFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = window.location.pathname;
+        });
+    }
+    
+    // Debug: Log current URL parameters
+    // const urlParams = new URLSearchParams(window.location.search);
+    // console.log('Current URL params:', Object.fromEntries(urlParams));
+});
+</script>
 @endpush
 
 

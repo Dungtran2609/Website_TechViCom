@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class ClientOrderController extends Controller
@@ -48,8 +49,15 @@ class ClientOrderController extends Controller
         $search = trim((string) $request->input('q', ''));
         $status = $request->input('status', 'all');
 
+        // Debug: Log parameters
+        Log::info('Order filter parameters', [
+            'status' => $status,
+            'search' => $search,
+            'all_params' => $request->all()
+        ]);
+
         // Thứ tự trạng thái để ORDER BY FIELD
-        $statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'received', 'returned', 'cancelled'];
+        $statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'received', 'cancelled', 'returned'];
 
         $query = Order::with(['orderItems.productVariant.product', 'returns'])
             ->where('user_id', $user->id);
@@ -57,6 +65,9 @@ class ClientOrderController extends Controller
         // Lọc theo trạng thái (DB-side)
         if ($status !== 'all' && in_array($status, $statusOrder, true)) {
             $query->where('status', $status);
+            Log::info('Filtering by status', ['status' => $status]);
+        } else {
+            Log::info('No status filter applied', ['status' => $status]);
         }
 
         // Tìm kiếm: DH000123 / ID / tên sản phẩm
@@ -75,12 +86,9 @@ class ClientOrderController extends Controller
                     return;
                 }
 
-                // Tên sản phẩm: nếu có FULLTEXT(name) sẽ dùng MATCH, không có fallback LIKE
-                $q->orWhereHas('orderItems.productVariant.product', function ($p) use ($search) {
-                    $p->where(function ($pp) use ($search) {
-                        $pp->whereRaw("MATCH(name) AGAINST (? IN BOOLEAN MODE)", [$search . '*'])
-                            ->orWhere('name', 'LIKE', '%' . $search . '%');
-                    });
+                // Tên sản phẩm: tìm theo name_product trong order_items
+                $q->orWhereHas('orderItems', function ($oi) use ($search) {
+                    $oi->where('name_product', 'LIKE', '%' . $search . '%');
                 });
             });
         }
@@ -91,6 +99,14 @@ class ClientOrderController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Debug: Log query and results
+        Log::info('Order query results', [
+            'total_orders' => $orders->total(),
+            'current_page' => $orders->currentPage(),
+            'per_page' => $orders->perPage(),
+            'status_counts' => $orders->getCollection()->groupBy('status')->map->count()
+        ]);
+
         // (Tuỳ view cần) số lượng theo từng trạng thái cho badge/tabs
         $counts = Order::where('user_id', $user->id)
             ->select('status', DB::raw('COUNT(*) as total'))
@@ -99,7 +115,7 @@ class ClientOrderController extends Controller
             ->all();
         $counts['all'] = Order::where('user_id', $user->id)->count();
 
-        return view('client.orders.index', [
+        return view('client.accounts.orders', [
             'orders' => $orders,
             'status' => $status,
             'search' => $search,
@@ -221,7 +237,7 @@ class ClientOrderController extends Controller
                 ->with('success', 'Đặt hàng thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Order creation failed: ' . $e->getMessage());
+            Log::error('Order creation failed: ' . $e->getMessage());
 
             return back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại.')->withInput();
         }

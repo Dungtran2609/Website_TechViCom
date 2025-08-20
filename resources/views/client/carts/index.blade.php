@@ -104,9 +104,10 @@
                     </div>
 
                     <div class="flex items-center space-x-4">
-                      @if($isOutOfStock)
-                        <div class="text-red-600 font-bold text-base">Hết hàng</div>
-                      @else
+                                              @if($isOutOfStock)
+                          <div class="text-red-600 font-bold text-base">Hết hàng</div>
+                          <div class="text-xs text-gray-500 mt-1">Không thể thanh toán</div>
+                        @else
                         <div class="flex items-center space-x-2">
                           <button
                             type="button"
@@ -188,12 +189,16 @@
                   </div>
               </div>
 
-              <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4" id="checkout-all-btn">
+              <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed" id="checkout-all-btn">
                 Thanh toán tất cả
               </button>
               <button type="button" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition mb-4 hidden" id="checkout-selected-btn">
                 Thanh toán sản phẩm đã chọn
               </button>
+              
+              <div class="text-xs text-gray-500 text-center mb-4" id="checkout-status">
+                <!-- Thông báo trạng thái sẽ hiển thị ở đây -->
+              </div>
 
               <a href="{{ route('home') }}" class="block text-center text-[#ff6c2f] hover:underline">← Tiếp tục mua sắm</a>
             </div>
@@ -351,29 +356,33 @@ async function deleteSelected(){
 }
 // ===== Thanh toán =====
 function proceedToCheckout(){ // thanh toán tất cả
-  // Lấy tất cả sản phẩm trong giỏ còn hàng
-  const ids = Array.from(document.querySelectorAll('.cart-item'))
-    .map(el => el.dataset.id)
-    .filter((id, idx) => {
-      const cb = cbs[idx];
-      return cb && !cb.disabled;
-    });
-  if(ids.length === 0){
-    showNotification('Giỏ hàng trống hoặc không có sản phẩm còn hàng','error');
+  // Lấy tất cả sản phẩm trong giỏ còn hàng (không bị disabled)
+  const items = Array.from(document.querySelectorAll('.cart-item'));
+  const availableItems = items.filter(item => {
+    const checkbox = item.querySelector('.item-checkbox');
+    return checkbox && !checkbox.disabled;
+  });
+  
+  if(availableItems.length === 0){
+    showNotification('Không có sản phẩm nào còn hàng để thanh toán','error');
     return;
   }
+  
+  const ids = availableItems.map(item => item.dataset.id);
   localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
   window.location.href = '{{ route("checkout.index") }}?selected=' + ids.join(',');
 }
 
 function proceedToCheckoutSelected(){ // thanh toán theo chọn
-  const ids = Array.from(document.querySelectorAll('.item-checkbox:checked'))
-    .filter(cb => !cb.disabled)
-    .map(cb => cb.value);
-  if(ids.length === 0){
-    showNotification('Vui lòng chọn sản phẩm để thanh toán','error');
+  const checkedBoxes = Array.from(document.querySelectorAll('.item-checkbox:checked'));
+  const availableCheckedBoxes = checkedBoxes.filter(cb => !cb.disabled);
+  
+  if(availableCheckedBoxes.length === 0){
+    showNotification('Vui lòng chọn sản phẩm còn hàng để thanh toán','error');
     return;
   }
+  
+  const ids = availableCheckedBoxes.map(cb => cb.value);
   localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
   window.location.href = '{{ route("checkout.index") }}?selected=' + ids.join(',');
 }
@@ -387,6 +396,15 @@ function initSelectionFeatures(){
   const btnSel=document.getElementById('checkout-selected-btn');
 
   if(!selectAll) return;
+  
+  // Nếu không có sản phẩm nào, ẩn các nút thanh toán
+  if(cbs.length === 0) {
+    if(btnAll) btnAll.style.display = 'none';
+    if(btnSel) btnSel.style.display = 'none';
+    const statusEl = document.getElementById('checkout-status');
+    if(statusEl) statusEl.textContent = 'Giỏ hàng trống';
+    return;
+  }
 
   function refresh(){
     const checkedCount = Array.from(cbs).filter(cb=>cb.checked).length;
@@ -399,15 +417,37 @@ function initSelectionFeatures(){
     // - Chọn TẤT CẢ → chỉ hiện "Thanh toán tất cả" & enable
     // - Chọn một phần → hiện "Thanh toán sản phẩm đã chọn"
     // - Chưa chọn gì → chỉ hiện "Thanh toán tất cả" nhưng disable
-    if(allChecked){
+    const availableItems = Array.from(cbs).filter(cb => !cb.disabled);
+    const hasAvailableItems = availableItems.length > 0;
+    const statusEl = document.getElementById('checkout-status');
+    
+    if(allChecked && hasAvailableItems){
       btnAll.classList.remove('hidden'); btnAll.disabled = false;
       btnSel.classList.add('hidden');
+      if(statusEl) {
+        statusEl.textContent = `Đã chọn ${checkedCount} sản phẩm còn hàng`;
+        statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+      }
     } else if(anyChecked){
       btnAll.classList.add('hidden');
       btnSel.classList.remove('hidden');
+      if(statusEl) {
+        statusEl.textContent = `Đã chọn ${checkedCount} sản phẩm để thanh toán`;
+        statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+      }
     } else {
-      btnAll.classList.remove('hidden'); btnAll.disabled = true;
+      btnAll.classList.remove('hidden'); 
+      btnAll.disabled = !hasAvailableItems;
       btnSel.classList.add('hidden');
+      if(statusEl) {
+        if(hasAvailableItems) {
+          statusEl.textContent = 'Chưa chọn sản phẩm nào';
+          statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+        } else {
+          statusEl.textContent = 'Tất cả sản phẩm đều hết hàng';
+          statusEl.className = 'text-xs text-red-500 text-center mb-4';
+        }
+      }
     }
 
     // Mỗi lần thay đổi lựa chọn: reset mã và tính lại tổng

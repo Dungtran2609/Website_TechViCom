@@ -437,6 +437,12 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
         // Nếu client gửi status rõ ràng thì ưu tiên theo client
         if (!empty($data['status'])) {
+            // Nếu chuyển từ trạng thái khác sang cancelled, hoàn lại stock
+            if ($data['status'] === 'cancelled' && $oldStatus !== 'cancelled') {
+                // Hoàn lại stock khi admin hủy đơn hàng
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
+            }
+            
             if ($data['status'] === 'received') {
                 $order->status = 'received';
                 $order->shipped_at = now();

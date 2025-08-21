@@ -42,6 +42,7 @@ use App\Http\Controllers\Client\News\ClientNewsController;
 use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Products\ClientProductController;
+use App\Http\Controllers\Client\InvoiceController;
 
 // --- OTHER Controllers ---
 use App\Http\Controllers\Auth\SocialController;
@@ -103,7 +104,12 @@ Route::view('/about', 'client.pages.about')->name('about');
 Route::view('/policy', 'client.pages.policy')->name('policy');
 Route::view('/store-system', 'client.pages.store_system')->name('client.store_system');
 Route::view('/warranty', 'client.pages.warranty')->name('warranty');
-Route::view('/invoice', 'client.pages.invoice')->name('invoice');
+// Invoice routes
+Route::get('/invoice', [InvoiceController::class, 'index'])->name('client.invoice.index');
+Route::post('/invoice/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])->name('client.invoice.send-code');
+Route::post('/invoice/verify-code', [InvoiceController::class, 'verifyCode'])->name('client.invoice.verify-code');
+Route::get('/invoice/order/{id}', [InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
+Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
 Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('authorized_dealer');
 Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');

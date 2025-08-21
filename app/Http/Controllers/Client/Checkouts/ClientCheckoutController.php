@@ -1010,7 +1010,7 @@ class ClientCheckoutController extends Controller
                 session()->forget('repayment_order_id');
             } else {
                 // Tạo đơn hàng mới
-                $order = Order::create([
+                $orderData = [
                     'user_id'            => Auth::id(),
                     'order_number'       => 'ORD-' . time() . '-' . (Auth::id() ?? 'guest'),
 
@@ -1035,7 +1035,17 @@ class ClientCheckoutController extends Controller
                     'final_total'        => $finalTotal,
                     'status'             => 'pending',
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
-                ]);
+                ];
+
+                // Nếu là khách vãng lai, lưu thông tin guest
+                if (!Auth::check()) {
+                    $orderData['guest_name'] = $addressData['recipient_name'];
+                    $orderData['guest_email'] = $addressData['recipient_email'];
+                    $orderData['guest_phone'] = $addressData['recipient_phone'];
+                    $orderData['user_id'] = null; // Đảm bảo user_id là null cho khách vãng lai
+                }
+
+                $order = Order::create($orderData);
 
                 foreach ($cartItems as $item) {
                     $price     = (float)$item->price;

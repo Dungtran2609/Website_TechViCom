@@ -41,7 +41,7 @@
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách vận chuyển</a></li>
                     <li><a href="/policy" class="hover:text-orange-400 transition">Chính sách trả góp</a></li>
                     <li><a href="/warranty" class="hover:text-orange-400 transition">Tra cứu bảo hành</a></li>
-                    <li><a href="{{ route('invoice') }}" class="hover:text-orange-400 transition">Tra cứu hóa đơn</a></li>
+                    <li><a href="{{ route('client.invoice.index') }}" class="hover:text-orange-400 transition">Tra cứu hóa đơn</a></li>
                 </ul>
             </div>
 

@@ -88,9 +88,8 @@ class AdminRoleController extends Controller
             $role = Role::create([
                 'name' => $request->input('name'),
                 'slug' => Str::slug($request->input('name')),
-                'status' => $request->input('status', 'active'),
+                'status' => $request->boolean('status', true),
             ]);
-
             // Gán quyền cho vai trò
             if ($request->has('permissions')) {
                 $role->permissions()->sync($request->input('permissions'));
@@ -134,7 +133,7 @@ class AdminRoleController extends Controller
             $role->update([
                 'name' => $request->input('name'),
                 'slug' => Str::slug($request->input('name')),
-                'status' => $request->input('status', 'active'),
+                'status' => $request->boolean('status', true),
             ]);
 
             // Cập nhật quyền cho vai trò
@@ -164,7 +163,7 @@ class AdminRoleController extends Controller
         try {
             $role->load(['permissions:id,name']);
             $permissions = $role->permissions;
-            
+
             return view('admin.roles.show', compact('role', 'permissions'));
         } catch (Exception $e) {
             return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải chi tiết vai trò.');
@@ -201,7 +200,7 @@ class AdminRoleController extends Controller
                         ->withCount('permissions')
                         ->orderBy('deleted_at', 'desc')
                         ->get();
-                        
+
             return view('admin.roles.trashed', compact('roles'));
         } catch (Exception $e) {
             return redirect()->route('admin.roles.index')->with('error', 'Có lỗi xảy ra khi tải danh sách vai trò đã xóa.');
@@ -241,7 +240,7 @@ class AdminRoleController extends Controller
 
             // Xóa quan hệ với permissions
             $role->permissions()->detach();
-            
+
             // Xóa vĩnh viễn
             $role->forceDelete();
 

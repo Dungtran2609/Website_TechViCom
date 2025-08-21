@@ -8,7 +8,7 @@
     <style>
         :root{
             /* CHIỀU CAO ẢNH - đổi 1 chỗ là xong */
-            --prod-img-h: 200px; /* ví dụ 200px, chỉnh theo ý bạn */
+            --prod-img-h: 300px; /* Chiều cao ảnh giống hình bạn gửi */
         }
         /* Product Card Styles */
         .product-card {
@@ -36,7 +36,7 @@
             justify-content: center;
             overflow: hidden;
         }
-        /* Ảnh hiển thị 4K-ready + không bị cắt */
+        /* Ảnh hiển thị đầy đủ không bị cắt */
         .product-image {
             width: 100%;
             height: 100%;
@@ -84,13 +84,23 @@
         .empty-state p { color: #9ca3af; margin-bottom: 30px; }
 
 
-        /* Sort */
-        .sort-select {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            background: white;
-            color: #374151;
+        /* Show/Hide buttons */
+        .show-more-btn, .hide-some-btn {
+            background: #ff6c2f;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .show-more-btn:hover, .hide-some-btn:hover {
+            background: #e55a28;
+            transform: translateY(-2px);
+        }
+        .product-card.hidden {
+            display: none;
         }
     </style>
 @endpush
@@ -116,25 +126,14 @@
         </div>
 
 
-        <!-- Sort + Count -->
+        <!-- Count -->
         <div class="flex justify-between items-center mb-6">
             <span id="product-count" class="text-gray-600">{{ count($products ?? []) }} sản phẩm yêu thích</span>
-            <div class="flex items-center space-x-4">
-                <label for="sort-select" class="text-sm text-gray-600">Sắp xếp:</label>
-                <select id="sort-select" class="sort-select">
-                    <option value="newest">Mới nhất</option>
-                    <option value="oldest">Cũ nhất</option>
-                    <option value="price-low">Giá tăng dần</option>
-                    <option value="price-high">Giá giảm dần</option>
-                    <option value="name-asc">Tên A-Z</option>
-                    <option value="name-desc">Tên Z-A</option>
-                </select>
-            </div>
         </div>
 
 
         <!-- Products Grid: 5 cột trên desktop -->
-        <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div id="products-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             @forelse($products as $product)
                 @php
                     $variant = $product->variants->first();
@@ -152,21 +151,24 @@
                 @endphp
 
 
-                <div class="product-card"
+                <div class="product-card show"
                      data-product-id="{{ $product->id }}"
                      data-href="{{ route('products.show', $product->id) }}">
                     <div class="relative">
                         <div class="product-image-wrap">
-                            <picture class="w-full h-full">
-                                <source media="(min-width:1536px) and (min-resolution: 2dppx)" srcset="{{ $base ?? $f4k }}">
-                                <source media="(min-width:1280px)" srcset="{{ $base ?? $f2k }}">
-                                <source media="(min-width:768px)" srcset="{{ $base ?? $fhd }}">
-                                <img src="{{ $base ?? $fhd }}"
+                            @if($base)
+                                <img src="{{ $base }}"
                                      alt="{{ $product->name }}"
                                      class="product-image"
-                                     loading="lazy" decoding="async"
-                                     onerror="this.onerror=null; this.src='{{ $f4k }}'">
-                            </picture>
+                                     loading="lazy"
+                                     onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                            @else
+                                <div class="flex flex-col items-center justify-center text-gray-400 text-center">
+                                    <i class="fas fa-image text-4xl mb-2"></i>
+                                    <div class="text-sm">Hình ảnh không tồn tại</div>
+                                    <div class="text-xs">No Image Available</div>
+                                </div>
+                            @endif
                         </div>
 
 
@@ -230,24 +232,119 @@
                     @endif
                 </div>
             @endforelse
-        </div>
-    </div>
-</div>
-@endsection
+                 </div>
+         
+         <!-- Show More/Hide Some Buttons -->
+         <div class="text-center mt-8" id="show-hide-buttons" style="display: none;">
+             <button id="show-more-btn" class="show-more-btn mr-4">
+                 <i class="fas fa-plus mr-2"></i>Xem thêm sản phẩm
+             </button>
+             <button id="hide-some-btn" class="hide-some-btn">
+                 <i class="fas fa-minus mr-2"></i>Ẩn bớt sản phẩm
+             </button>
+         </div>
+     </div>
+ </div>
+ @endsection
 
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Toàn bộ card click -> sang chi tiết
-    document.querySelectorAll('.product-card[data-href]').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.favorite-btn')) return;
-            const href = card.getAttribute('data-href');
-            if (href) window.location.href = href;
+    const productsGrid = document.getElementById('products-grid');
+    const productCards = document.querySelectorAll('.product-card.show');
+    const showMoreBtn = document.getElementById('show-more-btn');
+    const hideSomeBtn = document.getElementById('hide-some-btn');
+    const showHideButtons = document.getElementById('show-hide-buttons');
+    const productCount = document.getElementById('product-count');
+    
+    let isShowingAll = true;
+    const itemsPerPage = 6; // Số sản phẩm hiển thị mỗi lần
+
+    // Khởi tạo
+    function initialize() {
+        const totalProducts = productCards.length;
+        
+        if (totalProducts === 0) {
+            return;
+        }
+
+        updateProductCount(totalProducts);
+        showInitialProducts();
+        enableCardClicks();
+    }
+
+    // Hiển thị sản phẩm ban đầu
+    function showInitialProducts() {
+        productCards.forEach((card, index) => {
+            if (index < itemsPerPage) {
+                card.classList.remove('hidden');
+                card.classList.add('show');
+            } else {
+                card.classList.add('hidden');
+                card.classList.remove('show');
+            }
         });
+        
+        updateButtons();
+    }
+
+    // Cập nhật số lượng sản phẩm
+    function updateProductCount(count) {
+        if (productCount) {
+            productCount.textContent = `${count} sản phẩm yêu thích`;
+        }
+    }
+
+    // Cập nhật trạng thái nút
+    function updateButtons() {
+        const visibleCount = document.querySelectorAll('.product-card.show').length;
+        const totalCount = productCards.length;
+        
+        if (totalCount > itemsPerPage) {
+            showHideButtons.style.display = 'block';
+            showMoreBtn.style.display = visibleCount < totalCount ? 'inline-block' : 'none';
+            hideSomeBtn.style.display = visibleCount > itemsPerPage ? 'inline-block' : 'none';
+        } else {
+            showHideButtons.style.display = 'none';
+        }
+    }
+
+    // Toàn bộ card click -> sang chi tiết
+    function enableCardClicks() {
+        document.querySelectorAll('.product-card[data-href]').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.favorite-btn')) return;
+                const href = card.getAttribute('data-href');
+                if (href) window.location.href = href;
+            });
+        });
+    }
+
+    // Hiển thị tất cả sản phẩm
+    showMoreBtn.addEventListener('click', function() {
+        productCards.forEach(card => {
+            card.classList.remove('hidden');
+            card.classList.add('show');
+        });
+        isShowingAll = true;
+        updateButtons();
     });
 
+    // Ẩn bớt sản phẩm
+    hideSomeBtn.addEventListener('click', function() {
+        productCards.forEach((card, index) => {
+            if (index < itemsPerPage) {
+                card.classList.remove('hidden');
+                card.classList.add('show');
+            } else {
+                card.classList.add('hidden');
+                card.classList.remove('show');
+            }
+        });
+        isShowingAll = false;
+        updateButtons();
+    });
 
     // Toggle favorite (giữ nguyên API bạn đang dùng)
     window.toggleFavorite = function(productId) {
@@ -287,6 +384,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(() => { if (icon) icon.className = orig; })
         .finally(() => { btn.disabled = false; });
     };
+
+    // Khởi tạo trang
+    initialize();
 });
 </script>
 @endpush

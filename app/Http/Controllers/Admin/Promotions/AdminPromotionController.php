@@ -49,7 +49,15 @@ class AdminPromotionController extends Controller
             'products' => 'array',
             'category_discount_value' => 'nullable|numeric|min:1|max:100',
         ]);
-        $data['slug'] = Str::slug($data['name']);
+        // Tạo slug duy nhất
+        $baseSlug = Str::slug($data['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (\App\Models\Promotion::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+        }
+        $data['slug'] = $slug;
         // Nếu là kiểu category thì lưu discount_value và cập nhật sale_price cho các sản phẩm thuộc danh mục
         if ($data['flash_type'] === 'category') {
             $data['discount_type'] = 'percent';

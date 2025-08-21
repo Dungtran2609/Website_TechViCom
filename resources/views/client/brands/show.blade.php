@@ -5,15 +5,17 @@
 @section('content')
     <div class="container mx-auto px-4 py-6">
 
-        {{-- BREADCRUMB ngay dưới header --}}
-        <nav class="text-sm mb-4">
-            <ol class="flex items-center gap-2 text-gray-500">
-                <li><a href="{{ route('home') }}" class="hover:text-orange-600">Trang chủ</a></li>
-                <li>/</li>
-                <li><a href="{{ route('brands.index') }}" class="hover:text-orange-600">Thương hiệu</a></li>
-                <li>/</li>
-                <li class="text-gray-800 font-medium">{{ $brand->name }}</li>
-            </ol>
+        <!-- Breadcrumb -->
+        <nav class="bg-white border-b border-gray-200 py-3 mb-6">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center space-x-2 text-sm">
+                    <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    <a href="{{ route('brands.index') }}" class="text-gray-500 hover:text-[#ff6c2f]">Thương hiệu</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    <span class="text-gray-900 font-medium">{{ $brand->name }}</span>
+                </div>
+            </div>
         </nav>
 
         {{-- Card thương hiệu --}}

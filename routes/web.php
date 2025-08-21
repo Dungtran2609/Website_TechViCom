@@ -5,11 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
-/*
-|--------------------------------------------------------------------------
-| Controller Imports
-|--------------------------------------------------------------------------
-*/
+// Controller Imports
 
 // --- ADMIN Controllers ---
 use App\Http\Controllers\Admin\AdminController;
@@ -55,13 +51,9 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 
-// =========================================================================
 // === CLIENT ROUTES ===
-// =========================================================================
-
 
 // Trang chủ client
-// Test route to add product to cart
 Route::get('/test-add-to-cart', function () {
     $cart = session()->get('cart', []);
     $cart[] = [
@@ -103,15 +95,18 @@ Route::get('/test-check-cart', function () {
 });
 
 
-
-
-
-
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::view('/about', 'client.about')->name('about');
-Route::view('/policy', 'client.policy')->name('policy');
 
+// Trang giới thiệu và chính sách
+Route::view('/about', 'client.pages.about')->name('about');
+Route::view('/policy', 'client.pages.policy')->name('policy');
+Route::view('/store-system', 'client.pages.store_system')->name('client.store_system');
+Route::view('/warranty', 'client.pages.warranty')->name('warranty');
+Route::view('/invoice', 'client.pages.invoice')->name('invoice');
+Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('authorized_dealer');
+Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
+Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
 
 // Test cart functionality
@@ -470,9 +465,8 @@ Route::prefix('client/orders')->name('client.orders.')->group(function () {
 });
 
 
-// =========================================================================
 // === ADMIN ROUTES ===
-// =========================================================================
+
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::post('logout', [AdminController::class, 'logout'])->name('logout');
@@ -681,11 +675,6 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| WEBHOOK, SOCIALITE & OTHER GLOBAL ROUTES
-|--------------------------------------------------------------------------
-*/
 Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->name('webhook.payos');
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
 Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
@@ -695,50 +684,16 @@ Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallba
 Route::get('auth/facebook', [SocialController::class, 'redirectToFacebook'])->name('auth.facebook');
 Route::get('auth/facebook/callback', [SocialController::class, 'handleFacebookCallback']);
 
-/*
-|--------------------------------------------------------------------------
-| DEBUGGING ROUTES (Only available in local environment)
-|--------------------------------------------------------------------------
-*/
 if (app()->environment('local')) {
     Route::prefix('debug')->group(function () {
         Route::get('/phpinfo', fn() => phpinfo());
-        // All test routes from original files are placed here
     });
 }
 
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION ROUTES (Laravel Breeze/UI)
-|--------------------------------------------------------------------------
-*/
+
 require __DIR__ . '/auth.php';
 
-// Gợi ý fix lỗi: View [client.accounts.orders] not found
-
-// Route quản lý logo admin phải nằm trong group admin
-
-
-
-
-// =========================================================================
-// === ADMIN ROUTES ===
-// =========================================================================
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
-    // ...existing admin routes...
-
     // Quản lý logo admin
     Route::resource('logos', \App\Http\Controllers\Admin\Logo\AdminLogoController::class)->names('logos');
 });
-
-// 1. Tạo file: resources/views/client/accounts/orders.blade.php
-// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
-// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.
-
-
-
-
-// Gợi ý fix lỗi: View [client.accounts.orders] not found
-// 1. Tạo file: resources/views/client/accounts/orders.blade.php
-// 2. Đảm bảo controller trả về đúng view: return view('client.accounts.orders', ...);
-// 3. Nếu muốn đổi tên view, sửa lại trong controller cho khớp.

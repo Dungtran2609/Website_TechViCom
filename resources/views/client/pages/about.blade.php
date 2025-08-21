@@ -12,7 +12,7 @@
                     Về Techvicom
                 </h1>
                 <p class="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto">
-                    Hệ thống bán lẻ công nghệ chính hãng hàng đầu Việt Nam
+                    Hệ thống bán lẻ công nghệ chính hãng hàng đầu Hà Nội
                 </p>
             </div>
         </section>
@@ -30,9 +30,9 @@
                         <div>
                             <h3 class="text-2xl font-bold text-gray-800 mb-6">Sứ mệnh của Techvicom</h3>
                             <p class="text-lg text-gray-600 mb-6 leading-relaxed">
-                                Techvicom là hệ thống bán lẻ các sản phẩm công nghệ chính hãng hàng đầu Việt Nam, 
+                                Techvicom là hệ thống bán lẻ các sản phẩm công nghệ chính hãng hàng đầu Hà Nội, 
                                 chuyên cung cấp điện thoại, laptop, tablet, phụ kiện và các thiết bị thông minh từ 
-                                các thương hiệu uy tín như Apple, Samsung, Xiaomi, Dell, HP, v.v.
+                                các thương hiệu uy tín như Apple, Samsung, Xiaomi, Dell, HP, v.v. Tọa lạc tại 13 Trịnh Văn Bô, Nam Từ Liêm, Hà Nội.
                             </p>
                             <p class="text-lg text-gray-600 leading-relaxed">
                                 Với phương châm <strong class="text-orange-500">"Khách hàng là trung tâm"</strong>, 
@@ -93,7 +93,7 @@
                                     <i class="fas fa-shipping-fast text-2xl text-orange-500"></i>
                                 </div>
                                 <h3 class="text-xl font-bold text-gray-800 mb-3">Giao hàng nhanh</h3>
-                                <p class="text-gray-600">Giao hàng toàn quốc với thời gian nhanh chóng</p>
+                                <p class="text-gray-600">Giao hàng trong nội thành Hà Nội với thời gian nhanh chóng</p>
                             </div>
                         </div>
 

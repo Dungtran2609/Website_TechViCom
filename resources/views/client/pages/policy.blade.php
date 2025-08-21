@@ -205,12 +205,12 @@
                             <div class="bg-white rounded-xl p-6">
                                 <h4 class="font-semibold text-gray-800 mb-3">Điện thoại & Tablet</h4>
                                 <p class="text-2xl font-bold text-purple-600 mb-2">12 tháng</p>
-                                <p class="text-gray-600">Bảo hành chính hãng toàn quốc</p>
+                                <p class="text-gray-600">Bảo hành chính hãng tại Hà Nội</p>
                             </div>
                             <div class="bg-white rounded-xl p-6">
                                 <h4 class="font-semibold text-gray-800 mb-3">Các sản phẩm khác</h4>
                                 <p class="text-2xl font-bold text-purple-600 mb-2">24 tháng</p>
-                                <p class="text-gray-600">Bảo hành chính hãng toàn quốc</p>
+                                <p class="text-gray-600">Bảo hành chính hãng tại Hà Nội</p>
                             </div>
                         </div>
                     </div>

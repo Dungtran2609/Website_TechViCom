@@ -150,21 +150,14 @@
 @section('content')
     <div class="container mx-auto px-4 py-8">
         <!-- Breadcrumb -->
-        <nav class="flex mb-8" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="{{ route('home') }}"
-                        class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-orange-600">
-                        <i class="fas fa-home mr-2"></i>Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                        <span class="text-sm font-medium text-gray-500">Tất cả danh mục</span>
-                    </div>
-                </li>
-            </ol>
+        <nav class="bg-white border-b border-gray-200 py-3 mb-8">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center space-x-2 text-sm">
+                    <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    <span class="text-gray-900 font-medium">Tất cả danh mục</span>
+                </div>
+            </div>
         </nav>
 
 

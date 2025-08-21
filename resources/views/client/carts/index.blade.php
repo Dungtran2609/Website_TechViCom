@@ -5,14 +5,15 @@
 
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="container mx-auto px-4">
-    <nav class="text-sm text-gray-500 mb-6">
-      <ol class="list-none p-0 inline-flex">
-        <li class="flex items-center">
-          <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
-          <i class="fas fa-chevron-right mx-2"></i>
-        </li>
-        <li class="text-gray-700">Giỏ hàng</li>
-      </ol>
+    <!-- Breadcrumb -->
+    <nav class="bg-white border-b border-gray-200 py-3 mb-6">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <span class="text-gray-900 font-medium">Giỏ hàng</span>
+            </div>
+        </div>
     </nav>
 
     <div class="max-w-6xl mx-auto">

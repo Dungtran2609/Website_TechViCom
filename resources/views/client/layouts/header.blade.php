@@ -1,5 +1,5 @@
 <!-- Header (all category items use the same icon) -->
-<header class="bg-white shadow-sm border-b">
+<header id="main-header" class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
     <style>
         /* Cart Sidebar */
         #cart-sidebar {
@@ -113,6 +113,19 @@
                 padding-left: .25rem;
                 padding-right: .25rem
             }
+        }
+
+        /* Header scroll effect */
+        body {
+            padding-top: 80px; /* Adjust based on header height */
+        }
+
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+
+        .header-visible {
+            transform: translateY(0);
         }
     </style>
 
@@ -444,6 +457,54 @@
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <script>
+    /* Header scroll effect */
+    (function() {
+        let lastScrollTop = 0;
+        const header = document.getElementById('main-header');
+        const scrollThreshold = 10; // Minimum scroll distance to trigger effect
+        
+        function handleScroll() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollDelta = scrollTop - lastScrollTop;
+            
+            // Only trigger if scroll distance is significant
+            if (Math.abs(scrollDelta) > scrollThreshold) {
+                if (scrollDelta > 0 && scrollTop > 100) {
+                    // Scrolling down - hide header
+                    header.classList.remove('header-visible');
+                    header.classList.add('header-hidden');
+                } else if (scrollDelta < 0) {
+                    // Scrolling up - show header
+                    header.classList.remove('header-hidden');
+                    header.classList.add('header-visible');
+                }
+                lastScrollTop = scrollTop;
+            }
+        }
+        
+        // Throttle scroll events for better performance
+        let ticking = false;
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+        
+        window.addEventListener('scroll', requestTick, { passive: true });
+        
+        // Show header when at top of page
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset <= 100) {
+                header.classList.remove('header-hidden');
+                header.classList.add('header-visible');
+            }
+        }, { passive: true });
+    })();
+
     /* Stable hover dropdowns */
     (function() {
         const groups = document.querySelectorAll('.dropdown-group');

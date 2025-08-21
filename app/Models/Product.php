@@ -92,6 +92,14 @@ class Product extends Model
             'id'          // PK của product
         );
     }
+
+    /**
+     * Mối quan hệ với các item trong đơn hàng
+     */
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
     public function getPriceRangeAttribute(): string
     {
         if ($this->variants->isEmpty()) {

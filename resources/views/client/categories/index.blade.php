@@ -1,9 +1,12 @@
 @extends('client.layouts.app')
 
+
 @section('title', 'Danh mục sản phẩm')
+
 
 @push('styles')
     <style>
+        /* Card */
         .category-card-pro {
             transition: all 0.3s cubic-bezier(.4, 2, .6, 1);
             box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.07);
@@ -16,20 +19,31 @@
             position: relative;
         }
 
+
         .category-card-pro:hover {
             transform: translateY(-6px) scale(1.03);
             box-shadow: 0 8px 32px 0 rgba(255, 108, 47, 0.15);
             border-color: #ff6c2f;
         }
 
-        .category-img-pro {
+
+        /* Image: show FULL image (contain) */
+        .category-img-wrap {
             width: 100%;
             height: 140px;
-            object-fit: cover;
             background: #f7f7f7;
             border-bottom: 1px solid #f1f1f1;
         }
 
+
+        .category-img-pro {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+
+        /* Old orange badge (kept but unused) */
         .category-badge-pro {
             position: absolute;
             top: 1rem;
@@ -43,42 +57,34 @@
             z-index: 2;
         }
 
-        .category-products-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: #0052cc;
-            color: #fff;
-            font-size: 0.85rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
+
+        /* NEW: subtle gray count badge placed UNDER the title */
+        .category-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            background: #f3f4f6;
+            /* gray-100 */
+            border: 1px solid #e5e7eb;
+            /* gray-200 */
+            color: #6b7280;
+            /* gray-500 */
+            font-size: .8rem;
             font-weight: 600;
-            z-index: 2;
+            padding: .2rem .6rem;
+            border-radius: 9999px;
+            opacity: .95;
         }
 
+
         .category-card-pro .category-title {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: .35rem;
             color: #222;
             text-align: center;
         }
 
-        .category-card-pro .category-children {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-            justify-content: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .category-card-pro .category-children span {
-            background: #f3f4f6;
-            color: #555;
-            font-size: 0.85rem;
-            padding: 0.15rem 0.6rem;
-            border-radius: 9999px;
-        }
 
         .category-card-pro .category-footer {
             margin-top: auto;
@@ -87,6 +93,7 @@
             align-items: center;
             justify-content: space-between;
         }
+
 
         .category-card-pro .category-link {
             color: #ff6c2f;
@@ -98,10 +105,13 @@
             transition: color 0.2s;
         }
 
+
         .category-card-pro .category-link:hover {
             color: #0052cc;
         }
 
+
+        /* Search bar (unused here but kept) */
         .category-search-bar {
             max-width: 420px;
             margin: 0 auto 2rem auto;
@@ -114,6 +124,7 @@
             border: 1px solid #eee;
         }
 
+
         .category-search-bar input {
             border: none;
             outline: none;
@@ -122,6 +133,7 @@
             font-size: 1rem;
             padding: 0.5rem 0;
         }
+
 
         .category-search-bar button {
             background: none;
@@ -133,6 +145,7 @@
         }
     </style>
 @endpush
+
 
 @section('content')
     <div class="container mx-auto px-4 py-8">
@@ -147,47 +160,60 @@
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <i class="fas fa-hevron-right text-gray-400 mx-2"></i>
+                        <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
                         <span class="text-sm font-medium text-gray-500">Tất cả danh mục</span>
                     </div>
                 </li>
             </ol>
         </nav>
 
+
         <!-- Page Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">Tất cả danh mục</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Khám phá các danh mục sản phẩm công nghệ hàng đầu với chất lượng tốt nhất
-            </p>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Khám phá các danh mục sản phẩm công nghệ hàng đầu với chất
+                lượng tốt nhất</p>
         </div>
 
 
         <!-- Categories Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-7">
             @forelse($categories as $category)
-                <div class="category-card-pro group relative">
-                    <a href="{{ route('categories.show', $category->slug) }}" class="block h-full">
-                        @if ($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
-                                class="category-img-pro">
-                        @else
-                            <img src="{{ asset('client_css/images/category-default.jpg') }}" alt="{{ $category->name }}"
-                                class="category-img-pro">
-                        @endif
-                        <span class="category-badge-pro">{{ $category->children_count }} danh mục con</span>
-
-                        <div class="px-4 pt-4 pb-2">
-                            <div class="category-title group-hover:text-[#ff6c2f] transition">{{ $category->name }}</div>
-                            @if ($category->children_count > 0)
-                                <div class="category-children mb-2">
-                                    @foreach ($category->children->take(3) as $child)
-                                        <span>{{ $child->name }}</span>
-                                    @endforeach
-                                </div>
-                            @endif
+                <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-orange-400 flex flex-col items-center p-0 overflow-hidden"
+                    style="min-height: 270px;">
+                    <a href="{{ route('categories.show', $category->slug) }}" class="block w-full h-full">
+                        <!-- Image: full (contain) -->
+                        <div
+                            class="category-img-wrap relative w-full h-[140px] flex items-center justify-center bg-gray-50 overflow-hidden p-2">
+                            @php
+                                $imgSrc = $category->image ? asset('storage/' . $category->image) : asset('client_css/images/placeholder.svg');
+                            @endphp
+                            <img src="{{ $imgSrc }}" alt="{{ $category->name }}"
+                                class="category-img-pro object-contain w-full h-full transition-transform duration-300 group-hover:scale-105"
+                                loading="lazy" decoding="async"
+                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}';">
+                            <!-- (ĐÃ BỎ) badge cam ở góc -->
                         </div>
 
+
+                        <!-- Content -->
+                        <div class="flex flex-col items-center px-3 pt-4 pb-3">
+                            <div
+                                class="category-title text-base font-bold text-gray-800 text-center group-hover:text-orange-500 transition">
+                                {{ $category->name }}</div>
+
+
+                            <!-- NEW: badge xám, đưa xuống dưới, kém nổi bật -->
+                            <div class="mt-1">
+                                <span class="category-count-badge" aria-label="Số danh mục con">
+                                    <i class="fas fa-layer-group"></i>
+                                    {{ number_format($category->children_count ?? 0) }} danh mục con
+                                </span>
+                            </div>
+
+
+                            <!-- (ĐÃ XÓA) danh mục con liệt kê bên dưới -->
+                        </div>
                     </a>
                 </div>
             @empty
@@ -200,6 +226,7 @@
                 </div>
             @endforelse
         </div>
+
 
         <!-- Call to Action -->
         @if ($categories->count() > 0)
@@ -216,3 +243,6 @@
         @endif
     </div>
 @endsection
+
+
+

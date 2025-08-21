@@ -12,9 +12,20 @@ use App\Http\Requests\Admin\Coupons\DeleteCouponRequest;
 
 class AdminCouponController extends Controller
 {
+    public function show($id)
+    {
+        $coupon = Coupon::withTrashed()->findOrFail($id);
+        return view('admin.coupons.show', compact('coupon'));
+    }
+
+    public function trash()
+    {
+        $coupons = \App\Models\Coupon::onlyTrashed()->orderByDesc('deleted_at')->get();
+        return view('admin.coupons.trash', compact('coupons'));
+    }
     public function index(Request $request)
 {
-    $query = Coupon::withTrashed()->latest();
+    $query = Coupon::latest();
 
     if ($request->filled('keyword')) {
         $query->where('code', 'like', '%' . $request->keyword . '%');

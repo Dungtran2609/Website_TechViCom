@@ -25,17 +25,18 @@
     </form>
 
     <div class="table-responsive">
-        <table class="table table-bordered table-hover table-striped align-middle shadow-sm rounded-3 overflow-hidden">
-            <thead class="table-light align-middle text-center">
+        <table class="simple-table">
+            <thead>
                 <tr>
-                    <th><i class="bi bi-ticket-perforated"></i> Mã</th>
-                    <th><i class="bi bi-percent"></i> Kiểu giảm</th>
-                    <th><i class="bi bi-funnel"></i> Kiểu áp dụng</th>
-                    <th><i class="bi bi-cash-coin"></i> Giá trị</th>
-                    <th><i class="bi bi-calendar-event"></i> Ngày bắt đầu</th>
-                    <th><i class="bi bi-calendar-check"></i> Ngày kết thúc</th>
-                    <th><i class="bi bi-toggle-on"></i> Trạng thái</th>
-                    <th class="text-center"><i class="bi bi-gear"></i> Hành động</th>
+                    <th style="width: 13%">ID</th>
+                    <th style="width: 14%">Mã</th>
+                    <th style="width: 14%">Kiểu giảm</th>
+                    <th style="width: 14%">Kiểu áp dụng</th>
+                    <th style="width: 10%">Giá trị</th>
+                    <th style="width: 10%">Ngày bắt đầu</th>
+                    <th style="width: 10%">Ngày kết thúc</th>
+                    <th style="width: 7%">Trạng thái</th>
+                    <th style="width: 13%">Hành động</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,60 +50,39 @@
                             'user' => 'Theo người dùng',
                         ];
                     @endphp
-                    <tr class="{{ $coupon->trashed() ? 'table-danger' : '' }}">
-                        <td class="fw-bold text-primary"><i class="bi bi-ticket-perforated"></i> {{ $coupon->code }}</td>
-                        <td>
-                            <span class="badge bg-info text-dark">
-                                <i class="bi bi-percent"></i> {{ $typeMapping[$coupon->discount_type] ?? 'Không xác định' }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">
-                                <i class="bi bi-funnel"></i> {{ $applyTypeMapping[$coupon->apply_type] ?? $coupon->apply_type }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-warning text-dark">
-                                <i class="bi bi-cash-coin"></i>
-                                {{ $coupon->discount_type === 'percent' 
-                                    ? $coupon->value . '%' 
-                                    : number_format($coupon->value, 0, ',', '.') . '₫' }}
-                            </span>
-                        </td>
-                        <td><span class="badge bg-light border text-dark"><i class="bi bi-calendar-event"></i> {{ \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') }}</span></td>
-                        <td><span class="badge bg-light border text-dark"><i class="bi bi-calendar-check"></i> {{ \Carbon\Carbon::parse($coupon->end_date)->format('d/m/Y') }}</span></td>
+                    <tr style="background: #fff; {{ $coupon->trashed() ? 'opacity:0.6;' : '' }}">
+                        <td><span class="badge bg-secondary">{{ $coupon->id }}</span></td>
+                        <td style="font-weight: 500; color: #222;">{{ $coupon->code }}</td>
+                        <td>{{ $typeMapping[$coupon->discount_type] ?? 'Không xác định' }}</td>
+                        <td>{{ $applyTypeMapping[$coupon->apply_type] ?? $coupon->apply_type }}</td>
+                        <td>{{ $coupon->discount_type === 'percent' ? $coupon->value . '%' : number_format($coupon->value, 0, ',', '.') . '₫' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($coupon->end_date)->format('d/m/Y') }}</td>
                         <td>
                             @if ($coupon->status)
-                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Kích hoạt</span>
+                                <span class="status-active">Kích hoạt</span>
                             @else
-                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Tạm dừng</span>
+                                <span class="status-inactive">Tạm dừng</span>
                             @endif
                         </td>
-                        <td class="text-center">
-                            <div class="btn-group" role="group">
-                            @if ($coupon->trashed())
-                                <form action="{{ route('admin.coupons.restore', $coupon->id) }}" method="POST" class="d-inline-block">
-                                    @csrf
-                                    @method('PUT')
-                                    <button type="submit" class="btn btn-sm btn-success" title="Khôi phục"><i class="bi bi-arrow-clockwise"></i></button>
-                                </form>
-                                <form action="{{ route('admin.coupons.forceDelete', $coupon->id) }}" method="POST" class="d-inline-block"
-                                      onsubmit="return confirm('Bạn chắc chắn muốn xoá vĩnh viễn?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-dark" title="Xoá vĩnh viễn"><i class="bi bi-trash3"></i></button>
-                                </form>
-                            @else
-                                <a href="{{ route('admin.coupons.edit', $coupon->id) }}"
-                                   class="btn btn-sm btn-warning text-white" title="Sửa"><i class="bi bi-pencil-square"></i></a>
-                                <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" class="d-inline-block"
-                                      onsubmit="return confirm('Bạn chắc chắn muốn xoá?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input type="hidden" name="id" value="{{ $coupon->id }}">
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Xoá"><i class="bi bi-trash"></i></button>
-                                </form>
-                            @endif
+                        <td>
+                            <div class="d-flex gap-2 justify-content-center align-items-center">
+                                <a href="{{ route('admin.coupons.show', $coupon->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                    <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
+                                </a>
+                                <a href="{{ route('admin.coupons.edit', $coupon->id) }}" class="btn btn-light btn-sm" title="Sửa mã giảm giá">
+                                    <iconify-icon icon="solar:pen-broken" class="align-middle fs-18"></iconify-icon>
+                                </a>
+                                @if(!$coupon->trashed())
+                                    <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Bạn chắc chắn muốn xoá mã này?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="id" value="{{ $coupon->id }}">
+                                        <button type="submit" class="btn btn-light btn-sm" title="Xoá">
+                                            <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle fs-18 text-danger"></iconify-icon>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -110,14 +90,110 @@
             </tbody>
         </table>
     </div>
+        <div class="d-flex justify-content-end mb-2">
+            <a href="{{ route('admin.coupons.trash') }}" class="btn btn-outline-danger btn-sm">
+                <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle"></iconify-icon> Thùng rác
+            </a>
+        </div>
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 <style>
-    .table thead th { vertical-align: middle; }
-    .table-striped > tbody > tr:nth-of-type(odd) { background-color: #f9fafb; }
-    .table-hover tbody tr:hover { background-color: #f1f5f9; }
-    .badge { font-size: 0.95em; }
-    .btn-group .btn { margin-right: 0.2em; }
+    .simple-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #fafbfc;
+        border-radius: 14px;
+        overflow: hidden;
+        font-size: 15px;
+        box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
+    }
+    .simple-table thead th {
+        font-weight: 600;
+        background: #f6f6f6;
+        color: #222;
+        border-bottom: 1.5px solid #ececec;
+        padding: 12px 10px;
+        text-align: left;
+    }
+    .simple-table tbody td {
+        padding: 10px 10px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #222;
+        background: #fff;
+        vertical-align: middle;
+    }
+    .simple-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .simple-table tbody tr:hover {
+        background: #f7f7fa;
+    }
+    .status-active {
+        background: #ffe7a3;
+        color: #b8860b;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-block;
+    }
+    .status-inactive {
+        background: #f8d7da;
+        color: #b02a37;
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-block;
+    }
+    .action-group {
+        display: flex;
+        gap: 6px;
+    }
+    .action-btn {
+        border: none;
+        outline: none;
+        background: #f1f3f6;
+        color: #222;
+        border-radius: 8px;
+        padding: 5px 13px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        margin: 0;
+        display: inline-block;
+        text-decoration: none;
+    }
+    .action-btn:hover, .action-btn:focus {
+        background: #e2e6ea;
+        color: #111;
+    }
+    .action-edit {
+        background: #e7f1ff;
+        color: #1766c2;
+    }
+    .action-edit:hover {
+        background: #d0e6ff;
+        color: #0d3a6b;
+    }
+    .action-delete {
+        background: #fbeaea;
+        color: #c82333;
+    }
+    .action-delete:hover {
+        background: #f5c6cb;
+        color: #721c24;
+    }
+    .action-restore {
+        background: #eaffea;
+        color: #218838;
+    }
+    .action-restore:hover {
+        background: #c3e6cb;
+        color: #155724;
+    }
 </style>
 @endpush
 </div>

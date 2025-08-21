@@ -25,7 +25,6 @@
                 <span class="badge bg-secondary variable-insert" data-insert="{{ '{' }}{ date('d/m/Y') }}">Ngày hiện tại</span>
             </div>
             <textarea name="content" id="content-textarea" class="form-control" rows="8" required>{{ $mail->content }}</textarea>
-            <div class="form-text">Click vào biến để chèn vào nội dung. Có thể dùng cú pháp Blade như <code>{{ '{' }}{ $user->name }}</code>, <code>{{ '{' }}{ $coupon_code }}</code>, ...</div>
         </div>
         <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" name="is_active" value="1" {{ $mail->is_active ? 'checked' : '' }}>

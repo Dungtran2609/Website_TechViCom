@@ -68,4 +68,29 @@ class StoreCouponRequest extends FormRequest
     }
 
 
+
+    public function rules(): array
+    {
+        return [
+            'code' => [
+                'required',
+                'string',
+                'max:20',
+                'unique:coupons,code',
+                'regex:/^[A-Za-z0-9]+$/',
+            ],
+            'apply_type' => ['required', 'in:all,product,category,user'],
+            'product_ids' => ['required_if:apply_type,product'],
+            'category_ids' => ['required_if:apply_type,category'],
+            'discount_type' => ['required', 'in:percent,fixed'],
+            'value' => ['required', 'numeric', 'min:1', 'max:100'],
+            'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'min_order_value' => ['nullable', 'numeric', 'min:0'],
+            'max_order_value' => ['nullable', 'numeric', 'min:0', 'gte:min_order_value'],
+            'max_usage_per_user' => ['nullable', 'integer', 'min:1'],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+            'status' => ['required', 'in:0,1'],
+        ];
+    }
 }

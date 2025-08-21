@@ -101,10 +101,35 @@
         </div>
     @endif
 
+    @if (session('repayment_order_id') && session('repayment_message'))
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thông báo!</strong>
+            <span class="block sm:inline">{{ session('repayment_message') }}</span>
+            <div class="mt-2 text-sm">
+                <i class="fas fa-info-circle mr-1"></i>
+                Bạn đang thanh toán lại đơn hàng #{{ session('repayment_order_id') }}. Giá sản phẩm sẽ được giữ nguyên như ban đầu.
+            </div>
+        </div>
+    @endif
+
     @if (session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
             <strong class="font-bold">Thành công!</strong>
             <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session('repayment_order_id'))
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thanh toán lại!</strong>
+            <span class="block sm:inline">Bạn đang thanh toán lại cho đơn hàng này. Vui lòng chọn phương thức thanh toán khác.</span>
+        </div>
+    @endif
+
+    @if (session('repayment_message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thông báo!</strong>
+            <span class="block sm:inline">{{ session('repayment_message') }}</span>
         </div>
     @endif
 
@@ -383,7 +408,26 @@
             {{-- TÓM TẮT ĐƠN (1/3) --}}
             <div class="lg:col-span-1 order-1 lg:order-2">
                 <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">Đơn hàng của bạn</h3>
+                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">
+                        @if (session('repayment_order_id'))
+                            Thanh toán lại đơn hàng
+                        @else
+                            Đơn hàng của bạn
+                        @endif
+                    </h3>
+                    
+                    @if (isset($existingOrder) && $existingOrder)
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                <div class="text-sm text-blue-700">
+                                    <strong>Đơn hàng #{{ $existingOrder->id }}</strong><br>
+                                    <span class="text-xs">Đang thanh toán lại với phương thức khác</span><br>
+                                    <span class="text-xs text-green-600 font-medium">✓ Giá sản phẩm được giữ nguyên như ban đầu</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <div id="checkout-items" class="space-y-4 mb-6">
                         @if (count($cartItems) > 0)
                             @foreach ($cartItems as $item)
@@ -516,6 +560,15 @@
                                 id="total-amount"
                                 class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
                         </div>
+                    </div>
+                    
+                    {{-- Nút tiếp tục mua sắm --}}
+                    <div class="border-t pt-4 mt-4">
+                        <a href="{{ route('products.index') }}" 
+                           class="block w-full text-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300">
+                            <i class="fas fa-shopping-bag mr-2"></i>
+                            Tiếp tục mua sắm
+                        </a>
                     </div>
                 </div>
             </div>

@@ -13,24 +13,13 @@ class AdminAttributeController extends Controller
     {
         $query = Attribute::query();
 
-        // Lọc theo loại
-        if (request()->filled('type')) {
-            $type = request('type');
-            if ($type !== '') {
-                $query->where('type', $type);
-            }
-        }
-
         if (request()->has('search')) {
             $query->where('name', 'like', '%' . request('search') . '%');
         }
 
-        $attributes = $query->orderByDesc('updated_at')->paginate(10)->withQueryString();
-        $dbTypes = Attribute::select('type')->distinct()->pluck('type')->toArray();
-        $defaultTypes = ['text', 'number', 'color'];
-        $types = collect(array_unique(array_merge($defaultTypes, $dbTypes)));
+        $attributes = $query->orderByDesc('id')->paginate(10)->withQueryString();
 
-        return view('admin.products.attributes.index', compact('attributes', 'types'));
+        return view('admin.products.attributes.index', compact('attributes'));
     }
 
     public function create()

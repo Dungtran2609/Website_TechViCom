@@ -10,9 +10,9 @@
             <a href="{{ route('admin.roles.trashed') }}" class="btn btn-danger">
                 <i class="fas fa-trash"></i> Thùng rác
             </a>
-            {{-- <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
+            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Thêm vai trò
-            </a> --}}
+            </a>
         </div>
     </div>
 
@@ -60,8 +60,8 @@
                                     <span class="badge bg-info">{{ $role->permissions->count() }} quyền</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-{{ $role->is_active ? 'success' : 'secondary' }}">
-                                        {{ $role->is_active ? 'Hoạt động' : 'Không hoạt động' }}
+                                    <span class="badge bg-{{ $role->status ? 'success' : 'secondary' }}">
+                                        {{ $role->status ? 'Hoạt động' : 'Không hoạt động' }}
                                     </span>
                                 </td>
                                 <td>
@@ -75,7 +75,7 @@
                                             <iconify-icon icon="solar:pen-2-broken"
                                                 class="align-middle fs-18"></iconify-icon>
                                         </a>
-                                        <form action="{{ route('admin.roles.destroy', $role) }}" method="POST"
+                                        {{-- <form action="{{ route('admin.roles.destroy', $role) }}" method="POST"
                                             class="d-inline">
                                             @csrf
                                             @method('DELETE')
@@ -85,7 +85,7 @@
                                                 <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
                                                     class="align-middle fs-18"></iconify-icon>
                                             </button>
-                                        </form>
+                                        </form> --}}
                                     </div>
                                 </td>
                             </tr>

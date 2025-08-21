@@ -108,19 +108,19 @@ class AdminUserController extends Controller
     {
         $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender', 'is_active']);
 
-
         if ($request->password) {
             $userData['password'] = Hash::make($request->password);
         }
-
 
         if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
             if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
                 Storage::disk('public')->delete($user->image_profile);
             }
             $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
+        } else {
+            // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
+            $userData['image_profile'] = $user->image_profile;
         }
-
 
         $user->update($userData);
         $user->roles()->sync($request->roles);

@@ -21,6 +21,8 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
+    // Luôn eager load permissions khi lấy roles để tránh lỗi undefined method
+    protected $with = ['roles.permissions'];
     // Thứ tự các Trait không quá quan trọng, nhưng đây là thứ tự phổ biến
     use  HasFactory, Notifiable, SoftDeletes, HasRoles;
 
@@ -68,7 +70,7 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+    return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
     }
 
 

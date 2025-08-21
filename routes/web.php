@@ -574,12 +574,14 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     });
     // ==== Roles ====
     Route::prefix('roles')->middleware(CheckRole::class . ':admin')->name('roles.')->group(function () {
-        Route::get('list', [AdminRoleController::class, 'list'])->name('list');
-        Route::post('update-users', [AdminRoleController::class, 'updateUsers'])->name('updateUsers');
-        Route::get('trashed', [AdminRoleController::class, 'trashed'])->name('trashed');
-        Route::post('{id}/restore', [AdminRoleController::class, 'restore'])->name('restore');
-        Route::delete('{id}/force-delete', [AdminRoleController::class, 'forceDelete'])->name('force-delete');
-        Route::resource('/', AdminRoleController::class)->parameters(['' => 'role']);
+    Route::get('list', [AdminRoleController::class, 'list'])->name('list');
+    Route::post('update-users', [AdminRoleController::class, 'updateUsers'])->name('updateUsers');
+    Route::get('trashed', [AdminRoleController::class, 'trashed'])->name('trashed');
+    Route::post('{id}/restore', [AdminRoleController::class, 'restore'])->name('restore');
+    Route::delete('{id}/force-delete', [AdminRoleController::class, 'forceDelete'])->name('force-delete');
+    // Route xem chi tiết vai trò
+    Route::get('{role}', [AdminRoleController::class, 'show'])->name('show');
+    Route::resource('/', AdminRoleController::class)->parameters(['' => 'role']);
     });
     Route::prefix('permissions')->middleware(CheckRole::class . ':admin')->name('permissions.')->group(function () {
         Route::get('list', [AdminPermissionController::class, 'list'])->name('list');

@@ -666,8 +666,9 @@
                         @foreach ($relatedProducts as $rp)
                             <a href="{{ route('products.show', $rp->id) }}"
                                 class="rp-card bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow transition">
-                                <button type="button" class="rp-like" title="Yêu thích"><i
-                                        class="fas fa-heart"></i></button>
+                                <button type="button" class="rp-like favorite-once" data-product-id="{{ $rp->id }}" title="Yêu thích" onclick="event.preventDefault(); event.stopPropagation();">
+                                    <i class="{{ in_array($rp->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
+                                </button>
                                 <div class="aspect-square bg-gray-50 flex items-center justify-center">
                                     <img src="{{ $rp->thumbnail ? asset('storage/' . $rp->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                         alt="{{ $rp->name }}" class="max-w-full max-h-full object-contain p-3"
@@ -1218,5 +1219,56 @@
         // Set "Tất cả" as default active
         document.querySelector('[data-rating="all"]').classList.add('border-red-500', 'text-red-500');
         document.querySelector('[data-rating="all"]').classList.remove('border-gray-300', 'text-gray-700');
+
+        /* ===== Favorite Products ===== */
+        document.querySelectorAll('.favorite-once').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productId = this.getAttribute('data-product-id');
+                const icon = this.querySelector('i');
+                const originalIcon = icon.className;
+                
+                // Show loading
+                icon.className = 'fas fa-spinner fa-spin';
+                this.disabled = true;
+                
+                fetch('{{ route("accounts.favorites.toggle") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update icon based on favorite status
+                        if (data.is_favorite) {
+                            icon.className = 'fas fa-heart';
+                        } else {
+                            icon.className = 'far fa-heart';
+                        }
+                        
+                        // Show toast message
+                        toast(data.message, 'success');
+                    } else {
+                        // Restore original state on error
+                        icon.className = originalIcon;
+                        toast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Restore original state on error
+                    icon.className = originalIcon;
+                    toast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                })
+                .finally(() => {
+                    this.disabled = false;
+                });
+            });
+        });
     </script>
 @endpush

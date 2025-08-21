@@ -581,7 +581,11 @@
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
       <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
-        <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
+        <h4 class="font-medium text-gray-900 text-sm">
+          <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">
+            ${item.name}
+          </a>
+        </h4>
         ${variantHtml}
         <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
         ${

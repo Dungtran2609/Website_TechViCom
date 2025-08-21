@@ -102,7 +102,11 @@
                         @endif
                       </div>
                       <div>
-                        <h3 class="font-medium text-gray-900">{{ $item->product->name }}</h3>
+                        <h3 class="font-medium text-gray-900">
+                          <a href="{{ route('products.show', $item->product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
+                            {{ $item->product->name }}
+                          </a>
+                        </h3>
                         @if($isOutOfStock)
                           <div class="text-sm text-red-600 font-semibold">Hết hàng</div>
                         @elseif(!empty($item->productVariant))

@@ -126,4 +126,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class, 'user_id', 'id');
     }
+
+    /**
+     * Quan hệ một-nhiều với FavoriteProduct.
+     */
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
+    }
 }

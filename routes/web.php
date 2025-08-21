@@ -95,6 +95,8 @@ Route::get('/test-check-cart', function () {
 
 
 
+
+
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -484,6 +486,14 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
     Route::put('/addresses/{id}', [ClientAccountController::class, 'updateAddress'])->name('update-address');
     Route::delete('/addresses/{id}', [ClientAccountController::class, 'deleteAddress'])->name('delete-address');
     Route::patch('/addresses/{id}/set-default', [ClientAccountController::class, 'setDefaultAddress'])->name('addresses.set-default');
+    
+    // Favorite Products Routes
+    Route::middleware('auth')->group(function () {
+        Route::get('/favorites', [App\Http\Controllers\Client\FavoriteController::class, 'index'])->name('favorites');
+        Route::post('/favorites/toggle', [App\Http\Controllers\Client\FavoriteController::class, 'toggle'])->name('favorites.toggle');
+        Route::delete('/favorites/remove', [App\Http\Controllers\Client\FavoriteController::class, 'remove'])->name('favorites.remove');
+        Route::post('/favorites/check', [App\Http\Controllers\Client\FavoriteController::class, 'check'])->name('favorites.check');
+    });
 });
 
 // Client Orders Routes
@@ -735,6 +745,7 @@ require __DIR__ . '/auth.php';
 // Gợi ý fix lỗi: View [client.accounts.orders] not found
 
 // Route quản lý logo admin phải nằm trong group admin
+
 
 
 

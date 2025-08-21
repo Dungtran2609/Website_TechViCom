@@ -458,7 +458,7 @@
                                     {{-- Tim yêu thích: một chiều --}}
                                     <button onclick="event.stopPropagation()" class="fav-btn favorite-once"
                                         aria-label="Yêu thích" data-product-id="{{ $product->id }}">
-                                        <i class="far fa-heart"></i>
+                                        <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                                     </button>
                                 </div>
 
@@ -842,50 +842,71 @@
                 window.location.href = url.toString();
             }
 
-            // Yêu thích: một chiều, lưu localStorage
-            const FAVORITES_KEY = 'favorites';
+            // Yêu thích: sử dụng API thay vì localStorage
             const favBtns = document.querySelectorAll('.favorite-once');
 
-            function readFavs() {
-                try {
-                    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
-                } catch (e) {
-                    return [];
-                }
-            }
-
-            function writeFavs(arr) {
-                localStorage.setItem(FAVORITES_KEY, JSON.stringify(arr));
-            }
-
-            function setHeart(btn, on) {
+            function setHeart(btn, isFavorite) {
                 const icon = btn.querySelector('i');
-                btn.classList.toggle('is-active', !!on);
+                btn.classList.toggle('is-active', isFavorite);
                 if (icon) {
-                    icon.classList.toggle('fas', !!on);
-                    icon.classList.toggle('far', !on);
+                    icon.classList.toggle('fas', isFavorite);
+                    icon.classList.toggle('far', !isFavorite);
                 }
-                if (on) btn.dataset.locked = '1';
             }
 
-            const favInit = readFavs();
+            // Khởi tạo trạng thái yêu thích từ server
             favBtns.forEach(btn => {
-                const id = parseInt(btn.dataset.productId);
-                setHeart(btn, favInit.includes(id));
+                const productId = parseInt(btn.dataset.productId);
+                const icon = btn.querySelector('i');
+                const isFavorite = icon.classList.contains('fas');
+                setHeart(btn, isFavorite);
             });
 
             favBtns.forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const id = parseInt(this.dataset.productId);
-                    if (this.dataset.locked === '1') return; // đã thích -> không tắt
-                    setHeart(this, true);
-                    let favs = readFavs();
-                    if (!favs.includes(id)) {
-                        favs.push(id);
-                        writeFavs(favs);
-                    }
-                    toast('Đã thêm vào yêu thích');
+                    const productId = parseInt(this.dataset.productId);
+                    
+                    // Hiển thị loading
+                    const originalIcon = this.querySelector('i').className;
+                    this.querySelector('i').className = 'fas fa-spinner fa-spin';
+                    this.disabled = true;
+                    
+                    fetch('{{ route("accounts.favorites.toggle") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            setHeart(this, data.is_favorite);
+                            toast(data.message);
+                        } else {
+                            // Khôi phục trạng thái ban đầu nếu có lỗi
+                            this.querySelector('i').className = originalIcon;
+                            toast('Có lỗi xảy ra, vui lòng thử lại');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Khôi phục trạng thái ban đầu nếu có lỗi
+                        this.querySelector('i').className = originalIcon;
+                        toast('Có lỗi xảy ra, vui lòng thử lại');
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                    });
                 });
             });
 

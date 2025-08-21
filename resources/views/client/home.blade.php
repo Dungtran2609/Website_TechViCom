@@ -584,9 +584,9 @@
                             @if ($product->flash_sale_price && $product->discount_percent > 0)
                                 <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
                             @endif
-                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
-                                <i class="far fa-heart"></i>
+                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
@@ -639,9 +639,9 @@
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
-                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
-                                <i class="far fa-heart"></i>
+                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
@@ -900,39 +900,69 @@
             setInterval(updateCountdown, 1000);
         })();
 
-        // === Wishlist: toggle + persist localStorage ===
+        // === Wishlist: toggle using API ===
         (function() {
-            const KEY = 'tv_wishlist_ids';
-            const parse = () => {
-                try {
-                    return new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
-                } catch {
-                    return new Set();
-                }
-            };
-            const save = (set) => localStorage.setItem(KEY, JSON.stringify([...set]));
-            const liked = parse();
-
-            document.querySelectorAll('.wish-btn[data-id]').forEach(btn => {
-                const id = String(btn.dataset.id);
-                const icon = btn.querySelector('i');
-                const active = liked.has(id);
-                btn.classList.toggle('active', active);
-                if (icon) {
-                    icon.classList.toggle('fas', active);
-                    icon.classList.toggle('far', !active);
-                }
-                btn.addEventListener('click', () => {
-                    const nowActive = btn.classList.toggle('active');
-                    if (icon) {
-                        icon.classList.toggle('fas', nowActive);
-                        icon.classList.toggle('far', !nowActive);
-                    }
-                    if (nowActive) liked.add(id);
-                    else liked.delete(id);
-                    save(liked);
+            document.querySelectorAll('.wish-btn.favorite-once').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    const icon = this.querySelector('i');
+                    const originalIcon = icon.className;
+                    
+                    // Show loading
+                    icon.className = 'fas fa-spinner fa-spin';
+                    this.disabled = true;
+                    
+                    fetch('{{ route("accounts.favorites.toggle") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update icon based on favorite status
+                            if (data.is_favorite) {
+                                icon.className = 'fas fa-heart';
+                                this.classList.add('active');
+                            } else {
+                                icon.className = 'far fa-heart';
+                                this.classList.remove('active');
+                            }
+                            
+                            // Show toast message
+                            showToast(data.message);
+                        } else {
+                            // Restore original state on error
+                            icon.className = originalIcon;
+                            showToast('Có lỗi xảy ra, vui lòng thử lại');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Restore original state on error
+                        icon.className = originalIcon;
+                        showToast('Có lỗi xảy ra, vui lòng thử lại');
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                    });
                 });
             });
+            
+            // Toast function
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white';
+                toast.style.backgroundColor = '#10b981';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 1500);
+            }
         })();
 
         // === Horizontal sliders controller (cho mọi .hslider) ===

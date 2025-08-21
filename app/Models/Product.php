@@ -136,6 +136,14 @@ class Product extends Model
         return $this->hasMany(ProductComment::class);
     }
 
+    /**
+     * Quan hệ một-nhiều với FavoriteProduct.
+     */
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'product_id', 'id');
+    }
+
     public function getDisplayPriceAttribute()
     {
         if ($this->type === 'simple') {

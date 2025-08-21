@@ -7,8 +7,8 @@ use App\Models\Banner;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -177,6 +177,12 @@ class HomeController extends Controller
         // Lấy bài viết mới nhất
         $latestNews = \App\Models\News::orderByDesc('created_at')->limit(4)->get();
 
+        // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
+        $favoriteProductIds = [];
+        if (Auth::check()) {
+            $favoriteProductIds = Auth::user()->favoriteProducts()->pluck('product_id')->toArray();
+        }
+
         return view('client.home', compact(
             'banners',
             'featuredProducts',
@@ -185,7 +191,8 @@ class HomeController extends Controller
             'brands',
             'latestNews',
             'flashSaleProducts',
-            'flashSaleEndTime'
+            'flashSaleEndTime',
+            'favoriteProductIds'
         ));
     }
 }

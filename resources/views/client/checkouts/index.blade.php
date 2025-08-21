@@ -441,7 +441,15 @@
                                             @endif
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-medium text-gray-900 text-sm">{{ $productName }}</h4>
+                                            <h4 class="font-medium text-gray-900 text-sm">
+                                                @if($product && $product->id)
+                                                    <a href="{{ route('products.show', $product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
+                                                        {{ $productName }}
+                                                    </a>
+                                                @else
+                                                    {{ $productName }}
+                                                @endif
+                                            </h4>
                                             @if (!empty($variant) && method_exists($variant, 'attributeValues'))
                                                 <p class="text-xs text-gray-500">
                                                     @foreach ($variant->attributeValues as $value)

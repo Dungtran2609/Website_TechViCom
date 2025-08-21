@@ -357,7 +357,15 @@
                                     </div>
                                     
                                     <div class="flex-grow-1">
-                                        <h5 class="font-semibold text-gray-800 mb-2">{{ $item->name_product }}</h5>
+                                        <h5 class="font-semibold text-gray-800 mb-2">
+                                            @if($item->product && $item->product->id)
+                                                <a href="{{ route('products.show', $item->product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
+                                                    {{ $item->name_product }}
+                                                </a>
+                                            @else
+                                                {{ $item->name_product }}
+                                            @endif
+                                        </h5>
                                         
                                         @if($item->productVariant)
                                             <div class="text-sm text-gray-600 mb-2">

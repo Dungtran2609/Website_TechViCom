@@ -235,7 +235,15 @@
                                                     @endif
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <h6 class="font-medium text-gray-800 mb-1">{{ $item->name_product }}</h6>
+                                                    <h6 class="font-medium text-gray-800 mb-1">
+                                                        @if($item->product && $item->product->id)
+                                                            <a href="{{ route('products.show', $item->product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
+                                                                {{ $item->name_product }}
+                                                            </a>
+                                                        @else
+                                                            {{ $item->name_product }}
+                                                        @endif
+                                                    </h6>
                                                     <div class="text-sm text-gray-600">
                                                         <span>Số lượng: {{ $item->quantity }}</span>
                                                         <span class="mx-2">•</span>

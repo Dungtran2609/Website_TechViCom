@@ -9,6 +9,8 @@ use App\Models\Brand;
 use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClientProductController extends Controller
 {
@@ -30,6 +32,12 @@ class ClientProductController extends Controller
                 $q->where('status', 'approved');
             }])
             ->where('status', 1);
+
+        // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
+        $favoriteProductIds = [];
+        if (Auth::check()) {
+            $favoriteProductIds = Auth::user()->favoriteProducts()->pluck('product_id')->toArray();
+        }
 
         // Lọc theo danh mục (slug hoặc id) - hỗ trợ nhiều danh mục và phân cấp
         if ($request->filled('category')) {
@@ -182,7 +190,8 @@ class ClientProductController extends Controller
             'categories',
             'brands',
             'attributes',
-            'currentCategory'
+            'currentCategory',
+            'favoriteProductIds'
         ));
     }
 
@@ -262,43 +271,48 @@ class ClientProductController extends Controller
             ->limit(4)
             ->get();
 
-        return view('client.products.show', compact('product', 'relatedProducts', 'flashSaleInfo'));
+        // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
+        $favoriteProductIds = [];
+        if (Auth::check()) {
+            $favoriteProductIds = Auth::user()->favoriteProducts()->pluck('product_id')->toArray();
+        }
+
+        return view('client.products.show', compact('product', 'relatedProducts', 'flashSaleInfo', 'favoriteProductIds'));
     }
 
     public function love(Request $request)
     {
-        // Lấy danh sách ID sản phẩm yêu thích từ localStorage (sẽ được xử lý ở frontend)
-        // Vì localStorage chỉ có thể truy cập ở client-side, nên chúng ta sẽ load tất cả sản phẩm
-        // và để frontend filter theo localStorage
-        
-        $query = Product::query()
-            ->with([
-                'brand',
-                'category',
-                'productAllImages',
-                'variants.attributeValues'
-            ])
-            ->withAvg(['productComments as avg_rating' => function ($q) {
-                $q->whereNotNull('rating')->where('status', 'approved');
-            }], 'rating')
-            ->withCount(['productComments as reviews_count' => function ($q) {
-                $q->where('status', 'approved');
-            }])
-            ->where('status', 1);
+        // Kiểm tra đăng nhập
+        if (!Auth::check()) {
+            // Thay vì redirect, hiển thị trang với thông báo đăng nhập
+            $products = collect();
+            $notLoggedIn = true;
+            
+            return view('client.products.love', compact('products', 'notLoggedIn'));
+        }
 
-        // Sắp xếp theo thời gian tạo mới nhất
-        $query->orderBy('created_at', 'desc');
+        // Lấy danh sách sản phẩm yêu thích
+        $favorites = Auth::user()->favoriteProducts()
+            ->with(['product.brand', 'product.category', 'product.productAllImages', 'product.variants.attributeValues', 'product.productComments'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        $products = $query->paginate(12);
-        $categories = Category::where('status', 1)->get();
-        $brands = Brand::where('status', 1)->get();
-        $attributes = Attribute::with('attributeValues')->get();
+        // Tính toán avg_rating và reviews_count cho mỗi sản phẩm
+        $favorites->transform(function ($favorite) {
+            $product = $favorite->product;
+            $approvedComments = $product->productComments->where('status', 'approved')->whereNotNull('rating');
+            $avgRating = $approvedComments->count() > 0 ? $approvedComments->avg('rating') : 0;
+            $reviewsCount = $product->productComments->where('status', 'approved')->count();
+            $product->avg_rating = $avgRating;
+            $product->reviews_count = $reviewsCount;
+            return $favorite;
+        });
 
-        return view('client.products.love', compact(
-            'products',
-            'categories',
-            'brands',
-            'attributes'
-        ));
+        // Lấy danh sách sản phẩm từ favorites để hiển thị
+        $products = $favorites->pluck('product');
+
+        $notLoggedIn = false;
+
+        return view('client.products.love', compact('products', 'notLoggedIn'));
     }
 }

@@ -31,15 +31,31 @@ class ClientProductController extends Controller
             }])
             ->where('status', 1);
 
-        // Lọc theo danh mục (slug hoặc id)
+        // Lọc theo danh mục (slug hoặc id) - hỗ trợ nhiều danh mục và phân cấp
         if ($request->filled('category')) {
-            if (is_numeric($request->category)) {
-                $query->where('category_id', $request->category);
-            } else {
-                $category = Category::where('slug', $request->category)->first();
-                if ($category) {
-                    $query->where('category_id', $category->id);
+            $categorySlugs = is_array($request->category) ? $request->category : explode(',', $request->category);
+            $categoryIds = [];
+            
+            foreach ($categorySlugs as $slug) {
+                if (is_numeric($slug)) {
+                    $categoryIds[] = $slug;
+                } else {
+                    $category = Category::where('slug', $slug)->first();
+                    if ($category) {
+                        $categoryIds[] = $category->id;
+                        
+                        // Nếu là danh mục cha, thêm cả danh mục con
+                        if ($category->children()->count() > 0) {
+                            $childrenIds = $category->children()->where('status', true)->pluck('id')->toArray();
+                            $categoryIds = array_merge($categoryIds, $childrenIds);
+                        }
+                    }
                 }
+            }
+            
+            if (!empty($categoryIds)) {
+                $categoryIds = array_unique($categoryIds);
+                $query->whereIn('category_id', $categoryIds);
             }
         }
 
@@ -148,7 +164,11 @@ class ClientProductController extends Controller
         }
 
         $products   = $query->paginate(12);
-        $categories = Category::where('status', 1)->get();
+        $categories = Category::where('status', 1)
+            ->with(['children' => function($q) {
+                $q->where('status', 1);
+            }])
+            ->get();
         $brands     = Brand::where('status', 1)->get();
         $attributes = Attribute::with('attributeValues')->get();
 

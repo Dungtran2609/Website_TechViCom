@@ -100,6 +100,45 @@
             opacity: 1;
         }
 
+        /* Category Filter Styles */
+        .category-filter-group {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .category-filter-group:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        
+        .toggle-subcategories {
+            transition: all 0.2s ease;
+            padding: 2px;
+            border-radius: 4px;
+        }
+        
+        .toggle-subcategories:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.1);
+        }
+        
+        .subcategories {
+            transition: all 0.3s ease;
+        }
+        
+        .parent-category:indeterminate {
+            background-color: #ff6c2f;
+            border-color: #ff6c2f;
+        }
+        
+        .category-filter:checked {
+            accent-color: #ff6c2f;
+        }
+        }
+
         .cat-swiper .swiper-slide {
             width: auto;
         }
@@ -143,56 +182,11 @@
             </div>
 
             {{-- Banner slide --}}
-            <div class="rounded-2xl overflow-hidden shadow-lg">
-                <div class="swiper banner-swiper">
-                    <div class="swiper-wrapper">
-                        @forelse(($banners ?? []) as $banner)
-                            <div class="swiper-slide">
-                                <img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
-                                    src="{{ asset($banner->image_path) }}" alt="{{ $banner->title ?? 'Banner' }}"
-                                    loading="eager" decoding="async" fetchpriority="high">
-                            </div>
-                        @empty
-                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
-                                    src="{{ asset('client_css/images/banners/banner1.jpg') }}" alt="Banner 1"></div>
-                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
-                                    src="{{ asset('client_css/images/banners/banner2.jpg') }}" alt="Banner 2"></div>
-                            <div class="swiper-slide"><img class="w-full h-[280px] md:h-[360px] lg:h-[420px] object-cover"
-                                    src="{{ asset('client_css/images/banners/banner3.jpg') }}" alt="Banner 3"></div>
-                        @endforelse
-                    </div>
-                    <div class="swiper-pagination"></div>
-                    <div class="swiper-button-next"></div>
-                    <div class="swiper-button-prev"></div>
-                </div>
-            </div>
+            
         </div>
     </section>
 
-    <!-- Category Selection (Slider) -->
-    <section class="bg-white py-4 border-b border-gray-200">
-        <div class="container mx-auto px-4">
-            <div class="flex items-center gap-3 mb-3">
-                <h3 class="font-semibold text-gray-700">Danh mục:</h3>
-            </div>
-            <div class="swiper cat-swiper">
-                <div class="swiper-wrapper items-center">
-                    <div class="swiper-slide">
-                        <button class="category-btn {{ !request('category') ? 'active' : '' }}" data-category="">Tất
-                            cả</button>
-                    </div>
-                    @foreach ($categories as $category)
-                        <div class="swiper-slide">
-                            <button class="category-btn {{ request('category') == $category->slug ? 'active' : '' }}"
-                                data-category="{{ $category->slug }}">{{ $category->name }}</button>
-                        </div>
-                    @endforeach
-                </div>
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-button-next"></div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Products Grid -->
     <section class="py-12">
@@ -202,6 +196,45 @@
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
                         <h3 class="text-lg font-bold mb-6 text-gray-800">Bộ lọc</h3>
+
+                        <!-- Category Filter -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">Danh mục</h4>
+                            <div class="space-y-2">
+                                @foreach($categories->whereNull('parent_id') as $parentCategory)
+                                    <div class="category-filter-group">
+                                        <div class="flex items-center justify-between">
+                                            <label class="flex items-center cursor-pointer">
+                                                <input type="checkbox" value="{{ $parentCategory->slug }}" class="mr-2 category-filter parent-category" data-category-id="{{ $parentCategory->id }}">
+                                                <span class="font-medium">{{ $parentCategory->name }}</span>
+                                            </label>
+                                            @if($parentCategory->children->count() > 0)
+                                                <button type="button" class="toggle-subcategories text-gray-400 hover:text-gray-600" data-category-id="{{ $parentCategory->id }}">
+                                                    <i class="fas fa-chevron-down text-xs"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                        
+                                        @if($parentCategory->children->count() > 0)
+                                            <div class="subcategories ml-4 mt-2 space-y-1" id="subcategories-{{ $parentCategory->id }}" style="display: none;">
+                                                @foreach($parentCategory->children as $childCategory)
+                                                    <label class="flex items-center cursor-pointer">
+                                                        <input type="checkbox" value="{{ $childCategory->slug }}" class="mr-2 category-filter child-category" data-parent-id="{{ $parentCategory->id }}" data-category-id="{{ $childCategory->id }}">
+                                                        <span class="text-sm">{{ $childCategory->name }}</span>
+                                                    </label>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            <!-- Clear Category Filter Button -->
+                            <div class="mt-3">
+                                <button id="clear-category-filters" class="w-full px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition">
+                                    Xóa bộ lọc danh mục
+                                </button>
+                            </div>
+                        </div>
 
                         <!-- Price Range Filter -->
                         <div class="mb-6">
@@ -530,8 +563,97 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            // --- Category filter toggle functionality ---
+            document.querySelectorAll('.toggle-subcategories').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const categoryId = this.dataset.categoryId;
+                    const subcategories = document.getElementById(`subcategories-${categoryId}`);
+                    const icon = this.querySelector('i');
+                    
+                    if (subcategories.style.display === 'none') {
+                        subcategories.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    } else {
+                        subcategories.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
+                });
+            });
+
+            // --- Parent-child category relationship ---
+            document.querySelectorAll('.parent-category').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const categoryId = this.dataset.categoryId;
+                    const childCheckboxes = document.querySelectorAll(`.child-category[data-parent-id="${categoryId}"]`);
+                    
+                    childCheckboxes.forEach(child => {
+                        child.checked = this.checked;
+                    });
+                });
+            });
+
+            document.querySelectorAll('.child-category').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const parentId = this.dataset.parentId;
+                    const parentCheckbox = document.querySelector(`.parent-category[data-category-id="${parentId}"]`);
+                    const siblingCheckboxes = document.querySelectorAll(`.child-category[data-parent-id="${parentId}"]`);
+                    const checkedSiblings = document.querySelectorAll(`.child-category[data-parent-id="${parentId}"]:checked`);
+                    
+                    if (checkedSiblings.length === 0) {
+                        parentCheckbox.checked = false;
+                    } else if (checkedSiblings.length === siblingCheckboxes.length) {
+                        parentCheckbox.checked = true;
+                    } else {
+                        parentCheckbox.indeterminate = true;
+                    }
+                });
+            });
+
             // --- Auto-check filters from URL ---
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // Auto-check categories
+            if (urlParams.has('category')) {
+                const categories = urlParams.get('category').split(',');
+                document.querySelectorAll('.category-filter').forEach(cb => {
+                    if (categories.includes(cb.value)) {
+                        cb.checked = true;
+                        
+                        // If it's a child category, show its parent's subcategories
+                        if (cb.classList.contains('child-category')) {
+                            const parentId = cb.dataset.parentId;
+                            const subcategories = document.getElementById(`subcategories-${parentId}`);
+                            const toggleButton = document.querySelector(`.toggle-subcategories[data-category-id="${parentId}"]`);
+                            const icon = toggleButton?.querySelector('i');
+                            
+                            if (subcategories) {
+                                subcategories.style.display = 'block';
+                                if (icon) {
+                                    icon.classList.remove('fa-chevron-down');
+                                    icon.classList.add('fa-chevron-up');
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Update parent checkboxes based on children
+                document.querySelectorAll('.parent-category').forEach(parent => {
+                    const categoryId = parent.dataset.categoryId;
+                    const childCheckboxes = document.querySelectorAll(`.child-category[data-parent-id="${categoryId}"]`);
+                    const checkedChildren = document.querySelectorAll(`.child-category[data-parent-id="${categoryId}"]:checked`);
+                    
+                    if (checkedChildren.length === childCheckboxes.length && childCheckboxes.length > 0) {
+                        parent.checked = true;
+                    } else if (checkedChildren.length > 0) {
+                        parent.indeterminate = true;
+                    }
+                });
+            }
+            
             if (urlParams.has('brands')) {
                 const brands = urlParams.get('brands').split(',');
                 document.querySelectorAll('.brand-filter').forEach(cb => {
@@ -572,17 +694,65 @@
                 });
             }
 
-            // Category buttons
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const category = this.dataset.category;
-                    const url = new URL(window.location);
-                    if (category) url.searchParams.set('category', category);
-                    else url.searchParams.delete('category');
-                    url.searchParams.delete('page');
-                    window.location.href = url.toString();
+            // Category filter functionality
+            document.querySelectorAll('.toggle-subcategories').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const categoryId = this.dataset.categoryId;
+                    const subcategories = document.getElementById(`subcategories-${categoryId}`);
+                    const icon = this.querySelector('i');
+                    
+                    if (subcategories.style.display === 'none') {
+                        subcategories.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    } else {
+                        subcategories.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
                 });
             });
+
+            // Parent-child category relationship
+            document.querySelectorAll('.parent-category').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const categoryId = this.dataset.categoryId;
+                    const childCheckboxes = document.querySelectorAll(`.child-category[data-parent-id="${categoryId}"]`);
+                    
+                    childCheckboxes.forEach(child => {
+                        child.checked = this.checked;
+                    });
+                });
+            });
+
+            document.querySelectorAll('.child-category').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const parentId = this.dataset.parentId;
+                    const parentCheckbox = document.querySelector(`.parent-category[data-category-id="${parentId}"]`);
+                    const siblingCheckboxes = document.querySelectorAll(`.child-category[data-parent-id="${parentId}"]`);
+                    const checkedSiblings = document.querySelectorAll(`.child-category[data-parent-id="${parentId}"]:checked`);
+                    
+                    if (checkedSiblings.length === 0) {
+                        parentCheckbox.checked = false;
+                    } else if (checkedSiblings.length === siblingCheckboxes.length) {
+                        parentCheckbox.checked = true;
+                    } else {
+                        parentCheckbox.indeterminate = true;
+                    }
+                });
+            });
+
+            // Clear category filters button
+            const clearCategoryBtn = document.getElementById('clear-category-filters');
+            if (clearCategoryBtn) {
+                clearCategoryBtn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-filter').forEach(cb => {
+                        cb.checked = false;
+                    });
+                    applyFilters();
+                });
+            }
 
             // Sort change
             const sortFilter = document.getElementById('sort-filter');
@@ -597,7 +767,7 @@
             }
 
             // Filters change
-            document.querySelectorAll('.price-filter, .brand-filter, .ram-filter, .storage-filter, .rating-filter')
+            document.querySelectorAll('.price-filter, .brand-filter, .ram-filter, .storage-filter, .rating-filter, .category-filter')
                 .forEach(filter => filter.addEventListener('change', applyFilters));
 
             // Clear filters
@@ -620,6 +790,17 @@
 
             function applyFilters() {
                 const url = new URL(window.location);
+
+                // Category (parent and child)
+                const categoryFilters = [];
+                document.querySelectorAll('.category-filter:checked').forEach(cb => {
+                    categoryFilters.push(cb.value);
+                });
+                if (categoryFilters.length > 0) {
+                    url.searchParams.set('category', categoryFilters.join(','));
+                } else {
+                    url.searchParams.delete('category');
+                }
 
                 // Price (triệu -> VND)
                 const priceFilter = document.querySelector('input[name="price"]:checked');

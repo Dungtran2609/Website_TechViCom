@@ -230,19 +230,23 @@ class AdminPermissionController extends Controller
                     $modulePermissions[$module] = true;
                 }
 
-                // Nếu quyền chưa tồn tại trong DB (kể cả trong thùng rác) thì tạo mới
-                if (!in_array($routeName, $existingPermissionNames)) {
-                    $newPermission = Permission::create([
-                        'name' => $routeName,
+                // Sử dụng firstOrCreate để tránh duplicate entry
+                $newPermission = Permission::firstOrCreate(
+                    ['name' => $routeName],
+                    [
                         'description' => "Quyền tự động tạo từ hệ thống: {$routeName}",
                         'module' => $module,
-                    ]);
+                    ]
+                );
+                
+                // Nếu permission mới được tạo
+                if ($newPermission->wasRecentlyCreated) {
                     $adminRole->permissions()->attach($newPermission->id);
                     $newPermissionsCount++;
                 }
                 // Nếu quyền đã tồn tại nhưng nằm trong thùng rác, hãy khôi phục nó
-                elseif ($allDbPermissions->has($routeName) && $allDbPermissions[$routeName]->trashed()) {
-                    $allDbPermissions[$routeName]->restore();
+                elseif ($newPermission->trashed()) {
+                    $newPermission->restore();
                     $restoredPermissionsCount++;
                 }
             }
@@ -251,16 +255,24 @@ class AdminPermissionController extends Controller
         // Tạo quyền tổng quát manage_{module} cho từng module admin
         foreach (array_keys($modulePermissions) as $module) {
             $manageName = 'manage_' . $module;
-            if (!in_array($manageName, $existingPermissionNames)) {
-                $newPermission = Permission::create([
-                    'name' => $manageName,
+            
+            // Sử dụng firstOrCreate để tránh duplicate entry
+            $newPermission = Permission::firstOrCreate(
+                ['name' => $manageName],
+                [
                     'description' => "Quyền quản lý toàn bộ module {$module}",
                     'module' => $module,
-                ]);
+                ]
+            );
+            
+            // Nếu permission mới được tạo
+            if ($newPermission->wasRecentlyCreated) {
                 $adminRole->permissions()->attach($newPermission->id);
                 $newPermissionsCount++;
-            } elseif ($allDbPermissions->has($manageName) && $allDbPermissions[$manageName]->trashed()) {
-                $allDbPermissions[$manageName]->restore();
+            }
+            // Nếu quyền đã tồn tại nhưng nằm trong thùng rác, hãy khôi phục nó
+            elseif ($newPermission->trashed()) {
+                $newPermission->restore();
                 $restoredPermissionsCount++;
             }
         }

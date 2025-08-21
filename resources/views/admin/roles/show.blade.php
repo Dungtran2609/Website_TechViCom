@@ -1,6 +1,8 @@
 @extends('admin.layouts.app')
 
+
 @section('title', 'Chi tiết vai trò')
+
 
 @section('content')
     <div class="container-fluid">
@@ -14,6 +16,7 @@
             </a>
         </div>
 
+
         <!-- Hàng chứa nội dung chính -->
         <div class="row justify-content-center">
             <!-- Cột nội dung chính - ĐÃ ĐƯỢỢC MỞ RỘNG TỪ col-lg-8 LÊN col-xl-10 -->
@@ -26,6 +29,7 @@
                             <div class="col-lg-4">
                                 <h5 class="text-muted mb-4">Thông tin cơ bản</h5>
 
+
                                 <div class="d-flex align-items-start mb-4">
                                     <i class="fas fa-hashtag fa-fw text-muted mt-1 me-3"></i>
                                     <div>
@@ -33,6 +37,7 @@
                                         <span class="fw-bold fs-5">{{ $role->id ?? $role->role_id }}</span>
                                     </div>
                                 </div>
+
 
                                 <div class="d-flex align-items-start mb-4">
                                     <i class="fas fa-user-tag fa-fw text-muted mt-1 me-3"></i>
@@ -42,6 +47,7 @@
                                     </div>
                                 </div>
 
+
                                 <div class="d-flex align-items-start mb-4">
                                     <i class="fas fa-link fa-fw text-muted mt-1 me-3"></i>
                                     <div>
@@ -49,6 +55,7 @@
                                         <span class="badge bg-info-soft fs-6">{{ $role->slug }}</span>
                                     </div>
                                 </div>
+
 
                                 <div class="d-flex align-items-start">
                                     <i class="fas fa-toggle-on fa-fw text-muted mt-1 me-3"></i>
@@ -61,6 +68,7 @@
                                     </div>
                                 </div>
                             </div>
+
 
                             <!-- Cột Quyền của vai trò (Phải) - Dành nhiều không gian hơn -->
                             <div class="col-lg-8">
@@ -81,8 +89,10 @@
                             </div>
                         </div>
 
+
                         <!-- Đường kẻ phân cách -->
                         <hr class="my-4">
+
 
                         <!-- Các nút hành động -->
                         <div class="d-flex justify-content-end gap-2">
@@ -100,6 +110,7 @@
     </div>
 @endsection
 
+
 @push('styles')
     {{-- Thêm CSS tùy chỉnh cho trang này --}}
     <style>
@@ -109,20 +120,24 @@
             color: var(--bs-primary) !important;
         }
 
+
         .bg-info-soft {
             background-color: rgba(var(--bs-info-rgb), 0.15) !important;
             color: var(--bs-info) !important;
         }
+
 
         .bg-success-soft {
             background-color: rgba(var(--bs-success-rgb), 0.15) !important;
             color: var(--bs-success) !important;
         }
 
+
         .bg-secondary-soft {
             background-color: rgba(var(--bs-secondary-rgb), 0.15) !important;
             color: var(--bs-secondary) !important;
         }
+
 
         /* Khung chứa danh sách quyền */
         .permissions-container {
@@ -135,23 +150,28 @@
             border: 1px solid var(--bs-border-color-translucent);
         }
 
+
         /* Tùy chỉnh thanh cuộn cho đẹp hơn */
         .permissions-container::-webkit-scrollbar {
             width: 6px;
         }
 
+
         .permissions-container::-webkit-scrollbar-track {
             background: transparent;
         }
+
 
         .permissions-container::-webkit-scrollbar-thumb {
             background-color: #ccc;
             border-radius: 6px;
         }
 
+
         .permissions-container::-webkit-scrollbar-thumb:hover {
             background-color: #aaa;
         }
+
 
         /* Badge cho mỗi quyền */
         .permission-badge {
@@ -168,3 +188,6 @@
         }
     </style>
 @endpush
+
+
+

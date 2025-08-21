@@ -3,7 +3,15 @@
 
 
 
+
+
+
+
 namespace App\Models;
+
+
+
+
 
 
 
@@ -19,12 +27,20 @@ use Spatie\Permission\Traits\HasRoles;
 
 
 
+
+
+
+
 class User extends Authenticatable
 {
     // Luôn eager load permissions khi lấy roles để tránh lỗi undefined method
     protected $with = ['roles.permissions'];
     // Thứ tự các Trait không quá quan trọng, nhưng đây là thứ tự phổ biến
     use  HasFactory, Notifiable, SoftDeletes, HasRoles;
+
+
+
+
 
 
 
@@ -41,14 +57,10 @@ class User extends Authenticatable
     ];
 
 
-
-
     protected $hidden = [
         'password',
         'remember_token',
     ];
-
-
 
 
     protected $casts = [
@@ -60,7 +72,18 @@ class User extends Authenticatable
 
 
 
+
+
+
+
     protected $dates = ['deleted_at'];
+
+
+
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
+    }
 
 
 
@@ -70,8 +93,12 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-    return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
     }
+
+
+
+
 
 
 
@@ -83,6 +110,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAddress::class, 'user_id', 'id');
     }
+
+
+
+
 
 
 
@@ -99,6 +130,10 @@ class User extends Authenticatable
         // Giả sử cột tên vai trò trong bảng `roles` của bạn là 'name'. Nếu là 'slug', hãy đổi 'name' thành 'slug'.
         return $this->roles()->whereIn('name', $roles)->exists();
     }
+
+
+
+
 
 
 
@@ -120,19 +155,14 @@ class User extends Authenticatable
         }
 
 
+
+
         return false;
     }
+
 
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id', 'id');
-    }
-
-    /**
-     * Quan hệ một-nhiều với FavoriteProduct.
-     */
-    public function favoriteProducts()
-    {
-        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
     }
 }

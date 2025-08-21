@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Chi tiết người dùng</h1>
@@ -12,6 +13,7 @@
             </a>
         </div>
     </div>
+
 
     <div class="row">
         <!-- Thông tin người dùng -->
@@ -33,6 +35,7 @@
                             </div>
                         @endif
                     </div>
+
 
                     <!-- Thông tin chi tiết -->
                     <div class="row">
@@ -74,13 +77,16 @@
                                                     <span class="badge bg-info">Nam</span>
                                                 @break
 
+
                                                 @case('female')
                                                     <span class="badge bg-pink">Nữ</span>
                                                 @break
 
+
                                                 @case('other')
                                                     <span class="badge bg-secondary">Khác</span>
                                                 @break
+
 
                                                 @default
                                                     <span class="badge bg-light text-dark">Không xác định</span>
@@ -124,6 +130,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Địa chỉ -->
         <div class="col-lg-4">
@@ -196,6 +203,7 @@
         </div>
     </div>
 
+
     <!-- Form thêm địa chỉ mới -->
     <div class="row mt-4">
         <div class="col-12">
@@ -235,6 +243,7 @@
                                     <label class="form-label font-semibold">Địa chỉ chi tiết <span
                                             class="text-danger">*</span></label>
 
+
                                     <!-- Ô nhập địa chỉ chi tiết (số nhà, tên đường...) -->
                                     <input type="text" name="address_line"
                                         class="form-control mb-2 @error('address_line') is-invalid @enderror"
@@ -243,6 +252,7 @@
                                     @error('address_line')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+
 
                                     <!-- Hàng chứa các ô chọn Tỉnh, Huyện, Xã -->
                                     <div class="row">
@@ -310,16 +320,20 @@
     </div>
 @endsection
 
+
 @section('scripts')
     // Sử dụng @push('scripts') trong file Blade của bạn để chèn script này
         <script>
             $(document).ready(function() {
 
+
                 //======================================================================
                 // SECTION 1: LOGIC XỬ LÝ DROPDOWN ĐỊA CHỈ
                 //======================================================================
 
+
                 const apiBaseUrl = '{{ url('/api') }}'; // Sử dụng API công khai đã có
+
 
                 // Hàm để load danh sách Tỉnh/Thành (chỉ Hà Nội)
                 function loadProvinces() {
@@ -340,14 +354,18 @@
                         });
                 }
 
+
                 // Hàm để load Quận/Huyện dựa vào mã Tỉnh/Thành
                 function loadDistricts(provinceCode, districtSelectElement) {
                     const wardSelectElement = $(districtSelectElement).closest('.row').find('select[name="ward_code"]');
 
+
                     $(districtSelectElement).empty().append('<option value="">Chọn quận/huyện</option>');
                     $(wardSelectElement).empty().append('<option value="">Chọn phường/xã</option>');
 
+
                     if (!provinceCode) return;
+
 
                     fetch(`${apiBaseUrl}/districts/${provinceCode}`)
                         .then(response => response.json())
@@ -359,11 +377,14 @@
                         });
                 }
 
+
                 // Hàm để load Phường/Xã dựa vào mã Quận/Huyện
                 function loadWards(districtCode, wardSelectElement) {
                     $(wardSelectElement).empty().append('<option value="">Chọn phường/xã</option>');
 
+
                     if (!districtCode) return;
+
 
                     fetch(`${apiBaseUrl}/wards/${districtCode}`)
                         .then(response => response.json())
@@ -375,32 +396,40 @@
                         });
                 }
 
+
                 // --- Gán sự kiện cho các dropdown ---
                 // Sử dụng event delegation để áp dụng cho cả các form được tạo động
+
 
                 // Khi chọn Tỉnh/Thành
                 $(document).on('change', 'select[name="city_code"]', function() {
                     const provinceCode = $(this).val();
                     const districtSelect = $(this).closest('.row').find('select[name="district_code"]');
 
+
                     // Cập nhật input ẩn với TÊN của tỉnh/thành
                     $(this).closest('.row').find('input[name="city"]').val($(this).find('option:selected')
                     .text());
 
+
                     loadDistricts(provinceCode, districtSelect);
                 });
+
 
                 // Khi chọn Quận/Huyện
                 $(document).on('change', 'select[name="district_code"]', function() {
                     const districtCode = $(this).val();
                     const wardSelect = $(this).closest('.row').find('select[name="ward_code"]');
 
+
                     // Cập nhật input ẩn với TÊN của quận/huyện
                     $(this).closest('.row').find('input[name="district"]').val($(this).find('option:selected')
                         .text());
 
+
                     loadWards(districtCode, wardSelect);
                 });
+
 
                 // Khi chọn Phường/Xã
                 $(document).on('change', 'select[name="ward_code"]', function() {
@@ -409,13 +438,17 @@
                     .text());
                 });
 
+
                 // Tự động load danh sách tỉnh/thành khi trang được tải
                 loadProvinces();
+
+
 
 
                 //======================================================================
                 // SECTION 2: LOGIC XỬ LÝ FORM CHUNG
                 //======================================================================
+
 
                 // 2.1. Tự động mở form "Thêm địa chỉ" nếu có lỗi validation
                 @if ($errors->any())
@@ -428,6 +461,7 @@
                         bsCollapse.show(); // Luôn hiển thị form nếu có lỗi
                     }
                 @endif
+
 
                 // 2.2. Hiển thị trạng thái "loading" khi submit bất kỳ form nào và kiểm tra input ẩn
                 const forms = document.querySelectorAll('form');
@@ -471,6 +505,10 @@
                     });
                 });
 
+
             });
         </script>
     @endsection
+
+
+

@@ -1,11 +1,14 @@
 <?php
 
+
 namespace App\Http\Middleware;
+
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+
 
 class CheckPermission
 {
@@ -24,14 +27,17 @@ class CheckPermission
     {
         $user = Auth::user();
 
+
         if (!$user) {
             return redirect()->route('login');
         }
+
 
         // Nếu user có đúng quyền này thì cho phép
         if ($user->hasPermission($permission)) {
             return $next($request);
         }
+
 
         // Nếu là quyền nhỏ lẻ (vd: admin.products.create), kiểm tra quyền tổng quát manage_products
         $parts = explode('.', $permission);
@@ -43,6 +49,10 @@ class CheckPermission
             }
         }
 
+
         abort(403, 'Bạn không có quyền truy cập: ' . $permission);
     }
 }
+
+
+

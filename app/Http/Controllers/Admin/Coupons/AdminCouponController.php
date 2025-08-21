@@ -40,13 +40,13 @@ class AdminCouponController extends Controller
 
     // Sync pivot tables
     if ($request->has('product_ids')) {
-        $coupon->products()->sync($request->product_ids);
+        $coupon->products()->sync($request->input('product_ids'));
     }
     if ($request->has('category_ids')) {
-        $coupon->categories()->sync($request->category_ids);
+        $coupon->categories()->sync($request->input('category_ids'));
     }
     if ($request->has('user_ids')) {
-        $coupon->users()->sync($request->user_ids);
+        $coupon->users()->sync($request->input('user_ids'));
     }
 
     return redirect()->route('admin.coupons.index')

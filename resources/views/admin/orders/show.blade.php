@@ -145,6 +145,12 @@
                     <label class="form-label fw-medium">Giảm giá coupon:</label>
                     <div class="text-danger">-{{ number_format($orderData['coupon_discount'] ?? 0, 0) }} VND</div>
                 </div>
+                @if(($orderData['vnpay_discount'] ?? 0) > 0)
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Giảm giá VNPay:</label>
+                    <div class="text-danger">-{{ number_format(($orderData['vnpay_discount'] ?? 0) / 100, 0) }} VND</div>
+                </div>
+                @endif
                 <div class="mb-3">
                     <label class="form-label fw-medium">Tổng thanh toán:</label>
                     <div class="text-dark fw-bold fs-5">{{ number_format($orderData['final_total'], 0) }} VND</div>
@@ -179,12 +185,21 @@
                     @foreach($orderData['order_items'] as $item)
                         <tr>
                             <td style="width:80px;">
-                                @if(!empty($item['image_product_url']))
-                                    <img src="{{ $item['image_product_url'] }}" class="img-fluid rounded"
-                                        style="width:60px; height:60px; object-fit:cover;" alt="{{ $item['name_product'] }}">
+                                @php
+                                    $imageUrl = null;
+                                    if (!empty($item['image_product_url'])) {
+                                        $imageUrl = $item['image_product_url'];
+                                    } elseif (!empty($item['product_thumbnail'])) {
+                                        $imageUrl = asset('storage/' . ltrim($item['product_thumbnail'], '/'));
+                                    }
+                                @endphp
+                                @if($imageUrl)
+                                    <img src="{{ $imageUrl }}" class="img-fluid rounded"
+                                         style="width:60px; height:60px; object-fit:cover;" alt="{{ $item['name_product'] }}"
+                                         onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                 @else
                                     <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                        style="width:60px; height:60px;">
+                                         style="width:60px; height:60px;">
                                         <span class="text-muted small">Không có ảnh</span>
                                     </div>
                                 @endif

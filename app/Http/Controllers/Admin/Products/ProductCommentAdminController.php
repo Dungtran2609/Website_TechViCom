@@ -72,14 +72,13 @@ class ProductCommentAdminController extends Controller
     public function destroy(Request $request, $id)
     {
         $comment = ProductComment::findOrFail($id);
-        $comment->status = ProductComment::STATUS_DELETED;
+        $comment->is_hidden = true;
         $comment->save();
-        $comment->delete();
         $redirectRoute = route('admin.products.comments.index');
         if ($request->has('product_id')) {
             $redirectRoute .= '?product_id=' . $request->input('product_id');
         }
-        return redirect($redirectRoute)->with('success', 'Đã xoá bình luận!');
+        return redirect($redirectRoute)->with('success', 'Đã ẩn bình luận!');
     }
 
     public function approve($id, Request $request)
@@ -106,6 +105,21 @@ class ProductCommentAdminController extends Controller
         return redirect()->route('admin.products.comments.index');
     }
 
+    public function toggleHidden($id, Request $request)
+    {
+        $comment = ProductComment::findOrFail($id);
+        $comment->is_hidden = !$comment->is_hidden;
+        $comment->save();
+        
+        $redirectRoute = route('admin.products.comments.index');
+        if ($request->has('product_id')) {
+            $redirectRoute .= '?product_id=' . $request->input('product_id');
+        }
+        
+        $message = $comment->is_hidden ? 'Đã ẩn bình luận!' : 'Đã hiện bình luận!';
+        return redirect($redirectRoute)->with('success', $message);
+    }
+
     public function reply(Request $request, $id)
     {
         $comment = ProductComment::findOrFail($id);
@@ -124,6 +138,7 @@ class ProductCommentAdminController extends Controller
         ProductComment::create([
             'product_id' => $comment->product_id,
             'user_id' => Auth::id(),
+            'order_id' => $comment->order_id, // Copy order_id từ comment gốc
             'content' => $request->reply_content,
             'rating' => null,
             'status' => ProductComment::STATUS_APPROVED,

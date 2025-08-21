@@ -144,13 +144,17 @@
             <h5 class="mb-0">Chi tiết sản phẩm</h5>
         </div>
         <div class="card-body">
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Lưu ý:</strong> Giá sản phẩm đã được cố định và không thể thay đổi. Chỉ có thể điều chỉnh số lượng.
+            </div>
             <div class="table-responsive">
                 <table class="table align-middle table-hover table-centered">
                     <thead class="bg-light-subtle">
                         <tr>
                             <th>Sản phẩm</th>
                             <th>Số lượng</th>
-                            <th>Giá</th>
+                            <th>Giá (Cố định)</th>
                             <th>Tổng</th>
                         </tr>
                     </thead>
@@ -170,9 +174,10 @@
                                     <input type="hidden" name="order_items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" name="order_items[{{ $index }}][price]"
-                                        value="{{ old("order_items.$index.price", $item['price']) }}" class="form-control form-control-sm" min="0"
-                                        @if($orderData['status'] !== 'pending') readonly @endif>
+                                    {{-- KHÓA KHÔNG CHO SỬA GIÁ & vẫn submit giá trị --}}
+                                    <input type="number" step="0.01" value="{{ old("order_items.$index.price", $item['price']) }}" 
+                                        class="form-control form-control-sm" min="0" disabled>
+                                    <input type="hidden" name="order_items[{{ $index }}][price]" value="{{ $item['price'] }}">
                                 </td>
                                 <td>
                                     <span class="text-dark fw-medium">{{ number_format($itTotal, 0) }} VND</span>

@@ -60,6 +60,36 @@
             padding: 1rem;
         }
     }
+    
+    .avatar-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .avatar-image {
+        border: 3px solid white;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .avatar-container .btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .image-preview {
+        transition: all 0.3s ease;
+    }
+    
+    .image-preview:hover {
+        transform: scale(1.05);
+    }
 </style>
 @endpush
 
@@ -71,8 +101,22 @@
             <div class="col-lg-3 mb-4">
                 <div class="account-sidebar rounded-lg p-6 text-white mb-4">
                     <div class="text-center mb-6">
-                        <div class="avatar-placeholder mx-auto mb-3">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                        <div class="avatar-container mx-auto mb-3 position-relative">
+                            @if(Auth::user()->image_profile)
+                                <img src="{{ asset('storage/' . Auth::user()->image_profile) }}" 
+                                     alt="Ảnh đại diện" 
+                                     class="avatar-image rounded-circle"
+                                     style="width: 80px; height: 80px; object-fit: cover;">
+                            @else
+                                <div class="avatar-placeholder">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            <button type="button" class="btn btn-sm btn-light position-absolute bottom-0 end-0" 
+                                    onclick="document.getElementById('image_profile').click()" 
+                                    title="Đổi ảnh đại diện">
+                                <i class="fas fa-camera"></i>
+                            </button>
                         </div>
                         <h4 class="font-bold text-lg">{{ Auth::user()->name }}</h4>
                         <p class="text-white/80 text-sm">{{ Auth::user()->email }}</p>
@@ -144,6 +188,50 @@
                     @method('PUT')
                         @csrf
                         @method('PUT')
+                        
+                        <!-- Upload ảnh đại diện -->
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-camera me-2 text-orange-500"></i>
+                                Ảnh đại diện
+                            </label>
+                            <div class="d-flex align-items-center">
+                                <div class="me-4">
+                                    @if(Auth::user()->image_profile)
+                                        <img src="{{ asset('storage/' . Auth::user()->image_profile) }}" 
+                                             alt="Ảnh đại diện hiện tại" 
+                                             class="rounded-circle border"
+                                             style="width: 100px; height: 100px; object-fit: cover;">
+                                    @else
+                                        <div class="rounded-circle border d-flex align-items-center justify-content-center bg-light"
+                                             style="width: 100px; height: 100px;">
+                                            <i class="fas fa-user fa-3x text-muted"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="file" 
+                                           class="form-control @error('image_profile') is-invalid @enderror" 
+                                           id="image_profile" 
+                                           name="image_profile" 
+                                           accept="image/*"
+                                           style="display: none;">
+                                    <button type="button" 
+                                            class="btn btn-outline-primary me-2" 
+                                            onclick="document.getElementById('image_profile').click()">
+                                        <i class="fas fa-upload me-2"></i>
+                                        Chọn ảnh
+                                    </button>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Hỗ trợ: JPG, PNG, GIF, WEBP. Tối đa 2MB.
+                                    </small>
+                                    @error('image_profile')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -298,6 +386,70 @@ document.addEventListener('DOMContentLoaded', function() {
             field.classList.toggle('is-invalid', !isValid);
             field.classList.toggle('is-valid', isValid);
         }
+    }
+    
+    // Image upload preview
+    const imageInput = document.getElementById('image_profile');
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Vui lòng chọn một tệp ảnh hợp lệ.');
+                    this.value = '';
+                    return;
+                }
+                
+                // Validate file size (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Kích thước ảnh không được vượt quá 2MB.');
+                    this.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update main preview in form
+                    const mainPreview = document.querySelector('.form-group .rounded-circle');
+                    if (mainPreview) {
+                        if (mainPreview.tagName === 'IMG') {
+                            mainPreview.src = e.target.result;
+                        } else {
+                            // Replace placeholder with image
+                            const newImg = document.createElement('img');
+                            newImg.src = e.target.result;
+                            newImg.alt = 'Ảnh đại diện mới';
+                            newImg.className = 'rounded-circle border image-preview';
+                            newImg.style.width = '100px';
+                            newImg.style.height = '100px';
+                            newImg.style.objectFit = 'cover';
+                            mainPreview.parentNode.replaceChild(newImg, mainPreview);
+                        }
+                    }
+                    
+                    // Update sidebar preview
+                    const sidebarPreview = document.querySelector('.avatar-container img');
+                    if (sidebarPreview) {
+                        sidebarPreview.src = e.target.result;
+                    } else {
+                        // Replace placeholder in sidebar
+                        const sidebarPlaceholder = document.querySelector('.avatar-placeholder');
+                        if (sidebarPlaceholder) {
+                            const newImg = document.createElement('img');
+                            newImg.src = e.target.result;
+                            newImg.alt = 'Ảnh đại diện';
+                            newImg.className = 'avatar-image rounded-circle';
+                            newImg.style.width = '80px';
+                            newImg.style.height = '80px';
+                            newImg.style.objectFit = 'cover';
+                            sidebarPlaceholder.parentNode.replaceChild(newImg, sidebarPlaceholder);
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
     
     // Smooth animations

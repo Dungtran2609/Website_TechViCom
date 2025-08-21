@@ -121,8 +121,10 @@
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
                 <a href="{{ route('home') }}" class="flex items-center">
-                    <img src="{{ asset('admin_css/images/logo_techvicom.png') }}" alt="Techvicom"
-                        class="w-10 h-10 rounded-lg mr-3 object-cover">
+                    @php
+                        $clientLogo = \App\Models\Logo::where('type', 'client')->orderByDesc('id')->first();
+                    @endphp
+                    <img src="{{ $clientLogo ? asset('storage/' . $clientLogo->path) : asset('admin_css/images/logo_techvicom.png') }}" alt="{{ $clientLogo->alt ?? 'Techvicom' }}" class="w-10 h-10 rounded-lg mr-3 object-cover">
                     <span class="text-xl font-bold text-gray-800">Techvicom</span>
                 </a>
             </div>
@@ -148,7 +150,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             @if (isset($categories) && $categories->count() > 0)
                                 @foreach ($categories->take(6) as $category)
-                                    <a href="{{ route('categories.show', $category->slug) }}"
+                                    <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                         class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                                         <!-- Shared icon (ignore per-category images) -->
                                         <div class="cat-icon mr-3 group-hover:scale-110 transition-transform">
@@ -318,6 +320,10 @@
                                     <a href="{{ route('accounts.addresses') }}"
                                         class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                         <i class="fas fa-map-marker-alt mr-3 text-gray-400"></i> Địa chỉ giao hàng
+                                    </a>
+                                    <a href="{{ route('products.love') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-heart mr-3 text-gray-400"></i> Sản phẩm yêu thích
                                     </a>
 
                                     <div class="border-t border-gray-200 my-2"></div>
@@ -575,7 +581,11 @@
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
       <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
-        <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
+        <h4 class="font-medium text-gray-900 text-sm">
+          <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">
+            ${item.name}
+          </a>
+        </h4>
         ${variantHtml}
         <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
         ${

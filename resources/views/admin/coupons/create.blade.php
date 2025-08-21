@@ -10,6 +10,71 @@
 
             <div class="row g-3">
                 <div class="col-md-6">
+                    <label class="form-label">Kiểu áp dụng</label>
+                    <select name="apply_type" id="apply_type" class="form-select">
+                        <option value="all" {{ old('apply_type') == 'all' ? 'selected' : '' }}>Tất cả đơn hàng</option>
+                        <option value="product" {{ old('apply_type') == 'product' ? 'selected' : '' }}>Theo sản phẩm</option>
+                        <option value="category" {{ old('apply_type') == 'category' ? 'selected' : '' }}>Theo danh mục</option>
+                        <option value="user" {{ old('apply_type') == 'user' ? 'selected' : '' }}>Theo người dùng</option>
+                    </select>
+                    @error('apply_type')
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
+
+                <div class="col-md-6" id="category_select_box" style="display:none;">
+                    <label class="form-label">Chọn danh mục áp dụng</label>
+                    <select name="category_ids[]" id="category_id" class="form-select" multiple>
+                        @php
+                            $selectedCategories = old('category_ids', []);
+                        @endphp
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ in_array($cat->id, $selectedCategories) ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6" id="product_select_box" style="display:none;">
+                    <label class="form-label">Chọn sản phẩm áp dụng</label>
+                    <select name="product_ids[]" id="product_id" class="form-select" multiple>
+                        @php
+                            $selectedProducts = old('product_ids', []);
+                        @endphp
+                        @foreach($products as $prod)
+                            <option value="{{ $prod->id }}" {{ in_array($prod->id, $selectedProducts) ? 'selected' : '' }}>{{ $prod->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6" id="user_select_box" style="display:none;">
+                    <label class="form-label">Chọn người dùng áp dụng</label>
+                    <select name="user_ids[]" id="user_id" class="form-select" multiple>
+                        @php
+                            $selectedUsers = old('user_ids', []);
+                        @endphp
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" {{ in_array($user->id, $selectedUsers) ? 'selected' : '' }}>{{ $user->name }} ({{ $user->email }})</option>
+                        @endforeach
+                    </select>
+                </div>
+@push('scripts')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    function toggleApplyTypeFields() {
+        var type = $('#apply_type').val();
+        $('#category_select_box').toggle(type === 'category');
+        $('#product_select_box').toggle(type === 'product');
+        $('#user_select_box').toggle(type === 'user');
+    }
+    $('#apply_type').on('change', toggleApplyTypeFields);
+    toggleApplyTypeFields();
+    $('#category_id').select2({placeholder: 'Chọn danh mục', allowClear: true, width: '100%'});
+    $('#product_id').select2({placeholder: 'Chọn sản phẩm', allowClear: true, width: '100%'});
+    $('#user_id').select2({placeholder: 'Chọn người dùng', allowClear: true, width: '100%'});
+});
+</script>
+@endpush
+                <div class="col-md-6">
     <label class="form-label">Mã</label>
     <input type="text" name="code" class="form-control" value="{{ old('code') }}">
     @error('code')

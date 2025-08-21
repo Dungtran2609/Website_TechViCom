@@ -17,21 +17,46 @@ class AdminCategoryController extends Controller
     {
         $query = Category::with('parent');
 
+        // Lọc theo trạng thái
+        if (request()->filled('status')) {
+            $status = request('status');
+            if ($status !== '') {
+                $query->where('status', $status);
+            }
+        }
+
+        // Lọc theo danh mục cha
+        if (request()->filled('parent_id')) {
+            $parentId = request('parent_id');
+            if ($parentId !== '') {
+                $query->where('parent_id', $parentId);
+            }
+        }
+
+        // Lọc theo danh mục con (id cụ thể)
+        if (request()->filled('child_id')) {
+            $childId = request('child_id');
+            if ($childId !== '') {
+                $query->where('id', $childId);
+            }
+        }
 
         if (request()->has('search')) {
             $search = request('search');
             $query->where('name', 'like', '%' . $search . '%');
         }
 
-
-        // Sắp xếp theo mới nhất
-        $query->orderBy('id', 'desc');
-
+        // Sắp xếp theo update mới nhất
+        $query->orderBy('updated_at', 'desc');
 
         $categories = $query->paginate(5)->withQueryString();
 
+        // Lấy danh sách danh mục cha và con để render filter
+        $allCategories = Category::all();
+        $parentCategories = $allCategories->where('parent_id', null);
+        $childCategories = $allCategories->where('parent_id', '!=', null);
 
-        return view('admin.products.categories.index', compact('categories'));
+        return view('admin.products.categories.index', compact('categories', 'parentCategories', 'childCategories'));
     }
 
 

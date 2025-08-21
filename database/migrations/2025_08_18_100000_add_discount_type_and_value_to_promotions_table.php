@@ -7,7 +7,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('promotions', function (Blueprint $table) {
-            $table->string('discount_type')->nullable()->after('type');
+            $table->string('discount_type')->nullable()->after('flash_type');
             $table->decimal('discount_value', 15, 2)->nullable()->after('discount_type');
         });
     }

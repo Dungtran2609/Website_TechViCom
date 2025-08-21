@@ -14,7 +14,6 @@
         </div>
     </div>
 
-
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.products.index') }}"
@@ -57,6 +56,13 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
 
     <div class="card">
         <div class="card-body">
@@ -64,6 +70,7 @@
                 <table class="table align-middle table-hover">
                     <thead class="bg-light-subtle">
                         <tr>
+                            <th>ID</th>
                             <th>Ảnh</th>
                             <th>Tên sản phẩm</th>
                             <th>Loại</th>
@@ -76,6 +83,7 @@
                     <tbody>
                         @forelse ($products as $product)
                             <tr>
+                                <td>{{ $product->id }}</td>
                                 <td>
                                     @if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail))
                                         <img src="{{ asset('storage/' . $product->thumbnail) }}" alt="{{ $product->name }}"

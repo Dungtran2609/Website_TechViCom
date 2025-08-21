@@ -71,8 +71,15 @@ class AdminUserController extends Controller
         ]);
 
 
-        $user->roles()->sync($request->roles);
-
+        // Gán vai trò mặc định là 'user' nếu không chọn vai trò nào
+        $roleIds = $request->roles;
+        if (empty($roleIds)) {
+            $userRole = \App\Models\Role::where('slug', 'user')->orWhere('name', 'user')->first();
+            if ($userRole) {
+                $roleIds = [$userRole->id];
+            }
+        }
+        $user->roles()->sync($roleIds);
 
         if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
             $user->addresses()->create([

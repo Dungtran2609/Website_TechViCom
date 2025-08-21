@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Aug 17, 2025 at 09:21 PM
+-- Generation Time: Aug 20, 2025 at 12:36 AM
 -- Server version: 8.0.30
--- PHP Version: 8.2.20
+-- PHP Version: 8.3.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -43,9 +43,9 @@ CREATE TABLE `attributes` (
 --
 
 INSERT INTO `attributes` (`id`, `name`, `slug`, `type`, `description`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'Màu sắc', 'mau-sac', 'color', NULL, NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(2, 'RAM', 'ram', 'text', NULL, NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(3, 'Bộ nhớ trong', 'bo-nho-trong', 'text', NULL, NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09');
+(1, 'Màu sắc', 'mau-sac', 'color', NULL, NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'RAM', 'ram', 'text', NULL, NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 'Bộ nhớ trong', 'bo-nho-trong', 'text', NULL, NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -103,9 +103,9 @@ CREATE TABLE `banners` (
 --
 
 INSERT INTO `banners` (`id`, `stt`, `image`, `start_date`, `end_date`, `link`, `created_at`, `updated_at`) VALUES
-(1, 1, 'uploads/banners/banner1.jpg', '2025-08-08 04:06:10', '2025-09-07 04:06:10', 'https://techvicom.vn/', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 2, 'uploads/banners/banner2.jpg', '2025-08-13 04:06:10', '2025-09-12 04:06:10', 'https://techvicom.vn/khuyen-mai', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 3, 'uploads/banners/banner3.jpg', '2025-08-17 04:06:10', '2025-09-17 04:06:10', NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10');
+(1, 1, 'uploads/banners/banner1.jpg', '2025-08-10 07:32:37', '2025-09-09 07:32:37', 'https://techvicom.vn/', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 2, 'uploads/banners/banner2.jpg', '2025-08-15 07:32:37', '2025-09-14 07:32:37', 'https://techvicom.vn/khuyen-mai', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 3, 'uploads/banners/banner3.jpg', '2025-08-19 07:32:37', '2025-09-19 07:32:37', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -130,16 +130,16 @@ CREATE TABLE `brands` (
 --
 
 INSERT INTO `brands` (`id`, `name`, `image`, `slug`, `description`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Apple', 'brands/apple.png', 'apple', 'Chuyên các sản phẩm iPhone, MacBook, iPad.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(2, 'Samsung', 'brands/samsung.png', 'samsung', 'Thương hiệu điện thoại Android và thiết bị gia dụng.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(3, 'ASUS', 'brands/asus.png', 'asus', 'Chuyên laptop văn phòng, gaming, bo mạch chủ.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, 'Xiaomi', 'brands/xiaomi.png', 'xiaomi', 'Điện thoại thông minh và thiết bị IoT giá rẻ.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 'Dell', 'brands/dell.png', 'dell', 'Laptop doanh nhân và máy chủ hiệu suất cao.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 'HP', 'brands/hp.png', 'hp', 'Thương hiệu máy tính và thiết bị in ấn phổ biến.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(7, 'Lenovo', 'brands/lenovo.png', 'lenovo', 'Máy tính văn phòng, gaming và máy trạm.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(8, 'Sony', 'brands/sony.png', 'sony', 'Thiết bị giải trí, PlayStation và âm thanh cao cấp.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(9, 'MSI', 'brands/msi.png', 'msi', 'Chuyên laptop và linh kiện gaming cao cấp.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(10, 'Acer', 'brands/acer.png', 'acer', 'Laptop học sinh, sinh viên và văn phòng giá rẻ.', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, 'Apple', 'brands/apple.png', 'apple', 'Chuyên các sản phẩm iPhone, MacBook, iPad.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 'Samsung', 'brands/samsung.png', 'samsung', 'Thương hiệu điện thoại Android và thiết bị gia dụng.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 'ASUS', 'brands/asus.png', 'asus', 'Chuyên laptop văn phòng, gaming, bo mạch chủ.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 'Xiaomi', 'brands/xiaomi.png', 'xiaomi', 'Điện thoại thông minh và thiết bị IoT giá rẻ.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 'Dell', 'brands/dell.png', 'dell', 'Laptop doanh nhân và máy chủ hiệu suất cao.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 'HP', 'brands/hp.png', 'hp', 'Thương hiệu máy tính và thiết bị in ấn phổ biến.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 'Lenovo', 'brands/lenovo.png', 'lenovo', 'Máy tính văn phòng, gaming và máy trạm.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 'Sony', 'brands/sony.png', 'sony', 'Thiết bị giải trí, PlayStation và âm thanh cao cấp.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(9, 'MSI', 'brands/msi.png', 'msi', 'Chuyên laptop và linh kiện gaming cao cấp.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(10, 'Acer', 'brands/acer.png', 'acer', 'Laptop học sinh, sinh viên và văn phòng giá rẻ.', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -181,13 +181,6 @@ CREATE TABLE `carts` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `carts`
---
-
-INSERT INTO `carts` (`id`, `user_id`, `product_id`, `variant_id`, `quantity`, `created_at`, `updated_at`) VALUES
-(2, 13, 1, 2, 1, '2025-08-17 21:07:20', '2025-08-17 21:07:20');
-
 -- --------------------------------------------------------
 
 --
@@ -211,20 +204,20 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `parent_id`, `name`, `slug`, `image`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, NULL, 'Laptop', 'laptop', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(2, NULL, 'Điện thoại', 'dien-thoai', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(3, NULL, 'Tablet', 'tablet', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, NULL, 'Phụ kiện', 'phu-kien', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 1, 'Laptop Gaming', 'laptop-gaming', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 1, 'Laptop Văn phòng', 'laptop-van-phong', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(7, 1, 'MacBook', 'macbook', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(8, 2, 'iPhone', 'iphone', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(9, 2, 'Samsung Galaxy', 'samsung-galaxy', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(10, 2, 'Xiaomi', 'xiaomi', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(11, 3, 'iPad', 'ipad', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(12, 3, 'Samsung Tab', 'samsung-tab', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(13, 4, 'Tai nghe', 'tai-nghe', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(14, 4, 'Sạc và cáp', 'sac-va-cap', NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, NULL, 'Laptop', 'laptop', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, NULL, 'Điện thoại', 'dien-thoai', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, NULL, 'Tablet', 'tablet', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, NULL, 'Phụ kiện', 'phu-kien', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 1, 'Laptop Gaming', 'laptop-gaming', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 1, 'Laptop Văn phòng', 'laptop-van-phong', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 1, 'MacBook', 'macbook', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 2, 'iPhone', 'iphone', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(9, 2, 'Samsung Galaxy', 'samsung-galaxy', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(10, 2, 'Xiaomi', 'xiaomi', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(11, 3, 'iPad', 'ipad', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(12, 3, 'Samsung Tab', 'samsung-tab', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(13, 4, 'Tai nghe', 'tai-nghe', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(14, 4, 'Sạc và cáp', 'sac-va-cap', NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -254,16 +247,16 @@ CREATE TABLE `contacts` (
 --
 
 INSERT INTO `contacts` (`id`, `name`, `email`, `phone`, `subject`, `message`, `user_id`, `handled_by`, `status`, `response`, `responded_at`, `is_read`, `created_at`, `updated_at`) VALUES
-(1, 'Nguyễn Văn A', 'vana@example.com', '0909123456', 'Hỏi về sản phẩm', 'Cho tôi hỏi sản phẩm này còn hàng không?', 13, NULL, 'pending', NULL, NULL, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 'Trần Thị B', 'thib@example.com', '0911222333', 'Thắc mắc giao hàng', 'Tôi muốn biết khi nào đơn hàng được giao.', 10, NULL, 'pending', NULL, NULL, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 'Lê Văn C', 'vanc@example.com', '0922333444', 'Hủy đơn hàng', 'Tôi muốn hủy đơn hàng vừa đặt.', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(4, 'Phạm Thị D', 'thid@example.com', '0933444555', 'Phản hồi dịch vụ', 'Dịch vụ chăm sóc khách hàng rất tốt.', NULL, NULL, 'pending', NULL, NULL, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(5, 'Đỗ Minh E', 'minhe@example.com', '0944555666', 'Đổi hàng', 'Tôi muốn đổi sản phẩm vì bị lỗi.', 9, NULL, 'pending', NULL, NULL, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(6, 'Hoàng Thị F', 'thif@example.com', '0955666777', 'Cần tư vấn', 'Bạn có thể tư vấn giúp tôi sản phẩm phù hợp?', NULL, NULL, 'pending', NULL, NULL, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(7, 'Ngô Văn G', 'vang@example.com', '0966777888', 'Góp ý', 'Website của bạn rất dễ sử dụng.', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(8, 'Vũ Thị H', 'thih@example.com', '0977888999', 'Thanh toán', 'Tôi muốn đổi phương thức thanh toán.', 7, NULL, 'pending', NULL, NULL, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(9, 'Bùi Văn I', 'vani@example.com', '0988999000', 'Khuyến mãi', 'Cửa hàng hiện có chương trình khuyến mãi nào?', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(10, 'Lý Thị K', 'thik@example.com', '0999000111', 'Đặt hàng lỗi', 'Tôi không thể đặt hàng trên website.', 2, NULL, 'pending', NULL, NULL, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10');
+(1, 'Nguyễn Văn A', 'vana@example.com', '0909123456', 'Hỏi về sản phẩm', 'Cho tôi hỏi sản phẩm này còn hàng không?', 13, NULL, 'pending', NULL, NULL, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'Trần Thị B', 'thib@example.com', '0911222333', 'Thắc mắc giao hàng', 'Tôi muốn biết khi nào đơn hàng được giao.', 10, NULL, 'pending', NULL, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 'Lê Văn C', 'vanc@example.com', '0922333444', 'Hủy đơn hàng', 'Tôi muốn hủy đơn hàng vừa đặt.', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 'Phạm Thị D', 'thid@example.com', '0933444555', 'Phản hồi dịch vụ', 'Dịch vụ chăm sóc khách hàng rất tốt.', NULL, NULL, 'pending', NULL, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 'Đỗ Minh E', 'minhe@example.com', '0944555666', 'Đổi hàng', 'Tôi muốn đổi sản phẩm vì bị lỗi.', 9, NULL, 'pending', NULL, NULL, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 'Hoàng Thị F', 'thif@example.com', '0955666777', 'Cần tư vấn', 'Bạn có thể tư vấn giúp tôi sản phẩm phù hợp?', NULL, NULL, 'pending', NULL, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 'Ngô Văn G', 'vang@example.com', '0966777888', 'Góp ý', 'Website của bạn rất dễ sử dụng.', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 'Vũ Thị H', 'thih@example.com', '0977888999', 'Thanh toán', 'Tôi muốn đổi phương thức thanh toán.', 7, NULL, 'pending', NULL, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 'Bùi Văn I', 'vani@example.com', '0988999000', 'Khuyến mãi', 'Cửa hàng hiện có chương trình khuyến mãi nào?', NULL, NULL, 'pending', NULL, NULL, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 'Lý Thị K', 'thik@example.com', '0999000111', 'Đặt hàng lỗi', 'Tôi không thể đặt hàng trên website.', 2, NULL, 'pending', NULL, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -285,20 +278,21 @@ CREATE TABLE `coupons` (
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `promotion_id` bigint UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `coupons`
 --
 
-INSERT INTO `coupons` (`id`, `code`, `discount_type`, `value`, `max_discount_amount`, `min_order_value`, `max_order_value`, `max_usage_per_user`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'DISCOUNT10', 'percent', 10, 100000, 500000, 5000000, 5, '2025-08-08', '2025-09-18', 1, NULL, NULL, NULL),
-(2, 'BIGSALE10', 'percent', 10, 20000000, 50000000, 1000000000, 1, '2025-08-17', '2025-09-18', 1, NULL, NULL, NULL),
-(3, 'VIPFIXED', 'fixed', 50000000, NULL, 200000000, 2000000000, 1, '2025-08-17', '2025-09-18', 1, NULL, NULL, NULL),
-(4, 'MEGAVIP', 'percent', 50, 100000000, 500000000, 5000000000, 1, '2025-08-17', '2025-09-18', 1, NULL, NULL, NULL),
-(5, 'SALE50', 'percent', 50, 100000, 200000, 1000000, 2, '2025-08-17', '2025-09-17', 1, NULL, NULL, NULL),
-(6, 'SALE100', 'percent', 50, 100000, 200000, 1000000, 2, '2025-08-17', '2025-09-17', 1, NULL, NULL, NULL);
+INSERT INTO `coupons` (`id`, `code`, `discount_type`, `value`, `max_discount_amount`, `min_order_value`, `max_order_value`, `max_usage_per_user`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `deleted_at`, `promotion_id`) VALUES
+(1, 'DISCOUNT10', 'percent', 10, 100000, 500000, 5000000, 5, '2025-08-10', '2025-09-20', 1, NULL, '2025-08-20 00:33:19', NULL, NULL),
+(2, 'BIGSALE10', 'percent', 10, 20000000, 50000000, 1000000000, 1, '2025-08-19', '2025-09-20', 1, NULL, NULL, NULL, 2),
+(3, 'VIPFIXED', 'fixed', 50000000, NULL, 200000000, 2000000000, 1, '2025-08-19', '2025-09-20', 1, NULL, NULL, NULL, NULL),
+(4, 'MEGAVIP', 'percent', 50, 100000000, 500000000, 5000000000, 1, '2025-08-19', '2025-09-20', 1, NULL, NULL, NULL, NULL),
+(5, 'SALE50', 'percent', 50, 100000, 200000, 90000000, 2, '2025-08-19', '2025-09-19', 1, NULL, '2025-08-20 00:35:12', NULL, 1),
+(6, 'SALE100', 'percent', 50, 100000, 200000, 1000000, 2, '2025-08-19', '2025-09-19', 1, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -350,6 +344,57 @@ CREATE TABLE `job_batches` (
   `created_at` int NOT NULL,
   `finished_at` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `logos`
+--
+
+CREATE TABLE `logos` (
+  `id` bigint UNSIGNED NOT NULL,
+  `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'client',
+  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `alt` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `logos`
+--
+
+INSERT INTO `logos` (`id`, `type`, `path`, `alt`, `created_at`, `updated_at`) VALUES
+(1, 'client', 'logos/logo_techvicom.png', 'Logo trang chủ', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'admin', 'logos/logo_techvicom.png', 'Logo admin', '2025-08-20 00:32:37', '2025-08-20 00:32:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mail_templates`
+--
+
+CREATE TABLE `mail_templates` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `auto_send` tinyint(1) NOT NULL DEFAULT '0',
+  `type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `mail_templates`
+--
+
+INSERT INTO `mail_templates` (`id`, `name`, `subject`, `content`, `is_active`, `auto_send`, `type`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'Chào mừng', 'Chào mừng bạn đến với TechViCom!', '<p>Xin chào <b>{{ $user->name }}</b>,<br>Chào mừng bạn đã đăng ký tài khoản tại TechViCom!</p>', 1, 1, 'welcome', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 'Gửi mã giảm giá', 'Nhận mã giảm giá đặc biệt từ TechViCom', '<p>Chào {{ $user->name }},<br>Bạn nhận được mã giảm giá: <b>{{ $coupon_code }}</b></p>', 1, 0, 'coupon', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 'Chúc mừng sinh nhật', 'TechViCom chúc mừng sinh nhật bạn!', '<p>Chúc mừng sinh nhật {{ $user->name }}!<br>Chúc bạn một ngày thật vui vẻ và nhận nhiều ưu đãi từ TechViCom.</p>', 1, 1, 'birthday', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -412,7 +457,16 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (42, '2025_08_15_024219_increase_vnpay_url_length_in_orders_table', 1),
 (43, '2025_08_15_141822_alter_variant_id_nullable_in_order_items_table', 1),
 (44, '2025_08_15_181227_rename_product_variant_id_to_variant_id_in_carts_table', 1),
-(45, '2025_08_17_165602_add_vnp_columns_to_orders_table', 1);
+(45, '2025_08_17_165602_add_vnp_columns_to_orders_table', 1),
+(46, '2025_08_18_000001_create_promotions_table', 1),
+(47, '2025_08_18_000002_add_promotion_id_to_coupons_table', 1),
+(48, '2025_08_18_000003_create_promotion_category_table', 1),
+(49, '2025_08_18_000004_create_promotion_product_table', 1),
+(50, '2025_08_18_025406_add_social_columns_to_users_table', 1),
+(51, '2025_08_18_061620_create_mail_templates_table', 1),
+(52, '2025_08_18_100000_add_discount_type_and_value_to_promotions_table', 1),
+(53, '2025_08_18_120000_add_softdeletes_to_mail_templates_table', 1),
+(54, '2025_08_19_000000_create_logos_table', 1);
 
 -- --------------------------------------------------------
 
@@ -463,14 +517,14 @@ CREATE TABLE `news` (
 --
 
 INSERT INTO `news` (`id`, `category_id`, `title`, `content`, `image`, `author_id`, `status`, `published_at`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 1, 'Giảm giá 50% cho đơn hàng đầu tiên', 'Hãy nhanh tay nhận ưu đãi 50% khi mua hàng lần đầu tiên tại cửa hàng chúng tôi.', 'uploads/news/default.jpg', 13, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(2, 1, 'Mua 1 tặng 1 cuối tuần', 'Chương trình mua 1 tặng 1 áp dụng từ thứ 6 đến chủ nhật hàng tuần.', 'uploads/news/default.jpg', 13, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(3, 2, 'iPhone 15 chính thức ra mắt', 'Apple đã giới thiệu iPhone 15 với nhiều cải tiến về hiệu năng và camera.', 'uploads/news/default.jpg', 10, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(4, 2, 'Samsung trình làng Galaxy Z Flip6', 'Samsung tiếp tục đẩy mạnh phân khúc điện thoại gập với Galaxy Z Flip6.', 'uploads/news/default.jpg', 7, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(5, 3, 'Hướng dẫn sử dụng máy ép chậm', 'Bài viết sẽ giúp bạn hiểu rõ cách sử dụng máy ép chậm để giữ nguyên dưỡng chất.', 'uploads/news/default.jpg', 7, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(6, 3, 'Cách bảo quản tai nghe không dây', 'Giữ gìn tai nghe đúng cách giúp kéo dài tuổi thọ và giữ âm thanh tốt.', 'uploads/news/default.jpg', 7, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(7, 4, 'Đánh giá laptop Asus Zenbook 14', 'Asus Zenbook 14 nổi bật với thiết kế mỏng nhẹ, pin trâu và hiệu năng ổn định.', 'uploads/news/default.jpg', 13, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL),
-(8, 4, 'So sánh Xiaomi Redmi Note 12 và Realme 11', 'Cùng so sánh hai sản phẩm tầm trung hot nhất hiện nay.', 'uploads/news/default.jpg', 13, 'published', '2025-08-17 21:06:10', '2025-08-17 21:06:10', '2025-08-17 21:06:10', NULL);
+(1, 1, 'Giảm giá 50% cho đơn hàng đầu tiên', 'Hãy nhanh tay nhận ưu đãi 50% khi mua hàng lần đầu tiên tại cửa hàng chúng tôi.', 'uploads/news/default.jpg', 10, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 1, 'Mua 1 tặng 1 cuối tuần', 'Chương trình mua 1 tặng 1 áp dụng từ thứ 6 đến chủ nhật hàng tuần.', 'uploads/news/default.jpg', 10, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 2, 'iPhone 15 chính thức ra mắt', 'Apple đã giới thiệu iPhone 15 với nhiều cải tiến về hiệu năng và camera.', 'uploads/news/default.jpg', 13, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 2, 'Samsung trình làng Galaxy Z Flip6', 'Samsung tiếp tục đẩy mạnh phân khúc điện thoại gập với Galaxy Z Flip6.', 'uploads/news/default.jpg', 10, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 3, 'Hướng dẫn sử dụng máy ép chậm', 'Bài viết sẽ giúp bạn hiểu rõ cách sử dụng máy ép chậm để giữ nguyên dưỡng chất.', 'uploads/news/default.jpg', 9, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 3, 'Cách bảo quản tai nghe không dây', 'Giữ gìn tai nghe đúng cách giúp kéo dài tuổi thọ và giữ âm thanh tốt.', 'uploads/news/default.jpg', 9, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 4, 'Đánh giá laptop Asus Zenbook 14', 'Asus Zenbook 14 nổi bật với thiết kế mỏng nhẹ, pin trâu và hiệu năng ổn định.', 'uploads/news/default.jpg', 2, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 4, 'So sánh Xiaomi Redmi Note 12 và Realme 11', 'Cùng so sánh hai sản phẩm tầm trung hot nhất hiện nay.', 'uploads/news/default.jpg', 9, 'published', '2025-08-20 00:32:37', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -491,16 +545,16 @@ CREATE TABLE `news_categories` (
 --
 
 INSERT INTO `news_categories` (`id`, `name`, `slug`, `created_at`, `updated_at`) VALUES
-(1, 'Khuyến mãi', 'khuyen-mai', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 'Tin tức công nghệ', 'tin-tuc-cong-nghe', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 'Hướng dẫn sử dụng sản phẩm', 'huong-dan-su-dung-san-pham', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(4, 'Đánh giá sản phẩm', 'danh-gia-san-pham', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(5, 'Mẹo vặt công nghệ', 'meo-vat-cong-nghe', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(6, 'Sự kiện và ra mắt sản phẩm', 'su-kien-ra-mat-san-pham', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(7, 'Review cửa hàng', 'review-cua-hang', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(8, 'Chăm sóc khách hàng', 'cham-soc-khach-hang', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(9, 'Mua sắm trực tuyến', 'mua-sam-truc-tuyen', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(10, 'Sản phẩm mới', 'san-pham-moi', '2025-08-17 21:06:10', '2025-08-17 21:06:10');
+(1, 'Khuyến mãi', 'khuyen-mai', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'Tin tức công nghệ', 'tin-tuc-cong-nghe', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 'Hướng dẫn sử dụng sản phẩm', 'huong-dan-su-dung-san-pham', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 'Đánh giá sản phẩm', 'danh-gia-san-pham', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 'Mẹo vặt công nghệ', 'meo-vat-cong-nghe', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 'Sự kiện và ra mắt sản phẩm', 'su-kien-ra-mat-san-pham', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 'Review cửa hàng', 'review-cua-hang', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 'Chăm sóc khách hàng', 'cham-soc-khach-hang', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 'Mua sắm trực tuyến', 'mua-sam-truc-tuyen', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 'Sản phẩm mới', 'san-pham-moi', '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -525,63 +579,65 @@ CREATE TABLE `news_comments` (
 --
 
 INSERT INTO `news_comments` (`id`, `user_id`, `news_id`, `parent_id`, `content`, `is_hidden`, `likes_count`, `created_at`, `updated_at`) VALUES
-(1, 13, 1, NULL, 'Thông tin chi tiết và rõ ràng.', 1, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 13, 1, 1, '↪ Rất mong có thêm bài viết tương tự.', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 9, 1, NULL, 'Bài viết rất hữu ích, cảm ơn bạn!', 1, 10, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(4, 7, 1, NULL, 'Rất thích nội dung kiểu này.', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(5, 10, 1, 4, '↪ Rất mong có thêm bài viết tương tự.', 1, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(6, 10, 2, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 1, 7, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(7, 9, 2, NULL, 'Rất thích nội dung kiểu này.', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(8, 7, 2, 7, '↪ Rất thích nội dung kiểu này.', 0, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(9, 13, 2, 7, '↪ Rất mong có thêm bài viết tương tự.', 1, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(10, 7, 2, NULL, 'Có thể giải thích thêm phần này được không?', 1, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(11, 2, 3, NULL, 'Rất mong có thêm bài viết tương tự.', 1, 10, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(12, 7, 3, NULL, 'Có thể giải thích thêm phần này được không?', 1, 9, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(13, 2, 3, 12, '↪ Sản phẩm này mình đã dùng, rất ok.', 0, 2, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(14, 10, 3, 12, '↪ Sản phẩm này mình đã dùng, rất ok.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(15, 9, 3, NULL, 'Cảm ơn bạn đã chia sẻ!', 1, 8, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(16, 7, 3, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 8, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(17, 7, 3, 16, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(18, 13, 3, 16, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(19, 7, 4, NULL, 'Thông tin chi tiết và rõ ràng.', 1, 7, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(20, 13, 4, NULL, 'Cảm ơn bạn đã chia sẻ!', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(21, 2, 4, 20, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(22, 7, 4, NULL, 'Thông tin chi tiết và rõ ràng.', 0, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(23, 9, 4, 22, '↪ Cảm ơn bạn đã chia sẻ!', 1, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(24, 9, 4, NULL, 'Rất mong có thêm bài viết tương tự.', 0, 8, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(25, 2, 4, 24, '↪ Cảm ơn bạn đã chia sẻ!', 1, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(26, 10, 4, NULL, 'Thông tin chi tiết và rõ ràng.', 1, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(27, 7, 4, 26, '↪ Rất mong có thêm bài viết tương tự.', 0, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(28, 9, 4, 26, '↪ Rất thích nội dung kiểu này.', 1, 2, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(29, 13, 5, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 1, 9, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(30, 2, 5, 29, '↪ Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(31, 9, 5, NULL, 'Rất mong có thêm bài viết tương tự.', 1, 9, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(32, 7, 5, 31, '↪ Bài viết hay nhưng nên bổ sung thêm ví dụ.', 1, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(33, 10, 5, 31, '↪ Có thể giải thích thêm phần này được không?', 1, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(34, 9, 5, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(35, 10, 5, NULL, 'Cảm ơn bạn đã chia sẻ!', 0, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(36, 13, 5, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 10, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(37, 2, 5, 36, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(38, 9, 5, 36, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(39, 9, 6, NULL, 'Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(40, 9, 6, 39, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(41, 9, 6, NULL, 'Có thể giải thích thêm phần này được không?', 0, 8, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(42, 7, 6, 41, '↪ Bài viết rất hữu ích, cảm ơn bạn!', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(43, 2, 6, 41, '↪ Thông tin chi tiết và rõ ràng.', 0, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(44, 2, 6, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 5, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(45, 7, 7, NULL, 'Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(46, 2, 7, NULL, 'Cảm ơn bạn đã chia sẻ!', 0, 8, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(47, 10, 7, NULL, 'Cảm ơn bạn đã chia sẻ!', 0, 6, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(48, 2, 7, 47, '↪ Thông tin chi tiết và rõ ràng.', 1, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(49, 13, 7, NULL, 'Rất mong có thêm bài viết tương tự.', 0, 4, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(50, 13, 7, NULL, 'Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(51, 2, 8, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 0, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(52, 9, 8, NULL, 'Bài viết rất hữu ích, cảm ơn bạn!', 0, 7, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(53, 9, 8, 52, '↪ Cảm ơn bạn đã chia sẻ!', 1, 2, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(54, 2, 8, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(55, 9, 8, 54, '↪ Có thể giải thích thêm phần này được không?', 0, 2, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(56, 2, 8, 54, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 3, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(57, 13, 8, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 1, 1, '2025-08-17 21:06:10', '2025-08-17 21:06:10');
+(1, 13, 1, NULL, 'Có thể giải thích thêm phần này được không?', 0, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 7, 1, 1, '↪ Thông tin chi tiết và rõ ràng.', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 10, 1, 1, '↪ Rất mong có thêm bài viết tương tự.', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 9, 1, NULL, 'Thông tin chi tiết và rõ ràng.', 1, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 13, 1, NULL, 'Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 9, 1, 5, '↪ Rất thích nội dung kiểu này.', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 2, 1, 5, '↪ Cảm ơn bạn đã chia sẻ!', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 7, 1, NULL, 'Bài viết rất hữu ích, cảm ơn bạn!', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 9, 1, 8, '↪ Bài viết hay nhưng nên bổ sung thêm ví dụ.', 1, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 2, 1, 8, '↪ Bài viết rất hữu ích, cảm ơn bạn!', 0, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(11, 9, 1, NULL, 'Có thể giải thích thêm phần này được không?', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(12, 2, 2, NULL, 'Có thể giải thích thêm phần này được không?', 1, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(13, 10, 2, 12, '↪ Rất thích nội dung kiểu này.', 1, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(14, 7, 2, 12, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(15, 2, 2, NULL, 'Rất mong có thêm bài viết tương tự.', 1, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(16, 9, 2, 15, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(17, 9, 2, 15, '↪ Rất thích nội dung kiểu này.', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(18, 13, 2, NULL, 'Bài viết rất hữu ích, cảm ơn bạn!', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(19, 2, 3, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(20, 9, 3, NULL, 'Rất mong có thêm bài viết tương tự.', 0, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(21, 13, 3, 20, '↪ Sản phẩm này mình đã dùng, rất ok.', 1, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(22, 2, 3, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 1, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(23, 9, 3, 22, '↪ Cảm ơn bạn đã chia sẻ!', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(24, 9, 4, NULL, 'Mình sẽ giới thiệu bài viết này cho bạn bè.', 1, 10, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(25, 10, 4, 24, '↪ Sản phẩm này mình đã dùng, rất ok.', 1, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(26, 7, 4, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(27, 9, 4, NULL, 'Thông tin chi tiết và rõ ràng.', 1, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(28, 9, 4, 27, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(29, 7, 4, NULL, 'Mình sẽ giới thiệu bài viết này cho bạn bè.', 1, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(30, 10, 4, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 5, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(31, 7, 5, NULL, 'Mình sẽ giới thiệu bài viết này cho bạn bè.', 1, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(32, 7, 5, 31, '↪ Có thể giải thích thêm phần này được không?', 1, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(33, 13, 5, NULL, 'Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 8, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(34, 10, 5, 33, '↪ Sản phẩm này mình đã dùng, rất ok.', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(35, 7, 5, 33, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(36, 13, 5, NULL, 'Rất thích nội dung kiểu này.', 1, 10, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(37, 2, 5, 36, '↪ Rất thích nội dung kiểu này.', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(38, 13, 5, 36, '↪ Có thể giải thích thêm phần này được không?', 1, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(39, 9, 5, NULL, 'Cảm ơn bạn đã chia sẻ!', 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(40, 10, 5, 39, '↪ Có thể giải thích thêm phần này được không?', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(41, 13, 6, NULL, 'Rất thích nội dung kiểu này.', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(42, 9, 6, NULL, 'Tôi đã áp dụng và thấy hiệu quả ngay.', 1, 8, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(43, 7, 6, NULL, 'Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 9, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(44, 9, 6, 43, '↪ Mình sẽ giới thiệu bài viết này cho bạn bè.', 0, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(45, 13, 6, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 0, 5, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(46, 10, 6, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 1, 9, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(47, 9, 6, 46, '↪ Sản phẩm này mình đã dùng, rất ok.', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(48, 7, 7, NULL, 'Sản phẩm này mình đã dùng, rất ok.', 1, 8, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(49, 2, 7, NULL, 'Rất thích nội dung kiểu này.', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(50, 2, 7, 49, '↪ Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(51, 10, 7, 49, '↪ Tôi đã áp dụng và thấy hiệu quả ngay.', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(52, 7, 7, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 1, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(53, 9, 8, NULL, 'Cảm ơn bạn đã chia sẻ!', 1, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(54, 2, 8, 53, '↪ Thông tin chi tiết và rõ ràng.', 0, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(55, 13, 8, NULL, 'Rất thích nội dung kiểu này.', 0, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(56, 10, 8, NULL, 'Cảm ơn bạn đã chia sẻ!', 0, 4, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(57, 13, 8, NULL, 'Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 5, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(58, 2, 8, 57, '↪ Có thể giải thích thêm phần này được không?', 0, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(59, 13, 8, 57, '↪ Bài viết hay nhưng nên bổ sung thêm ví dụ.', 0, 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -643,30 +699,26 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`id`, `user_id`, `address_id`, `guest_name`, `guest_email`, `guest_phone`, `payment_method`, `coupon_id`, `coupon_code`, `discount_amount`, `shipping_fee`, `total_amount`, `final_total`, `status`, `payment_status`, `vnpay_url`, `vnp_txn_ref`, `vnp_amount_expected`, `vnpay_transaction_id`, `vnpay_bank_code`, `vnpay_card_type`, `paid_at`, `recipient_name`, `recipient_phone`, `recipient_email`, `recipient_address`, `shipped_at`, `created_at`, `updated_at`, `shipping_method_id`, `deleted_at`) VALUES
-(1, 11, 6, NULL, NULL, NULL, 'credit_card', 4, 'FV4QKETX', '26.43', '14', '441', '428', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dr. Brady Collins II', '681.237.0615', NULL, '791 Kunde Plaza Apt. 417\nMarcville, NV 49779', '2025-07-08 00:02:38', '2025-05-26 08:34:50', '2025-08-17 21:06:10', NULL, NULL),
-(2, 11, 3, NULL, NULL, NULL, 'credit_card', NULL, NULL, '44.34', '17', '432', '404', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Adolphus Boehm I', '+1-402-820-7463', NULL, '27386 Wendy Mill Apt. 428\nLake Estella, LA 16529-6978', '2025-08-12 09:45:51', '2025-07-31 22:08:54', '2025-08-17 21:06:10', NULL, NULL),
-(3, 3, 1, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '37.00', '18', '371', '352', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Justina Barton', '1-903-572-3136', NULL, '7884 Marge Bridge\nNorth Rodolfo, DC 19744', '2025-08-02 14:57:39', '2025-07-23 15:50:24', '2025-08-17 21:06:10', 16, NULL),
-(4, 7, 36, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '25.66', '17', '280', '271', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Alivia Smith', '551-387-4400', NULL, '8279 Alene Ports\nRusselport, TN 40873', '2025-05-23 12:07:18', '2025-03-14 09:43:21', '2025-08-17 21:06:10', NULL, NULL),
-(5, 7, 25, NULL, NULL, NULL, 'paypal', NULL, NULL, '45.07', '6', '165', '126', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dr. Skye Lueilwitz', '814.623.0726', NULL, '285 Hazle Freeway\nJaclynland, FL 77718-2181', '2025-06-15 06:47:30', '2025-05-24 18:34:24', '2025-08-17 21:06:10', NULL, NULL),
-(6, 7, 25, NULL, NULL, NULL, 'paypal', NULL, NULL, '11.92', '14', '73', '75', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Prof. Winston Mann III', '(470) 674-2531', NULL, '377 Lloyd Station\nNew Erick, WI 03776-3162', '2025-05-07 05:06:37', '2025-03-26 05:19:24', '2025-08-17 21:06:10', 9, NULL),
-(7, 7, 39, NULL, NULL, NULL, 'credit_card', NULL, NULL, '27.98', '16', '364', '352', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sarina Runolfsson', '520-334-4608', NULL, '384 Barrows Drive Suite 127\nSherwoodview, IN 04242-4112', NULL, '2025-03-03 14:03:09', '2025-08-17 21:06:10', NULL, NULL),
-(8, 3, 1, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '20.24', '16', '115', '111', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Anabelle Hermiston', '(808) 503-6439', NULL, '3210 McLaughlin Mill\nWest Declan, WV 81206', '2025-08-17 16:43:53', '2025-08-17 10:04:52', '2025-08-17 21:06:10', 19, NULL),
-(9, 3, 2, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '45.16', '10', '176', '141', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Julia Quitzon I', '(352) 844-1084', NULL, '7968 Larkin Crest\nThadshire, ND 35673-2295', '2025-07-27 00:01:02', '2025-07-19 06:49:13', '2025-08-17 21:06:10', 14, NULL),
-(10, 2, 18, NULL, NULL, NULL, 'paypal', 2, '1RE11G97', '27.43', '17', '495', '485', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Kim Kuhlman', '310.345.4860', NULL, '1445 Abbey Flat\nEast Malindaton, CT 97799', NULL, '2025-06-26 17:03:20', '2025-08-17 21:06:10', NULL, '2025-07-03 23:58:44'),
-(11, 2, 18, NULL, NULL, NULL, 'credit_card', NULL, NULL, '3.16', '11', '113', '121', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Kiarra Beatty', '+1-667-970-4776', NULL, '569 Olga Plaza\nLynchfurt, IL 73440-6931', NULL, '2025-08-12 09:59:53', '2025-08-17 21:06:10', NULL, NULL),
-(12, 13, 39, NULL, NULL, NULL, 'paypal', 6, 'WPVFYL4P', '16.06', '6', '105', '95', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Aryanna Conroy', '1-832-388-8661', NULL, '34402 Orn Divide\nLake Aryanna, NE 34590-0420', '2025-06-18 20:12:29', '2025-06-05 02:41:43', '2025-08-17 21:06:10', NULL, NULL),
-(13, 5, 21, NULL, NULL, NULL, 'credit_card', NULL, NULL, '8.40', '17', '144', '153', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Royal Cruickshank', '+1 (951) 620-6856', NULL, '505 Goldner Streets Suite 303\nSouth Allison, UT 31892-5174', '2025-06-26 20:34:35', '2025-05-24 21:26:47', '2025-08-17 21:06:10', 3, NULL),
-(14, 10, 15, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '46.37', '17', '423', '393', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Alexis Spencer', '(747) 415-1139', NULL, '558 Hegmann Bridge Suite 128\nBrownberg, AL 16578-0251', '2025-03-23 03:28:54', '2025-03-16 05:50:52', '2025-08-17 21:06:10', 11, NULL),
-(15, 9, 39, NULL, NULL, NULL, 'credit_card', NULL, NULL, '39.80', '11', '299', '271', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Ambrose Mante', '(980) 586-1436', NULL, '4336 Kreiger Estates\nDouglasbury, AK 59821-7563', '2025-06-27 01:53:46', '2025-05-07 08:12:28', '2025-08-17 21:06:10', NULL, NULL),
-(16, 12, 17, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '41.59', '8', '154', '120', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Annetta Jacobson', '(938) 651-7172', NULL, '119 Stracke Estate Apt. 417\nEast Paris, IN 14205-1143', '2025-07-17 07:03:08', '2025-07-03 07:27:23', '2025-08-17 21:06:10', NULL, NULL),
-(17, 10, 5, NULL, NULL, NULL, 'paypal', NULL, NULL, '30.06', '15', '264', '249', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mrs. Annabelle Hartmann', '806-754-9039', NULL, '793 Klocko Glens Suite 104\nJanessahaven, IL 14229-1782', NULL, '2025-07-27 00:57:15', '2025-08-17 21:06:10', NULL, NULL),
-(18, 2, 8, NULL, NULL, NULL, 'paypal', NULL, NULL, '21.46', '17', '73', '68', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dr. Geraldine Kessler', '1-657-283-9944', NULL, '40785 Americo Terrace\nSouth Claudieburgh, MN 43922', NULL, '2025-07-13 02:45:02', '2025-08-17 21:06:10', 2, NULL),
-(19, 8, 1, NULL, NULL, NULL, 'paypal', NULL, NULL, '10.13', '18', '70', '77', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Beatrice Koss', '1-719-599-0016', NULL, '6738 Daniel Grove\nWest Kurt, LA 03834', NULL, '2025-04-29 11:11:42', '2025-08-17 21:06:10', NULL, NULL),
-(20, 6, 39, NULL, NULL, NULL, 'bank_transfer', 5, 'AGVQF8OD', '30.38', '10', '228', '208', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dr. Adriana Daugherty DVM', '234.415.4313', NULL, '24407 Emard Ports\nLeifmouth, MS 60894', NULL, '2025-06-16 06:05:57', '2025-08-17 21:06:10', NULL, NULL),
-(21, 13, NULL, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '0.00', '0', '28990000', '28990000', 'cancelled', 'cancelled', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=2899000000&vnp_Bill_Address=2894+Layla+Square+Apt.+588%2C+T%C3%A2n+Mai%2C+Thanh+Xu%C3%A2n%2C+H%C3%A0+N%E1%BB%99i&vnp_Bill_City=Hanoi&vnp_Bill_Country=VN&vnp_Bill_FirstName=Admin&vnp_Bill_Mobile=0999999999&vnp_Command=pay&vnp_CreateDate=20250818040702&vnp_CurrCode=VND&vnp_ExpireDate=20250818042202&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Thanh+toan+don+hang+%2321&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2F127.0.0.1%3A8000%2Fvnpay%2Freturn&vnp_SecureHash=d62e7834f765295617c67a921b152d5ba85047b296c6ea2e074f48eade266dbbda7e78a0a9b7fb5858b88ae4617c62cc4f560b0ad3a2423876b0b6325ad7948c&vnp_SecureHashType=HmacSHA512&vnp_TmnCode=2WZSC2P3&vnp_TxnRef=VNP-21-20250818040702-3406&vnp_Version=2.1.0', 'VNP-21-20250818040702-3406', 2899000000, NULL, NULL, NULL, NULL, 'Admin', '0999999999', NULL, '2894 Layla Square Apt. 588, Tân Mai, Thanh Xuân, Hà Nội', NULL, '2025-08-17 21:07:02', '2025-08-17 21:07:06', NULL, NULL),
-(22, 13, NULL, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '0.00', '0', '28990000', '28990000', 'cancelled', 'cancelled', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=2899000000&vnp_Bill_Address=2894+Layla+Square+Apt.+588%2C+T%C3%A2n+Mai%2C+Thanh+Xu%C3%A2n%2C+H%C3%A0+N%E1%BB%99i&vnp_Bill_City=Hanoi&vnp_Bill_Country=VN&vnp_Bill_FirstName=Admin&vnp_Bill_Mobile=0999999999&vnp_Command=pay&vnp_CreateDate=20250818040716&vnp_CurrCode=VND&vnp_ExpireDate=20250818042216&vnp_IpAddr=127.0.0.1&vnp_Locale=vn&vnp_OrderInfo=Thanh+toan+don+hang+%2322&vnp_OrderType=other&vnp_ReturnUrl=http%3A%2F%2F127.0.0.1%3A8000%2Fvnpay%2Freturn&vnp_SecureHash=93e5a78993a93bb161e0bcfc90b4b429b4dc8ec4ac31304a10ae29baa19f191f47a3e1f310dcef72dafb709c49f3b961704d92fbd65e93155a1799a24737ba62&vnp_SecureHashType=HmacSHA512&vnp_TmnCode=2WZSC2P3&vnp_TxnRef=VNP-22-20250818040716-1796&vnp_Version=2.1.0', 'VNP-22-20250818040716-1796', 2899000000, NULL, NULL, NULL, NULL, 'Admin', '0999999999', NULL, '2894 Layla Square Apt. 588, Tân Mai, Thanh Xuân, Hà Nội', NULL, '2025-08-17 21:07:16', '2025-08-17 21:07:20', NULL, NULL),
-(23, 13, NULL, NULL, NULL, NULL, 'cod', NULL, NULL, '0.00', '0', '28990000', '28990000', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Admin', '0999999999', NULL, '2894 Layla Square Apt. 588, Tân Mai, Thanh Xuân, Hà Nội', NULL, '2025-08-17 21:16:27', '2025-08-17 21:16:27', NULL, NULL),
-(24, 13, NULL, NULL, NULL, NULL, 'cod', NULL, NULL, '0.00', '50000', '1000000', '1050000', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Admin', '0999999999', NULL, '2894 Layla Square Apt. 588, Tân Mai, Thanh Xuân, Hà Nội', NULL, '2025-08-17 21:17:53', '2025-08-17 21:17:53', NULL, NULL);
+(1, 5, 17, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '1.40', '16', '279', '293', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Keven Trantow', '445.888.2596', NULL, '2423 Reilly Springs\nLake Wilton, CA 87098', NULL, '2025-07-15 00:52:22', '2025-08-20 00:32:37', NULL, NULL),
+(2, 7, 32, NULL, NULL, NULL, 'credit_card', 6, 'XQ9VTG53', '35.28', '20', '332', '317', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Edmond Kulas', '+1.484.884.5272', NULL, '91188 Yost Drive\nRollinside, OK 85246', NULL, '2025-05-21 06:41:17', '2025-08-20 00:32:37', NULL, NULL),
+(3, 3, 31, NULL, NULL, NULL, 'credit_card', NULL, NULL, '19.36', '12', '240', '233', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Hayden Conroy', '385.964.5255', NULL, '707 Adriel Ports Apt. 371\nStephaniaborough, NJ 49405', NULL, '2025-05-27 17:50:52', '2025-08-20 00:32:37', NULL, NULL),
+(4, 9, 14, NULL, NULL, NULL, 'paypal', 5, 'NW3BTUXM', '44.66', '12', '365', '332', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Alexandrine Daniel', '(952) 573-3111', NULL, '12861 Botsford Fields\nNorth Troy, MI 12056', NULL, '2025-02-22 22:06:20', '2025-08-20 00:32:37', 17, NULL),
+(5, 10, 11, NULL, NULL, NULL, 'bank_transfer', 4, 'DYJ0JBHY', '0.41', '16', '418', '433', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Jazmyn Keebler', '669-365-0998', NULL, '5898 Reynolds Passage Apt. 734\nNew Prestonshire, VT 97839', '2025-08-05 19:03:19', '2025-07-07 20:36:31', '2025-08-20 00:32:37', 16, NULL),
+(6, 2, 38, NULL, NULL, NULL, 'paypal', NULL, NULL, '5.86', '10', '61', '65', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Ruthie Legros MD', '858-230-7822', NULL, '98593 Ziemann Points Suite 124\nNorth Macchester, WV 90958-2239', '2025-05-22 00:07:32', '2025-05-10 03:54:06', '2025-08-20 00:32:37', 8, '2025-07-06 22:25:47'),
+(7, 6, 36, NULL, NULL, NULL, 'credit_card', NULL, NULL, '7.97', '9', '209', '209', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Zack Ullrich', '(743) 800-5682', NULL, '1863 Thompson Crossing Suite 737\nSallymouth, CA 11374', '2025-07-16 14:20:11', '2025-03-16 04:06:20', '2025-08-20 00:32:37', NULL, '2025-05-29 18:48:24'),
+(8, 8, 30, NULL, NULL, NULL, 'credit_card', NULL, NULL, '44.79', '18', '307', '280', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Mr. Armani Stracke DVM', '843.631.3569', NULL, '751 Jasmin Forges Suite 695\nCloydside, MA 87401', '2025-07-14 15:43:25', '2025-06-28 17:01:25', '2025-08-20 00:32:37', 15, NULL),
+(9, 12, 13, NULL, NULL, NULL, 'credit_card', NULL, NULL, '26.54', '14', '93', '81', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Prof. Caden Rogahn PhD', '(484) 889-7576', NULL, '2582 Chris Knolls\nNew Joaniehaven, WA 03785-9451', '2025-08-08 03:35:15', '2025-07-28 02:32:29', '2025-08-20 00:32:37', 13, NULL),
+(10, 8, 19, NULL, NULL, NULL, 'paypal', 3, 'C2E4OYEK', '28.23', '17', '175', '163', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Prof. Genevieve Johnson Sr.', '+1 (628) 852-1720', NULL, '81792 Stark Falls Suite 719\nNew Oran, OK 68865', NULL, '2025-07-13 10:35:27', '2025-08-20 00:32:37', NULL, NULL),
+(11, 11, 10, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '37.22', '6', '145', '113', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Milan Sporer', '+1 (407) 484-6595', NULL, '7726 Vandervort Isle\nReingerview, MO 50647', NULL, '2025-07-12 13:33:09', '2025-08-20 00:32:37', 4, '2025-08-09 08:49:14'),
+(12, 13, 22, NULL, NULL, NULL, 'credit_card', NULL, NULL, '40.56', '8', '343', '310', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Luna McKenzie', '267-514-0234', NULL, '76321 Towne Lakes\nPagacberg, RI 41140', '2025-08-01 00:38:52', '2025-02-23 03:49:34', '2025-08-20 00:32:37', NULL, NULL),
+(13, 8, 38, NULL, NULL, NULL, 'credit_card', NULL, NULL, '27.69', '9', '81', '63', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Minnie Rodriguez MD', '+1 (283) 595-2162', NULL, '264 Maximus Isle Suite 062\nSouth Anahi, NC 98438', '2025-06-01 20:37:40', '2025-05-02 15:33:00', '2025-08-20 00:32:37', 10, NULL),
+(14, 11, 21, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '36.17', '8', '316', '287', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Eloisa Borer', '+1-325-279-8980', NULL, '87649 Destiny Neck Apt. 534\nPort Casimer, MN 08780-2677', NULL, '2025-03-20 07:08:51', '2025-08-20 00:32:37', NULL, NULL),
+(15, 1, 39, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '1.81', '10', '414', '423', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Dorothea Deckow', '+1-801-692-3819', NULL, '4183 Dashawn Gateway\nNew Tobinstad, KY 37139', '2025-06-21 15:36:01', '2025-04-05 06:11:29', '2025-08-20 00:32:37', NULL, NULL),
+(16, 10, 14, NULL, NULL, NULL, 'credit_card', 2, 'GOZYEZZZ', '8.26', '10', '228', '230', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Elena Casper', '726.825.7282', NULL, '3264 Harris Flat\nWest Jayceport, HI 11176-3219', '2025-07-21 22:09:43', '2025-03-16 07:07:32', '2025-08-20 00:32:37', 1, NULL),
+(17, 2, 3, NULL, NULL, NULL, 'credit_card', NULL, NULL, '49.06', '7', '257', '215', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Cheyanne Cummerata', '229.606.8414', NULL, '766 Lemke Forges Suite 276\nBernhardview, NV 05665', '2025-07-13 05:53:21', '2025-04-01 12:29:41', '2025-08-20 00:32:37', NULL, NULL),
+(18, 6, 36, NULL, NULL, NULL, 'paypal', NULL, NULL, '23.65', '16', '394', '386', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Esta Grady', '930.771.5654', NULL, '44057 Mercedes Forge\nEast Quintonport, MD 68889', '2025-06-25 11:44:47', '2025-05-24 22:06:42', '2025-08-20 00:32:37', NULL, NULL),
+(19, 10, 21, NULL, NULL, NULL, 'paypal', NULL, NULL, '9.83', '15', '280', '285', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Leopold Hettinger', '+13416073489', NULL, '9785 Senger Lodge Apt. 174\nNew Yasminechester, OH 61955-0360', NULL, '2025-04-21 20:06:00', '2025-08-20 00:32:37', NULL, NULL),
+(20, 8, 6, NULL, NULL, NULL, 'bank_transfer', NULL, NULL, '37.55', '18', '163', '144', 'pending', 'pending', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Luis Carter', '+1-210-650-6635', NULL, '80818 Waylon Flats\nMarcelberg, AL 76746', NULL, '2025-03-29 15:22:11', '2025-08-20 00:32:37', 18, '2025-05-06 00:43:05');
 
 -- --------------------------------------------------------
 
@@ -693,30 +745,26 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `variant_id`, `product_id`, `name_product`, `image_product`, `quantity`, `price`, `total_price`, `created_at`, `updated_at`) VALUES
-(1, 16, 3, 4, 'Laptop Asus Zenbook 14 OLED', NULL, 5, '110.60', '553.00', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 17, 9, 6, 'MacBook Pro M3 14inch', NULL, 3, '20.63', '61.89', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 4, 11, 4, 'Laptop Asus Zenbook 14 OLED', NULL, 4, '164.92', '659.68', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(4, 7, 7, 2, 'Laptop Gaming ROG Zephyrus G16', NULL, 5, '189.17', '945.85', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(5, 1, 9, 8, 'Tai nghe Sony WH-1000XM5', NULL, 3, '136.50', '409.50', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(6, 1, 10, 5, 'iPad Pro M2 11inch', NULL, 3, '121.63', '364.89', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(7, 18, 1, 11, 'Tai nghe Xiaomi Buds 4 Pro', NULL, 2, '173.15', '346.30', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(8, 15, 12, 10, 'Xiaomi Redmi Note 13 Pro', NULL, 5, '21.27', '106.35', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(9, 5, 1, 6, 'MacBook Pro M3 14inch', NULL, 4, '55.80', '223.20', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(10, 7, 11, 3, 'iPhone SE 2024', NULL, 4, '74.31', '297.24', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(11, 14, 14, 6, 'MacBook Pro M3 14inch', NULL, 1, '125.31', '125.31', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(12, 16, 4, 5, 'iPad Pro M2 11inch', NULL, 2, '132.14', '264.28', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(13, 15, 9, 2, 'Laptop Gaming ROG Zephyrus G16', NULL, 2, '45.05', '90.10', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(14, 8, 15, 7, 'Samsung Galaxy S24 Ultra', NULL, 4, '101.38', '405.52', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(15, 11, 10, 4, 'Laptop Asus Zenbook 14 OLED', NULL, 1, '151.49', '151.49', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(16, 9, 1, 6, 'MacBook Pro M3 14inch', NULL, 2, '160.38', '320.76', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(17, 6, 5, 10, 'Xiaomi Redmi Note 13 Pro', NULL, 4, '187.95', '751.80', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(18, 7, 6, 3, 'iPhone SE 2024', NULL, 1, '68.06', '68.06', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(19, 10, 14, 8, 'Tai nghe Sony WH-1000XM5', NULL, 4, '108.49', '433.96', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(20, 15, 2, 2, 'Laptop Gaming ROG Zephyrus G16', NULL, 5, '123.01', '615.05', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(21, 21, 2, 1, 'Điện thoại Flagship XYZ 2025', 'client_css/images/placeholder.svg', 1, '28990000.00', '28990000.00', '2025-08-17 21:07:02', '2025-08-17 21:07:02'),
-(22, 22, 2, 1, 'Điện thoại Flagship XYZ 2025', 'client_css/images/placeholder.svg', 1, '28990000.00', '28990000.00', '2025-08-17 21:07:16', '2025-08-17 21:07:16'),
-(23, 23, 2, 1, 'Điện thoại Flagship XYZ 2025', 'storage/products/variants/YNwaEuMgi9WTJyb82qWL0khCvMSUvf4cawAvkEvD.jpg', 1, '28990000.00', '28990000.00', '2025-08-17 21:16:27', '2025-08-17 21:16:27'),
-(24, 24, 1, 1, 'Điện thoại Flagship XYZ 2025', 'storage/products/variants/3Erm0Ih2eiSR6ghhuE1S13X4beb9nf1r9VJHKfeO.jpg', 1, '1000000.00', '1000000.00', '2025-08-17 21:17:53', '2025-08-17 21:17:53');
+(1, 3, 12, 11, 'Tai nghe Xiaomi Buds 4 Pro', NULL, 5, '55.21', '276.05', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 10, 8, 4, 'Laptop Asus Zenbook 14 OLED', NULL, 4, '162.09', '648.36', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 9, 9, 5, 'iPad Pro M2 11inch', NULL, 2, '31.01', '62.02', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 17, 12, 5, 'iPad Pro M2 11inch', NULL, 5, '172.60', '863.00', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 2, 2, 9, 'Samsung Tab S9 Ultra', NULL, 2, '100.86', '201.72', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 6, 16, 5, 'iPad Pro M2 11inch', NULL, 1, '51.22', '51.22', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 5, 15, 7, 'Samsung Galaxy S24 Ultra', NULL, 2, '165.22', '330.44', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 19, 8, 1, 'Điện thoại Flagship XYZ 2025', NULL, 3, '161.24', '483.72', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 2, 4, 7, 'Samsung Galaxy S24 Ultra', NULL, 1, '44.38', '44.38', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 5, 2, 1, 'Điện thoại Flagship XYZ 2025', NULL, 4, '81.86', '327.44', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(11, 11, 15, 10, 'Xiaomi Redmi Note 13 Pro', NULL, 4, '152.91', '611.64', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(12, 8, 12, 7, 'Samsung Galaxy S24 Ultra', NULL, 5, '67.83', '339.15', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(13, 18, 16, 2, 'Laptop Gaming ROG Zephyrus G16', NULL, 5, '173.31', '866.55', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(14, 5, 16, 10, 'Xiaomi Redmi Note 13 Pro', NULL, 3, '68.61', '205.83', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(15, 14, 2, 10, 'Xiaomi Redmi Note 13 Pro', NULL, 5, '51.86', '259.30', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(16, 19, 6, 4, 'Laptop Asus Zenbook 14 OLED', NULL, 4, '89.71', '358.84', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(17, 2, 3, 7, 'Samsung Galaxy S24 Ultra', NULL, 4, '153.82', '615.28', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(18, 16, 15, 11, 'Tai nghe Xiaomi Buds 4 Pro', NULL, 5, '40.02', '200.10', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(19, 19, 12, 11, 'Tai nghe Xiaomi Buds 4 Pro', NULL, 5, '181.45', '907.25', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(20, 17, 12, 9, 'Samsung Tab S9 Ultra', NULL, 2, '125.37', '250.74', '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -743,26 +791,26 @@ CREATE TABLE `order_returns` (
 --
 
 INSERT INTO `order_returns` (`id`, `order_id`, `reason`, `status`, `type`, `requested_at`, `processed_at`, `admin_note`, `client_note`, `created_at`, `updated_at`) VALUES
-(1, 3, 'Khách thay đổi ý định', 'approved', 'cancel', '2025-07-22 03:51:51', '2025-08-08 19:21:32', 'Nihil eos et ullam ratione.', 'Dolor aliquid aut tempora ab distinctio id natus.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(2, 15, 'Không cần nữa', 'rejected', 'cancel', '2025-07-21 14:04:23', '2025-08-17 09:59:29', 'Quia omnis itaque a ducimus qui qui.', 'Officia adipisci cupiditate at dolore.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(3, 13, 'Khách thay đổi ý định', 'pending', 'cancel', '2025-08-08 00:08:32', NULL, NULL, 'Et fugit vel et aut velit.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(4, 20, NULL, 'rejected', 'cancel', '2025-07-27 06:24:28', NULL, NULL, NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(5, 6, 'Không đúng mô tả', 'rejected', 'cancel', '2025-07-30 01:59:04', '2025-08-03 03:36:45', 'Ducimus rerum autem aut commodi.', NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(6, 20, NULL, 'approved', 'cancel', '2025-08-15 13:19:13', '2025-08-16 03:52:42', 'Sapiente molestias maxime ipsa temporibus omnis omnis dolorem ut.', 'Voluptatem accusamus sunt ut quis dolores sit omnis.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(7, 4, 'Không đúng mô tả', 'approved', 'cancel', '2025-07-30 03:51:51', NULL, 'Sint animi enim inventore.', 'Nobis quia molestiae qui omnis.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(8, 17, 'Khách thay đổi ý định', 'rejected', 'return', '2025-08-06 11:43:10', '2025-08-11 06:09:57', 'Quos excepturi sunt reprehenderit ea aut omnis necessitatibus.', 'Voluptas quis earum veritatis modi in.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(9, 5, 'Khách thay đổi ý định', 'pending', 'return', '2025-07-24 03:55:35', NULL, 'Laboriosam distinctio et laudantium fugit et.', NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(10, 19, 'Giao nhầm hàng', 'approved', 'cancel', '2025-08-04 21:59:47', '2025-08-08 15:02:58', 'Laudantium sapiente rem non ea voluptas explicabo omnis.', 'Nesciunt non sunt corrupti odit illo sunt.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(11, 9, NULL, 'approved', 'return', '2025-07-25 11:38:51', NULL, 'Et exercitationem reprehenderit quasi laudantium ratione accusantium.', NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(12, 13, NULL, 'approved', 'return', '2025-08-07 22:35:30', NULL, NULL, 'Itaque veniam in in eum hic excepturi sit.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(13, 8, 'Khách thay đổi ý định', 'approved', 'return', '2025-07-30 11:38:13', NULL, 'Commodi natus ea dolores saepe dolorum eaque.', NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(14, 8, 'Không đúng mô tả', 'pending', 'cancel', '2025-08-10 16:48:07', NULL, NULL, NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(15, 8, NULL, 'pending', 'return', '2025-08-08 14:55:54', NULL, NULL, NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(16, 12, 'Sản phẩm lỗi', 'approved', 'cancel', '2025-08-13 04:17:00', '2025-08-17 10:22:37', 'Sapiente voluptas dolorum dolore cum ab aspernatur suscipit.', 'Ut aut ut dolor deleniti ex nulla placeat.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(17, 17, 'Giao nhầm hàng', 'pending', 'cancel', '2025-08-01 10:41:22', '2025-08-05 20:16:17', NULL, NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(18, 4, 'Không đúng mô tả', 'pending', 'return', '2025-08-01 02:11:37', '2025-08-03 09:23:39', NULL, NULL, '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(19, 12, NULL, 'pending', 'return', '2025-08-03 13:32:53', NULL, 'Facilis et et accusamus.', 'Esse et aspernatur autem enim molestiae deleniti.', '2025-08-17 21:06:10', '2025-08-17 21:06:10'),
-(20, 7, NULL, 'approved', 'cancel', '2025-07-20 14:06:01', NULL, NULL, 'Velit et mollitia natus voluptates earum consectetur.', '2025-08-17 21:06:10', '2025-08-17 21:06:10');
+(1, 19, 'Sản phẩm lỗi', 'rejected', 'return', '2025-07-29 16:52:31', NULL, 'Sint atque voluptatem facilis quo maiores reprehenderit.', 'Quia quia sequi magnam dignissimos illo iusto.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 20, NULL, 'approved', 'return', '2025-07-24 15:35:28', '2025-07-30 11:57:09', NULL, 'Voluptatem molestiae nobis molestiae quo qui.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 19, 'Khách thay đổi ý định', 'rejected', 'cancel', '2025-07-29 21:04:07', '2025-08-17 11:30:32', NULL, 'Rerum aut consequuntur enim accusantium consequatur debitis.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 15, 'Không đúng mô tả', 'approved', 'return', '2025-07-23 16:50:51', '2025-08-10 18:00:06', NULL, 'Error beatae odio esse quia.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 5, 'Khách thay đổi ý định', 'pending', 'return', '2025-08-02 06:20:23', NULL, NULL, 'Consequuntur libero illum et repellendus a.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 1, NULL, 'rejected', 'cancel', '2025-08-09 08:45:22', '2025-08-14 23:04:19', 'Illum porro nihil sunt et dolore.', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 17, 'Giao nhầm hàng', 'pending', 'cancel', '2025-08-15 23:19:29', '2025-08-19 16:53:44', 'Consectetur et odit id qui.', 'Et repellat illo consequatur et ea eligendi qui.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 18, 'Sản phẩm lỗi', 'pending', 'return', '2025-07-26 16:52:37', NULL, 'Occaecati necessitatibus natus praesentium in et rerum at.', 'In soluta veniam perferendis ullam corrupti iusto reiciendis.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 10, 'Không cần nữa', 'pending', 'return', '2025-08-18 04:15:16', '2025-08-19 09:59:23', 'Perferendis omnis itaque repudiandae tempora consequuntur ducimus.', 'Nemo eum voluptas quia sint dolorem.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 16, NULL, 'rejected', 'cancel', '2025-08-07 22:43:10', '2025-08-19 22:02:25', NULL, 'Nesciunt et vero sunt possimus non esse.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(11, 2, 'Không cần nữa', 'approved', 'return', '2025-07-27 20:41:27', '2025-08-04 00:30:07', 'Beatae vel dolor nobis tenetur odio recusandae reprehenderit est.', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(12, 8, 'Khách thay đổi ý định', 'pending', 'cancel', '2025-08-05 16:14:09', NULL, NULL, 'Veniam modi nobis tenetur repellendus saepe.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(13, 16, NULL, 'pending', 'return', '2025-08-08 13:14:00', '2025-08-18 03:06:50', 'Est quia laborum veritatis non et.', 'Eos qui fugiat culpa rerum omnis.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(14, 4, 'Sản phẩm lỗi', 'pending', 'cancel', '2025-08-07 03:31:29', NULL, 'Sed quisquam reprehenderit quaerat nisi.', 'Aut quo quas qui rerum consectetur ut.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(15, 8, 'Giao nhầm hàng', 'approved', 'return', '2025-08-05 12:28:04', '2025-08-11 08:43:22', NULL, 'Ut facilis quia expedita optio illum.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(16, 5, NULL, 'pending', 'return', '2025-08-03 13:11:16', NULL, NULL, 'Dolor sunt rerum sunt et qui ullam numquam nemo.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(17, 10, 'Giao nhầm hàng', 'rejected', 'cancel', '2025-07-27 04:53:06', NULL, 'Vitae mollitia aliquam recusandae sed.', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(18, 15, 'Khách thay đổi ý định', 'pending', 'return', '2025-07-26 06:49:46', NULL, 'Deserunt mollitia sit corrupti aliquid.', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(19, 3, 'Khách thay đổi ý định', 'approved', 'return', '2025-07-24 16:14:12', NULL, NULL, 'Nostrum omnis accusantium nostrum odio.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(20, 15, 'Không cần nữa', 'approved', 'return', '2025-08-16 22:29:06', '2025-08-20 05:12:04', 'Magnam sint dolore voluptate deleniti magnam molestiae vel.', 'Aperiam velit voluptates sint dignissimos.', '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -796,12 +844,12 @@ CREATE TABLE `permissions` (
 --
 
 INSERT INTO `permissions` (`id`, `name`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'view_users', 'Xem danh sách người dùng', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(2, 'edit_users', 'Chỉnh sửa người dùng', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(3, 'delete_users', 'Xoá người dùng', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, 'manage_roles', 'Quản lý vai trò', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 'manage_content', 'Quản lý nội dung', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 'manage_coupons', 'Quản lý mã giảm giá', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, 'view_users', 'Xem danh sách người dùng', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 'edit_users', 'Chỉnh sửa người dùng', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 'delete_users', 'Xoá người dùng', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 'manage_roles', 'Quản lý vai trò', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 'manage_content', 'Quản lý nội dung', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 'manage_coupons', 'Quản lý mã giảm giá', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -822,17 +870,17 @@ CREATE TABLE `permission_role` (
 --
 
 INSERT INTO `permission_role` (`id`, `permission_id`, `role_id`, `created_at`, `updated_at`) VALUES
-(1, 3, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(2, 2, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(3, 5, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(4, 6, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(5, 4, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(6, 1, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(7, 2, 2, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(8, 5, 2, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(9, 6, 2, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(10, 1, 2, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(11, 1, 3, '2025-08-17 21:06:09', '2025-08-17 21:06:09');
+(1, 3, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 2, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 5, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 6, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 4, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 1, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 2, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 5, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 6, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 1, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(11, 1, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -882,17 +930,17 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `category_id`, `brand_id`, `name`, `slug`, `type`, `short_description`, `long_description`, `thumbnail`, `status`, `is_featured`, `view_count`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 8, 1, 'Điện thoại Flagship XYZ 2025', 'dien-thoai-flagship-xyz-2025', 'variable', 'Siêu phẩm công nghệ với màn hình Super Retina và chip A20 Bionic.', 'Chi tiết về các công nghệ đột phá, camera siêu nét và thời lượng pin vượt trội của Điện thoại Flagship XYZ 2025.', 'products/uERgfUBbWtnaN3fZ21Jpz1YaohcKgsHvliFynPRQ.jpg', 'active', 1, 1500, '2025-08-17 21:06:09', '2025-08-17 21:15:54', NULL),
-(2, 5, 3, 'Laptop Gaming ROG Zephyrus G16', 'laptop-gaming-rog-zephyrus-g16', 'variable', 'Mạnh mẽ trong thân hình mỏng nhẹ, màn hình Nebula HDR tuyệt đỉnh.', 'Trải nghiệm gaming và sáng tạo không giới hạn với CPU Intel Core Ultra 9 và card đồ họa NVIDIA RTX 4080.', NULL, 'active', 1, 950, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(3, 8, 1, 'iPhone SE 2024', 'iphone-se-2024', 'simple', 'Sức mạnh đáng kinh ngạc trong một thiết kế nhỏ gọn, quen thuộc.', 'iPhone SE 2024 trang bị chip A17 Bionic mạnh mẽ, kết nối 5G và camera tiên tiến. Một lựa chọn tuyệt vời với mức giá phải chăng.', NULL, 'active', 0, 12500, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, 5, 3, 'Laptop Asus Zenbook 14 OLED', 'laptop-asus-zenbook-14-oled', 'simple', 'Mỏng nhẹ tinh tế, màn hình OLED 2.8K rực rỡ, chuẩn Intel Evo.', 'Asus Zenbook 14 OLED là sự kết hợp hoàn hảo giữa hiệu năng và tính di động, lý tưởng cho các chuyên gia sáng tạo và doanh nhân năng động.', NULL, 'active', 0, 3100, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 3, 1, 'iPad Pro M2 11inch', 'ipad-pro-m2-11inch', 'variable', 'Màn hình Liquid Retina, chip M2 mạnh mẽ.', 'iPad Pro M2 11inch dành cho công việc sáng tạo và giải trí.', NULL, 'active', 1, 2100, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 7, 1, 'MacBook Pro M3 14inch', 'macbook-pro-m3-14inch', 'variable', 'Hiệu năng đỉnh cao, màn hình mini-LED.', 'MacBook Pro M3 14inch dành cho lập trình viên và designer.', NULL, 'active', 1, 1800, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(7, 8, 2, 'Samsung Galaxy S24 Ultra', 'samsung-galaxy-s24-ultra', 'simple', 'Camera 200MP, pin 5000mAh.', 'Flagship Android mạnh mẽ nhất của Samsung.', NULL, 'active', 1, 3200, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(8, 13, 8, 'Tai nghe Sony WH-1000XM5', 'tai-nghe-sony-wh-1000xm5', 'simple', 'Chống ồn chủ động, pin 30h.', 'Tai nghe cao cấp dành cho audiophile và dân văn phòng.', NULL, 'active', 0, 900, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(9, 12, 2, 'Samsung Tab S9 Ultra', 'samsung-tab-s9-ultra', 'variable', 'Màn hình AMOLED 14.6 inch, S Pen đi kèm.', 'Tablet Android mạnh mẽ nhất của Samsung.', NULL, 'active', 0, 1100, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(10, 8, 4, 'Xiaomi Redmi Note 13 Pro', 'xiaomi-redmi-note-13-pro', 'simple', 'Camera 200MP, pin 5000mAh, sạc nhanh 120W.', 'Điện thoại tầm trung cấu hình mạnh, giá tốt.', NULL, 'active', 0, 2100, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(11, 13, 4, 'Tai nghe Xiaomi Buds 4 Pro', 'tai-nghe-xiaomi-buds-4-pro', 'simple', 'Chống ồn chủ động, pin 38h.', 'Tai nghe true wireless giá rẻ, chất lượng tốt.', NULL, 'active', 0, 700, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, 8, 1, 'Điện thoại Flagship XYZ 2025', 'dien-thoai-flagship-xyz-2025', 'variable', 'Siêu phẩm công nghệ với màn hình Super Retina và chip A20 Bionic.', 'Chi tiết về các công nghệ đột phá, camera siêu nét và thời lượng pin vượt trội của Điện thoại Flagship XYZ 2025.', NULL, 'active', 1, 1500, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 5, 3, 'Laptop Gaming ROG Zephyrus G16', 'laptop-gaming-rog-zephyrus-g16', 'variable', 'Mạnh mẽ trong thân hình mỏng nhẹ, màn hình Nebula HDR tuyệt đỉnh.', 'Trải nghiệm gaming và sáng tạo không giới hạn với CPU Intel Core Ultra 9 và card đồ họa NVIDIA RTX 4080.', NULL, 'active', 1, 950, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 8, 1, 'iPhone SE 2024', 'iphone-se-2024', 'simple', 'Sức mạnh đáng kinh ngạc trong một thiết kế nhỏ gọn, quen thuộc.', 'iPhone SE 2024 trang bị chip A17 Bionic mạnh mẽ, kết nối 5G và camera tiên tiến. Một lựa chọn tuyệt vời với mức giá phải chăng.', NULL, 'active', 0, 12500, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 5, 3, 'Laptop Asus Zenbook 14 OLED', 'laptop-asus-zenbook-14-oled', 'simple', 'Mỏng nhẹ tinh tế, màn hình OLED 2.8K rực rỡ, chuẩn Intel Evo.', 'Asus Zenbook 14 OLED là sự kết hợp hoàn hảo giữa hiệu năng và tính di động, lý tưởng cho các chuyên gia sáng tạo và doanh nhân năng động.', NULL, 'active', 0, 3100, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 3, 1, 'iPad Pro M2 11inch', 'ipad-pro-m2-11inch', 'variable', 'Màn hình Liquid Retina, chip M2 mạnh mẽ.', 'iPad Pro M2 11inch dành cho công việc sáng tạo và giải trí.', NULL, 'active', 1, 2100, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 7, 1, 'MacBook Pro M3 14inch', 'macbook-pro-m3-14inch', 'variable', 'Hiệu năng đỉnh cao, màn hình mini-LED.', 'MacBook Pro M3 14inch dành cho lập trình viên và designer.', NULL, 'active', 1, 1800, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 8, 2, 'Samsung Galaxy S24 Ultra', 'samsung-galaxy-s24-ultra', 'simple', 'Camera 200MP, pin 5000mAh.', 'Flagship Android mạnh mẽ nhất của Samsung.', NULL, 'active', 1, 3200, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 13, 8, 'Tai nghe Sony WH-1000XM5', 'tai-nghe-sony-wh-1000xm5', 'simple', 'Chống ồn chủ động, pin 30h.', 'Tai nghe cao cấp dành cho audiophile và dân văn phòng.', NULL, 'active', 0, 900, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(9, 12, 2, 'Samsung Tab S9 Ultra', 'samsung-tab-s9-ultra', 'variable', 'Màn hình AMOLED 14.6 inch, S Pen đi kèm.', 'Tablet Android mạnh mẽ nhất của Samsung.', NULL, 'active', 0, 1100, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(10, 8, 4, 'Xiaomi Redmi Note 13 Pro', 'xiaomi-redmi-note-13-pro', 'simple', 'Camera 200MP, pin 5000mAh, sạc nhanh 120W.', 'Điện thoại tầm trung cấu hình mạnh, giá tốt.', NULL, 'active', 0, 2100, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(11, 13, 4, 'Tai nghe Xiaomi Buds 4 Pro', 'tai-nghe-xiaomi-buds-4-pro', 'simple', 'Chống ồn chủ động, pin 38h.', 'Tai nghe true wireless giá rẻ, chất lượng tốt.', NULL, 'active', 0, 700, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -933,19 +981,19 @@ CREATE TABLE `product_comments` (
 --
 
 INSERT INTO `product_comments` (`id`, `product_id`, `user_id`, `content`, `rating`, `status`, `parent_id`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 8, 4, 'Bình luận mẫu số 1 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-08-11 21:06:10', '2025-08-17 21:06:10'),
-(2, 6, 1, 'Bình luận mẫu số 2 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-08-01 21:06:10', '2025-08-17 21:06:10'),
-(3, 7, 2, 'Bình luận mẫu số 3 cho sản phẩm.', 5, 'approved', NULL, NULL, '2025-08-01 21:06:10', '2025-08-17 21:06:10'),
-(4, 6, 11, 'Bình luận mẫu số 4 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-07-19 21:06:10', '2025-08-17 21:06:10'),
-(5, 1, 10, 'Bình luận mẫu số 5 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-08-08 21:06:10', '2025-08-17 21:06:10'),
-(6, 11, 3, 'Bình luận mẫu số 6 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-08-11 21:06:10', '2025-08-17 21:06:10'),
-(7, 11, 13, 'Bình luận mẫu số 7 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-07-28 21:06:10', '2025-08-17 21:06:10'),
-(8, 1, 13, 'Bình luận mẫu số 8 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-29 21:06:10', '2025-08-17 21:06:10'),
-(9, 5, 2, 'Bình luận mẫu số 9 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-08-08 21:06:10', '2025-08-17 21:06:10'),
-(10, 11, 9, 'Bình luận mẫu số 10 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-21 21:06:10', '2025-08-17 21:06:10'),
-(11, 6, 2, 'Trả lời cho bình luận 1', NULL, 'approved', 1, NULL, '2025-08-15 21:06:10', '2025-08-17 21:06:10'),
-(12, 7, 3, 'Trả lời cho bình luận 2', NULL, 'approved', 2, NULL, '2025-08-16 21:06:10', '2025-08-17 21:06:10'),
-(13, 6, 13, 'Trả lời cho bình luận 3', NULL, 'approved', 3, NULL, '2025-08-07 21:06:10', '2025-08-17 21:06:10');
+(1, 5, 4, 'Bình luận mẫu số 1 cho sản phẩm.', 5, 'approved', NULL, NULL, '2025-08-07 00:32:37', '2025-08-20 00:32:37'),
+(2, 2, 13, 'Bình luận mẫu số 2 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-21 00:32:37', '2025-08-20 00:32:37'),
+(3, 2, 6, 'Bình luận mẫu số 3 cho sản phẩm.', 5, 'approved', NULL, NULL, '2025-08-07 00:32:37', '2025-08-20 00:32:37'),
+(4, 3, 13, 'Bình luận mẫu số 4 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-31 00:32:37', '2025-08-20 00:32:37'),
+(5, 3, 9, 'Bình luận mẫu số 5 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-07-24 00:32:37', '2025-08-20 00:32:37'),
+(6, 6, 7, 'Bình luận mẫu số 6 cho sản phẩm.', 5, 'approved', NULL, NULL, '2025-07-31 00:32:37', '2025-08-20 00:32:37'),
+(7, 9, 9, 'Bình luận mẫu số 7 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-08-13 00:32:37', '2025-08-20 00:32:37'),
+(8, 8, 5, 'Bình luận mẫu số 8 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-23 00:32:37', '2025-08-20 00:32:37'),
+(9, 8, 5, 'Bình luận mẫu số 9 cho sản phẩm.', 4, 'approved', NULL, NULL, '2025-08-18 00:32:37', '2025-08-20 00:32:37'),
+(10, 10, 4, 'Bình luận mẫu số 10 cho sản phẩm.', 3, 'approved', NULL, NULL, '2025-07-29 00:32:37', '2025-08-20 00:32:37'),
+(11, 2, 13, 'Trả lời cho bình luận 1', NULL, 'approved', 1, NULL, '2025-08-14 00:32:37', '2025-08-20 00:32:37'),
+(12, 2, 7, 'Trả lời cho bình luận 2', NULL, 'approved', 2, NULL, '2025-08-13 00:32:37', '2025-08-20 00:32:37'),
+(13, 3, 7, 'Trả lời cho bình luận 3', NULL, 'approved', 3, NULL, '2025-08-19 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -977,22 +1025,22 @@ CREATE TABLE `product_variants` (
 --
 
 INSERT INTO `product_variants` (`id`, `product_id`, `sku`, `price`, `sale_price`, `image`, `weight`, `length`, `width`, `height`, `stock`, `low_stock_amount`, `is_active`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 1, 'DT-XYZ-DO-8G', 25990000, 1000000, 'products/variants/3Erm0Ih2eiSR6ghhuE1S13X4beb9nf1r9VJHKfeO.jpg', NULL, NULL, NULL, NULL, 50, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:15:54', NULL),
-(2, 1, 'DT-XYZ-XANH-16G', 28990000, NULL, 'products/variants/YNwaEuMgi9WTJyb82qWL0khCvMSUvf4cawAvkEvD.jpg', NULL, NULL, NULL, NULL, 45, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:15:54', NULL),
-(3, 2, 'ROG-G16-8G', 52000000, NULL, NULL, NULL, NULL, NULL, NULL, 25, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, 2, 'ROG-G16-16G', 58500000, NULL, NULL, NULL, NULL, NULL, NULL, 15, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 3, 'IP-SE-2024', 12490000, NULL, NULL, NULL, NULL, NULL, NULL, 400, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 4, 'AS-ZEN14-OLED', 26490000, NULL, NULL, NULL, NULL, NULL, NULL, 80, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(7, 5, 'IPAD-M2-128GB', 21990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(8, 5, 'IPAD-M2-256GB', 24990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(9, 6, 'MBP-M3-256GB', 45990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(10, 6, 'MBP-M3-512GB', 52990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(11, 7, 'SGS24U', 33990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(12, 8, 'SONY-XM5', 8490000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(13, 9, 'TAB-S9U-256GB', 27990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(14, 9, 'TAB-S9U-512GB', 31990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(15, 10, 'RN13PRO', 8990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(16, 11, 'BUDS4PRO', 2490000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, 1, 'DT-XYZ-DO-8G', 25990000, NULL, NULL, NULL, NULL, NULL, NULL, 50, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 1, 'DT-XYZ-XANH-16G', 28990000, NULL, NULL, NULL, NULL, NULL, NULL, 45, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 2, 'ROG-G16-8G', 52000000, NULL, NULL, NULL, NULL, NULL, NULL, 25, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 2, 'ROG-G16-16G', 58500000, NULL, NULL, NULL, NULL, NULL, NULL, 15, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 3, 'IP-SE-2024', 12490000, NULL, NULL, NULL, NULL, NULL, NULL, 400, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 4, 'AS-ZEN14-OLED', 26490000, NULL, NULL, NULL, NULL, NULL, NULL, 80, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 5, 'IPAD-M2-128GB', 21990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 5, 'IPAD-M2-256GB', 24990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(9, 6, 'MBP-M3-256GB', 45990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(10, 6, 'MBP-M3-512GB', 52990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(11, 7, 'SGS24U', 33990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(12, 8, 'SONY-XM5', 8490000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(13, 9, 'TAB-S9U-256GB', 27990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(14, 9, 'TAB-S9U-512GB', 31990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(15, 10, 'RN13PRO', 8990000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(16, 11, 'BUDS4PRO', 2490000, NULL, NULL, NULL, NULL, NULL, NULL, 100, NULL, 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -1029,6 +1077,80 @@ INSERT INTO `product_variant_attribute_values` (`id`, `product_variant_id`, `att
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `promotions`
+--
+
+CREATE TABLE `promotions` (
+  `id` bigint UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `type` enum('all','category','product') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'all',
+  `discount_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `discount_value` decimal(15,2) DEFAULT NULL,
+  `start_date` datetime DEFAULT NULL,
+  `end_date` datetime DEFAULT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `promotions`
+--
+
+INSERT INTO `promotions` (`id`, `name`, `slug`, `description`, `type`, `discount_type`, `discount_value`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'Back to School', 'back-to-school', 'Khuyến mãi mùa tựu trường cho học sinh, sinh viên.', 'product', 'percent', '10.00', '2025-08-15 07:32:00', '2025-08-30 07:32:00', 1, '2025-08-20 00:32:37', '2025-08-20 00:33:19', NULL),
+(2, 'Black Friday', 'black-friday-68a517a5cebe6', 'Giảm giá sốc dịp Black Friday cho toàn bộ sản phẩm.', 'all', 'amount', '50000.00', '2025-09-19 07:32:37', '2025-09-24 07:32:37', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 'Tết Sale', 'tet-sale-68a517a5cf23d', 'Chương trình khuyến mãi lớn dịp Tết Nguyên Đán.', 'all', 'percent', '15.00', '2025-11-20 07:32:37', '2025-11-30 07:32:37', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `promotion_category`
+--
+
+CREATE TABLE `promotion_category` (
+  `id` bigint UNSIGNED NOT NULL,
+  `promotion_id` bigint UNSIGNED NOT NULL,
+  `category_id` bigint UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `promotion_category`
+--
+
+INSERT INTO `promotion_category` (`id`, `promotion_id`, `category_id`, `created_at`, `updated_at`) VALUES
+(2, 2, 2, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `promotion_product`
+--
+
+CREATE TABLE `promotion_product` (
+  `id` bigint UNSIGNED NOT NULL,
+  `promotion_id` bigint UNSIGNED NOT NULL,
+  `product_id` bigint UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `promotion_product`
+--
+
+INSERT INTO `promotion_product` (`id`, `promotion_id`, `product_id`, `created_at`, `updated_at`) VALUES
+(3, 2, 3, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 1, 10, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `roles`
 --
 
@@ -1046,9 +1168,9 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`id`, `name`, `slug`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(2, 'staff', 'staff', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(3, 'user', 'user', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09');
+(1, 'admin', 'admin', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'staff', 'staff', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 'user', 'user', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -1081,7 +1203,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('fl71xoKL1CO9LCDi5ib1F0M8OO75K9j8W4y9XrtX', 13, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36 Edg/139.0.0.0', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiQjh3dEFCZmlUZHhlNDZacGJaQTVONGE2MU9JeDBDeUpOSTRTanJidyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJuZXciO2E6MDp7fXM6Mzoib2xkIjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9vcmRlcnMiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToxMztzOjEzOiJsYXN0X29yZGVyX2lkIjtpOjI0O30=', 1755465554);
+('6uEkkHlPgKR2jfxHfzUJv7bDPNZxFzkc65JmpSp2', 13, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36', 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoia0VQbW1MM2tjN0gwaVFEcjVOUXhOTDNxZzJqS3I0TGFGVVdQOGFjMiI7czozOiJ1cmwiO2E6MTp7czo4OiJpbnRlbmRlZCI7czo0NToiaHR0cDovLzEyNy4wLjAuMTo4MDAwL2FkbWluL3Byb21vdGlvbnMvMS9lZGl0Ijt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mjc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9jYXJ0cyI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjEzO3M6NjoiYnV5bm93IjthOjM6e3M6MTA6InByb2R1Y3RfaWQiO2k6MjtzOjg6InF1YW50aXR5IjtpOjE7czoxMDoidmFyaWFudF9pZCI7aTozO319', 1755650121);
 
 -- --------------------------------------------------------
 
@@ -1114,26 +1236,26 @@ CREATE TABLE `shipping_methods` (
 --
 
 INSERT INTO `shipping_methods` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
-(1, 'Giao hàng tận nơi', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(2, 'Nhận hàng tại cửa hàng', 'Repudiandae tempore similique quia odio provident sed veritatis.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(3, 'Phương thức giao hàng #3', 'Ut suscipit sunt et maiores.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(4, 'Phương thức giao hàng #4', 'Eaque repellendus non sit repudiandae incidunt.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(5, 'Phương thức giao hàng #5', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(6, 'Phương thức giao hàng #6', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(7, 'Phương thức giao hàng #7', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(8, 'Phương thức giao hàng #8', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(9, 'Phương thức giao hàng #9', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(10, 'Phương thức giao hàng #10', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(11, 'Phương thức giao hàng #11', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(12, 'Phương thức giao hàng #12', 'Facilis porro saepe architecto natus maiores optio tempore.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(13, 'Phương thức giao hàng #13', 'Et totam aut voluptas quis numquam et explicabo.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(14, 'Phương thức giao hàng #14', 'Reprehenderit esse et delectus esse.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(15, 'Phương thức giao hàng #15', 'Quia quasi praesentium beatae et.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(16, 'Phương thức giao hàng #16', 'Eius est rem dolor doloremque.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(17, 'Phương thức giao hàng #17', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(18, 'Phương thức giao hàng #18', 'Qui ut et architecto dolore aut sint voluptas.', '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(19, 'Phương thức giao hàng #19', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09'),
-(20, 'Phương thức giao hàng #20', NULL, '2025-08-17 21:06:09', '2025-08-17 21:06:09');
+(1, 'Giao hàng tận nơi', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(2, 'Nhận hàng tại cửa hàng', 'Explicabo architecto placeat quibusdam distinctio et.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(3, 'Phương thức giao hàng #3', 'Occaecati repellendus quis officiis cumque sed.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(4, 'Phương thức giao hàng #4', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(5, 'Phương thức giao hàng #5', 'Sed et illo accusamus facilis accusantium.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(6, 'Phương thức giao hàng #6', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(7, 'Phương thức giao hàng #7', 'Et aliquid sit iste veniam ut.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(8, 'Phương thức giao hàng #8', 'Architecto praesentium voluptas sint quis iste doloribus.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(9, 'Phương thức giao hàng #9', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(10, 'Phương thức giao hàng #10', 'Minus neque magnam temporibus accusamus.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(11, 'Phương thức giao hàng #11', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(12, 'Phương thức giao hàng #12', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(13, 'Phương thức giao hàng #13', 'Quis veniam optio tempora dolores sed exercitationem.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(14, 'Phương thức giao hàng #14', 'Suscipit qui totam hic blanditiis et quo tempore cum.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(15, 'Phương thức giao hàng #15', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(16, 'Phương thức giao hàng #16', 'Quia veritatis commodi iste et hic sequi ipsa.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(17, 'Phương thức giao hàng #17', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(18, 'Phương thức giao hàng #18', 'Voluptas velit porro enim sit nam vero ut.', '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(19, 'Phương thức giao hàng #19', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37'),
+(20, 'Phương thức giao hàng #20', NULL, '2025-08-20 00:32:37', '2025-08-20 00:32:37');
 
 -- --------------------------------------------------------
 
@@ -1145,6 +1267,8 @@ CREATE TABLE `users` (
   `id` bigint UNSIGNED NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `google_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `facebook_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone_number` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1162,20 +1286,20 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `remember_token`, `phone_number`, `image_profile`, `is_active`, `birthday`, `gender`, `created_at`, `updated_at`, `email_verified_at`, `deleted_at`) VALUES
-(1, 'John Doe', 'johndoe@example.com', '$2y$12$rAsCG9VzCCKei8DMtCNMAeqKq/npPsYueL3UuaJBJiVPFe.a5m56C', NULL, '123456789', 'profile1.jpg', 1, '1990-01-01', 'male', '2025-08-17 21:06:06', '2025-08-17 21:06:06', NULL, NULL),
-(2, 'Jane Smith', 'jane@example.com', '$2y$12$etr7pzz62P.BZPj1oaV.FeNrcNVnYo2Wua8odS4NXRvWoZ7Q401Je', NULL, '987654321', 'profile2.jpg', 1, '1992-05-15', 'female', '2025-08-17 21:06:06', '2025-08-17 21:06:06', NULL, NULL),
-(3, 'Nguyen Van A', 'nguyenvana@example.com', '$2y$12$YXptqOZ5yEWwVhyGiqOh7udMldOLGdolYmz67bRYwXtjl8mYDfzfe', NULL, '0901111111', 'profile3.jpg', 1, '1995-03-10', 'male', '2025-08-17 21:06:06', '2025-08-17 21:06:06', NULL, NULL),
-(4, 'Tran Thi B', 'tranthib@example.com', '$2y$12$mwdrZcxZSFgjg6BVbuIk/OB2SuE/RsipUi25W7OYCKVgQDx1qu0cC', NULL, '0902222222', 'profile4.jpg', 1, '1996-07-21', 'female', '2025-08-17 21:06:07', '2025-08-17 21:06:07', NULL, NULL),
-(5, 'Le Van C', 'levanc@example.com', '$2y$12$5fmXNZAHmrB/SBmW.FWef.Kp5x4Lfd3EEwnWNbF8YjnVU5qQss1Hm', NULL, '0903333333', 'profile5.jpg', 1, '1993-11-05', 'male', '2025-08-17 21:06:07', '2025-08-17 21:06:07', NULL, NULL),
-(6, 'Pham Thi D', 'phamthid@example.com', '$2y$12$XA1grMPhRM7l0w0bmAfkFObrr5zgB9ltYp23/Hq1cApPMU.RvF6lK', NULL, '0904444444', 'profile6.jpg', 1, '1994-02-14', 'female', '2025-08-17 21:06:07', '2025-08-17 21:06:07', NULL, NULL),
-(7, 'Hoang Van E', 'hoangvane@example.com', '$2y$12$xL4IwlEQlas56xOOWgSVn.vRUv3cLp5qu01s0r3R6hgmlsHzS8Gyu', NULL, '0905555555', 'profile7.jpg', 1, '1991-09-09', 'male', '2025-08-17 21:06:08', '2025-08-17 21:06:08', NULL, NULL),
-(8, 'Vu Thi F', 'vuthif@example.com', '$2y$12$5G/d8V7onciQ2wYwMvITTO8OKqLQIYyBxVqggPCXTiEEAcxidVXsy', NULL, '0906666666', 'profile8.jpg', 1, '1997-12-12', 'female', '2025-08-17 21:06:08', '2025-08-17 21:06:08', NULL, NULL),
-(9, 'Do Van G', 'dovang@example.com', '$2y$12$qd11sTeYNVfRNKDRJf00AOzTFcHv1q.jwIR3rx3CHrdUNg5lTlxqO', NULL, '0907777777', 'profile9.jpg', 1, '1998-04-18', 'male', '2025-08-17 21:06:08', '2025-08-17 21:06:08', NULL, NULL),
-(10, 'Bui Thi H', 'buithih@example.com', '$2y$12$E6bOosfY1v3agg4zoOnnvuprrIux4Y.0p.0P/8E3tn2dIpBTkN1iy', NULL, '0908888888', 'profile10.jpg', 1, '1999-06-25', 'female', '2025-08-17 21:06:08', '2025-08-17 21:06:08', NULL, NULL),
-(11, 'Pham Van I', 'phamvani@example.com', '$2y$12$Ru8k9XSbGUoVpnu.zsw5I.N5vUQkaCsYtZe1WNZ97IAYKW49jZ1Ca', NULL, '0909999999', 'profile11.jpg', 1, '1992-08-30', 'male', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL, NULL),
-(12, 'Nguyen Thi K', 'nguyenthik@example.com', '$2y$12$CHqs8KVDC4P5xM8wmapMl.9Llof8Og9ouzl8NivMdD5qmhTH6owt.', NULL, '0910000000', 'profile12.jpg', 1, '1993-10-11', 'female', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL, NULL),
-(13, 'Admin', 'admin@gmail.com', '$2y$12$dZ2Iz5PrYfU7IOrze2XtjeU/XRaL23ioeQgnbwLNmMM70WC/F/kKu', NULL, '0999999999', 'admin.jpg', 1, '1990-01-01', 'male', '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL, NULL);
+INSERT INTO `users` (`id`, `name`, `email`, `google_id`, `facebook_id`, `password`, `remember_token`, `phone_number`, `image_profile`, `is_active`, `birthday`, `gender`, `created_at`, `updated_at`, `email_verified_at`, `deleted_at`) VALUES
+(1, 'John Doe', 'johndoe@example.com', NULL, NULL, '$2y$12$MagbixUofDodm1gzYkxPeuobHrH513uphZGJjWfxerfO.YQrZTrwq', NULL, '123456789', 'profile1.jpg', 1, '1990-01-01', 'male', '2025-08-20 00:32:34', '2025-08-20 00:32:34', NULL, NULL),
+(2, 'Jane Smith', 'jane@example.com', NULL, NULL, '$2y$12$lyybjs9dmgL7axLaT8gqe.Q4uoodqQAJ7UWm5orL35GUAKqdh4E7m', NULL, '987654321', 'profile2.jpg', 1, '1992-05-15', 'female', '2025-08-20 00:32:35', '2025-08-20 00:32:35', NULL, NULL),
+(3, 'Nguyen Van A', 'nguyenvana@example.com', NULL, NULL, '$2y$12$Gt2EcyvehzxeAIzR6wkiGuFtwiZ0P0Hm4SXlDZMVL8rfOhvHJuUGS', NULL, '0901111111', 'profile3.jpg', 1, '1995-03-10', 'male', '2025-08-20 00:32:35', '2025-08-20 00:32:35', NULL, NULL),
+(4, 'Tran Thi B', 'tranthib@example.com', NULL, NULL, '$2y$12$CRWYuIPFozuXaiIbHupoIOwBFICs/xRf3FPBNcEv1v3nUIkXATPbK', NULL, '0902222222', 'profile4.jpg', 1, '1996-07-21', 'female', '2025-08-20 00:32:35', '2025-08-20 00:32:35', NULL, NULL),
+(5, 'Le Van C', 'levanc@example.com', NULL, NULL, '$2y$12$rwA/HfGY01OTSSzYVfy7mOt9DsEdKu0RcuvSG/4ETveo8Svn03PEa', NULL, '0903333333', 'profile5.jpg', 1, '1993-11-05', 'male', '2025-08-20 00:32:35', '2025-08-20 00:32:35', NULL, NULL),
+(6, 'Pham Thi D', 'phamthid@example.com', NULL, NULL, '$2y$12$fn60ACBy6Rxe7xPJpAd1yuNqMdkmM1Vd3XwDRR1VA/sImrXXzIcka', NULL, '0904444444', 'profile6.jpg', 1, '1994-02-14', 'female', '2025-08-20 00:32:35', '2025-08-20 00:32:35', NULL, NULL),
+(7, 'Hoang Van E', 'hoangvane@example.com', NULL, NULL, '$2y$12$xVpHW4ZIg19y.1V0dSdb2uS4Mi.fVHpjdFc4Bb1/BRegLlxvg24EC', NULL, '0905555555', 'profile7.jpg', 1, '1991-09-09', 'male', '2025-08-20 00:32:36', '2025-08-20 00:32:36', NULL, NULL),
+(8, 'Vu Thi F', 'vuthif@example.com', NULL, NULL, '$2y$12$5ZwmaJ7TgD5buDC23BIWQ.Ql0tl2MD7pZf3.CydphX3ilUu8BGpsq', NULL, '0906666666', 'profile8.jpg', 1, '1997-12-12', 'female', '2025-08-20 00:32:36', '2025-08-20 00:32:36', NULL, NULL),
+(9, 'Do Van G', 'dovang@example.com', NULL, NULL, '$2y$12$feQG9FcfAQA.0YjnBJZmzOSy.idBUahLanhZFCzRci6NGwjfXzIDC', NULL, '0907777777', 'profile9.jpg', 1, '1998-04-18', 'male', '2025-08-20 00:32:36', '2025-08-20 00:32:36', NULL, NULL),
+(10, 'Bui Thi H', 'buithih@example.com', NULL, NULL, '$2y$12$T.RNE3ldHqNqrO0MblLVNeBcab0NkqxG4NszotZ.vIRAnbGz/Rinm', NULL, '0908888888', 'profile10.jpg', 1, '1999-06-25', 'female', '2025-08-20 00:32:36', '2025-08-20 00:32:36', NULL, NULL),
+(11, 'Pham Van I', 'phamvani@example.com', NULL, NULL, '$2y$12$.iZD9YYHrXpyK1PtMOEbju2Pij1X6Rlux8fs2iuM7RnlUw3AkrV.m', NULL, '0909999999', 'profile11.jpg', 1, '1992-08-30', 'male', '2025-08-20 00:32:36', '2025-08-20 00:32:36', NULL, NULL),
+(12, 'Nguyen Thi K', 'nguyenthik@example.com', NULL, NULL, '$2y$12$XxyFcx50V3tiZVs8W2dQ1e0pl8DHTpgPiATgPrRMWwNODMUC4M9.e', NULL, '0910000000', 'profile12.jpg', 1, '1993-10-11', 'female', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL, NULL),
+(13, 'Admin', 'admin@gmail.com', NULL, NULL, '$2y$12$GND2QmITvP7zsMFHyWrYm.0iCGPprZ5W2ggAZ6GpJ5oz06GA72t1K', NULL, '0999999999', 'admin.jpg', 1, '1990-01-01', 'male', '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1204,45 +1328,45 @@ CREATE TABLE `user_addresses` (
 --
 
 INSERT INTO `user_addresses` (`id`, `user_id`, `recipient_name`, `phone`, `address`, `address_line`, `ward`, `district`, `city`, `is_default`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 13, NULL, NULL, NULL, '2894 Layla Square Apt. 588', 'Tân Mai', 'Thanh Xuân', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(2, 13, NULL, NULL, NULL, '79913 Macy River', 'Phúc Tân', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(3, 13, NULL, NULL, NULL, '161 Horace Mall', 'Phúc Tân', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(4, 10, NULL, NULL, NULL, '6059 Ephraim Coves', 'Quan Hoa', 'Ba Đình', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(5, 10, NULL, NULL, NULL, '55779 Langworth Wall', 'Vĩnh Phúc', 'Tây Hồ', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(6, 10, NULL, NULL, NULL, '29702 Schmeler Stravenue Suite 588', 'Yên Sở', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(7, 9, NULL, NULL, NULL, '2325 Luigi Coves', 'Ô Chợ Dừa', 'Hoàn Kiếm', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(8, 9, NULL, NULL, NULL, '392 Marina Ports', 'Điện Biên', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(9, 9, NULL, NULL, NULL, '625 Dicki Ramp', 'Ô Chợ Dừa', 'Tây Hồ', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(10, 7, NULL, NULL, NULL, '731 Jaida Rapid', 'Đội Cấn', 'Đống Đa', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(11, 7, NULL, NULL, NULL, '27451 Shields Causeway Apt. 077', 'Quan Hoa', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(12, 7, NULL, NULL, NULL, '53353 Odie Wells Apt. 408', 'Điện Biên', 'Đống Đa', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(13, 2, NULL, NULL, NULL, '4520 Waters Crossroad Suite 121', 'Yên Sở', 'Cầu Giấy', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(14, 2, NULL, NULL, NULL, '456 Nicole Mountain', 'Dịch Vọng', 'Thanh Xuân', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(15, 2, NULL, NULL, NULL, '16417 Krajcik Stravenue Suite 136', 'Nghĩa Tân', 'Tây Hồ', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(16, 1, NULL, NULL, NULL, '30038 Pacocha Trace Suite 897', 'Đội Cấn', 'Tây Hồ', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(17, 1, NULL, NULL, NULL, '4065 Kemmer Centers Suite 940', 'Vĩnh Phúc', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(18, 1, NULL, NULL, NULL, '83930 Kub Green Suite 790', 'Láng Hạ', 'Thanh Xuân', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(19, 5, NULL, NULL, NULL, '97652 Green Pine', 'Hoàng Văn Thụ', 'Cầu Giấy', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(20, 5, NULL, NULL, NULL, '56044 Ryder Dam', 'Hàng Trống', 'Hoàng Mai', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(21, 5, NULL, NULL, NULL, '4026 Miller Cape Suite 594', 'Yên Hòa', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(22, 12, NULL, NULL, NULL, '8705 Estell Summit Apt. 243', 'Đội Cấn', 'Đống Đa', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(23, 12, NULL, NULL, NULL, '575 Troy Harbor', 'Thổ Quan', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(24, 12, NULL, NULL, NULL, '74482 Quinten Path', 'Dịch Vọng', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(25, 3, NULL, NULL, NULL, '3546 Laurel Cove', 'Quan Hoa', 'Long Biên', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(26, 3, NULL, NULL, NULL, '749 Eryn Camp Suite 515', 'Chương Dương', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(27, 3, NULL, NULL, NULL, '86794 Myrtle Plains Apt. 422', 'Ô Chợ Dừa', 'Long Biên', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(28, 6, NULL, NULL, NULL, '636 Jadon Lodge Suite 447', 'Chương Dương', 'Thanh Xuân', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(29, 6, NULL, NULL, NULL, '8595 Wilfredo Meadow', 'Điện Biên', 'Thanh Xuân', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(30, 6, NULL, NULL, NULL, '72947 McCullough Union Apt. 307', 'Yên Sở', 'Hoàng Mai', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(31, 11, NULL, NULL, NULL, '3605 Odie Knoll', 'Đội Cấn', 'Đống Đa', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(32, 11, NULL, NULL, NULL, '613 Benedict Manor Suite 142', 'Nghĩa Tân', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(33, 11, NULL, NULL, NULL, '14686 Jailyn Via Suite 337', 'Phúc Xá', 'Đống Đa', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(34, 4, NULL, NULL, NULL, '61967 Marvin Manor', 'Dịch Vọng', 'Cầu Giấy', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(35, 4, NULL, NULL, NULL, '6145 Lelah Neck', 'Kim Liên', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(36, 4, NULL, NULL, NULL, '78844 Lueilwitz Ports Suite 604', 'Phúc Xá', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(37, 8, NULL, NULL, NULL, '9762 Farrell Via', 'Ô Chợ Dừa', 'Đống Đa', 'Hà Nội', 1, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(38, 8, NULL, NULL, NULL, '543 Pagac Vista', 'Nghĩa Tân', 'Đống Đa', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL),
-(39, 8, NULL, NULL, NULL, '41377 Herman Centers Suite 008', 'Thổ Quan', 'Đống Đa', 'Hà Nội', 0, '2025-08-17 21:06:09', '2025-08-17 21:06:09', NULL);
+(1, 13, NULL, NULL, NULL, '44961 Langworth Shoal', 'Quan Hoa', 'Ba Đình', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(2, 13, NULL, NULL, NULL, '510 Deshaun Villages Apt. 055', 'Vĩnh Phúc', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(3, 13, NULL, NULL, NULL, '85037 Otilia Drives', 'Dịch Vọng', 'Tây Hồ', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(4, 10, NULL, NULL, NULL, '832 Cecilia Junctions Suite 984', 'Ô Chợ Dừa', 'Tây Hồ', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(5, 10, NULL, NULL, NULL, '6520 Gina Union', 'Phúc Xá', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(6, 10, NULL, NULL, NULL, '783 Bauch Summit', 'Thổ Quan', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(7, 9, NULL, NULL, NULL, '17558 Remington Plains Apt. 630', 'Yên Sở', 'Ba Đình', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(8, 9, NULL, NULL, NULL, '6794 Ondricka Pine Apt. 418', 'Nghĩa Tân', 'Đống Đa', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(9, 9, NULL, NULL, NULL, '1425 Betty Islands', 'Phúc Tân', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(10, 7, NULL, NULL, NULL, '368 Trantow Street Suite 660', 'Hoàng Văn Thụ', 'Long Biên', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(11, 7, NULL, NULL, NULL, '61073 Kylie Track', 'Dịch Vọng', 'Hoàng Mai', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(12, 7, NULL, NULL, NULL, '91269 Reichel Station', 'Nghĩa Tân', 'Long Biên', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(13, 2, NULL, NULL, NULL, '350 Ryan Junctions', 'Trúc Bạch', 'Ba Đình', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(14, 2, NULL, NULL, NULL, '68461 Cummings Trail', 'Vĩnh Phúc', 'Long Biên', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(15, 2, NULL, NULL, NULL, '831 Williamson Garden Apt. 283', 'Trúc Bạch', 'Hoàng Mai', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(16, 1, NULL, NULL, NULL, '310 Columbus Run', 'Phúc Xá', 'Cầu Giấy', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(17, 1, NULL, NULL, NULL, '309 Elfrieda Light Apt. 300', 'Hàng Bài', 'Đống Đa', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(18, 1, NULL, NULL, NULL, '1374 Mackenzie Bridge Apt. 268', 'Láng Hạ', 'Long Biên', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(19, 5, NULL, NULL, NULL, '80097 Briana Underpass', 'Vĩnh Phúc', 'Long Biên', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(20, 5, NULL, NULL, NULL, '896 Weissnat Glen Suite 852', 'Đội Cấn', 'Long Biên', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(21, 5, NULL, NULL, NULL, '587 Dane Shores Suite 822', 'Phúc Xá', 'Long Biên', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(22, 12, NULL, NULL, NULL, '631 Daugherty Lakes', 'Yên Hòa', 'Ba Đình', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(23, 12, NULL, NULL, NULL, '37417 Hamill Streets', 'Yên Hòa', 'Thanh Xuân', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(24, 12, NULL, NULL, NULL, '4905 Meagan Isle', 'Phúc Xá', 'Hoàn Kiếm', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(25, 3, NULL, NULL, NULL, '6779 Herzog Highway Apt. 116', 'Đội Cấn', 'Ba Đình', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(26, 3, NULL, NULL, NULL, '9786 Ortiz Ville', 'Điện Biên', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(27, 3, NULL, NULL, NULL, '222 Elinor Burg', 'Ô Chợ Dừa', 'Ba Đình', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(28, 6, NULL, NULL, NULL, '966 Missouri Gateway', 'Đội Cấn', 'Hoàng Mai', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(29, 6, NULL, NULL, NULL, '25144 Cristopher Flat Apt. 905', 'Chương Dương', 'Ba Đình', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(30, 6, NULL, NULL, NULL, '89107 Elnora Bypass Suite 316', 'Điện Biên', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(31, 11, NULL, NULL, NULL, '50208 Alberto Row Suite 252', 'Phúc Xá', 'Hai Bà Trưng', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(32, 11, NULL, NULL, NULL, '66496 Arno Point Suite 514', 'Phúc Xá', 'Hoàng Mai', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(33, 11, NULL, NULL, NULL, '12389 Philip Parks', 'Giáp Bát', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(34, 4, NULL, NULL, NULL, '65661 Betty Cliffs Apt. 378', 'Dịch Vọng', 'Long Biên', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(35, 4, NULL, NULL, NULL, '510 Fadel Roads', 'Thổ Quan', 'Cầu Giấy', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(36, 4, NULL, NULL, NULL, '2461 Mayert Circles Apt. 433', 'Điện Biên', 'Thanh Xuân', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(37, 8, NULL, NULL, NULL, '480 Kailyn Bridge Suite 990', 'Chương Dương', 'Hoàn Kiếm', 'Hà Nội', 1, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(38, 8, NULL, NULL, NULL, '5508 Watsica Street Apt. 628', 'Quan Hoa', 'Hai Bà Trưng', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL),
+(39, 8, NULL, NULL, NULL, '3546 Delia Hollow Suite 332', 'Điện Biên', 'Tây Hồ', 'Hà Nội', 0, '2025-08-20 00:32:37', '2025-08-20 00:32:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -1354,7 +1478,8 @@ ALTER TABLE `contacts`
 --
 ALTER TABLE `coupons`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `coupons_code_unique` (`code`);
+  ADD UNIQUE KEY `coupons_code_unique` (`code`),
+  ADD KEY `coupons_promotion_id_foreign` (`promotion_id`);
 
 --
 -- Indexes for table `failed_jobs`
@@ -1374,6 +1499,18 @@ ALTER TABLE `jobs`
 -- Indexes for table `job_batches`
 --
 ALTER TABLE `job_batches`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `logos`
+--
+ALTER TABLE `logos`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `mail_templates`
+--
+ALTER TABLE `mail_templates`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1518,6 +1655,29 @@ ALTER TABLE `product_variant_attribute_values`
   ADD KEY `product_variant_attribute_values_attribute_value_id_foreign` (`attribute_value_id`);
 
 --
+-- Indexes for table `promotions`
+--
+ALTER TABLE `promotions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `promotions_slug_unique` (`slug`);
+
+--
+-- Indexes for table `promotion_category`
+--
+ALTER TABLE `promotion_category`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `promotion_category_promotion_id_foreign` (`promotion_id`),
+  ADD KEY `promotion_category_category_id_foreign` (`category_id`);
+
+--
+-- Indexes for table `promotion_product`
+--
+ALTER TABLE `promotion_product`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `promotion_product_promotion_id_foreign` (`promotion_id`),
+  ADD KEY `promotion_product_product_id_foreign` (`product_id`);
+
+--
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
@@ -1613,7 +1773,7 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -1646,10 +1806,22 @@ ALTER TABLE `jobs`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `logos`
+--
+ALTER TABLE `logos`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `mail_templates`
+--
+ALTER TABLE `mail_templates`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT for table `news`
@@ -1667,7 +1839,7 @@ ALTER TABLE `news_categories`
 -- AUTO_INCREMENT for table `news_comments`
 --
 ALTER TABLE `news_comments`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -1679,13 +1851,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `order_returns`
@@ -1740,6 +1912,24 @@ ALTER TABLE `product_variants`
 --
 ALTER TABLE `product_variant_attribute_values`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `promotions`
+--
+ALTER TABLE `promotions`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `promotion_category`
+--
+ALTER TABLE `promotion_category`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `promotion_product`
+--
+ALTER TABLE `promotion_product`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -1813,6 +2003,12 @@ ALTER TABLE `categories`
 ALTER TABLE `contacts`
   ADD CONSTRAINT `contacts_handled_by_foreign` FOREIGN KEY (`handled_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `contacts_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `coupons`
+--
+ALTER TABLE `coupons`
+  ADD CONSTRAINT `coupons_promotion_id_foreign` FOREIGN KEY (`promotion_id`) REFERENCES `promotions` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `model_has_permissions`
@@ -1889,6 +2085,20 @@ ALTER TABLE `product_variants`
 ALTER TABLE `product_variant_attribute_values`
   ADD CONSTRAINT `product_variant_attribute_values_attribute_value_id_foreign` FOREIGN KEY (`attribute_value_id`) REFERENCES `attribute_values` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `product_variant_attribute_values_product_variant_id_foreign` FOREIGN KEY (`product_variant_id`) REFERENCES `product_variants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `promotion_category`
+--
+ALTER TABLE `promotion_category`
+  ADD CONSTRAINT `promotion_category_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `promotion_category_promotion_id_foreign` FOREIGN KEY (`promotion_id`) REFERENCES `promotions` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `promotion_product`
+--
+ALTER TABLE `promotion_product`
+  ADD CONSTRAINT `promotion_product_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `promotion_product_promotion_id_foreign` FOREIGN KEY (`promotion_id`) REFERENCES `promotions` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `role_has_permissions`

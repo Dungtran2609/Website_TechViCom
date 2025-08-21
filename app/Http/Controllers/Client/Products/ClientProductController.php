@@ -9,6 +9,8 @@ use App\Models\Brand;
 use App\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClientProductController extends Controller
 {
@@ -31,15 +33,37 @@ class ClientProductController extends Controller
             }])
             ->where('status', 1);
 
-        // Lọc theo danh mục (slug hoặc id)
+        // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
+        $favoriteProductIds = [];
+        if (Auth::check()) {
+            $favoriteProductIds = Auth::user()->favoriteProducts()->pluck('product_id')->toArray();
+        }
+
+        // Lọc theo danh mục (slug hoặc id) - hỗ trợ nhiều danh mục và phân cấp
         if ($request->filled('category')) {
-            if (is_numeric($request->category)) {
-                $query->where('category_id', $request->category);
-            } else {
-                $category = Category::where('slug', $request->category)->first();
-                if ($category) {
-                    $query->where('category_id', $category->id);
+            $categorySlugs = is_array($request->category) ? $request->category : explode(',', $request->category);
+            $categoryIds = [];
+            
+            foreach ($categorySlugs as $slug) {
+                if (is_numeric($slug)) {
+                    $categoryIds[] = $slug;
+                } else {
+                    $category = Category::where('slug', $slug)->first();
+                    if ($category) {
+                        $categoryIds[] = $category->id;
+                        
+                        // Nếu là danh mục cha, thêm cả danh mục con
+                        if ($category->children()->count() > 0) {
+                            $childrenIds = $category->children()->where('status', true)->pluck('id')->toArray();
+                            $categoryIds = array_merge($categoryIds, $childrenIds);
+                        }
+                    }
                 }
+            }
+            
+            if (!empty($categoryIds)) {
+                $categoryIds = array_unique($categoryIds);
+                $query->whereIn('category_id', $categoryIds);
             }
         }
 
@@ -148,7 +172,11 @@ class ClientProductController extends Controller
         }
 
         $products   = $query->paginate(12);
-        $categories = Category::where('status', 1)->get();
+        $categories = Category::where('status', 1)
+            ->with(['children' => function($q) {
+                $q->where('status', 1);
+            }])
+            ->get();
         $brands     = Brand::where('status', 1)->get();
         $attributes = Attribute::with('attributeValues')->get();
 
@@ -162,7 +190,8 @@ class ClientProductController extends Controller
             'categories',
             'brands',
             'attributes',
-            'currentCategory'
+            'currentCategory',
+            'favoriteProductIds'
         ));
     }
 
@@ -182,6 +211,58 @@ class ClientProductController extends Controller
         // Tăng view_count
         $product->increment('view_count');
 
+        // Kiểm tra flash sale đang diễn ra (theo sản phẩm hoặc danh mục)
+        $now = now();
+        $flashSale = \App\Models\Promotion::whereIn('flash_type', ['flash_sale', 'category'])
+            ->where('status', 1)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('start_date', 'asc')
+            ->first();
+
+        $flashSaleInfo = null;
+        if ($flashSale) {
+            if ($flashSale->flash_type === 'flash_sale') {
+                // Kiểm tra sản phẩm có trong promotion_product không
+                $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
+                if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
+                    $flashSaleInfo = [
+                        'sale_price' => $promoProduct->pivot->sale_price,
+                        'discount_percent' => null,
+                        'promotion' => $flashSale
+                    ];
+                }
+            } elseif ($flashSale->flash_type === 'category') {
+                // Kiểm tra sản phẩm thuộc danh mục được áp dụng
+                $categoryIds = $flashSale->categories->pluck('id')->toArray();
+                $allCategoryIds = $categoryIds;
+                foreach ($flashSale->categories as $cat) {
+                    $childIds = $cat->children()->pluck('id')->toArray();
+                    $allCategoryIds = array_merge($allCategoryIds, $childIds);
+                }
+                $allCategoryIds = array_unique($allCategoryIds);
+                if (in_array($product->category_id, $allCategoryIds)) {
+                    // Tính giá giảm theo discount_type/value
+                    $variant = $product->variants->first();
+                    $price = $variant ? $variant->price : null;
+                    $salePrice = null;
+                    if ($price) {
+                        if ($flashSale->discount_type === 'percent') {
+                            $salePrice = $price * (1 - $flashSale->discount_value / 100);
+                        } elseif ($flashSale->discount_type === 'amount') {
+                            $salePrice = max(0, $price - $flashSale->discount_value);
+                        }
+                    }
+                    $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
+                    $flashSaleInfo = [
+                        'sale_price' => $salePrice,
+                        'discount_percent' => $discountPercent,
+                        'promotion' => $flashSale
+                    ];
+                }
+            }
+        }
+
         // Sản phẩm liên quan
         $relatedProducts = Product::with(['brand', 'category', 'productAllImages', 'variants'])
             ->where('category_id', $product->category_id)
@@ -190,6 +271,48 @@ class ClientProductController extends Controller
             ->limit(4)
             ->get();
 
-        return view('client.products.show', compact('product', 'relatedProducts'));
+        // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
+        $favoriteProductIds = [];
+        if (Auth::check()) {
+            $favoriteProductIds = Auth::user()->favoriteProducts()->pluck('product_id')->toArray();
+        }
+
+        return view('client.products.show', compact('product', 'relatedProducts', 'flashSaleInfo', 'favoriteProductIds'));
+    }
+
+    public function love(Request $request)
+    {
+        // Kiểm tra đăng nhập
+        if (!Auth::check()) {
+            // Thay vì redirect, hiển thị trang với thông báo đăng nhập
+            $products = collect();
+            $notLoggedIn = true;
+            
+            return view('client.products.love', compact('products', 'notLoggedIn'));
+        }
+
+        // Lấy danh sách sản phẩm yêu thích
+        $favorites = Auth::user()->favoriteProducts()
+            ->with(['product.brand', 'product.category', 'product.productAllImages', 'product.variants.attributeValues', 'product.productComments'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Tính toán avg_rating và reviews_count cho mỗi sản phẩm
+        $favorites->transform(function ($favorite) {
+            $product = $favorite->product;
+            $approvedComments = $product->productComments->where('status', 'approved')->whereNotNull('rating');
+            $avgRating = $approvedComments->count() > 0 ? $approvedComments->avg('rating') : 0;
+            $reviewsCount = $product->productComments->where('status', 'approved')->count();
+            $product->avg_rating = $avgRating;
+            $product->reviews_count = $reviewsCount;
+            return $favorite;
+        });
+
+        // Lấy danh sách sản phẩm từ favorites để hiển thị
+        $products = $favorites->pluck('product');
+
+        $notLoggedIn = false;
+
+        return view('client.products.love', compact('products', 'notLoggedIn'));
     }
 }

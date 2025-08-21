@@ -184,6 +184,7 @@ class VNPayService
             'calculated'    => $calcHash,
             'hash_data'     => $hashData,
             'is_valid'      => $isValid,
+            'all_params'    => $params, // Log tất cả tham số để debug
         ]);
 
         // Chuẩn hoá output cho controller
@@ -197,6 +198,8 @@ class VNPayService
             'vnp_BankCode'          => $params['vnp_BankCode']          ?? null,
             'vnp_CardType'          => $params['vnp_CardType']          ?? null,
             'vnp_PayDate'           => $params['vnp_PayDate']           ?? null,
+            'vnp_PromotionCode'     => $params['vnp_PromotionCode']     ?? null, // Mã khuyến mại
+            'vnp_PromotionAmount'   => isset($params['vnp_PromotionAmount']) ? (int) $params['vnp_PromotionAmount'] : null, // Số tiền khuyến mại
             'raw'                   => $params,
         ];
     }

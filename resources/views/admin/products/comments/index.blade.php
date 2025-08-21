@@ -53,11 +53,13 @@
                 <tr>
                     <th style="color: #007bff; font-weight: 600; min-width: 120px;">Sản phẩm</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 110px;">Người dùng</th>
+                    <th style="color: #007bff; font-weight: 600; min-width: 130px;">Đơn hàng</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 130px;">Ngày - Giờ gửi</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 110px;">Đánh giá</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 180px;">Bình luận</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 150px;">Phản hồi</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 110px;">Trạng thái</th>
+                    <th style="color: #007bff; font-weight: 600; min-width: 110px;">Ẩn/Hiện</th>
                     <th style="color: #007bff; font-weight: 600; min-width: 110px;">Chức năng</th>
                 </tr>
             </thead>
@@ -66,6 +68,14 @@
                 <tr style="transition: background 0.2s;">
                     <td style="background: #f8f9fa; color: #212529; border-radius: 8px 0 0 8px; font-size: 1em;">{{ $comment->product->name ?? '-' }}</td>
                     <td style="background: #f8f9fa; color: #212529; font-size: 1em;">{{ $comment->user->name ?? '-' }}</td>
+                    <td style="background: #f8f9fa; color: #212529; font-size: 0.98em;">
+                        @if($comment->order)
+                            {{ $comment->order->random_code ?? $comment->order->code ?? ('DH' . str_pad($comment->order->id, 6, '0', STR_PAD_LEFT)) }}
+                            <span class="badge bg-success ms-1" style="font-size: 0.8em;">Đã nhận</span>
+                        @else
+                            <span class="text-muted">-</span>
+                        @endif
+                    </td>
                     <td style="background: #f8f9fa; color: #212529; font-size: 0.98em;">{{ $comment->created_at->format('d/m/Y - H:i') }}</td>
                     <td style="background: #f8f9fa; font-size: 1.1em;">
                         @if($comment->rating)
@@ -97,6 +107,13 @@
                             <span class="badge rounded-pill" style="background: #dc3545; color: #fff; font-size: 0.98em;">Đã xoá</span>
                         @endif
                     </td>
+                    <td style="background: #f8f9fa; font-size: 0.98em;">
+                        @if($comment->is_hidden)
+                            <span class="badge rounded-pill" style="background: #dc3545; color: #fff; font-size: 0.98em;">Đã ẩn</span>
+                        @else
+                            <span class="badge rounded-pill" style="background: #28a745; color: #fff; font-size: 0.98em;">Hiển thị</span>
+                        @endif
+                    </td>
                     <td style="background: #f8f9fa; border-radius: 0 8px 8px 0; font-size: 1em;">
                         <div class="d-flex justify-content-center align-items-center gap-2" style="height: 100%;">
                         <a href="{{ route('admin.products.comments.show', $comment->id) }}" title="Xem"><i class="bi bi-eye" style="color: #007bff; font-size: 1.1em;"></i></a>
@@ -106,9 +123,15 @@
                                 <button type="submit" class="btn btn-link p-0 m-0 align-baseline" title="Duyệt"><i class="bi bi-check2-square" style="color: #28a745; font-size: 1.1em;"></i></button>
                             </form>
                         @endif
-                        <form action="{{ route('admin.products.comments.destroy', $comment->id) }}{{ request('product_id') ? '?product_id='.request('product_id') : '' }}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xoá bình luận này?');">
+                        <form action="{{ route('admin.products.comments.toggle-hidden', $comment->id) }}{{ request('product_id') ? '?product_id='.request('product_id') : '' }}" method="POST" style="display:inline;">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="btn btn-link p-0 m-0 align-baseline" title="{{ $comment->is_hidden ? 'Hiện' : 'Ẩn' }}">
+                                <i class="bi {{ $comment->is_hidden ? 'bi-eye' : 'bi-eye-slash' }}" style="color: {{ $comment->is_hidden ? '#28a745' : '#ffc107' }}; font-size: 1.1em;"></i>
+                            </button>
+                        </form>
+                        <form action="{{ route('admin.products.comments.destroy', $comment->id) }}{{ request('product_id') ? '?product_id='.request('product_id') : '' }}" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn ẩn bình luận này?');">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-link p-0 m-0 align-baseline" title="Xoá"><i class="bi bi-x-lg" style="color: #dc3545; font-size: 1.1em;"></i></button>
+                            <button type="submit" class="btn btn-link p-0 m-0 align-baseline" title="Ẩn vĩnh viễn"><i class="bi bi-x-lg" style="color: #dc3545; font-size: 1.1em;"></i></button>
                         </form>
                         </div>
                     </td>

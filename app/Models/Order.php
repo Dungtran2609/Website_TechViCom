@@ -51,7 +51,9 @@ class Order extends Model
         'vnpay_transaction_id',
         'vnpay_bank_code',
         'vnpay_card_type',
-        'vnpay_cancel_count'
+        'vnpay_discount',
+        'vnpay_cancel_count',
+        'received_at'
     ];
 
 
@@ -64,6 +66,7 @@ class Order extends Model
         'deleted_at',
         'shipped_at',
         'paid_at',
+        'received_at',
     ];
 
 
@@ -109,6 +112,14 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    /**
+     * Alias cho orderItems để tương thích với controller
+     */
+    public function orderDetails()
+    {
+        return $this->orderItems();
     }
 
 
@@ -214,7 +225,68 @@ class Order extends Model
             ? ($this->guest_phone ?? 'N/A')
             : ($this->user->phone_number ?? 'N/A');
     }
-    // ...
 
+    /**
+     * Accessor: tạo mã đơn hàng từ ID
+     */
+    public function getOrderCodeAttribute()
+    {
+        return 'TVC' . str_pad($this->id, 9, '0', STR_PAD_LEFT);
+    }
 
+    /**
+     * Accessor: lấy tên khách hàng cho hiển thị
+     */
+    public function getNameAttribute()
+    {
+        return $this->isGuestOrder() ? $this->guest_name : ($this->user->name ?? 'N/A');
+    }
+
+    /**
+     * Accessor: lấy email khách hàng cho hiển thị
+     */
+    public function getEmailAttribute()
+    {
+        return $this->isGuestOrder() ? $this->guest_email : ($this->user->email ?? 'N/A');
+    }
+
+    /**
+     * Accessor: lấy số điện thoại khách hàng cho hiển thị
+     */
+    public function getPhoneAttribute()
+    {
+        return $this->isGuestOrder() ? $this->guest_phone : ($this->user->phone_number ?? 'N/A');
+    }
+
+    /**
+     * Accessor: lấy địa chỉ khách hàng cho hiển thị
+     */
+    public function getAddressAttribute()
+    {
+        return $this->recipient_address;
+    }
+
+    /**
+     * Accessor: lấy tổng tiền cho hiển thị
+     */
+    public function getTotalAttribute()
+    {
+        return $this->final_total;
+    }
+
+    /**
+     * Accessor: lấy tạm tính cho hiển thị
+     */
+    public function getSubtotalAttribute()
+    {
+        return $this->total_amount;
+    }
+
+    /**
+     * Accessor: lấy giảm giá cho hiển thị
+     */
+    public function getDiscountAttribute()
+    {
+        return $this->discount_amount;
+    }
 }

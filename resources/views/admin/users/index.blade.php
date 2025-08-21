@@ -1,6 +1,8 @@
 @extends('admin.layouts.app')
 
 
+
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Quản lý người dùng</h1>
@@ -15,18 +17,36 @@
     </div>
 
 
-    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 d-flex gap-2 align-items-center">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25"
-            placeholder="Tìm người dùng...">
-        <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
 
 
-        @if (request('search'))
+
+
+    <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-auto"
+            placeholder="Tìm theo tên hoặc email...">
+
+
+        <select name="role" class="form-select w-auto">
+            <option value="">Tất cả vai trò</option>
+            @foreach($roles as $role)
+                <option value="{{ $role->id }}" {{ request('role') == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+            @endforeach
+        </select>
+
+
+        <button type="submit" class="btn btn-outline-primary">Lọc</button>
+
+
+        @if (request('search') || request('role'))
             <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
                 <i class="fas fa-undo"></i> Quay lại danh sách đầy đủ
             </a>
         @endif
     </form>
+
+
+
+
 
 
 
@@ -38,11 +58,15 @@
     @endif
 
 
+
+
     @if ($errors->has('delete'))
         <div class="alert alert-danger">
             {{ $errors->first('delete') }}
         </div>
     @endif
+
+
 
 
     <div class="card">
@@ -121,3 +145,6 @@
         </div>
     </div>
 @endsection
+
+
+

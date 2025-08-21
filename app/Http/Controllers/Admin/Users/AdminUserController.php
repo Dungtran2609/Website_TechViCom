@@ -1,7 +1,11 @@
 <?php
 
 
+
+
 namespace App\Http\Controllers\Admin\Users;
+
+
 
 
 use App\Models\Role;
@@ -17,6 +21,8 @@ use App\Http\Requests\UpdateUserAddressRequest;
 use Illuminate\Support\Facades\Auth;
 
 
+
+
 class AdminUserController extends Controller
 {
     public function index()
@@ -24,7 +30,11 @@ class AdminUserController extends Controller
         $query = User::with('roles');
 
 
-        if ($search = request('search')) {
+        $search = request('search');
+        $roleId = request('role');
+
+
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
@@ -32,11 +42,21 @@ class AdminUserController extends Controller
         }
 
 
-        $users = $query->orderByDesc('id')->paginate(10)->appends(['search' => $search]);
+        if ($roleId) {
+            $query->whereHas('roles', function ($q) use ($roleId) {
+                $q->where('roles.id', $roleId);
+            });
+        }
 
 
-        return view('admin.users.index', compact('users'));
+        $users = $query->orderByDesc('id')->paginate(10)->appends(['search' => $search, 'role' => $roleId]);
+
+
+        $roles = \App\Models\Role::all();
+        return view('admin.users.index', compact('users', 'roles'));
     }
+
+
 
 
     public function create()
@@ -46,10 +66,14 @@ class AdminUserController extends Controller
     }
 
 
+
+
     public function store(UserRequest $request)
     {
         $imagePath = $request->hasFile('image_profile') && $request->file('image_profile')->isValid()
             ? $request->file('image_profile')->store('profiles', 'public') : null;
+
+
 
 
         $user = User::create([
@@ -64,15 +88,12 @@ class AdminUserController extends Controller
         ]);
 
 
-        // Gán vai trò mặc định là 'user' nếu không chọn vai trò nào
-        $roleIds = $request->roles;
-        if (empty($roleIds)) {
-            $userRole = \App\Models\Role::where('slug', 'user')->orWhere('name', 'user')->first();
-            if ($userRole) {
-                $roleIds = [$userRole->id];
-            }
-        }
-        $user->roles()->sync($roleIds);
+
+
+        $user->roles()->sync($request->roles);
+
+
+
 
         if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
             $user->addresses()->create([
@@ -85,8 +106,12 @@ class AdminUserController extends Controller
         }
 
 
+
+
         return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được tạo thành công.');
     }
+
+
 
 
     public function edit(User $user)
@@ -95,6 +120,8 @@ class AdminUserController extends Controller
         $addresses = $user->addresses;
         return view('admin.users.edit', compact('user', 'roles', 'addresses'));
     }
+
+
 
 
     public function update(UserRequest $request, User $user)
@@ -112,6 +139,9 @@ class AdminUserController extends Controller
                 Storage::disk('public')->delete($user->image_profile);
             }
             $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
+        } else {
+            // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
+            $userData['image_profile'] = $user->image_profile;
         }
 
 
@@ -119,8 +149,12 @@ class AdminUserController extends Controller
         $user->roles()->sync($request->roles);
 
 
+
+
         if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
             $defaultAddress = $user->addresses->where('is_default', 1)->first() ?? $user->addresses->first();
+
+
 
 
             if ($defaultAddress) {
@@ -143,8 +177,12 @@ class AdminUserController extends Controller
         }
 
 
+
+
         return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được cập nhật thành công.');
     }
+
+
 
 
     public function show(User $user)
@@ -152,6 +190,8 @@ class AdminUserController extends Controller
         $user->load('addresses');
         return view('admin.users.show', compact('user'));
     }
+
+
 
 
     public function destroy(User $user)
@@ -176,11 +216,19 @@ class AdminUserController extends Controller
         }
 
 
+
+
         $user->delete();
+
+
 
 
         return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được ẩn (soft delete).');
     }
+
+
+
+
 
 
 
@@ -192,6 +240,8 @@ class AdminUserController extends Controller
     }
 
 
+
+
     public function restore($id)
     {
         $user = User::onlyTrashed()->whereKey($id)->firstOrFail();
@@ -200,9 +250,13 @@ class AdminUserController extends Controller
     }
 
 
+
+
     public function forceDelete($id)
     {
         $user = User::withTrashed()->findOrFail($id);
+
+
 
 
         if (Auth::id() === $user->id) {
@@ -225,47 +279,93 @@ class AdminUserController extends Controller
         }
 
 
+
+
         $user->forceDelete();
+
+
 
 
         return redirect()->route('admin.users.trashed')->with('success', 'Tài khoản đã được xóa vĩnh viễn.');
     }
 
 
-    public function addresses(User $user)
+
+
+    // public function addresses(User $user)
+    // {
+    //     $addresses = $user->addresses;
+    //     return view('admin.users.addresses.index', compact('user', 'addresses'));
+    // }
+
+
+   public function addresses(User $user)
     {
-        $addresses = $user->addresses;
+        $addresses = $user->addresses()->orderByDesc('is_default')->get();
         return view('admin.users.addresses.index', compact('user', 'addresses'));
     }
 
 
+    /**
+     * Thêm địa chỉ mới cho người dùng từ trang admin.
+     */
     public function addAddress(StoreUserAddressRequest $request, $userId)
     {
         $user = User::findOrFail($userId);
 
 
-        if ($request->is_default) {
+        // Dữ liệu đã được validate bởi StoreUserAddressRequest
+        // Chúng ta lấy tên đầy đủ từ các input ẩn mà JavaScript đã điền vào.
+        $data = $request->only([
+            'recipient_name',
+            'phone',
+            'address_line',
+            'ward',         // Lấy từ input hidden name="ward"
+            'district',     // Lấy từ input hidden name="district"
+            'city',         // Lấy từ input hidden name="city"
+            'is_default'
+        ]);
+
+
+        // Xử lý địa chỉ mặc định
+        if (!empty($data['is_default'])) {
             $user->addresses()->update(['is_default' => false]);
+            $data['is_default'] = true;
+        } else {
+            // Đảm bảo rằng is_default luôn là false nếu không được chọn
+            $data['is_default'] = false;
         }
 
 
-        $user->addresses()->create($request->validated());
-        return redirect()->route('admin.users.show', $userId)->with('success', 'Địa chỉ mới đã được thêm.');
+        $user->addresses()->create($data);
+
+
+        return redirect()->route('admin.users.show', $userId)->with('success', 'Địa chỉ mới đã được thêm thành công.');
     }
 
 
+    /**
+     * Cập nhật địa chỉ cho người dùng từ trang admin.
+     */
     public function updateAddress(UpdateUserAddressRequest $request, UserAddress $address)
     {
+        // Xử lý địa chỉ mặc định
         if ($request->is_default) {
+            // Bỏ mặc định tất cả các địa chỉ khác của người dùng này
             UserAddress::where('user_id', $address->user_id)->update(['is_default' => false]);
         }
 
 
         $address->update($request->validated());
-        return redirect()->back()->with('success', 'Địa chỉ đã được cập nhật.');
+
+
+        return redirect()->back()->with('success', 'Địa chỉ đã được cập nhật thành công.');
     }
 
 
+    /**
+     * Xóa địa chỉ của người dùng.
+     */
     public function deleteAddress(UserAddress $address)
     {
         if ($address->is_default) {
@@ -274,6 +374,11 @@ class AdminUserController extends Controller
 
 
         $address->delete();
-        return redirect()->back()->with('success', 'Địa chỉ đã được xóa.');
+
+
+        return redirect()->back()->with('success', 'Địa chỉ đã được xóa thành công.');
     }
 }
+
+
+

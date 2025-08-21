@@ -41,11 +41,6 @@ class ProductVariant extends Model
         return $this->belongsToMany(AttributeValue::class, 'product_variant_attribute_values');
     }
 
-   
-   
-   
-   
-
     public function attributes()
     {
         return $this->hasMany(ProductVariantAttributeValue::class);
@@ -64,11 +59,9 @@ class ProductVariant extends Model
     {
         // FK trên product_all_images là product_id, local key bên variant cũng là product_id
         return $this->hasMany(
-            \App\Models\ProductAllImage::class,
+            ProductAllImage::class,
             'product_id',   // foreign key trên product_all_images
             'product_id'    // local key trên product_variants
-        )
-            ->orderBy('sort_order')  // ưu tiên ảnh có sort_order nhỏ
-            ->limit(1);              // chỉ load 1 ảnh “chính”
+        )->limit(1);              // chỉ load 1 ảnh “chính”
     }
 }

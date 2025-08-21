@@ -17,7 +17,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Admin\AdminProductRequest;
 
-
 class AdminProductController extends Controller
 {
     public function index(Request $request)
@@ -32,9 +31,9 @@ class AdminProductController extends Controller
             ->when($request->sort_price === 'desc', fn($q) => $q->orderByRaw('(select max(price) from product_variants where product_id=products.id) desc'))
             ->when(!$request->sort_price, fn($q) => $q->latest('updated_at'))
             ->paginate(10);
+
         return view('admin.products.index', compact('products'));
     }
-
 
     public function create()
     {
@@ -45,7 +44,6 @@ class AdminProductController extends Controller
         ]);
     }
 
-
     private function generateUniqueSku($prefix = 'SP')
     {
         do {
@@ -54,14 +52,12 @@ class AdminProductController extends Controller
         return $sku;
     }
 
-
     public function store(AdminProductRequest $request)
     {
         DB::transaction(function () use ($request) {
             $productData = $this->prepareProductData($request);
             $product = Product::create($productData);
             $this->syncVariants($product, $request);
-           
             // Xử lý thư viện ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $image) {
@@ -71,17 +67,14 @@ class AdminProductController extends Controller
             }
         });
 
-
         return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công.');
     }
-
 
     public function show(Product $product)
     {
         $product->load(['brand', 'category', 'variants.attributeValues.attribute', 'allImages']);
         return view('admin.products.show', compact('product'));
     }
-
 
     public function edit(Product $product)
     {
@@ -94,14 +87,13 @@ class AdminProductController extends Controller
         ]);
     }
 
-
     public function update(AdminProductRequest $request, Product $product)
     {
         DB::transaction(function () use ($request, $product) {
             $productData = $this->prepareProductData($request, $product);
             $product->update($productData);
             $this->syncVariants($product, $request);
-           
+
             if ($request->filled('delete_images')) {
                 foreach ($request->delete_images as $id) {
                     $image = $product->allImages()->find($id);
@@ -111,7 +103,6 @@ class AdminProductController extends Controller
                     }
                 }
             }
-
 
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $file) {
@@ -123,13 +114,19 @@ class AdminProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công.');
     }
 
-
     public function destroy(Product $product)
     {
+        // Kiểm tra xem sản phẩm có đang được đặt hàng không
+        $hasOrders = $product->orderItems()->exists();
+        
+        if ($hasOrders) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+        
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được chuyển vào thùng rác.');
     }
-
 
     private function prepareProductData(Request $request, Product $product = null): array
     {
@@ -143,56 +140,38 @@ class AdminProductController extends Controller
         return $validated;
     }
 
-
     private function syncVariants(Product $product, Request $request): void
     {
         $submittedVariantIds = [];
         if ($request->type === 'simple') {
-        $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
-        $simpleVariantData['is_active'] = true;
-
-
-
-
-        // Sinh SKU tự động nếu không nhập
-        if (empty($simpleVariantData['sku'])) {
-            $simpleVariantData['sku'] = $this->generateUniqueSku();
-        }
-
-
-
-
-        $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
-
-
-
-
-        // Lưu thuộc tính cho sản phẩm đơn
-        $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
-        $variant->attributeValues()->sync($attributeValueIds);
-
-
-
-
-        $submittedVariantIds[] = $variant->id;
-        }
-        elseif ($request->type === 'variable' && $request->has('variants')) {
+            $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
+            $simpleVariantData['is_active'] = true;
+            // Sinh SKU tự động nếu không nhập
+            if (empty($simpleVariantData['sku'])) {
+                $simpleVariantData['sku'] = $this->generateUniqueSku();
+            }
+            $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
+            // Lưu thuộc tính cho sản phẩm đơn
+            $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
+            $variant->attributeValues()->sync($attributeValueIds);
+            $submittedVariantIds[] = $variant->id;
+        } elseif ($request->type === 'variable' && $request->has('variants')) {
             foreach ($request->variants as $key => $variantData) {
                 $variantData['is_active'] = isset($variantData['is_active']);
                 $variantPayload = Arr::except($variantData, ['attributes', 'image']);
-               
+
                 if (empty($variantPayload['sku'])) {
                     $variantPayload['sku'] = $this->generateUniqueSku();
                 }
 
 
                 $variant = $product->variants()->updateOrCreate(['id' => $variantData['id'] ?? null], $variantPayload);
-               
+
                 if ($request->hasFile("variants.{$key}.image")) {
                     $path = $request->file("variants.{$key}.image")->store('products/variants', 'public');
                     $variant->update(['image' => $path]);
                 }
-               
+
                 $variant->attributeValues()->sync($variantData['attributes']);
                 $submittedVariantIds[] = $variant->id;
             }
@@ -203,8 +182,7 @@ class AdminProductController extends Controller
 
     public function trashed()
     {
-
-
+    
         $products = Product::onlyTrashed()->with(['brand', 'category'])->latest('deleted_at')->paginate(10);
         return view('admin.products.trashed', compact('products'));
     }
@@ -212,7 +190,6 @@ class AdminProductController extends Controller
 
     public function restore($id)
     {
-
 
         $product = Product::onlyTrashed()->findOrFail($id);
         $product->restore();
@@ -223,18 +200,24 @@ class AdminProductController extends Controller
     public function forceDelete($id)
     {
         $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
-       
+
+        // Kiểm tra xem sản phẩm có đang được đặt hàng không
+        $hasOrders = $product->orderItems()->exists();
+        
+        if ($hasOrders) {
+            return redirect()->route('admin.products.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+
         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
             Storage::disk('public')->delete($product->thumbnail);
         }
-
 
         foreach ($product->allImages as $image) {
             if ($image->image_path && Storage::disk('public')->exists($image->image_path)) {
                 Storage::disk('public')->delete($image->image_path);
             }
         }
-
 
         $product->forceDelete();
         return redirect()->route('admin.products.trashed')->with('success', 'Đã xoá vĩnh viễn sản phẩm.');

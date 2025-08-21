@@ -472,7 +472,7 @@
                                         alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg">
                                 @endif
                                 <h3 class="font-semibold mb-2 line-clamp-1">{{ $category->name }}</h3>
-                                <a href="{{ route('categories.show', $category->slug) }}"
+                                <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                     class="text-sm text-blue-600 hover:text-blue-800">
                                     {{ $category->children->count() > 0 ? 'Xem tất cả' : 'Xem sản phẩm' }}
                                 </a>
@@ -500,14 +500,18 @@
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold text-[#ff6c2f]">⚡ FLASH SALE</h2>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả <i class="fas fa-arrow-right ml-2"></i></a>
+                    <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem
+                        tất cả <i class="fas fa-arrow-right ml-2"></i></a>
                     <div class="flex items-center space-x-2 text-lg font-semibold">
                         <span>Kết thúc trong:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">00</div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">00
+                        </div>
                         <span>:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="minutes">00</div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="minutes">00
+                        </div>
                         <span>:</span>
-                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="seconds">00</div>
+                        <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="seconds">00
+                        </div>
                     </div>
                 </div>
             </div>
@@ -517,8 +521,10 @@
                         <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                             onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                             <div class="relative img-wrap">
-                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%</div>
-                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích" onclick="event.stopPropagation();">
+                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%
+                                </div>
+                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                                    onclick="event.stopPropagation();">
                                     <i class="far fa-heart"></i>
                                 </button>
                                 <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
@@ -532,9 +538,11 @@
                                         $variant = $product->variants->first();
                                     @endphp
                                     @if ($variant)
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price ?? $variant->price) }}₫</span>
-                                        @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
-                                            <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price ?? $variant->price) }}₫</span>
+                                        @if ($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                            <span
+                                                class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                         @endif
                                     @else
                                         <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
@@ -546,13 +554,15 @@
                                             <i class="fas fa-star"></i>
                                         @endfor
                                     </div>
-                                    <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                                    <span
+                                        class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 @else
-                    <div class="col-span-5 text-center text-muted py-5">Hiện không có chương trình Flash Sale nào đang diễn ra.</div>
+                    <div class="col-span-5 text-center text-muted py-5">Hiện không có chương trình Flash Sale nào đang diễn
+                        ra.</div>
                 @endif
             </div>
         </div>
@@ -571,12 +581,12 @@
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
-                            @if($product->flash_sale_price && $product->discount_percent > 0)
+                            @if ($product->flash_sale_price && $product->discount_percent > 0)
                                 <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
                             @endif
-                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
-                                <i class="far fa-heart"></i>
+                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
@@ -587,11 +597,14 @@
                             <div class="flex items-center justify-between mb-2">
                                 @php $variant = $product->variants->first(); @endphp
                                 @if ($variant)
-                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
-                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                    @if ($product->flash_sale_price && $variant->price > $product->flash_sale_price)
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                        <span
+                                            class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
@@ -613,6 +626,7 @@
     </section>
 
     <!-- ================= Sản phẩm hot ================= -->
+    <!-- ================= Sản phẩm hot ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
@@ -620,48 +634,56 @@
                 <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem tất cả
                     <i class="fas fa-arrow-right ml-2"></i></a>
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 @foreach ($hotProducts as $product)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
-                            <div class="chip chip-neutral"><i class="fas fa-eye"></i> {{ $product->view_count }}</div>
-                            @if($product->flash_sale_price && $product->discount_percent > 0)
-                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
-                            @endif
-                            <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
                                 onclick="event.stopPropagation();">
-                                <i class="far fa-heart"></i>
+                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
-
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
                                 onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                         </div>
-
-                        <div class="p-4">
+                        <div class="p-4" style="position: relative;">
                             <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
                             <div class="flex items-center justify-between mb-2">
-                                @php $variant = $product->variants->first(); @endphp
-                                @if ($variant)
-                                    @if($product->flash_sale_price && $variant->price > $product->flash_sale_price)
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
-                                        <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                @if ($product->type === 'simple' && $product->variants->count() > 0)
+                                    @php $variant = $product->variants->first(); @endphp
+                                    <span
+                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                @elseif($product->type === 'variable' && $product->variants->count() > 0)
+                                    @php
+                                        $minPrice = $product->variants->min('price');
+                                        $maxPrice = $product->variants->max('price');
+                                    @endphp
+                                    @if ($minPrice === $maxPrice)
+                                        <span
+                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
                                     @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                        <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }} -
+                                            {{ number_format($maxPrice) }}₫</span>
                                     @endif
                                 @else
                                     <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
                                 @endif
                             </div>
-                            <div class="flex items-center">
-                                <div class="flex text-yellow-400 text-sm">
-                                    @for ($i = 1; $i <= 5; $i++)
-                                        <i class="fas fa-star"></i>
-                                    @endfor
-                                </div>
-                                <span class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-1">
+                                    <span class="flex text-yellow-400 text-sm">
+                                        @for ($i = 1; $i <= 5; $i++)
+                                            <i class="fas fa-star"></i>
+                                        @endfor
+                                    </span>
+                                    <span class="text-gray-500 text-sm">({{ $product->productComments->count() }})</span>
+                                </span>
+                                <span class="flex items-center ml-4" style="gap: 4px; font-size: 17px; color: #6b7280;">
+                                    <i class="fas fa-eye" style="color: #6b7280;"></i>
+                                    <span
+                                        style="font-size: 15px; color: #6b7280;">{{ number_format($product->view_count) }}</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -669,6 +691,8 @@
             </div>
         </div>
     </section>
+
+
 
     <!-- ================= Brand Section: CAROUSEL ================= -->
     <section class="py-12">
@@ -793,7 +817,6 @@
         </div>
     </section>
 @endsection
-
 @push('scripts')
     <script>
         // === Slideshow ===
@@ -852,7 +875,7 @@
                 m = document.getElementById('minutes'),
                 s = document.getElementById('seconds');
             if (!h || !m || !s) return;
-            @if(!empty($flashSaleEndTime))
+            @if (!empty($flashSaleEndTime))
                 const end = new Date(@json($flashSaleEndTime));
             @else
                 const end = null;
@@ -876,39 +899,69 @@
             setInterval(updateCountdown, 1000);
         })();
 
-        // === Wishlist: toggle + persist localStorage ===
+        // === Wishlist: toggle using API ===
         (function() {
-            const KEY = 'tv_wishlist_ids';
-            const parse = () => {
-                try {
-                    return new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
-                } catch {
-                    return new Set();
-                }
-            };
-            const save = (set) => localStorage.setItem(KEY, JSON.stringify([...set]));
-            const liked = parse();
-
-            document.querySelectorAll('.wish-btn[data-id]').forEach(btn => {
-                const id = String(btn.dataset.id);
-                const icon = btn.querySelector('i');
-                const active = liked.has(id);
-                btn.classList.toggle('active', active);
-                if (icon) {
-                    icon.classList.toggle('fas', active);
-                    icon.classList.toggle('far', !active);
-                }
-                btn.addEventListener('click', () => {
-                    const nowActive = btn.classList.toggle('active');
-                    if (icon) {
-                        icon.classList.toggle('fas', nowActive);
-                        icon.classList.toggle('far', !nowActive);
-                    }
-                    if (nowActive) liked.add(id);
-                    else liked.delete(id);
-                    save(liked);
+            document.querySelectorAll('.wish-btn.favorite-once').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-product-id');
+                    const icon = this.querySelector('i');
+                    const originalIcon = icon.className;
+                    
+                    // Show loading
+                    icon.className = 'fas fa-spinner fa-spin';
+                    this.disabled = true;
+                    
+                    fetch('{{ route("accounts.favorites.toggle") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update icon based on favorite status
+                            if (data.is_favorite) {
+                                icon.className = 'fas fa-heart';
+                                this.classList.add('active');
+                            } else {
+                                icon.className = 'far fa-heart';
+                                this.classList.remove('active');
+                            }
+                            
+                            // Show toast message
+                            showToast(data.message);
+                        } else {
+                            // Restore original state on error
+                            icon.className = originalIcon;
+                            showToast('Có lỗi xảy ra, vui lòng thử lại');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Restore original state on error
+                        icon.className = originalIcon;
+                        showToast('Có lỗi xảy ra, vui lòng thử lại');
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                    });
                 });
             });
+            
+            // Toast function
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white';
+                toast.style.backgroundColor = '#10b981';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 1500);
+            }
         })();
 
         // === Horizontal sliders controller (cho mọi .hslider) ===

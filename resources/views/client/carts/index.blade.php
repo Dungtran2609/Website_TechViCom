@@ -5,14 +5,15 @@
 
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="container mx-auto px-4">
-    <nav class="text-sm text-gray-500 mb-6">
-      <ol class="list-none p-0 inline-flex">
-        <li class="flex items-center">
-          <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
-          <i class="fas fa-chevron-right mx-2"></i>
-        </li>
-        <li class="text-gray-700">Giỏ hàng</li>
-      </ol>
+    <!-- Breadcrumb -->
+    <nav class="bg-white border-b border-gray-200 py-3 mb-6">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <span class="text-gray-900 font-medium">Giỏ hàng</span>
+            </div>
+        </div>
     </nav>
 
     <div class="max-w-6xl mx-auto">
@@ -50,14 +51,26 @@
                       $v = $item->product->variants?->firstWhere('id', $item->variant_id);
                       if ($v) $displayPrice = $v->sale_price ?? $v->price ?? 0;
                     }
-                    // ẢNH: ưu tiên ảnh biến thể
+                    // ẢNH: ưu tiên ảnh biến thể, fallback về ảnh sản phẩm chính
                     $imagePath = null;
+                    $imageSource = 'none'; // Debug: để biết ảnh lấy từ đâu
+                    
                     if (!empty($item->productVariant?->image)) {
                       $imagePath = asset('storage/' . ltrim($item->productVariant->image, '/'));
+                      $imageSource = 'variant';
+                    } elseif (!empty($item->product->image)) {
+                      $imagePath = asset('uploads/products/' . ltrim($item->product->image, '/'));
+                      $imageSource = 'product_main';
                     } elseif (!empty($item->product->productAllImages) && $item->product->productAllImages->count() > 0) {
                       $imgObj   = $item->product->productAllImages->first();
                       $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
-                      if ($imgField) $imagePath = asset('uploads/products/' . ltrim($imgField, '/'));
+                      if ($imgField) {
+                        $imagePath = asset('uploads/products/' . ltrim($imgField, '/'));
+                        $imageSource = 'product_all_images';
+                      }
+                    } elseif (!empty($item->product->thumbnail)) {
+                      $imagePath = asset('uploads/products/' . ltrim($item->product->thumbnail, '/'));
+                      $imageSource = 'product_thumbnail';
                     }
                     $isOutOfStock = ($stock <= 0);
                   @endphp
@@ -70,18 +83,31 @@
                   >
                     <div class="flex items-center space-x-4">
                       <input type="checkbox" class="item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="{{ $item->id }}" @if($isOutOfStock) disabled @endif>
-                      <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                        @if(!empty($item->productVariant?->image))
-                          <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}"
+                      <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative" 
+                           title="Ảnh: {{ $imageSource }} - {{ $imagePath ? 'Có' : 'Không có' }}">
+                        @if($imagePath)
+                          <img src="{{ $imagePath }}"
                                alt="{{ $item->product->name }}"
-                               class="w-full h-full object-cover"
-                               onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                               class="w-full h-full object-cover transition-opacity duration-200"
+                               loading="lazy"
+                               onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}';this.classList.add('opacity-50');">
                         @else
-                          <img src="{{ asset('client_css/images/placeholder.svg') }}" alt="No image" class="w-full h-full object-cover">
+                          <img src="{{ asset('client_css/images/placeholder.svg') }}" 
+                               alt="No image" 
+                               class="w-full h-full object-cover opacity-50">
+                        @endif
+                        @if($isOutOfStock)
+                          <div class="absolute inset-0 bg-red-500 bg-opacity-20 flex items-center justify-center">
+                            <span class="text-red-600 text-xs font-bold">Hết hàng</span>
+                          </div>
                         @endif
                       </div>
                       <div>
-                        <h3 class="font-medium text-gray-900">{{ $item->product->name }}</h3>
+                        <h3 class="font-medium text-gray-900">
+                          <a href="{{ route('products.show', $item->product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
+                            {{ $item->product->name }}
+                          </a>
+                        </h3>
                         @if($isOutOfStock)
                           <div class="text-sm text-red-600 font-semibold">Hết hàng</div>
                         @elseif(!empty($item->productVariant))
@@ -104,9 +130,10 @@
                     </div>
 
                     <div class="flex items-center space-x-4">
-                      @if($isOutOfStock)
-                        <div class="text-red-600 font-bold text-base">Hết hàng</div>
-                      @else
+                                              @if($isOutOfStock)
+                          <div class="text-red-600 font-bold text-base">Hết hàng</div>
+                          <div class="text-xs text-gray-500 mt-1">Không thể thanh toán</div>
+                        @else
                         <div class="flex items-center space-x-2">
                           <button
                             type="button"
@@ -188,12 +215,16 @@
                   </div>
               </div>
 
-              <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4" id="checkout-all-btn">
+              <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed" id="checkout-all-btn">
                 Thanh toán tất cả
               </button>
               <button type="button" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition mb-4 hidden" id="checkout-selected-btn">
                 Thanh toán sản phẩm đã chọn
               </button>
+              
+              <div class="text-xs text-gray-500 text-center mb-4" id="checkout-status">
+                <!-- Thông báo trạng thái sẽ hiển thị ở đây -->
+              </div>
 
               <a href="{{ route('home') }}" class="block text-center text-[#ff6c2f] hover:underline">← Tiếp tục mua sắm</a>
             </div>
@@ -351,29 +382,33 @@ async function deleteSelected(){
 }
 // ===== Thanh toán =====
 function proceedToCheckout(){ // thanh toán tất cả
-  // Lấy tất cả sản phẩm trong giỏ còn hàng
-  const ids = Array.from(document.querySelectorAll('.cart-item'))
-    .map(el => el.dataset.id)
-    .filter((id, idx) => {
-      const cb = cbs[idx];
-      return cb && !cb.disabled;
-    });
-  if(ids.length === 0){
-    showNotification('Giỏ hàng trống hoặc không có sản phẩm còn hàng','error');
+  // Lấy tất cả sản phẩm trong giỏ còn hàng (không bị disabled)
+  const items = Array.from(document.querySelectorAll('.cart-item'));
+  const availableItems = items.filter(item => {
+    const checkbox = item.querySelector('.item-checkbox');
+    return checkbox && !checkbox.disabled;
+  });
+  
+  if(availableItems.length === 0){
+    showNotification('Không có sản phẩm nào còn hàng để thanh toán','error');
     return;
   }
+  
+  const ids = availableItems.map(item => item.dataset.id);
   localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
   window.location.href = '{{ route("checkout.index") }}?selected=' + ids.join(',');
 }
 
 function proceedToCheckoutSelected(){ // thanh toán theo chọn
-  const ids = Array.from(document.querySelectorAll('.item-checkbox:checked'))
-    .filter(cb => !cb.disabled)
-    .map(cb => cb.value);
-  if(ids.length === 0){
-    showNotification('Vui lòng chọn sản phẩm để thanh toán','error');
+  const checkedBoxes = Array.from(document.querySelectorAll('.item-checkbox:checked'));
+  const availableCheckedBoxes = checkedBoxes.filter(cb => !cb.disabled);
+  
+  if(availableCheckedBoxes.length === 0){
+    showNotification('Vui lòng chọn sản phẩm còn hàng để thanh toán','error');
     return;
   }
+  
+  const ids = availableCheckedBoxes.map(cb => cb.value);
   localStorage.setItem('checkout_selected_items', JSON.stringify(ids));
   window.location.href = '{{ route("checkout.index") }}?selected=' + ids.join(',');
 }
@@ -387,6 +422,15 @@ function initSelectionFeatures(){
   const btnSel=document.getElementById('checkout-selected-btn');
 
   if(!selectAll) return;
+  
+  // Nếu không có sản phẩm nào, ẩn các nút thanh toán
+  if(cbs.length === 0) {
+    if(btnAll) btnAll.style.display = 'none';
+    if(btnSel) btnSel.style.display = 'none';
+    const statusEl = document.getElementById('checkout-status');
+    if(statusEl) statusEl.textContent = 'Giỏ hàng trống';
+    return;
+  }
 
   function refresh(){
     const checkedCount = Array.from(cbs).filter(cb=>cb.checked).length;
@@ -399,15 +443,37 @@ function initSelectionFeatures(){
     // - Chọn TẤT CẢ → chỉ hiện "Thanh toán tất cả" & enable
     // - Chọn một phần → hiện "Thanh toán sản phẩm đã chọn"
     // - Chưa chọn gì → chỉ hiện "Thanh toán tất cả" nhưng disable
-    if(allChecked){
+    const availableItems = Array.from(cbs).filter(cb => !cb.disabled);
+    const hasAvailableItems = availableItems.length > 0;
+    const statusEl = document.getElementById('checkout-status');
+    
+    if(allChecked && hasAvailableItems){
       btnAll.classList.remove('hidden'); btnAll.disabled = false;
       btnSel.classList.add('hidden');
+      if(statusEl) {
+        statusEl.textContent = `Đã chọn ${checkedCount} sản phẩm còn hàng`;
+        statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+      }
     } else if(anyChecked){
       btnAll.classList.add('hidden');
       btnSel.classList.remove('hidden');
+      if(statusEl) {
+        statusEl.textContent = `Đã chọn ${checkedCount} sản phẩm để thanh toán`;
+        statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+      }
     } else {
-      btnAll.classList.remove('hidden'); btnAll.disabled = true;
+      btnAll.classList.remove('hidden'); 
+      btnAll.disabled = !hasAvailableItems;
       btnSel.classList.add('hidden');
+      if(statusEl) {
+        if(hasAvailableItems) {
+          statusEl.textContent = 'Chưa chọn sản phẩm nào';
+          statusEl.className = 'text-xs text-gray-500 text-center mb-4';
+        } else {
+          statusEl.textContent = 'Tất cả sản phẩm đều hết hàng';
+          statusEl.className = 'text-xs text-red-500 text-center mb-4';
+        }
+      }
     }
 
     // Mỗi lần thay đổi lựa chọn: reset mã và tính lại tổng

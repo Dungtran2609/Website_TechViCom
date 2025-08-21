@@ -15,12 +15,20 @@ class AdminBrandController extends Controller
     {
         $query = Brand::withCount('products');
 
+        // Lọc theo trạng thái
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if ($status !== '') {
+                $query->where('status', $status);
+            }
+        }
+
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('name', 'like', '%' . $search . '%');
         }
 
-        $query->orderBy('id', 'desc');
+        $query->orderBy('updated_at', 'desc');
 
         $brands = $query->paginate(5)->withQueryString();
 
@@ -139,5 +147,4 @@ class AdminBrandController extends Controller
 
         return redirect()->route('admin.products.brands.trashed')->with('success', 'Đã xoá vĩnh viễn thương hiệu.');
     }
-
 }

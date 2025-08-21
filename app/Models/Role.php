@@ -1,6 +1,4 @@
 <?php
-
-
 namespace App\Models;
 
 
@@ -15,7 +13,7 @@ class Role extends Model
 
 
     // Cho phép gán các thuộc tính
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'slug', 'status'];
 
 
     // Dùng soft delete
@@ -40,8 +38,6 @@ class Role extends Model
     }
 
 
-
-
     /**
      * Kiểm tra vai trò có một quyền cụ thể không
      *
@@ -53,3 +49,6 @@ class Role extends Model
         return $this->permissions->contains('name', $permissionName);
     }
 }
+
+
+

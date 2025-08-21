@@ -1,16 +1,21 @@
 <?php
 
+
 namespace App\Models;
+
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 
 class UserAddress extends Model
 {
     use HasFactory;
 
+
     // Bảng tương ứng
     protected $table = 'user_addresses';
+
 
     // Các cột có thể điền vào
     protected $fillable = [
@@ -25,6 +30,7 @@ class UserAddress extends Model
         'is_default',
     ];
 
+
     /**
      * Quan hệ ngược về bảng users.
      */
@@ -33,3 +39,4 @@ class UserAddress extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }
+

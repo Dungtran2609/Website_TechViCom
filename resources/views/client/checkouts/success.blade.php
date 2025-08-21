@@ -6,9 +6,9 @@
     @if (session('notification'))
         <div
             class="fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-medium transition-all duration-300
-        @if (session('notification.type') === 'success') bg-green-500
-        @elseif(session('notification.type') === 'error') bg-red-500
-        @else bg-yellow-500 @endif">
+                @if (session('notification.type') === 'success') bg-green-500
+                @elseif(session('notification.type') === 'error') bg-red-500
+                @else bg-yellow-500 @endif">
             {{ session('notification.message') }}
         </div>
     @endif
@@ -17,16 +17,40 @@
             <!-- Success Message -->
             <div class="bg-white rounded-lg shadow-md p-8 text-center">
                 <div class="mb-6">
+
+                    @php
+                        $forcedOrderId = session('force_cod_for_order_id');
+                        $vnpayLocked = false;
+                        if ($forcedOrderId && $order->id == $forcedOrderId) {
+                            $prevOrder = \App\Models\Order::find($forcedOrderId);
+                            if (
+                                $prevOrder &&
+                                method_exists(
+                                    app('App\\Http\\Controllers\\Client\\Checkouts\\ClientCheckoutController'),
+                                    'getCancelCount',
+                                )
+                            ) {
+                                $vnpayLocked =
+                                    app(
+                                        'App\\Http\\Controllers\\Client\\Checkouts\\ClientCheckoutController',
+                                    )->getCancelCount($prevOrder) > 3;
+                            }
+                        }
+                    @endphp
                     @if ($order->payment_method === 'bank_transfer' && $order->payment_status === 'cancelled')
                         <i class="fas fa-times-circle text-orange-500 text-6xl mb-4"></i>
                     @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'failed')
                         <i class="fas fa-exclamation-triangle text-red-500 text-6xl mb-4"></i>
+                    @elseif($vnpayLocked)
+                        <i class="fas fa-ban text-red-500 text-6xl mb-4"></i>
                     @else
                         <i class="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
                     @endif
 
                     <h1 class="text-2xl font-bold text-gray-900 mb-2">
-                        @if ($order->payment_method === 'cod')
+                        @if ($vnpayLocked)
+                            Bạn đã hủy thanh toán VNPay quá 3 lần
+                        @elseif($order->payment_method === 'cod')
                             Đặt hàng thành công!
                         @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'paid')
                             Thanh toán thành công!
@@ -40,7 +64,10 @@
                     </h1>
 
                     <p class="text-gray-600">
-                        @if ($order->payment_method === 'cod')
+                        @if ($vnpayLocked)
+                            Bạn đã hủy thanh toán VNPay quá 3 lần. Vui lòng chọn phương thức thanh toán khác để tiếp tục đặt
+                            hàng. Nếu cần hỗ trợ, vui lòng liên hệ hotline.
+                        @elseif($order->payment_method === 'cod')
                             Cảm ơn bạn đã mua hàng tại Techvicom. Chúng tôi sẽ liên hệ sớm nhất để xác nhận và giao hàng!
                         @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'paid')
                             Cảm ơn bạn đã thanh toán thành công. Đơn hàng đang được xử lý!
@@ -54,14 +81,14 @@
                     </p>
                 </div>
 
-                @if (($order->payment_method === 'bank_transfer' && $order->status === 'cancelled') || (($orderVnpayCancelCount ?? 0) >= 3 && $order->payment_method === 'bank_transfer'))
-                    <div class="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700">
-                        <b>Phương thức VNPay đã bị khóa do bạn đã hủy thanh toán 3 lần.</b><br>
-                        <span class="font-semibold text-red-600">Đơn hàng đã bị hủy. Vui lòng chọn phương thức khác (COD) để tiếp tục.</span>
+                <!-- Order Info -->
+                @if ($vnpayLocked)
+                    <div class="mt-6 mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <i class="fas fa-ban mr-2"></i> Bạn không thể thanh toán lại bằng VNPay cho đơn này. Vui lòng chọn
+                        phương thức khác hoặc liên hệ hỗ trợ.
+
                     </div>
                 @endif
-
-                <!-- Order Info -->
                 <div class="bg-gray-50 rounded-lg p-6 mb-6">
                     <h3 class="font-semibold text-gray-900 mb-4">Thông tin đơn hàng</h3>
                     <div class="space-y-2 text-sm">
@@ -70,17 +97,25 @@
                             <span class="font-medium">#{{ $order->id }}</span>
                         </div>
 
-                        {{-- Tạm tính --}}
+                        {{-- Tạm tính: tổng giá sản phẩm --}}
                         <div class="flex justify-between py-1">
                             <span>Tạm tính:</span>
                             <span class="font-medium">{{ number_format($order->total_amount ?? 0) }}₫</span>
                         </div>
 
-                        {{-- Giảm giá --}}
+                        {{-- Giảm giá: nếu có --}}
                         @if (($order->discount_amount ?? 0) > 0)
                             <div class="flex justify-between py-1 text-green-600">
                                 <span>Giảm giá:</span>
                                 <span class="font-medium">-{{ number_format($order->discount_amount) }}₫</span>
+                            </div>
+                        @endif
+
+                        {{-- Giảm giá VNPay: nếu có --}}
+                        @if (($order->vnpay_discount ?? 0) > 0)
+                            <div class="flex justify-between py-1 text-green-600">
+                                <span>Giảm giá VNPay:</span>
+                                <span class="font-medium">-{{ number_format($order->vnpay_discount / 100) }}₫</span>
                             </div>
                         @endif
 
@@ -90,7 +125,7 @@
                             <span class="font-medium">{{ number_format($order->shipping_fee ?? 0) }}₫</span>
                         </div>
 
-                        {{-- Tổng cộng --}}
+                        {{-- Tổng cộng: đã bao gồm tất cả giảm giá --}}
                         <div class="flex justify-between py-2 border-t border-gray-300 mt-2">
                             <span class="font-semibold">Tổng cộng:</span>
                             <span
@@ -112,21 +147,19 @@
 
                         <div class="flex justify-between">
                             <span>Trạng thái thanh toán:</span>
-                            @php
-                                $paymentLabel = 'Chưa thanh toán';
-                                $paymentClass = 'text-blue-600';
-                                if ($order->payment_status === 'paid') {
-                                    $paymentLabel = 'Đã thanh toán';
-                                    $paymentClass = 'text-green-600';
-                                } elseif ($order->payment_status === 'failed') {
-                                    $paymentLabel = 'Thanh toán thất bại';
-                                    $paymentClass = 'text-red-600';
-                                } elseif ($order->payment_status === 'cancelled') {
-                                    $paymentLabel = 'Đã hủy thanh toán';
-                                    $paymentClass = 'text-orange-600';
-                                }
-                            @endphp
-                            <span class="font-medium {{ $paymentClass }}">{{ $paymentLabel }}</span>
+                            <span
+                                class="font-medium
+                                @if ($order->payment_status === 'paid') text-green-600
+                                @elseif($order->payment_status === 'failed') text-red-600
+                                @else text-blue-600 @endif">
+                                @if ($order->payment_status === 'paid')
+                                    Đã thanh toán
+                                @elseif($order->payment_status === 'failed')
+                                    Thanh toán thất bại
+                                @else
+                                    Chưa thanh toán
+                                @endif
+                            </span>
                         </div>
 
                         @if ($order->payment_method === 'bank_transfer' && $order->vnpay_transaction_id)
@@ -203,15 +236,14 @@
                             class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">
                             <i class="fas fa-home mr-2"></i>Về trang chủ
                         </a>
-                        {{-- Ẩn nút thanh toán lại VNPAY nếu đã hủy >= 3 lần --}}
-                        @if (
-                            $order->payment_method === 'bank_transfer' &&
-                            $order->payment_status === 'cancelled' &&
-                            ($orderVnpayCancelCount ?? 0) < 3)
-                            <a href="{{ route('vnpay.payment', ['order_id' => $order->id]) }}"
-                                class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-                                <i class="fas fa-credit-card mr-2"></i>Thanh toán lại VNPAY
-                            </a>
+
+                        @if ($order->payment_method === 'bank_transfer' && $order->payment_status === 'cancelled')
+                            @if (!$vnpayLocked)
+                                <a href="{{ route('vnpay.payment', ['order_id' => $order->id]) }}"
+                                    class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                                    <i class="fas fa-credit-card mr-2"></i>Thanh toán lại VNPAY
+                                </a>
+                            @endif
                         @endif
 
                         @auth

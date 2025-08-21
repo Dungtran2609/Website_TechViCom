@@ -8,7 +8,11 @@ use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ClientAccountController extends Controller
 {
@@ -30,14 +34,75 @@ class ClientAccountController extends Controller
         return view('client.accounts.index', compact('user', 'recentOrders', 'addresses'));
     }
 
-    public function orders()
+    public function orders(Request $request)
     {
-        $orders = Order::with(['orderItems.product'])
-            ->where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $user   = Auth::user();
+        $search = trim((string) $request->input('q', ''));
+        $status = $request->input('status', 'all');
 
-        return view('client.accounts.orders', compact('orders'));
+
+
+        // Thứ tự trạng thái để ORDER BY FIELD (chỉ các trạng thái có thực trong DB)
+        $statusOrder = ['pending', 'shipped', 'delivered', 'received', 'cancelled', 'returned'];
+
+        $query = Order::with(['orderItems.productVariant.product', 'returns'])
+            ->where('user_id', $user->id);
+
+        // Lọc theo trạng thái (DB-side)
+        if ($status !== 'all' && in_array($status, $statusOrder, true)) {
+            $query->where('status', $status);
+            // Log::info('Filtering by status', ['status' => $status]);
+        } else {
+            // Log::info('No status filter applied', ['status' => $status]);
+        }
+
+        // Tìm kiếm: DH000123 / ID / tên sản phẩm
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                // "DH000123" -> lấy 123
+                if (preg_match('/^DH0*([0-9]+)$/i', $search, $m)) {
+                    $q->where('id', (int) $m[1]);
+                    return;
+                }
+
+                // Toàn số: id chính xác hoặc prefix id
+                if (ctype_digit($search)) {
+                    $q->where('id', (int) $search)
+                        ->orWhereRaw('CAST(id AS CHAR) LIKE ?', [$search . '%']);
+                    return;
+                }
+
+                // Tên sản phẩm: tìm theo name_product trong order_items
+                $q->orWhereHas('orderItems', function ($oi) use ($search) {
+                    $oi->where('name_product', 'LIKE', '%' . $search . '%');
+                });
+            });
+        }
+
+        // Sắp xếp theo trạng thái rồi thời gian tạo (DB-side)
+        $orders = $query
+            ->orderByRaw("FIELD(status, '" . implode("','", $statusOrder) . "'), created_at DESC")
+            ->paginate(10)
+            ->withQueryString();
+
+
+
+        // (Tuỳ view cần) số lượng theo từng trạng thái cho badge/tabs
+        $counts = Order::where('user_id', $user->id)
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+        $counts['all'] = Order::where('user_id', $user->id)->count();
+        
+
+
+        return view('client.accounts.orders', [
+            'orders' => $orders,
+            'status' => $status,
+            'search' => $search,
+            'counts' => $counts, // nếu muốn hiển thị badge số lượng ở tab
+        ]);
     }
 
     public function orderDetail($id)
@@ -111,12 +176,25 @@ class ClientAccountController extends Controller
             'email' => 'required|email|unique:users,email,' . Auth::id(),
             'phone_number' => 'nullable|string|max:20',
             'birthday' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other'
+            'gender' => 'nullable|in:male,female,other',
+            'image_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
         $user = Auth::user();
+        $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender']);
 
-        User::where('id', $user->id)->update($request->only(['name', 'email', 'phone_number', 'birthday', 'gender']));
+        // Xử lý upload ảnh đại diện
+        if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
+            // Xóa ảnh cũ nếu có
+            if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
+                Storage::disk('public')->delete($user->image_profile);
+            }
+            
+            // Lưu ảnh mới
+            $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
+        }
+
+        User::where('id', $user->id)->update($userData);
 
         return redirect()->back()->with('success', 'Cập nhật thông tin thành công');
     }
@@ -199,7 +277,7 @@ class ClientAccountController extends Controller
 
     public function updateAddress(Request $request, $id)
     {
-        $validator = \Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'recipient_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'address_line' => 'required|string|max:500',

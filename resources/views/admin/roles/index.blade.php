@@ -1,19 +1,23 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Phân vai trò cho người dùng</h1>
     </div>
 
+
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+
 
     <div class="card">
         <div class="card-body">
             <a href="{{ route('admin.roles.list') }}" class="btn btn-success">
                 <i class="fas fa-plus"></i> Danh sách vai trò
             </a>
+
 
             <form action="{{ route('admin.roles.updateUsers') }}" method="POST">
                 @csrf
@@ -47,6 +51,7 @@
                     </tbody>
                 </table>
 
+
                 <div class="mt-3 text-end">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Cập nhật vai trò
@@ -54,9 +59,13 @@
                 </div>
             </form>
 
+
             <div class="mt-3">
                 {{-- {{ $users->links('pagination::bootstrap-5') }} --}}
             </div>
         </div>
     </div>
 @endsection
+
+
+

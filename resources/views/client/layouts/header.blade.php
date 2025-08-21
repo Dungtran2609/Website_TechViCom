@@ -150,7 +150,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             @if (isset($categories) && $categories->count() > 0)
                                 @foreach ($categories->take(6) as $category)
-                                    <a href="{{ route('categories.show', $category->slug) }}"
+                                    <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                         class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                                         <!-- Shared icon (ignore per-category images) -->
                                         <div class="cat-icon mr-3 group-hover:scale-110 transition-transform">
@@ -320,6 +320,10 @@
                                     <a href="{{ route('accounts.addresses') }}"
                                         class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                         <i class="fas fa-map-marker-alt mr-3 text-gray-400"></i> Địa chỉ giao hàng
+                                    </a>
+                                    <a href="{{ route('products.love') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-heart mr-3 text-gray-400"></i> Sản phẩm yêu thích
                                     </a>
 
                                     <div class="border-t border-gray-200 my-2"></div>

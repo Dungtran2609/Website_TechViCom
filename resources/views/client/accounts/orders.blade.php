@@ -1,7 +1,9 @@
 @extends('client.layouts.app')
 
+
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
 
     @php
         // Chỉ hiển thị các trạng thái có thực trong database
@@ -18,17 +20,18 @@
         $search = request('q', '');
     @endphp
 
+
     <div class="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
         <div class="container mx-auto px-4">
             <!-- Header Section -->
             <div class="text-center mb-8">
-                <div
-                    class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mb-4">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mb-4">
                     <i class="fas fa-shopping-bag text-white text-2xl"></i>
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Đơn hàng của bạn</h1>
                 <p class="text-gray-600">Quản lý và theo dõi tất cả đơn hàng của bạn</p>
             </div>
+
 
             <!-- Status Filter Tabs -->
             <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -39,28 +42,24 @@
                             $href = url()->current() . (count($qs) ? '?' . http_build_query($qs) : '');
                             $isActive = $currentStatus === $key;
                         @endphp
-                        <input type="radio" class="hidden" name="orderFilter" id="{{ $key }}"
-                            value="{{ $key }}" {{ $isActive ? 'checked' : '' }}>
+                        <input type="radio" class="hidden" name="orderFilter" id="{{ $key }}" value="{{ $key }}" {{ $isActive ? 'checked' : '' }}>
                         <label
                             class="px-6 py-3 rounded-full font-medium cursor-pointer transition-all duration-200 {{ $isActive ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
                             for="{{ $key }}">
                             {{ $label }}
                             @if ($key === 'all')
                                 @isset($counts['all'])
-                                    <span
-                                        class="ml-2 px-2 py-1 text-xs rounded-full {{ $isActive ? 'bg-white bg-opacity-20' : 'bg-orange-100 text-orange-600' }}">{{ $counts['all'] }}</span>
+                                    <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $isActive ? 'bg-white bg-opacity-20' : 'bg-orange-100 text-orange-600' }}">{{ $counts['all'] }}</span>
                                 @endisset
                             @else
                                 @if (isset($counts[$key]) && $counts[$key] > 0)
-                                    <span
-                                        class="ml-2 px-2 py-1 text-xs rounded-full {{ $isActive ? 'bg-white bg-opacity-20' : 'bg-orange-100 text-orange-600' }}">{{ $counts[$key] }}</span>
+                                    <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $isActive ? 'bg-white bg-opacity-20' : 'bg-orange-100 text-orange-600' }}">{{ $counts[$key] }}</span>
                                 @endif
                             @endif
                         </label>
                     @endforeach
                 </div>
             </div>
-
 
 
             <!-- Search and Filter Section -->
@@ -82,6 +81,7 @@
                         </div>
                     </div>
 
+
                     <div>
                         <select id="statusFilter"
                             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
@@ -95,6 +95,7 @@
                             @endforeach
                         </select>
                     </div>
+
 
                     <div class="flex gap-2">
                         <button
@@ -112,10 +113,10 @@
                 </div>
             </div>
 
+
             @if ($orders->count() === 0)
                 <div class="bg-white rounded-2xl shadow-lg p-12 text-center">
-                    <div
-                        class="w-24 h-24 bg-gradient-to-r from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div class="w-24 h-24 bg-gradient-to-r from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="fas fa-shopping-bag text-3xl text-orange-500"></i>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-2">Chưa có đơn hàng nào</h3>
@@ -127,29 +128,23 @@
                     </a>
                 </div>
             @else
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <!-- Orders Table + Load More + Collapse -->
+                <div id="ordersWrapper"
+                     class="bg-white rounded-2xl shadow-lg overflow-hidden"
+                     data-current-page="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}"
+                     data-last-page="{{ method_exists($orders, 'lastPage') ? $orders->lastPage() : 1 }}">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                                 <tr>
-                                    <th
-                                        class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Mã đơn</th>
-                                    <th
-                                        class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Ngày đặt</th>
-                                    <th
-                                        class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Trạng thái</th>
-                                    <th
-                                        class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Tổng tiền</th>
-                                    <th
-                                        class="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                                        Thao tác</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Mã đơn</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Ngày đặt</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Tổng tiền</th>
+                                    <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Thao tác</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="ordersTbody">
                                 @php
                                     $statusColor = [
                                         'pending' => 'warning',
@@ -162,6 +157,7 @@
                                     ];
                                 @endphp
 
+
                                 {{-- KHÔNG sortBy ở Blade: Controller đã sắp xếp & lọc --}}
                                 @foreach ($orders as $order)
                                     @php $return = $order->returns()->latest()->first(); @endphp
@@ -171,7 +167,6 @@
                                                 {{ $order->random_code ?? ($order->code ?? 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}
                                             </div>
                                         </td>
-
                                         <td class="px-6 py-4">
                                             <div class="text-sm text-gray-900">
                                                 {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}
@@ -180,65 +175,50 @@
                                                 {{ \Carbon\Carbon::parse($order->created_at)->format('H:i') }}
                                             </div>
                                         </td>
-
                                         <td class="px-6 py-4">
                                             @php $key = $order->status ?? 'pending'; @endphp
                                             @switch($order->status)
                                                 @case('pending')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                                         <i class="fas fa-clock mr-1"></i>Chờ xử lý
                                                     </span>
                                                 @break
-
                                                 @case('processing')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                         <i class="fas fa-cog mr-1"></i>Đang xử lý
                                                     </span>
                                                 @break
-
                                                 @case('shipped')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                                                         <i class="fas fa-truck mr-1"></i>Đang giao
                                                     </span>
                                                 @break
-
                                                 @case('delivered')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                         <i class="fas fa-check-circle mr-1"></i>Đã giao
                                                     </span>
                                                 @break
-
                                                 @case('received')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                                                         <i class="fas fa-check-double mr-1"></i>Đã nhận hàng
                                                     </span>
                                                 @break
-
                                                 @case('cancelled')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                         <i class="fas fa-times-circle mr-1"></i>Đã hủy
                                                     </span>
                                                 @break
-
                                                 @case('returned')
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                                         <i class="fas fa-undo mr-1"></i>Trả hàng
                                                     </span>
                                                 @break
-
                                                 @default
-                                                    <span
-                                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                                         <i class="fas fa-question mr-1"></i>{{ ucfirst($order->status) }}
                                                     </span>
                                             @endswitch
+
 
                                             @if ($return && in_array($order->status, ['returned', 'cancelled']))
                                                 <div class="mt-2 text-xs text-gray-500">
@@ -247,16 +227,14 @@
                                                 </div>
                                             @endif
                                         </td>
-
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-semibold text-red-600">
                                                 {{ number_format($order->final_total, 0, ',', '.') }} VND
                                             </div>
                                         </td>
-
                                         <td class="px-6 py-4 text-center">
                                             <a href="{{ route('client.orders.show', $order->id) }}"
-                                                class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-sm hover:shadow-md">
+                                               class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-medium rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-sm hover:shadow-md">
                                                 <i class="fas fa-eye mr-2"></i>Xem
                                             </a>
                                         </td>
@@ -266,95 +244,50 @@
                         </table>
                     </div>
 
+
+                    @if (method_exists($orders, 'hasMorePages') && $orders->hasMorePages())
+                        <div id="loadMoreContainer" class="border-t bg-white p-4 text-center">
+                            <div class="flex items-center justify-center gap-3">
+                                <button id="loadMoreBtn" type="button"
+                                        class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-medium text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-sm hover:shadow-md transition-all">
+                                    <i id="loadMoreSpinner" class="fas fa-spinner fa-spin mr-2 hidden"></i>
+                                    <span id="loadMoreText">Xem thêm đơn hàng</span>
+                                </button>
+                                <button id="collapseBtn" type="button"
+                                        class="hidden inline-flex items-center justify-center px-5 py-3 rounded-xl font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                                    <i class="fas fa-chevron-up mr-2"></i>
+                                    Ẩn bớt
+                                </button>
+                            </div>
+                            <div id="loadMoreHint" class="text-xs text-gray-500 mt-2">Hiển thị thêm kết quả mà không tải lại trang</div>
+                        </div>
+                    @endif
                 </div>
+            @endif
         </div>
-    </div>
-    @endif
-    </div>
     </div>
 @endsection
 
+
 @push('styles')
     <style>
-        /* Custom styles for enhanced UI */
-        .table th,
-        .table td {
-            vertical-align: middle !important;
-        }
-
-        .badge {
-            font-size: 1em;
-            border-radius: 1rem;
-        }
-
-        .btn-outline-primary {
-            transition: box-shadow .2s;
-        }
-
-        .btn-outline-primary:hover {
-            box-shadow: 0 2px 8px rgba(0, 123, 255, .15);
-        }
-
-        .nav-pills .nav-link {
-            border-radius: 999px;
-        }
-
-        /* Enhanced pagination styling */
-        .pagination {
-            gap: 0.5rem;
-        }
-
-        .page-link {
-            border-radius: 0.5rem !important;
-            border: 1px solid #e5e7eb !important;
-            color: #374151 !important;
-            padding: 0.5rem 1rem !important;
-            transition: all 0.2s !important;
-        }
-
-        .page-link:hover {
-            background-color: #f3f4f6 !important;
-            border-color: #d1d5db !important;
-            color: #1f2937 !important;
-        }
-
-        .page-item.active .page-link {
-            background: linear-gradient(135deg, #f97316, #ef4444) !important;
-            border-color: #f97316 !important;
-            color: white !important;
-        }
-
         /* Smooth transitions */
-        * {
-            transition: all 0.2s ease-in-out;
-        }
+        * { transition: all 0.2s ease-in-out; }
+
 
         /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 @endpush
+
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get all filter controls
+            // === Filters & Search ===
             const filterButtons = document.querySelectorAll('input[name="orderFilter"]');
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
@@ -362,95 +295,50 @@
             const filterBtn = document.getElementById('filterBtn');
             const clearFilterBtn = document.getElementById('clearFilterBtn');
 
-            // Function to update URL and redirect
+
             function updateUrlAndRedirect() {
                 const currentUrl = new URL(window.location);
-
-                // Get current values
                 const searchTerm = searchInput ? searchInput.value.trim() : '';
                 const statusValue = statusFilter ? statusFilter.value : '';
-
-                // Update URL parameters
-                if (searchTerm) {
-                    currentUrl.searchParams.set('q', searchTerm);
-                } else {
-                    currentUrl.searchParams.delete('q');
-                }
-
-                if (statusValue) {
-                    currentUrl.searchParams.set('status', statusValue);
-                } else {
-                    currentUrl.searchParams.delete('status');
-                }
-
+                if (searchTerm) currentUrl.searchParams.set('q', searchTerm);
+                else currentUrl.searchParams.delete('q');
+                if (statusValue) currentUrl.searchParams.set('status', statusValue);
+                else currentUrl.searchParams.delete('status');
+                // Reset page when filter/search
+                currentUrl.searchParams.delete('page');
                 window.location.href = currentUrl.toString();
             }
 
-            // Filter buttons event - Server-side filtering
-            filterButtons.forEach((button, index) => {
+
+            filterButtons.forEach((button) => {
                 button.addEventListener('change', function() {
                     const filterValue = this.value;
-
-                    // Update status filter dropdown to match
-                    if (statusFilter) {
-                        statusFilter.value = filterValue === 'all' ? '' : filterValue;
-                    }
-
-                    // Clear page parameter when changing status to start from page 1
+                    if (statusFilter) statusFilter.value = filterValue === 'all' ? '' : filterValue;
                     const currentUrl = new URL(window.location);
                     currentUrl.searchParams.delete('page');
-
-                    // Set new status
-                    if (filterValue === 'all') {
-                        currentUrl.searchParams.delete('status');
-                    } else {
-                        currentUrl.searchParams.set('status', filterValue);
-                    }
-
+                    if (filterValue === 'all') currentUrl.searchParams.delete('status');
+                    else currentUrl.searchParams.set('status', filterValue);
                     window.location.href = currentUrl.toString();
                 });
             });
 
-            // Search button event
-            if (searchBtn) {
-                searchBtn.addEventListener('click', updateUrlAndRedirect);
-            }
 
-            // Search input enter key
+            if (searchBtn) searchBtn.addEventListener('click', updateUrlAndRedirect);
             if (searchInput) {
                 searchInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        updateUrlAndRedirect();
-                    }
+                    if (e.key === 'Enter') updateUrlAndRedirect();
                 });
             }
-
-            // Status filter change
             if (statusFilter) {
                 statusFilter.addEventListener('change', function() {
                     const filterValue = this.value;
-
-                    // Update radio buttons to match
                     filterButtons.forEach(button => {
-                        if (filterValue === '' && button.value === 'all') {
-                            button.checked = true;
-                        } else if (button.value === filterValue) {
-                            button.checked = true;
-                        } else {
-                            button.checked = false;
-                        }
+                        if (filterValue === '' && button.value === 'all') button.checked = true;
+                        else button.checked = (button.value === filterValue);
                     });
-
                     updateUrlAndRedirect();
                 });
             }
-
-            // Filter button event
-            if (filterBtn) {
-                filterBtn.addEventListener('click', updateUrlAndRedirect);
-            }
-
-            // Clear filter button
             if (clearFilterBtn) {
                 clearFilterBtn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -459,10 +347,143 @@
             }
 
 
+            // === Load More + Collapse ===
+            const wrapper = document.getElementById('ordersWrapper');
+            const tbody   = document.getElementById('ordersTbody');
+            const btn     = document.getElementById('loadMoreBtn');
+            const spinner = document.getElementById('loadMoreSpinner');
+            const btnTxt  = document.getElementById('loadMoreText');
+            const container = document.getElementById('loadMoreContainer');
+            const collapseBtn = document.getElementById('collapseBtn');
 
-            // Debug: Log current URL parameters
-            // const urlParams = new URLSearchParams(window.location.search);
-            // console.log('Current URL params:', Object.fromEntries(urlParams));
+
+            if (wrapper && tbody && btn) {
+                let currentPage = parseInt(wrapper.dataset.currentPage || '1', 10);
+                const basePage  = currentPage; // trang ban đầu để có thể "ẩn bớt" quay lại
+                const lastPage  = parseInt(wrapper.dataset.lastPage || '1', 10);
+                const loadedPages = new Set([currentPage]);
+
+
+                function setLoading(state) {
+                    if (state) {
+                        btn.disabled = true;
+                        if (spinner) spinner.classList.remove('hidden');
+                        if (btnTxt) btnTxt.textContent = 'Đang tải...';
+                        btn.setAttribute('aria-busy', 'true');
+                    } else {
+                        btn.disabled = false;
+                        if (spinner) spinner.classList.add('hidden');
+                        if (btnTxt) btnTxt.textContent = 'Xem thêm đơn hàng';
+                        btn.removeAttribute('aria-busy');
+                    }
+                }
+                function hideLoadMoreBtn() { if (btn) btn.classList.add('hidden'); updateContainerVisibility(); }
+                function showLoadMoreBtn() { if (btn) btn.classList.remove('hidden'); updateContainerVisibility(); }
+                function showCollapseBtn() { if (collapseBtn) collapseBtn.classList.remove('hidden'); updateContainerVisibility(); }
+                function hideCollapseBtn() { if (collapseBtn) collapseBtn.classList.add('hidden'); updateContainerVisibility(); }
+                function updateContainerVisibility() {
+                    if (!container) return;
+                    const loadMoreVisible = btn && !btn.classList.contains('hidden');
+                    const collapseVisible = collapseBtn && !collapseBtn.classList.contains('hidden');
+                    container.classList.toggle('hidden', !(loadMoreVisible || collapseVisible));
+                }
+
+
+                function buildNextUrl(nextPage) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('page', nextPage);
+                    return url.toString();
+                }
+
+
+                async function loadMore() {
+                    const nextPage = currentPage + 1;
+                    if (nextPage > lastPage || loadedPages.has(nextPage)) {
+                        hideLoadMoreBtn(); return;
+                    }
+                    setLoading(true);
+                    try {
+                        const nextUrl = buildNextUrl(nextPage);
+                        const res = await fetch(nextUrl, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                        const html = await res.text();
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        const nextTbody = doc.querySelector('table tbody');
+                        const newRows = nextTbody ? Array.from(nextTbody.querySelectorAll('tr')) : [];
+                        if (newRows.length === 0) { hideLoadMoreBtn(); setLoading(false); return; }
+
+
+                        const frag = document.createDocumentFragment();
+                        newRows.forEach(tr => {
+                            tr.dataset.page = String(nextPage);           // Đánh dấu trang để có thể Ẩn bớt
+                            tr.classList.add('loaded-more-row');
+                            frag.appendChild(tr);
+                        });
+                        tbody.appendChild(frag);
+
+
+                        currentPage = nextPage;
+                        loadedPages.add(nextPage);
+                        wrapper.dataset.currentPage = String(currentPage);
+
+
+                        // Hiện nút Ẩn bớt sau khi đã load ít nhất 1 trang mới
+                        showCollapseBtn();
+
+
+                        // Nếu đã là trang cuối -> ẩn nút xem thêm, vẫn giữ nút Ẩn bớt
+                        if (currentPage >= lastPage) {
+                            hideLoadMoreBtn();
+                        } else {
+                            showLoadMoreBtn();
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        if (btnTxt) { btnTxt.textContent = 'Lỗi tải. Thử lại'; setTimeout(() => { btnTxt.textContent = 'Xem thêm đơn hàng'; }, 1500); }
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+
+
+                function collapseToBase() {
+                    // Xóa các hàng đã được append (có data-page)
+                    tbody.querySelectorAll('tr[data-page]').forEach(tr => tr.remove());
+                    // Reset lại state
+                    currentPage = basePage;
+                    wrapper.dataset.currentPage = String(currentPage);
+                    loadedPages.clear();
+                    loadedPages.add(basePage);
+
+
+                    // Nút Ẩn bớt ẩn đi
+                    hideCollapseBtn();
+
+
+                    // Nếu còn trang tiếp theo so với basePage -> hiện lại nút "Xem thêm"
+                    if (lastPage > basePage) showLoadMoreBtn();
+                    else hideLoadMoreBtn();
+                }
+
+
+                // Khởi tạo hiển thị nút ngay từ đầu
+                if (currentPage >= lastPage) {
+                    hideLoadMoreBtn(); // nếu đang ở trang cuối, không hiện nút xem thêm
+                    hideCollapseBtn(); // chưa load thêm trang nào
+                } else {
+                    showLoadMoreBtn();
+                    hideCollapseBtn();
+                }
+
+
+                btn.addEventListener('click', loadMore);
+                if (collapseBtn) collapseBtn.addEventListener('click', collapseToBase);
+                updateContainerVisibility();
+            }
         });
     </script>
 @endpush
+
+
+
+
+

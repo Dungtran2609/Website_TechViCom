@@ -365,6 +365,7 @@ Route::get('/client', [HomeController::class, 'index'])->name('client.home');
 // Products routes (public access)
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
+    Route::get('/love', [ClientProductController::class, 'love'])->name('love');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
 
     // Product comments routes

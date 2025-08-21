@@ -472,7 +472,7 @@
                                         alt="{{ $category->name }}" class="w-16 h-16 mx-auto mb-4 object-cover rounded-lg">
                                 @endif
                                 <h3 class="font-semibold mb-2 line-clamp-1">{{ $category->name }}</h3>
-                                <a href="{{ route('categories.show', $category->slug) }}"
+                                <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                     class="text-sm text-blue-600 hover:text-blue-800">
                                     {{ $category->children->count() > 0 ? 'Xem tất cả' : 'Xem sản phẩm' }}
                                 </a>

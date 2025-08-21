@@ -181,7 +181,7 @@
             @forelse($categories as $category)
                 <div class="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-200 border border-gray-100 hover:border-orange-400 flex flex-col items-center p-0 overflow-hidden"
                     style="min-height: 270px;">
-                    <a href="{{ route('categories.show', $category->slug) }}" class="block w-full h-full">
+                    <a href="{{ route('products.index', ['category' => $category->slug]) }}" class="block w-full h-full">
                         <!-- Image: full (contain) -->
                         <div
                             class="category-img-wrap relative w-full h-[140px] flex items-center justify-center bg-gray-50 overflow-hidden p-2">

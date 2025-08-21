@@ -244,4 +244,41 @@ class ClientProductController extends Controller
 
         return view('client.products.show', compact('product', 'relatedProducts', 'flashSaleInfo'));
     }
+
+    public function love(Request $request)
+    {
+        // Lấy danh sách ID sản phẩm yêu thích từ localStorage (sẽ được xử lý ở frontend)
+        // Vì localStorage chỉ có thể truy cập ở client-side, nên chúng ta sẽ load tất cả sản phẩm
+        // và để frontend filter theo localStorage
+        
+        $query = Product::query()
+            ->with([
+                'brand',
+                'category',
+                'productAllImages',
+                'variants.attributeValues'
+            ])
+            ->withAvg(['productComments as avg_rating' => function ($q) {
+                $q->whereNotNull('rating')->where('status', 'approved');
+            }], 'rating')
+            ->withCount(['productComments as reviews_count' => function ($q) {
+                $q->where('status', 'approved');
+            }])
+            ->where('status', 1);
+
+        // Sắp xếp theo thời gian tạo mới nhất
+        $query->orderBy('created_at', 'desc');
+
+        $products = $query->paginate(12);
+        $categories = Category::where('status', 1)->get();
+        $brands = Brand::where('status', 1)->get();
+        $attributes = Attribute::with('attributeValues')->get();
+
+        return view('client.products.love', compact(
+            'products',
+            'categories',
+            'brands',
+            'attributes'
+        ));
+    }
 }

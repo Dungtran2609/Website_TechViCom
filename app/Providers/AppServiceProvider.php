@@ -8,7 +8,9 @@ use App\Models\Category;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use App\Models\User;
+use App\Models\Order;
 use App\Observers\UserObserver;
+use App\Observers\OrderObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
 
     // Đăng ký observer cho User
     User::observe(UserObserver::class);
+
+    // Đăng ký observer cho Order
+    Order::observe(OrderObserver::class);
 
         // Chia sẻ biến $Contacts cho tất cả view trong admin
         View::composer('admin.*', function ($view) {

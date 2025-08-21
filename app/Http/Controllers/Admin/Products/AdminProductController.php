@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Admin\AdminProductRequest;
 
+
 class AdminProductController extends Controller
 {
     public function index(Request $request)
@@ -31,9 +32,9 @@ class AdminProductController extends Controller
             ->when($request->sort_price === 'desc', fn($q) => $q->orderByRaw('(select max(price) from product_variants where product_id=products.id) desc'))
             ->when(!$request->sort_price, fn($q) => $q->latest('updated_at'))
             ->paginate(10);
-
         return view('admin.products.index', compact('products'));
     }
+
 
     public function create()
     {
@@ -43,6 +44,7 @@ class AdminProductController extends Controller
             'attributes' => Attribute::with('values')->get(),
         ]);
     }
+
 
     private function generateUniqueSku($prefix = 'SP')
     {
@@ -57,7 +59,7 @@ class AdminProductController extends Controller
         DB::transaction(function () use ($request) {
             $productData = $this->prepareProductData($request);
             $product = Product::create($productData);
-            $this->syncVariants($product, $request);
+            $this->syncVariants($product, $request);           
             // Xử lý thư viện ảnh
             if ($request->hasFile('gallery')) {
                 foreach ($request->file('gallery') as $image) {
@@ -93,7 +95,7 @@ class AdminProductController extends Controller
             $productData = $this->prepareProductData($request, $product);
             $product->update($productData);
             $this->syncVariants($product, $request);
-
+           
             if ($request->filled('delete_images')) {
                 foreach ($request->delete_images as $id) {
                     $image = $product->allImages()->find($id);
@@ -138,32 +140,36 @@ class AdminProductController extends Controller
         if ($request->type === 'simple') {
             $simpleVariantData = $request->only(['price', 'sale_price', 'sku', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
             $simpleVariantData['is_active'] = true;
-            // Sinh SKU tự động nếu không nhập
-            if (empty($simpleVariantData['sku'])) {
-                $simpleVariantData['sku'] = $this->generateUniqueSku();
-            }
-            $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
-            // Lưu thuộc tính cho sản phẩm đơn
-            $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
-            $variant->attributeValues()->sync($attributeValueIds);
-            $submittedVariantIds[] = $variant->id;
-        } elseif ($request->type === 'variable' && $request->has('variants')) {
+
+        // Sinh SKU tự động nếu không nhập
+        if (empty($simpleVariantData['sku'])) {
+            $simpleVariantData['sku'] = $this->generateUniqueSku();
+        }
+
+        $variant = $product->variants()->updateOrCreate(['id' => $product->variants()->first()?->id], $simpleVariantData);
+        // Lưu thuộc tính cho sản phẩm đơn
+        $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
+        $variant->attributeValues()->sync($attributeValueIds);
+        $submittedVariantIds[] = $variant->id;
+        }
+
+        elseif ($request->type === 'variable' && $request->has('variants')) {
             foreach ($request->variants as $key => $variantData) {
                 $variantData['is_active'] = isset($variantData['is_active']);
                 $variantPayload = Arr::except($variantData, ['attributes', 'image']);
-
+               
                 if (empty($variantPayload['sku'])) {
                     $variantPayload['sku'] = $this->generateUniqueSku();
                 }
 
 
                 $variant = $product->variants()->updateOrCreate(['id' => $variantData['id'] ?? null], $variantPayload);
-
+               
                 if ($request->hasFile("variants.{$key}.image")) {
                     $path = $request->file("variants.{$key}.image")->store('products/variants', 'public');
                     $variant->update(['image' => $path]);
                 }
-
+               
                 $variant->attributeValues()->sync($variantData['attributes']);
                 $submittedVariantIds[] = $variant->id;
             }
@@ -174,7 +180,7 @@ class AdminProductController extends Controller
 
     public function trashed()
     {
-    
+        
         $products = Product::onlyTrashed()->with(['brand', 'category'])->latest('deleted_at')->paginate(10);
         return view('admin.products.trashed', compact('products'));
     }
@@ -192,7 +198,7 @@ class AdminProductController extends Controller
     public function forceDelete($id)
     {
         $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
-
+       
         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
             Storage::disk('public')->delete($product->thumbnail);
         }

@@ -7,7 +7,13 @@ use Illuminate\Validation\Rule;
 
 class StoreCouponRequest extends FormRequest
 {
+
     public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function messages(): array
     {
         return [
             // Mã (code)
@@ -61,83 +67,5 @@ class StoreCouponRequest extends FormRequest
         ];
     }
 
-                // Kiểu áp dụng (apply_type)
-                'apply_type.required' => 'Vui lòng chọn kiểu áp dụng.',
-                'apply_type.in' => 'Kiểu áp dụng không hợp lệ.',
-                'product_ids.required_if' => 'Bạn phải chọn ít nhất 1 sản phẩm khi áp dụng theo sản phẩm.',
-                'category_ids.required_if' => 'Bạn phải chọn ít nhất 1 danh mục khi áp dụng theo danh mục.',
-
-                // Loại giảm giá (discount_type)
-                'discount_type.required' => 'Vui lòng chọn loại giảm giá.',
-                'discount_type.in' => 'Loại giảm giá không hợp lệ.',
-
-                // Giá trị (value)
-                'value.required' => 'Vui lòng nhập giá trị giảm.',
-                'value.numeric' => 'Giá trị giảm phải là số.',
-                'value.min' => 'Giá trị giảm phải lớn hơn 0.',
-                'value.max' => 'Nếu là phần trăm thì tối đa 100%.',
-
-                // Giảm tối đa (max_discount_amount)
-                'max_discount_amount.numeric' => 'Số tiền giảm tối đa phải là số.',
-                'max_discount_amount.min' => 'Số tiền giảm tối đa phải lớn hơn hoặc bằng 0.',
-
-                // Giá trị đơn tối thiểu/tối đa
-                'min_order_value.numeric' => 'Giá trị đơn tối thiểu phải là số.',
-                'min_order_value.min' => 'Giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0.',
-                'max_order_value.numeric' => 'Giá trị đơn tối đa phải là số.',
-                'max_order_value.min' => 'Giá trị đơn tối đa phải lớn hơn hoặc bằng 0.',
-                'max_order_value.gte' => 'Giá trị đơn tối đa phải lớn hơn hoặc bằng tối thiểu.',
-
-                // Số lần dùng mỗi người
-                'max_usage_per_user.integer' => 'Số lần dùng mỗi người phải là số nguyên.',
-                'max_usage_per_user.min' => 'Số lần dùng mỗi người phải lớn hơn hoặc bằng 1.',
-
-                // Ngày bắt đầu/kết thúc
-                'start_date.required' => 'Vui lòng chọn ngày bắt đầu.',
-                'start_date.date' => 'Ngày bắt đầu không đúng định dạng (YYYY-MM-DD).',
-                'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
-                'end_date.date' => 'Ngày kết thúc không đúng định dạng (YYYY-MM-DD).',
-                'end_date.after_or_equal' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
-
-                // Trạng thái
-                'status.required' => 'Vui lòng chọn trạng thái.',
-                'status.in' => 'Trạng thái không hợp lệ.',
-            ];
-
-    'discount_type.required' => 'Vui lòng chọn loại giảm giá.',
-    'discount_type.in' => 'Loại giảm giá không hợp lệ.',
-    'apply_type.required' => 'Vui lòng chọn kiểu áp dụng.',
-    'apply_type.in' => 'Kiểu áp dụng không hợp lệ.',
-
-        'value.required' => 'Vui lòng nhập giá trị giảm.',
-        'value.numeric' => 'Giá trị giảm phải là số.',
-        'value.min' => 'Giá trị giảm phải lớn hơn hoặc bằng 0.',
-
-        'max_discount_amount.numeric' => 'Giảm tối đa phải là số.',
-        'max_discount_amount.min' => 'Giảm tối đa phải lớn hơn hoặc bằng 0.',
-        'max_discount_amount.required' => 'Vui lòng nhập mức giảm tối đa.',
-
-        'min_order_value.numeric' => 'Giá trị đơn tối thiểu phải là số.',
-        'min_order_value.min' => 'Giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0.',
-        'min_order_value.required' => 'Vui lòng nhập giá trị đơn tối thiểu.',
-
-        'max_order_value.numeric' => 'Giá trị đơn tối đa phải là số.',
-        'max_order_value.min' => 'Giá trị đơn tối đa phải lớn hơn hoặc bằng 0.',
-        'max_order_value.required' => 'Vui lòng nhập giá trị đơn tối đa.',
-
-        'max_usage_per_user.integer' => 'Số lần dùng mỗi người phải là số nguyên.',
-        'max_usage_per_user.min' => 'Số lần dùng mỗi người phải lớn hơn hoặc bằng 1.',
-
-        'start_date.required' => 'Vui lòng chọn ngày bắt đầu.',
-        'start_date.date' => 'Ngày bắt đầu không hợp lệ.',
-
-        'end_date.required' => 'Vui lòng chọn ngày kết thúc.',
-        'end_date.date' => 'Ngày kết thúc không hợp lệ.',
-        'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
-
-        'status.required' => 'Vui lòng chọn trạng thái.',
-        'status.in' => 'Trạng thái không hợp lệ.',
-    ];
-}
 
 }

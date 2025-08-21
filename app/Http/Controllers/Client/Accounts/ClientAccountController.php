@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ClientAccountController extends Controller
 {
@@ -174,12 +176,25 @@ class ClientAccountController extends Controller
             'email' => 'required|email|unique:users,email,' . Auth::id(),
             'phone_number' => 'nullable|string|max:20',
             'birthday' => 'nullable|date',
-            'gender' => 'nullable|in:male,female,other'
+            'gender' => 'nullable|in:male,female,other',
+            'image_profile' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
         ]);
 
         $user = Auth::user();
+        $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender']);
 
-        User::where('id', $user->id)->update($request->only(['name', 'email', 'phone_number', 'birthday', 'gender']));
+        // Xử lý upload ảnh đại diện
+        if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
+            // Xóa ảnh cũ nếu có
+            if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
+                Storage::disk('public')->delete($user->image_profile);
+            }
+            
+            // Lưu ảnh mới
+            $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
+        }
+
+        User::where('id', $user->id)->update($userData);
 
         return redirect()->back()->with('success', 'Cập nhật thông tin thành công');
     }
@@ -262,7 +277,7 @@ class ClientAccountController extends Controller
 
     public function updateAddress(Request $request, $id)
     {
-        $validator = \Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'recipient_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'address_line' => 'required|string|max:500',

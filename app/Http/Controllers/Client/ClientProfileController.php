@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller; // Thêm dòng này
 use App\Http\Requests\ProfileUpdateRequest;
@@ -20,12 +19,14 @@ class ClientProfileController extends Controller // Đảm bảo kế thừa Con
         ]);
     }
 
+
     /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $request->user()->fill($request->validated());
+
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
@@ -49,3 +50,5 @@ class ClientProfileController extends Controller // Đảm bảo kế thừa Con
         return Redirect::to('/');
     }
 }
+
+

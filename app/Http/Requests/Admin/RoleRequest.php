@@ -1,8 +1,11 @@
 <?php
 
+
 namespace App\Http\Requests\Admin;
 
+
 use Illuminate\Foundation\Http\FormRequest;
+
 
 class RoleRequest extends FormRequest
 {
@@ -16,12 +19,15 @@ class RoleRequest extends FormRequest
             return auth()->check() && auth()->user()->can('create_role');
         }
 
+
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             return auth()->check() && auth()->user()->can('edit_role');
         }
 
+
         return false;
     }
+
 
     /**
      * Quy tắc validate cho vai trò
@@ -35,6 +41,7 @@ class RoleRequest extends FormRequest
             'status' => 'required|boolean',
         ];
     }
+
 
     /**
      * Thông báo lỗi tùy chỉnh
@@ -53,3 +60,6 @@ class RoleRequest extends FormRequest
         ];
     }
 }
+
+
+

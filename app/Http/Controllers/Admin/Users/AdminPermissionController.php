@@ -20,16 +20,36 @@ class AdminPermissionController extends Controller
     {
         $query = Permission::query();
 
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        // Tìm kiếm theo tên hoặc mô tả quyền
+        if ($request->filled('permission_name')) {
+            $search = $request->permission_name;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('description', 'like', "%$search%");
+            });
+        }
+        // Lọc theo module (nhóm chức năng)
+        $modules = Permission::select('module')->distinct()->pluck('module')->filter()->values();
+        if ($request->filled('module')) {
+            $query->where('module', $request->input('module'));
+        }
+        // Lọc theo tên vai trò (vai trò phải có quyền này)
+        $roles = Role::all();
+        if ($request->filled('role_name')) {
+            $roleIds = $roles->where('name', 'like', '%' . $request->role_name . '%')->pluck('id');
+            $query->whereHas('roles', function($q) use ($roleIds) {
+                $q->whereIn('roles.id', $roleIds);
+            });
         }
 
-        $permissions = $query->with('roles')->orderByDesc('id')->get();
-        $roles = Role::all();
+        // Luôn lấy cả quyền tổng quát manage_{module}
+        $query->orWhere(function($q) {
+            $q->where('name', 'like', 'manage\_%');
+        });
 
-        $permissions = $query->orderByDesc('id')->paginate(10);
+    $permissions = $query->with('roles')->orderByDesc('id')->get();
 
-        return view('admin.permissions.index', compact('permissions', 'roles'));
+    return view('admin.permissions.index', compact('permissions', 'roles', 'modules'));
     }
 
     /**
@@ -40,12 +60,26 @@ class AdminPermissionController extends Controller
         $query = Permission::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
         }
+
+        $modules = Permission::select('module')->distinct()->pluck('module')->filter()->values();
+        if ($request->filled('module')) {
+            $query->where('module', $request->input('module'));
+        }
+
+        // Luôn lấy cả quyền tổng quát manage_{module}
+        $query->orWhere(function($q) {
+            $q->where('name', 'like', 'manage\_%');
+        });
 
         $permissions = $query->orderByDesc('id')->paginate(10);
 
-        return view('admin.permissions.list', compact('permissions'));
+        return view('admin.permissions.list', compact('permissions', 'modules'));
     }
 
     /**
@@ -172,12 +206,11 @@ class AdminPermissionController extends Controller
         $newPermissionsCount = 0;
         $restoredPermissionsCount = 0;
 
-        // [SỬA LỖI] Sử dụng withTrashed() để lấy tất cả quyền, bao gồm cả những quyền trong thùng rác
-        // để tránh lỗi "Duplicate entry".
         $allDbPermissions = Permission::withTrashed()->get()->keyBy('name');
         $existingPermissionNames = $allDbPermissions->keys()->toArray();
 
         $routePermissionNames = [];
+        $modulePermissions = [];
 
         foreach ($allRoutes as $route) {
             $routeName = $route->getName();
@@ -188,22 +221,59 @@ class AdminPermissionController extends Controller
                 !Str::contains($routeName, ['login', 'logout', 'password', 'debugbar']) &&
                 $route->getActionName() != 'Closure'
             ) {
-$routePermissionNames[] = $routeName;
+                $routePermissionNames[] = $routeName;
 
-                // Nếu quyền chưa tồn tại trong DB (kể cả trong thùng rác) thì tạo mới
-                if (!in_array($routeName, $existingPermissionNames)) {
-                    $newPermission = Permission::create([
-                        'name' => $routeName,
-                        'description' => "Auto-generated for route: {$routeName}"
-                    ]);
+                // Tách module từ route name: admin.products.create => products
+                $parts = explode('.', $routeName);
+                $module = isset($parts[1]) ? $parts[1] : null;
+                if ($module) {
+                    $modulePermissions[$module] = true;
+                }
+
+                // Sử dụng firstOrCreate để tránh duplicate entry
+                $newPermission = Permission::firstOrCreate(
+                    ['name' => $routeName],
+                    [
+                        'description' => "Quyền tự động tạo từ hệ thống: {$routeName}",
+                        'module' => $module,
+                    ]
+                );
+                
+                // Nếu permission mới được tạo
+                if ($newPermission->wasRecentlyCreated) {
                     $adminRole->permissions()->attach($newPermission->id);
                     $newPermissionsCount++;
                 }
                 // Nếu quyền đã tồn tại nhưng nằm trong thùng rác, hãy khôi phục nó
-                elseif ($allDbPermissions->has($routeName) && $allDbPermissions[$routeName]->trashed()) {
-                    $allDbPermissions[$routeName]->restore();
+                elseif ($newPermission->trashed()) {
+                    $newPermission->restore();
                     $restoredPermissionsCount++;
                 }
+            }
+        }
+
+        // Tạo quyền tổng quát manage_{module} cho từng module admin
+        foreach (array_keys($modulePermissions) as $module) {
+            $manageName = 'manage_' . $module;
+            
+            // Sử dụng firstOrCreate để tránh duplicate entry
+            $newPermission = Permission::firstOrCreate(
+                ['name' => $manageName],
+                [
+                    'description' => "Quyền quản lý toàn bộ module {$module}",
+                    'module' => $module,
+                ]
+            );
+            
+            // Nếu permission mới được tạo
+            if ($newPermission->wasRecentlyCreated) {
+                $adminRole->permissions()->attach($newPermission->id);
+                $newPermissionsCount++;
+            }
+            // Nếu quyền đã tồn tại nhưng nằm trong thùng rác, hãy khôi phục nó
+            elseif ($newPermission->trashed()) {
+                $newPermission->restore();
+                $restoredPermissionsCount++;
             }
         }
 
@@ -225,7 +295,7 @@ $routePermissionNames[] = $routeName;
             if (!empty($permissionsToDelete)) {
                 // Chỉ xóa những quyền được tạo tự động để tránh xóa nhầm quyền tạo tay
                 $deletedCount = Permission::whereIn('name', $permissionsToDelete)
-                    ->where('description', 'like', 'Auto-generated%')
+                    ->where('description', 'like', 'Quyền tự động tạo từ hệ thống%')
                     ->delete();
                 if ($deletedCount > 0) {
                     $messages[] = "Đã xoá {$deletedCount} quyền cũ không còn sử dụng.";

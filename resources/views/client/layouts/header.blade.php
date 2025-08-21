@@ -1,5 +1,5 @@
 <!-- Header (all category items use the same icon) -->
-<header class="bg-white shadow-sm border-b">
+<header id="main-header" class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
     <style>
         /* Cart Sidebar */
         #cart-sidebar {
@@ -114,6 +114,19 @@
                 padding-right: .25rem
             }
         }
+
+        /* Header scroll effect */
+        body {
+            padding-top: 80px; /* Adjust based on header height */
+        }
+
+        .header-hidden {
+            transform: translateY(-100%);
+        }
+
+        .header-visible {
+            transform: translateY(0);
+        }
     </style>
 
     <div class="container mx-auto px-4 py-3">
@@ -150,7 +163,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             @if (isset($categories) && $categories->count() > 0)
                                 @foreach ($categories->take(6) as $category)
-                                    <a href="{{ route('categories.show', $category->slug) }}"
+                                    <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                         class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
                                         <!-- Shared icon (ignore per-category images) -->
                                         <div class="cat-icon mr-3 group-hover:scale-110 transition-transform">
@@ -321,6 +334,10 @@
                                         class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
                                         <i class="fas fa-map-marker-alt mr-3 text-gray-400"></i> Địa chỉ giao hàng
                                     </a>
+                                    <a href="{{ route('products.love') }}"
+                                        class="flex items-center px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                                        <i class="fas fa-heart mr-3 text-gray-400"></i> Sản phẩm yêu thích
+                                    </a>
 
                                     <div class="border-t border-gray-200 my-2"></div>
                                     <form action="{{ route('logout') }}" method="POST" class="w-full">
@@ -440,6 +457,54 @@
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <script>
+    /* Header scroll effect */
+    (function() {
+        let lastScrollTop = 0;
+        const header = document.getElementById('main-header');
+        const scrollThreshold = 10; // Minimum scroll distance to trigger effect
+        
+        function handleScroll() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollDelta = scrollTop - lastScrollTop;
+            
+            // Only trigger if scroll distance is significant
+            if (Math.abs(scrollDelta) > scrollThreshold) {
+                if (scrollDelta > 0 && scrollTop > 100) {
+                    // Scrolling down - hide header
+                    header.classList.remove('header-visible');
+                    header.classList.add('header-hidden');
+                } else if (scrollDelta < 0) {
+                    // Scrolling up - show header
+                    header.classList.remove('header-hidden');
+                    header.classList.add('header-visible');
+                }
+                lastScrollTop = scrollTop;
+            }
+        }
+        
+        // Throttle scroll events for better performance
+        let ticking = false;
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+        
+        window.addEventListener('scroll', requestTick, { passive: true });
+        
+        // Show header when at top of page
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset <= 100) {
+                header.classList.remove('header-hidden');
+                header.classList.add('header-visible');
+            }
+        }, { passive: true });
+    })();
+
     /* Stable hover dropdowns */
     (function() {
         const groups = document.querySelectorAll('.dropdown-group');
@@ -577,7 +642,11 @@
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
       <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
-        <h4 class="font-medium text-gray-900 text-sm">${item.name}</h4>
+        <h4 class="font-medium text-gray-900 text-sm">
+          <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">
+            ${item.name}
+          </a>
+        </h4>
         ${variantHtml}
         <p class="text-orange-500 font-semibold">${formatPrice(price)}</p>
         ${

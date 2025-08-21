@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->integer('vnpay_cancel_count')->default(0)->after('vnpay_url');
+            if (!Schema::hasColumn('orders', 'vnpay_discount')) {
+                $table->unsignedBigInteger('vnpay_discount')->default(0)->after('vnpay_card_type')->comment('Số tiền giảm từ voucher VNPay (x100)');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('vnpay_cancel_count');
+            if (Schema::hasColumn('orders', 'vnpay_discount')) {
+                $table->dropColumn('vnpay_discount');
+            }
         });
     }
 };

@@ -92,6 +92,14 @@ class Product extends Model
             'id'          // PK của product
         );
     }
+
+    /**
+     * Mối quan hệ với các item trong đơn hàng
+     */
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
     public function getPriceRangeAttribute(): string
     {
         if ($this->variants->isEmpty()) {
@@ -126,6 +134,14 @@ class Product extends Model
     public function comments()
     {
         return $this->hasMany(ProductComment::class);
+    }
+
+    /**
+     * Quan hệ một-nhiều với FavoriteProduct.
+     */
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'product_id', 'id');
     }
 
     public function getDisplayPriceAttribute()

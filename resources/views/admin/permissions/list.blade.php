@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Quản lý quyền</h1>
@@ -13,6 +14,7 @@
                 </button>
             </form>
 
+
             {{-- Nút đồng bộ và dọn dẹp (thêm mới và xoá cũ) --}}
             <form action="{{ route('admin.permissions.sync', ['prune' => 'true']) }}" method="POST" class="d-inline"
                   onsubmit="return confirm('Bạn có chắc chắn muốn xoá các quyền không còn tồn tại trong hệ thống? Hành động này không thể hoàn tác.')">
@@ -21,6 +23,7 @@
                     <i class="fas fa-broom"></i> Dọn dẹp quyền
                 </button>
             </form>
+
 
             <a href="{{ route('admin.permissions.index') }}" class="btn btn-secondary">
                 <i class="fas fa-shield-alt"></i> Phân quyền
@@ -34,14 +37,23 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('admin.permissions.list') }}" class="mb-4 d-flex gap-2 align-items-center">
-        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25"
-               placeholder="Tìm quyền...">
-        <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
-        @if (request('search'))
+
+    <form method="GET" action="{{ route('admin.permissions.list') }}" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control w-auto" placeholder="Tìm quyền...">
+        <select name="module" class="form-select w-auto">
+            <option value="">Tất cả nhóm chức năng</option>
+            @if(isset($modules))
+                @foreach($modules as $m)
+                    <option value="{{ $m }}" {{ request('module') == $m ? 'selected' : '' }}>{{ ucfirst($m) }}</option>
+                @endforeach
+            @endif
+        </select>
+        <button type="submit" class="btn btn-outline-primary">Lọc</button>
+        @if (request('search') || request('module'))
             <a href="{{ route('admin.permissions.list') }}" class="btn btn-secondary">Xoá lọc</a>
         @endif
     </form>
+
 
     {{-- [CẬP NHẬT] Thêm thông báo cho các loại session khác nhau --}}
     @if (session('success'))
@@ -53,6 +65,7 @@
      @if (session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
+
 
     <div class="card">
         <div class="card-body">
@@ -99,3 +112,6 @@
         </div>
     </div>
 @endsection
+
+
+

@@ -6,7 +6,7 @@
     <div class="container mx-auto px-4 py-12">
         <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-lg">
-            <a href="{{ route('client.home') }}" class="text-gray-700 hover:text-[#ff6c2f]">Trang chủ</a>
+            <a href="{{ route('home') }}" class="text-gray-700 hover:text-[#ff6c2f]">Trang chủ</a>
             <p class="text-gray-700">></p>
             <span class="text-green-700 font-semibold">Tin tức</span>
         </div>

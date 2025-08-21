@@ -111,13 +111,21 @@
                             </div>
                         @endif
 
+                        {{-- Giảm giá VNPay: nếu có --}}
+                        @if (($order->vnpay_discount ?? 0) > 0)
+                            <div class="flex justify-between py-1 text-green-600">
+                                <span>Giảm giá VNPay:</span>
+                                <span class="font-medium">-{{ number_format($order->vnpay_discount / 100) }}₫</span>
+                            </div>
+                        @endif
+
                         {{-- Phí vận chuyển --}}
                         <div class="flex justify-between">
                             <span>Phí vận chuyển:</span>
                             <span class="font-medium">{{ number_format($order->shipping_fee ?? 0) }}₫</span>
                         </div>
 
-                        {{-- Tổng cộng: tạm tính + phí ship --}}
+                        {{-- Tổng cộng: đã bao gồm tất cả giảm giá --}}
                         <div class="flex justify-between py-2 border-t border-gray-300 mt-2">
                             <span class="font-semibold">Tổng cộng:</span>
                             <span

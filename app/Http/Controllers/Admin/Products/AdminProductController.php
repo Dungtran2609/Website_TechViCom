@@ -118,6 +118,14 @@ class AdminProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Kiểm tra xem sản phẩm có đang được đặt hàng không
+        $hasOrders = $product->orderItems()->exists();
+        
+        if ($hasOrders) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+        
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được chuyển vào thùng rác.');
     }
@@ -198,7 +206,15 @@ class AdminProductController extends Controller
     public function forceDelete($id)
     {
         $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
-       
+
+        // Kiểm tra xem sản phẩm có đang được đặt hàng không
+        $hasOrders = $product->orderItems()->exists();
+        
+        if ($hasOrders) {
+            return redirect()->route('admin.products.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+
         if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
             Storage::disk('public')->delete($product->thumbnail);
         }

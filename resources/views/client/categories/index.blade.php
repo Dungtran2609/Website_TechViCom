@@ -234,7 +234,7 @@
                 <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-8 text-white">
                     <h2 class="text-2xl font-bold mb-4">Không tìm thấy danh mục mong muốn?</h2>
                     <p class="mb-6">Liên hệ với chúng tôi để được tư vấn sản phẩm phù hợp nhất</p>
-                    <a href="{{ route('client.contacts.create') }}"
+                    <a href="{{ route('client.contacts.index') }}"
                         class="inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                         <i class="fas fa-phone mr-2"></i>Liên hệ tư vấn
                     </a>

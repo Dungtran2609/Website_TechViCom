@@ -396,6 +396,7 @@ Route::middleware('auth')->prefix('accounts')->name('accounts.')->group(function
 
 // Routes with 'client' prefix
 Route::prefix('client')->name('client.')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
     // Other client order actions (AJAX)
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::post('{id}/confirm-received', [ClientOrderController::class, 'confirmReceived'])->name('confirm-received');
@@ -406,6 +407,7 @@ Route::prefix('client')->name('client.')->group(function () {
     // Contacts
     Route::prefix('contacts')->name('contacts.')->group(function () {
         Route::get('/', [ClientContactController::class, 'index'])->name('index');
+        Route::get('/create', [ClientContactController::class, 'create'])->name('create');
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 

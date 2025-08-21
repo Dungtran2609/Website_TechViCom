@@ -28,9 +28,6 @@
             <a href="{{ route('admin.permissions.trashed') }}" class="btn btn-danger">
                 <i class="fas fa-trash-alt"></i> Thùng rác
             </a>
-            <a href="{{ route('admin.permissions.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Thêm quyền
-            </a>
         </div>
     </div>
 

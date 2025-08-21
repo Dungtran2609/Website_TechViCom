@@ -109,6 +109,8 @@ Route::get('/test-check-cart', function () {
 
 // Routes chính
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// Route cho client.home để tránh lỗi route không tồn tại
+Route::get('/client', [HomeController::class, 'index'])->name('client.home');
 Route::view('/about', 'client.about')->name('about');
 Route::view('/policy', 'client.policy')->name('policy');
 
@@ -594,30 +596,36 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     });
 
     // Products Management
-    Route::prefix('products')->name('products.')->group(function () {
+    Route::prefix('products')->middleware(CheckPermission::class . ':manage_products')->name('products.')->group(function () {
         Route::get('trashed', [AdminProductController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [AdminProductController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
         Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
 
-        Route::prefix('categories')->name('categories.')->group(function () {
+
+        // Quản lý danh mục
+        Route::prefix('categories')->middleware(CheckPermission::class . ':manage_categories')->name('categories.')->group(function () {
             Route::get('trashed', [AdminCategoryController::class, 'trashed'])->name('trashed');
             Route::post('{id}/restore', [AdminCategoryController::class, 'restore'])->name('restore');
             Route::delete('{id}/force-delete', [AdminCategoryController::class, 'forceDelete'])->name('force-delete');
-            Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
+            Route::resource('manage', AdminCategoryController::class)->parameters(['manage' => 'category'])->names('');
         });
 
-        Route::prefix('brands')->name('brands.')->group(function () {
+        // Quản lý thương hiệu
+        Route::prefix('brands')->middleware(CheckPermission::class . ':manage_brands')->name('brands.')->group(function () {
             Route::get('trashed', [AdminBrandController::class, 'trashed'])->name('trashed');
             Route::post('{id}/restore', [AdminBrandController::class, 'restore'])->name('restore');
             Route::delete('{id}/force-delete', [AdminBrandController::class, 'forceDelete'])->name('force-delete');
-            Route::resource('/', AdminBrandController::class)->parameters(['' => 'brand'])->names('');
+            Route::resource('manage', AdminBrandController::class)->parameters(['manage' => 'brand'])->names('');
         });
 
-        Route::get('attributes/trashed', [AdminAttributeController::class, 'trashed'])->name('attributes.trashed');
-        Route::post('attributes/{id}/restore', [AdminAttributeController::class, 'restore'])->name('attributes.restore');
-        Route::delete('attributes/{id}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('attributes.force-delete');
-        Route::resource('attributes', AdminAttributeController::class);
+        // Quản lý thuộc tính
+        Route::prefix('attributes')->middleware(CheckPermission::class . ':manage_attributes')->name('attributes.')->group(function () {
+            Route::get('trashed', [AdminAttributeController::class, 'trashed'])->name('trashed');
+            Route::post('{id}/restore', [AdminAttributeController::class, 'restore'])->name('restore');
+            Route::delete('{id}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('force-delete');
+            Route::resource('manage', AdminAttributeController::class)->parameters(['manage' => 'attribute'])->names('');
+        });
 
         Route::prefix('attributes/{attribute}')->name('attributes.')->group(function () {
             Route::get('values/trashed', [AdminAttributeValueController::class, 'trashed'])->name('values.trashed');
@@ -635,7 +643,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     });
 
     // Orders Management
-    Route::prefix('orders')->name('orders.')->group(function () {
+    Route::prefix('orders')->middleware(CheckPermission::class . ':manage_orders')->name('orders.')->group(function () {
         Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
         Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
@@ -647,14 +655,14 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     });
 
     // News Management
-    Route::prefix('news')->name('news.')->group(function () {
+    Route::prefix('news')->middleware(CheckPermission::class . ':manage_news')->name('news.')->group(function () {
         Route::get('trash', [AdminNewsController::class, 'trash'])->name('trash');
         Route::put('{id}/restore', [AdminNewsController::class, 'restore'])->name('restore');
         Route::delete('{id}/force-delete', [AdminNewsController::class, 'forceDelete'])->name('force-delete');
         Route::resource('', AdminNewsController::class)->parameters(['' => 'news'])->names('');
     });
-    Route::resource('news-categories', AdminNewsCategoryController::class);
-    Route::prefix('news-comments')->name('news-comments.')->group(function () {
+    Route::resource('news-categories', AdminNewsCategoryController::class)->middleware(CheckPermission::class . ':manage_news_categories');
+    Route::prefix('news-comments')->middleware(CheckPermission::class . ':manage_news_comments')->name('news-comments.')->group(function () {
         Route::get('/', [AdminNewsCommentController::class, 'index'])->name('index');
         Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show');
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
@@ -663,9 +671,9 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     });
 
     // Other Management
-    Route::resource('banner', AdminBannerController::class);
-    Route::resource('promotions', AdminPromotionController::class);
-    Route::prefix('contacts')->name('contacts.')->group(function () {
+    Route::resource('banner', AdminBannerController::class)->middleware(CheckPermission::class . ':manage_banner');
+    Route::resource('promotions', AdminPromotionController::class)->middleware(CheckPermission::class . ':manage_promotions');
+    Route::prefix('contacts')->middleware(CheckPermission::class . ':manage_contacts')->name('contacts.')->group(function () {
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');
         Route::get('{id}', [AdminContactsController::class, 'show'])->name('show');
         Route::delete('{id}', [AdminContactsController::class, 'destroy'])->name('destroy');

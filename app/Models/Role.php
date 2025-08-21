@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Role extends Model
 {
+    protected $casts = [
+        'status' => 'boolean',
+    ];
     use HasFactory, SoftDeletes;
 
     // Cho phép gán các thuộc tính

@@ -61,9 +61,6 @@
     <script src="{{ asset('admin_css/vendor/jsvectormap/maps/world-merc.js') }}"></script>
     <script src="{{ asset('admin_css/vendor/jsvectormap/maps/world.js') }}"></script>
 
-
-    
-
     @stack('scripts')
 
     {{-- End main wrapper --}}

@@ -145,6 +145,12 @@
                     <label class="form-label fw-medium">Giảm giá coupon:</label>
                     <div class="text-danger">-{{ number_format($orderData['coupon_discount'] ?? 0, 0) }} VND</div>
                 </div>
+                @if(($orderData['vnpay_discount'] ?? 0) > 0)
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Giảm giá VNPay:</label>
+                    <div class="text-danger">-{{ number_format(($orderData['vnpay_discount'] ?? 0) / 100, 0) }} VND</div>
+                </div>
+                @endif
                 <div class="mb-3">
                     <label class="form-label fw-medium">Tổng thanh toán:</label>
                     <div class="text-dark fw-bold fs-5">{{ number_format($orderData['final_total'], 0) }} VND</div>

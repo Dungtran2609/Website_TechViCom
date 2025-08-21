@@ -405,6 +405,13 @@
                                 <span class="font-semibold">-{{ number_format($order->discount_amount) }}₫</span>
                             </div>
                         @endif
+
+                        @if($order->vnpay_discount > 0)
+                            <div class="d-flex justify-content-between text-green-600">
+                                <span>Giảm giá VNPay:</span>
+                                <span class="font-semibold">-{{ number_format($order->vnpay_discount / 100) }}₫</span>
+                            </div>
+                        @endif
                         
                         <div class="d-flex justify-content-between">
                             <span class="text-gray-600">Phí vận chuyển:</span>

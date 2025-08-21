@@ -66,12 +66,12 @@ class Product extends Model
 
     public function allImages()
     {
-        return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductAllImage::class);
     }
 
     public function productAllImages()
     {
-        return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductAllImage::class);
     }
 
     public function productVariants()
@@ -87,11 +87,10 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(
-            \App\Models\ProductAllImage::class,
+            ProductAllImage::class,
             'product_id', // FK trên product_all_images
             'id'          // PK của product
-        )
-            ->orderBy('sort_order');
+        );
     }
     public function getPriceRangeAttribute(): string
     {
@@ -124,7 +123,7 @@ class Product extends Model
     }
 
 
- public function comments()
+    public function comments()
     {
         return $this->hasMany(ProductComment::class);
     }
@@ -145,5 +144,4 @@ class Product extends Model
         }
         return null;
     }
-    
 }

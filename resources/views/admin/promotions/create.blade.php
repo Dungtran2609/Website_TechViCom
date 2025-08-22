@@ -17,7 +17,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('admin.promotions.store') }}" method="POST">
+                            <form action="{{ route('admin.promotions.store') }}" method="POST" id="promotionForm">
                                 @csrf
 
                                 <div class="row">
@@ -125,13 +125,15 @@
                                 {{-- Chọn sản phẩm --}}
                                 <div class="mb-3" id="product-select" style="display:none;">
                                     <label class="form-label">Chọn sản phẩm <span class="text-danger">*</span></label>
-                                    
+
                                     {{-- Tìm kiếm sản phẩm --}}
                                     <div class="mb-3">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                            <input type="text" id="product-search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="clearProductSearch()">
+                                            <input type="text" id="product-search" class="form-control"
+                                                placeholder="Tìm kiếm sản phẩm...">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                onclick="clearProductSearch()">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -148,12 +150,13 @@
                                         </button>
                                         <span class="badge bg-info ms-2" id="product-count">0 sản phẩm được chọn</span>
                                     </div>
-                                    
+
                                     <div class="border rounded p-3 @error('products') border-danger @enderror"
                                         style="max-height:300px;overflow:auto;">
                                         <div class="row" id="products-container">
                                             @foreach ($products as $product)
-                                                <div class="col-md-12 mb-2 product-item" data-name="{{ strtolower($product->name) }}">
+                                                <div class="col-md-12 mb-2 product-item"
+                                                    data-name="{{ strtolower($product->name) }}">
                                                     <div class="form-check d-flex align-items-center">
                                                         <input class="form-check-input product-checkbox me-2"
                                                             type="checkbox" name="products[]"
@@ -165,23 +168,24 @@
                                                                 <span class="fw-medium">{{ $product->name }}</span>
                                                             </div>
                                                         </label>
-                                                                                                <div class="d-flex align-items-center gap-2">
-                                            <input type="number" step="0.01" min="0" max="100"
-                                                class="form-control form-control-sm discount-percent-input"
-                                                name="discount_percents[{{ $product->id }}]" 
-                                                placeholder="% giảm giá"
-                                                style="width:100px; display:none;"
-                                                value="{{ old('discount_percents.' . $product->id) }}">
-                                            <span class="text-muted small" style="width:60px;">%</span>
-                                            <span class="text-muted">hoặc</span>
-                                            <input type="number" step="1000" min="0"
-                                                class="form-control form-control-sm sale-price-input"
-                                                name="sale_prices[{{ $product->id }}]" 
-                                                placeholder="Giá cố định"
-                                                style="width:130px; display:none;"
-                                                value="{{ old('sale_prices.' . $product->id) }}">
-                                            <span class="text-muted small" style="width:60px;">₫</span>
-                                        </div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <input type="number" step="0.01" min="0"
+                                                                max="100"
+                                                                class="form-control form-control-sm discount-percent-input"
+                                                                name="discount_percents[{{ $product->id }}]"
+                                                                placeholder="% giảm giá"
+                                                                style="width:100px; display:none;"
+                                                                value="{{ old('discount_percents.' . $product->id) }}">
+                                                            <span class="text-muted small" style="width:60px;">%</span>
+                                                            <span class="text-muted">hoặc</span>
+                                                            <input type="number" step="1000" min="0"
+                                                                class="form-control form-control-sm sale-price-input"
+                                                                name="sale_prices[{{ $product->id }}]"
+                                                                placeholder="Giá cố định"
+                                                                style="width:130px; display:none;"
+                                                                value="{{ old('sale_prices.' . $product->id) }}">
+                                                            <span class="text-muted small" style="width:60px;">₫</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -192,7 +196,8 @@
                                     @enderror
                                     <div class="form-text">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        Nhập phần trăm giảm giá (0-100%) hoặc giá cố định cho từng sản phẩm. Sản phẩm không có giá trị sẽ không được áp dụng khuyến mãi.
+                                        Nhập phần trăm giảm giá (0-100%) hoặc giá cố định cho từng sản phẩm. Sản phẩm không
+                                        có giá trị sẽ không được áp dụng khuyến mãi.
                                     </div>
                                 </div>
                                 <script>
@@ -216,7 +221,7 @@
                                     function filterProducts(searchTerm) {
                                         const products = document.querySelectorAll('.product-item');
                                         const term = searchTerm.toLowerCase();
-                                        
+
                                         products.forEach(product => {
                                             const name = product.getAttribute('data-name');
                                             if (name.includes(term)) {
@@ -251,8 +256,10 @@
                                         // Show/hide discount inputs only for checked products
                                         document.querySelectorAll('.product-checkbox').forEach(function(cb) {
                                             cb.addEventListener('change', function() {
-                                                let discountInput = this.closest('.form-check').querySelector('.discount-percent-input');
-                                                let salePriceInput = this.closest('.form-check').querySelector('.sale-price-input');
+                                                let discountInput = this.closest('.form-check').querySelector(
+                                                    '.discount-percent-input');
+                                                let salePriceInput = this.closest('.form-check').querySelector(
+                                                    '.sale-price-input');
                                                 if (discountInput) {
                                                     discountInput.style.display = (this.checked && (flashTypeSelect &&
                                                         flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
@@ -385,8 +392,8 @@
                             document.getElementById('char-count').textContent = charCount;
                         });
 
-                        // Form validation khi submit
-                        document.querySelector('form').addEventListener('submit', function(e) {
+                                                // Form validation khi submit
+                        document.getElementById('promotionForm').addEventListener('submit', function(e) {
                             const startDate = document.getElementById('start_date').value;
                             const endDate = document.getElementById('end_date').value;
                             const today = new Date().toISOString().slice(0, 16);
@@ -435,7 +442,7 @@
                                 checkedProducts.forEach(product => {
                                     const discountInput = product.closest('.form-check').querySelector('.discount-percent-input');
                                     const salePriceInput = product.closest('.form-check').querySelector('.sale-price-input');
-                                    
+
                                     if ((discountInput && discountInput.value && parseFloat(discountInput.value) > 0) ||
                                         (salePriceInput && salePriceInput.value && parseFloat(salePriceInput.value) > 0)) {
                                         hasDiscountValue = true;
@@ -449,5 +456,7 @@
                                 }
                             }
                         });
+
+
                     </script>
                 @endsection

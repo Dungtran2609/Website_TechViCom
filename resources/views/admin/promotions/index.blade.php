@@ -1,6 +1,39 @@
 @extends('admin.layouts.app')
 
 @section('content')
+    @php
+        $activePromotion = \App\Models\Promotion::where('status', 1)->first();
+    @endphp
+    
+    @if($activePromotion)
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle fa-2x me-3 text-success"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Chương trình khuyến mãi đang kích hoạt</h5>
+                    <p class="mb-1"><strong>{{ $activePromotion->name }}</strong></p>
+                    <p class="mb-0 small">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ \Carbon\Carbon::parse($activePromotion->start_date)->format('d/m/Y H:i') }} - 
+                        {{ \Carbon\Carbon::parse($activePromotion->end_date)->format('d/m/Y H:i') }}
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @else
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div>
+                    <h5 class="alert-heading mb-1">Không có chương trình khuyến mãi nào đang kích hoạt</h5>
+                    <p class="mb-0">Hiện tại không có chương trình khuyến mãi nào đang hoạt động. Hãy tạo hoặc kích hoạt một chương trình mới.</p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Danh sách chương trình khuyến mãi</h1>
         <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary">

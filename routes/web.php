@@ -374,6 +374,9 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/coupons', [ClientCouponController::class, 'listAvailableCoupons']);
 });
 
+// Route cho apply coupon (không có prefix api)
+Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES

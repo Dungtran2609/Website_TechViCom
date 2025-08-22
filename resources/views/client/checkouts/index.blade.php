@@ -463,7 +463,8 @@
                                 @endphp
                                 <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item"
                                     data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}"
-                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
+                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}"
+                                    data-category-id="{{ $product?->category_id ?? '' }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @php
@@ -650,19 +651,23 @@
                 .filter(id => id && id !== '')
                 .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
 
+            const requestData = {
+                coupon_code: code,
+                subtotal,
+                cart_product_ids: cartProductIds,
+                cart_product_amounts: cartProductAmounts,
+                cart_category_ids: cartCategoryIds
+            };
+            
+            console.log('Sending coupon request:', requestData);
+            
             fetch('/api/apply-coupon', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken()
                 },
-                body: JSON.stringify({
-                    coupon_code: code,
-                    subtotal,
-                    cart_product_ids: cartProductIds,
-                    cart_product_amounts: cartProductAmounts,
-                    cart_category_ids: cartCategoryIds
-                })
+                body: JSON.stringify(requestData)
             })
                 .then(r => r.json())
                 .then(data => {
@@ -706,6 +711,17 @@
                     msg.textContent = data.coupon?.message || 'Áp dụng thành công';
                     msg.className = 'mt-1 text-xs text-green-600';
                     updateCheckoutTotal();
+                    
+                    // Ẩn danh sách coupon khi áp dụng thành công
+                    const couponBox = document.getElementById('checkout-available-coupons');
+                    const toggleBtn = document.getElementById('toggle-coupon-list');
+                    if (couponBox) {
+                        couponBox.classList.add('hidden');
+                        couponBox.innerHTML = '';
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.textContent = 'Danh sách';
+                    }
                 })
                 .catch(() => {
                     input.classList.add('border-red-500');

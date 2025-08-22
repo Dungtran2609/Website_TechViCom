@@ -33,11 +33,11 @@
 
                 {{-- Kiểu áp dụng --}}
                 <div class="mb-3">
-                    <label for="type" class="form-label fw-semibold">Kiểu áp dụng</label>
-                    <select name="type" id="type" class="form-select" required>
+                    <label for="flash_type" class="form-label fw-semibold">Kiểu áp dụng</label>
+                    <select name="flash_type" id="flash_type" class="form-select" required>
                         <option value="all">Toàn bộ sản phẩm</option>
                         <option value="category">Theo danh mục</option>
-                        <option value="product">Theo sản phẩm</option>
+                        <option value="flash_sale">Theo sản phẩm (Flash Sale)</option>
                     </select>
                 </div>
 
@@ -208,9 +208,9 @@
 
 {{-- Script hiển thị select theo type --}}
 <script>
-    document.getElementById('type').addEventListener('change', function() {
+    document.getElementById('flash_type').addEventListener('change', function() {
         document.getElementById('category-select').style.display = this.value === 'category' ? 'block' : 'none';
-        document.getElementById('product-select').style.display = this.value === 'product' ? 'block' : 'none';
+        document.getElementById('product-select').style.display = this.value === 'flash_sale' ? 'block' : 'none';
     });
 </script>
 @endsection

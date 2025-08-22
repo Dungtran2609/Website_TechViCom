@@ -12,9 +12,20 @@ use App\Http\Requests\Admin\Coupons\DeleteCouponRequest;
 
 class AdminCouponController extends Controller
 {
+    public function show($id)
+    {
+        $coupon = Coupon::withTrashed()->findOrFail($id);
+        return view('admin.coupons.show', compact('coupon'));
+    }
+
+    public function trash()
+    {
+        $coupons = \App\Models\Coupon::onlyTrashed()->orderByDesc('deleted_at')->get();
+        return view('admin.coupons.trash', compact('coupons'));
+    }
     public function index(Request $request)
 {
-    $query = Coupon::withTrashed()->latest();
+    $query = Coupon::latest();
 
     if ($request->filled('keyword')) {
         $query->where('code', 'like', '%' . $request->keyword . '%');
@@ -40,13 +51,13 @@ class AdminCouponController extends Controller
 
     // Sync pivot tables
     if ($request->has('product_ids')) {
-        $coupon->products()->sync($request->product_ids);
+        $coupon->products()->sync($request->input('product_ids'));
     }
     if ($request->has('category_ids')) {
-        $coupon->categories()->sync($request->category_ids);
+        $coupon->categories()->sync($request->input('category_ids'));
     }
     if ($request->has('user_ids')) {
-        $coupon->users()->sync($request->user_ids);
+        $coupon->users()->sync($request->input('user_ids'));
     }
 
     return redirect()->route('admin.coupons.index')

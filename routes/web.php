@@ -201,6 +201,12 @@ Route::get('/debug-cart-data', function () {
 
 // Route resource cho promotions và mails (trong group admin)
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Coupon resource routes (thêm show, trash, restore, forceDelete)
+    Route::get('coupons/trash', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'trash'])->name('coupons.trash');
+    Route::put('coupons/{id}/restore', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'restore'])->name('coupons.restore');
+    Route::delete('coupons/{id}/force-delete', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'forceDelete'])->name('coupons.forceDelete');
+    Route::get('coupons/{coupon}', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'show'])->where('coupon', '[0-9]+')->name('coupons.show');
+    Route::resource('coupons', App\Http\Controllers\Admin\Coupons\AdminCouponController::class)->except(['show']);
     Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
     // Quản lý mail động
     Route::get('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendForm'])->name('mails.send');

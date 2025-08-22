@@ -3,7 +3,13 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <h4 class="mb-4">Thêm mã giảm giá</h4>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Thêm mã giảm giá</h4>
+            <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <iconify-icon icon="solar:arrow-left-broken" class="align-middle"></iconify-icon> Quay lại danh sách
+            </a>
+        </div>
 
         <form action="{{ route('admin.coupons.store') }}" method="POST">
             @csrf

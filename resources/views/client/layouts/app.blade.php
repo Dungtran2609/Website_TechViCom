@@ -292,8 +292,10 @@
         aria-controls="contactChatOffcanvas" title="Liên hệ & Chat">
         <i class="fas fa-headset"></i>
     </button>
+    
     <div class="offcanvas offcanvas-end offcanvas-contact" tabindex="-1" id="contactChatOffcanvas"
         aria-labelledby="contactChatOffcanvasLabel">
+        <script lang="javascript">var __vnp = {code : 26143,key:'', secret : 'eaef44ec178666a56bc5c17da48eebc9'};(function() {var ga = document.createElement('script');ga.type = 'text/javascript';ga.async=true; ga.defer=true;ga.src = '//core.vchat.vn/code/tracking.js?v=21980'; var s = document.getElementsByTagName('script');s[0].parentNode.insertBefore(ga, s[0]);})();</script>
         <div class="offcanvas-header">
             <div class="contact-chat-avatar me-3">
                 @php

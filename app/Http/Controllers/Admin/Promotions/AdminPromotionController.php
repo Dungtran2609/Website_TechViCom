@@ -6,6 +6,7 @@ use App\Models\Promotion;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\Promotions\PromotionRequest;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -36,20 +37,18 @@ class AdminPromotionController extends Controller
     return view('admin.promotions.create', compact('categories', 'products', 'coupons'));
     }
 
-    public function store(Request $request)
+    public function store(PromotionRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'flash_type' => 'required|in:all,category,flash_sale',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'boolean',
-            'categories' => 'array',
-            'products' => 'array',
-            'category_discount_value' => 'nullable|numeric|min:1|max:100',
-        ]);
-        $data['slug'] = Str::slug($data['name']);
+    $data = $request->validated();
+        // Tạo slug duy nhất
+        $baseSlug = Str::slug($data['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (\App\Models\Promotion::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+        }
+        $data['slug'] = $slug;
         // Nếu là kiểu category thì lưu discount_value và cập nhật sale_price cho các sản phẩm thuộc danh mục
         if ($data['flash_type'] === 'category') {
             $data['discount_type'] = 'percent';
@@ -116,20 +115,10 @@ class AdminPromotionController extends Controller
                 return view('admin.promotions.edit', compact('promotion', 'categories', 'products', 'coupons'));
     }
 
-    public function update(Request $request, $id)
+    public function update(PromotionRequest $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'flash_type' => 'required|in:all,category,flash_sale',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'boolean',
-            'categories' => 'array',
-            'products' => 'array',
-            'category_discount_value' => 'nullable|numeric|min:1|max:100',
-        ]);
+    $data = $request->validated();
         $data['slug'] = Str::slug($data['name']);
         if ($data['flash_type'] === 'category') {
             $data['discount_type'] = 'percent';

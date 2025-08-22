@@ -3,7 +3,13 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <h4 class="mb-4">Chỉnh sửa mã: {{ $coupon->code }}</h4>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Chỉnh sửa mã: {{ $coupon->code }}</h4>
+            <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <iconify-icon icon="solar:arrow-left-broken" class="align-middle"></iconify-icon> Quay lại danh sách
+            </a>
+        </div>
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

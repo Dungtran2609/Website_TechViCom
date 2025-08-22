@@ -78,11 +78,21 @@ Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('ent
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
 // Hóa đơn (Invoice) - phía client
-Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('client.invoice.index');
-Route::post('/invoice/send-verification-code', [App\Http\Controllers\Client\InvoiceController::class, 'sendVerificationCode'])->name('client.invoice.send-code');
-Route::post('/invoice/verify-code', [App\Http\Controllers\Client\InvoiceController::class, 'verifyCode'])->name('client.invoice.verify-code');
-Route::get('/invoice/order/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
-Route::get('/invoice/download/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
+Route::get('/invoice', [InvoiceController::class, 'index'])->name('client.invoice.index');
+Route::post('/invoice/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])
+    ->name('client.invoice.send-code')
+    ->middleware('invoice.spam');
+Route::post('/invoice/verify-code', [InvoiceController::class, 'verifyCode'])
+    ->name('client.invoice.verify-code')
+    ->middleware('invoice.spam');
+Route::get('/invoice/order/{id}', [InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
+Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
+
+// Các chức năng thanh toán cho khách vãng lai
+Route::post('/invoice/order/{id}/confirm-payment', [InvoiceController::class, 'confirmPayment'])->name('client.invoice.confirm-payment');
+Route::post('/invoice/order/{id}/pay-vnpay', [InvoiceController::class, 'payWithVnpay'])->name('client.invoice.pay-vnpay');
+Route::post('/invoice/order/{id}/request-return', [InvoiceController::class, 'requestReturn'])->name('client.invoice.request-return');
+Route::post('/invoice/order/{id}/confirm-receipt', [InvoiceController::class, 'confirmReceipt'])->name('client.invoice.confirm-receipt');
 
 // Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
@@ -330,7 +340,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
     });
     Route::prefix('contacts')->name('contacts.')->group(function () {
-        Route::get('/', [ClientContactController::class, 'create'])->name('index');
+        Route::get('/', [ClientContactController::class, 'index'])->name('index');
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 });

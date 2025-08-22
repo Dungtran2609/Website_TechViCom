@@ -63,6 +63,23 @@
     @php
         // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
         $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
+        
+        // Kiểm tra spam chặn cho khách vãng lai
+        $guestVnpayLocked = false;
+        if (!Auth::check()) {
+            $cancelData = session('guest_vnpay_cancel_count', []);
+            $totalCount = 0;
+            $currentTime = time();
+            
+            // Chỉ tính những lần hủy trong vòng 24 giờ qua
+            foreach ($cancelData as $timestamp => $count) {
+                if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+                    $totalCount += $count;
+                }
+            }
+            
+            $guestVnpayLocked = $totalCount >= 3;
+        }
     @endphp
 
     @if (session('notification'))
@@ -343,18 +360,27 @@
                                 </div>
 
                                 {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
+                                @php
+                                    $isVnpayLocked = $vnpayLocked || $guestVnpayLocked;
+                                    $lockReason = '';
+                                    if ($vnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 24 giờ.';
+                                    } elseif ($guestVnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng thử lại sau 24 giờ.';
+                                    }
+                                @endphp
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
-                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
-                                    data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
+                                            {{ $isVnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                    data-payment="bank_transfer" data-disabled="{{ $isVnpayLocked ? 'true' : 'false' }}"
                                     data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
                                     <input type="radio" id="banking" name="payment_method" value="bank_transfer"
-                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
+                                        class="mr-3 accent-orange-500" {{ $isVnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
-                                        @if ($vnpayLocked)
+                                        @if ($isVnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 2 phút.
+                                                {{ $lockReason }}
                                             </p>
                                         @endif
                                     </div>

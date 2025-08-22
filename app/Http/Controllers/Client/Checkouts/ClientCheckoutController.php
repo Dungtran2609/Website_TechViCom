@@ -122,6 +122,56 @@ class ClientCheckoutController extends Controller
         return $count;
     }
 
+    /* ============================== Guest VNPay cancel counter ============================== */
+    /** Lấy số lần hủy VNPay cho khách vãng lai từ session */
+    private function getGuestCancelCount(): int
+    {
+        $cancelData = session('guest_vnpay_cancel_count', []);
+        $totalCount = 0;
+        $currentTime = time();
+        
+        // Chỉ tính những lần hủy trong vòng 24 giờ qua
+        foreach ($cancelData as $timestamp => $count) {
+            if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+                $totalCount += $count;
+            }
+        }
+        
+        return $totalCount;
+    }
+
+    /** Tăng số lần hủy VNPay cho khách vãng lai */
+    private function incrementGuestCancelCount(): int
+    {
+        $cancelData = session('guest_vnpay_cancel_count', []);
+        $currentTime = time();
+        
+        // Thêm lần hủy mới
+        if (!isset($cancelData[$currentTime])) {
+            $cancelData[$currentTime] = 0;
+        }
+        $cancelData[$currentTime]++;
+        
+        // Dọn dẹp dữ liệu cũ (hơn 24 giờ)
+        $cleanedData = [];
+        foreach ($cancelData as $timestamp => $count) {
+            if ($currentTime - $timestamp < 86400) {
+                $cleanedData[$timestamp] = $count;
+            }
+        }
+        
+        session(['guest_vnpay_cancel_count' => $cleanedData]);
+        
+        $totalCount = $this->getGuestCancelCount();
+        
+        Log::info('Guest VNPay cancel count incremented', [
+            'new_count' => $totalCount,
+            'session_id' => session()->getId()
+        ]);
+        
+        return $totalCount;
+    }
+
     /** Kiểm tra xem có thể reset counter không (sau 2 phút) */
     private function canResetCancelCount(Order $order): bool
     {
@@ -206,6 +256,14 @@ class ClientCheckoutController extends Controller
         // Xử lý thanh toán lại từ đơn hàng
         $orderId = $request->get('order_id') ?: session('repayment_order_id');
         $existingOrder = null;
+        
+        // Nếu có selectedParam (mua sản phẩm mới) thì xóa session repayment
+        if (!empty($selectedParam)) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            $orderId = null; // Reset orderId để không lấy đơn hàng cũ
+        }
+        
         if ($orderId && Auth::check()) {
             $existingOrder = Order::with(['orderItems.productVariant.product.productAllImages', 'orderItems.product.productAllImages'])
                 ->where('user_id', Auth::id())
@@ -281,8 +339,8 @@ class ClientCheckoutController extends Controller
         }
 
         /* ---------- ƯU TIÊN ?selected= ---------- */
-        // Chỉ xử lý selectedParam nếu không đang thanh toán lại
-        if (empty($cartItems) && !empty($selectedParam) && !$existingOrder) {
+        // Xử lý selectedParam (mua sản phẩm mới) - ưu tiên cao nhất
+        if (empty($cartItems) && !empty($selectedParam)) {
             session()->forget('buynow');
 
             if (Auth::check()) {
@@ -465,9 +523,17 @@ class ClientCheckoutController extends Controller
             }
         }
 
-        // Chỉ kiểm tra giỏ hàng trống nếu không đang thanh toán lại
+        // Nếu không có cartItems và không có existingOrder, xóa session repayment và redirect
         if (empty($cartItems) && !$existingOrder) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
             return redirect()->route('carts.index')->with('error', 'Giỏ hàng trống');
+        }
+        
+        // Nếu có cartItems từ giỏ hàng (không phải thanh toán lại), xóa session repayment
+        if (!empty($cartItems) && !$existingOrder && !$request->get('order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
         }
 
         // Nếu đang thanh toán lại nhưng không có cartItems, redirect về cart với thông báo lỗi
@@ -545,9 +611,21 @@ class ClientCheckoutController extends Controller
             if ($totalCancelCount >= 3) {
                 $vnpayLocked = true;
                 $orderVnpayCancelCount = $totalCancelCount;
-                Log::info('VNPay locked due to total spam', [
+                Log::info('VNPay locked due to total spam for logged user', [
                     'user_id' => Auth::id(),
                     'total_cancel_count' => $totalCancelCount
+                ]);
+            }
+        } else {
+            // Kiểm tra spam chặn cho khách vãng lai
+            $guestCancelCount = $this->getGuestCancelCount();
+            
+            if ($guestCancelCount >= 3) {
+                $vnpayLocked = true;
+                $orderVnpayCancelCount = $guestCancelCount;
+                Log::info('VNPay locked due to total spam for guest', [
+                    'session_id' => session()->getId(),
+                    'guest_cancel_count' => $guestCancelCount
                 ]);
             }
         }
@@ -674,7 +752,7 @@ class ClientCheckoutController extends Controller
             /* Chặn VNPay nếu user đã hủy >=3 lần */
             if (($request->payment_method ?? '') === 'bank_transfer') {
                 if (Auth::check()) {
-                    // Kiểm tra tổng số lần hủy VNPay của user
+                    // Kiểm tra tổng số lần hủy VNPay của user đăng nhập
                     $userOrders = Order::where('user_id', Auth::id())
                         ->where('payment_method', 'bank_transfer')
                         ->get();
@@ -686,19 +764,36 @@ class ClientCheckoutController extends Controller
                         $totalCancelCount += $cancelCount;
                     }
 
-                    Log::info('Checking VNPay spam protection in process', [
+                    Log::info('Checking VNPay spam protection for logged user in process', [
                         'user_id' => Auth::id(),
                         'total_cancel_count' => $totalCancelCount,
                         'orders_count' => $userOrders->count()
                     ]);
 
                     if ($totalCancelCount >= 3) {
-                        Log::info('VNPay blocked due to total spam in process', [
+                        Log::info('VNPay blocked due to total spam for logged user in process', [
                             'user_id' => Auth::id(),
                             'total_cancel_count' => $totalCancelCount
                         ]);
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                    }
+                } else {
+                    // Kiểm tra tổng số lần hủy VNPay của khách vãng lai
+                    $guestCancelCount = $this->getGuestCancelCount();
+                    
+                    Log::info('Checking VNPay spam protection for guest in process', [
+                        'session_id' => session()->getId(),
+                        'guest_cancel_count' => $guestCancelCount
+                    ]);
+
+                    if ($guestCancelCount >= 3) {
+                        Log::info('VNPay blocked due to total spam for guest in process', [
+                            'session_id' => session()->getId(),
+                            'guest_cancel_count' => $guestCancelCount
+                        ]);
+                        return redirect()->route('checkout.fail')
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
                     }
                 }
             }
@@ -1446,6 +1541,18 @@ class ClientCheckoutController extends Controller
                         return redirect()->route('checkout.fail')
                             ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
                     }
+                } else {
+                    // Kiểm tra tổng số lần hủy VNPay của khách vãng lai
+                    $guestCancelCount = $this->getGuestCancelCount();
+                    
+                    if ($guestCancelCount >= 3) {
+                        Log::info('VNPay blocked due to total spam for guest in final check', [
+                            'session_id' => session()->getId(),
+                            'guest_cancel_count' => $guestCancelCount
+                        ]);
+                        return redirect()->route('checkout.fail')
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                    }
                 }
 
 
@@ -1538,43 +1645,38 @@ class ClientCheckoutController extends Controller
                     $totalCancelCount += $cancelCount;
                 }
 
-                if ($totalCancelCount >= 3) {
-                    session()->forget('repayment_order_id');
-                    return redirect()->route('checkout.fail')
-                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
-                }
-            }
-
-            // CHẶN nếu user đã hủy >= 3 lần
-            if (Auth::check()) {
-                $userOrders = Order::where('user_id', Auth::id())
-                    ->where('payment_method', 'bank_transfer')
-                    ->get();
-
-                Log::info('Checking VNPay spam protection in vnpay_payment', [
+                Log::info('Checking VNPay spam protection in vnpay_payment for logged user', [
                     'user_id' => Auth::id(),
+                    'total_cancel_count' => $totalCancelCount,
                     'orders_count' => $userOrders->count()
                 ]);
 
-                foreach ($userOrders as $userOrder) {
-                    $this->resetCancelCountIfNeeded($userOrder);
-                    $cancelCount = $this->getCancelCount($userOrder);
-
-                    Log::info('Order cancel count check in vnpay_payment', [
-                        'order_id' => $userOrder->id,
-                        'cancel_count' => $cancelCount
+                if ($totalCancelCount >= 3) {
+                    Log::info('VNPay blocked due to total spam in vnpay_payment for logged user', [
+                        'user_id' => Auth::id(),
+                        'total_cancel_count' => $totalCancelCount
                     ]);
+                    session()->forget('repayment_order_id');
+                    return redirect()->route('checkout.fail')
+                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                }
+            } else {
+                // Kiểm tra spam chặn cho khách vãng lai
+                $guestCancelCount = $this->getGuestCancelCount();
+                
+                Log::info('Checking VNPay spam protection in vnpay_payment for guest', [
+                    'session_id' => session()->getId(),
+                    'guest_cancel_count' => $guestCancelCount
+                ]);
 
-                    if ($cancelCount >= 3) {
-                        Log::info('VNPay blocked due to spam in vnpay_payment', [
-                            'order_id' => $userOrder->id,
-                            'cancel_count' => $cancelCount,
-                            'user_id' => Auth::id()
-                        ]);
-                        session()->forget('repayment_order_id');
-                        return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
-                    }
+                if ($guestCancelCount >= 3) {
+                    Log::info('VNPay blocked due to total spam in vnpay_payment for guest', [
+                        'session_id' => session()->getId(),
+                        'guest_cancel_count' => $guestCancelCount
+                    ]);
+                    session()->forget('repayment_order_id');
+                    return redirect()->route('checkout.fail')
+                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
                 }
             }
 
@@ -1671,7 +1773,7 @@ class ClientCheckoutController extends Controller
                         $totalCancelCount += $cancelCount;
                     }
 
-                    Log::info('Total VNPay cancel count for user', [
+                    Log::info('Total VNPay cancel count for logged user', [
                         'user_id' => Auth::id(),
                         'total_cancel_count' => $totalCancelCount,
                         'current_order_count' => $count
@@ -1688,7 +1790,30 @@ class ClientCheckoutController extends Controller
                     if ($totalCancelCount >= 3) {
                         session()->forget('repayment_order_id');
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                    }
+                } else {
+                    // Xử lý cho khách vãng lai
+                    $guestCancelCount = $this->incrementGuestCancelCount();
+                    
+                    Log::info('Total VNPay cancel count for guest', [
+                        'session_id' => session()->getId(),
+                        'guest_cancel_count' => $guestCancelCount,
+                        'current_order_count' => $count
+                    ]);
+
+                    // Thông báo sau lần 2
+                    if ($guestCancelCount == 2) {
+                        session(['repayment_order_id' => $order->id]);
+                        return redirect()->route('checkout.index')
+                            ->with('error', 'Bạn đã hủy VNPay 2 lần. Vui lòng đổi phương thức khác để hoàn thành, không đơn hàng sẽ bị hủy.');
+                    }
+
+                    // Chặn hoàn toàn nếu >=3
+                    if ($guestCancelCount >= 3) {
+                        session()->forget('repayment_order_id');
+                        return redirect()->route('checkout.fail')
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
                     }
                 }
 

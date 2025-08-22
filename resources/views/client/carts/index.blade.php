@@ -502,7 +502,7 @@ function showToast(msg, type = 'error') {
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => { toast.style.opacity = 0; }, 1800);
-  setTimeout(() => { toast.remove(); }, 2200);
+  setTimeout(() => { toast.remove(); }, 3000);
 }
 function handleIncreaseQuantity(id, current, stock) {
   if (current < stock) {

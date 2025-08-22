@@ -58,6 +58,21 @@ class AdminPromotionController extends Controller
     public function store(PromotionRequest $request)
     {
     $data = $request->validated();
+        
+        // Kiểm tra nếu muốn kích hoạt chương trình mới
+        if ($data['status'] == 1) {
+            // Tìm chương trình đang kích hoạt
+            $activePromotion = Promotion::where('status', 1)->first();
+            if ($activePromotion) {
+                // Tự động ẩn chương trình cũ
+                $activePromotion->status = 0;
+                $activePromotion->save();
+                
+                // Revert giá sản phẩm của chương trình cũ
+                $this->revertPromotionPrices($activePromotion);
+            }
+        }
+        
         // Tạo slug duy nhất (kiểm tra cả soft deleted records)
         $baseSlug = Str::slug($data['name']);
         $slug = $baseSlug;
@@ -132,6 +147,12 @@ class AdminPromotionController extends Controller
         if ($request->coupons) {
             \App\Models\Coupon::whereIn('id', $request->coupons)->update(['promotion_id' => $promotion->id]);
         }
+        
+        // Trả về JSON nếu request là AJAX
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Tạo chương trình thành công!']);
+        }
+        
         return redirect()->route('admin.promotions.index')->with('success', 'Tạo chương trình thành công!');
     }
 
@@ -148,10 +169,24 @@ class AdminPromotionController extends Controller
                 return view('admin.promotions.edit', compact('promotion', 'categories', 'products', 'coupons'));
     }
 
-    public function update(PromotionRequest $request, $id)
+        public function update(PromotionRequest $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
-    $data = $request->validated();
+        $data = $request->validated();
+        
+        // Kiểm tra nếu muốn kích hoạt chương trình mới
+        if ($data['status'] == 1 && $promotion->status == 0) {
+            // Tìm chương trình đang kích hoạt (khác chương trình hiện tại)
+            $activePromotion = Promotion::where('status', 1)->where('id', '!=', $id)->first();
+            if ($activePromotion) {
+                // Tự động ẩn chương trình cũ
+                $activePromotion->status = 0;
+                $activePromotion->save();
+                
+                // Revert giá sản phẩm của chương trình cũ
+                $this->revertPromotionPrices($activePromotion);
+            }
+        }
         
         // Tạo slug duy nhất cho update (kiểm tra cả soft deleted records)
         $baseSlug = Str::slug($data['name']);
@@ -255,6 +290,12 @@ class AdminPromotionController extends Controller
         if ($request->coupons) {
             \App\Models\Coupon::whereIn('id', $request->coupons)->update(['promotion_id' => $promotion->id]);
         }
+        
+        // Trả về JSON nếu request là AJAX
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Cập nhật chương trình thành công!']);
+        }
+        
         return redirect()->route('admin.promotions.index')->with('success', 'Cập nhật chương trình thành công!');
     }
 
@@ -263,5 +304,33 @@ class AdminPromotionController extends Controller
         $promotion = Promotion::findOrFail($id);
         $promotion->delete();
         return redirect()->route('admin.promotions.index')->with('success', 'Đã xóa chương trình!');
+    }
+
+    /**
+     * Revert giá sản phẩm về giá cũ khi ẩn promotion
+     */
+    private function revertPromotionPrices($promotion)
+    {
+        if ($promotion->flash_type === 'category') {
+            // Revert giá sản phẩm theo danh mục
+            $categoryIds = $promotion->categories()->pluck('categories.id')->toArray();
+            $productIds = \App\Models\Product::whereIn('category_id', $categoryIds)->pluck('id')->toArray();
+            foreach ($productIds as $pid) {
+                $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                foreach ($variants as $variant) {
+                    if (!is_null($variant->old_sale_price)) {
+                        $variant->sale_price = $variant->old_sale_price;
+                        $variant->old_sale_price = null;
+                        $variant->save();
+                    }
+                }
+            }
+        } elseif ($promotion->flash_type === 'flash_sale') {
+            // Revert giá sản phẩm flash sale
+            $oldProductIds = $promotion->products()->pluck('products.id')->toArray();
+            \App\Models\ProductVariant::whereIn('product_id', $oldProductIds)
+                ->whereNotNull('old_sale_price')
+                ->update(['sale_price' => DB::raw('old_sale_price'), 'old_sale_price' => null]);
+        }
     }
 }

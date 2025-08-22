@@ -64,8 +64,13 @@ class HomeController extends Controller
                         }
                     } elseif ($flashSale->flash_type === 'flash_sale') {
                         $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
-                        if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
-                            $salePrice = $promoProduct->pivot->sale_price;
+                        if ($promoProduct && $promoProduct->pivot) {
+                            // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                            if ($promoProduct->pivot->sale_price && $promoProduct->pivot->sale_price > 0) {
+                                $salePrice = $promoProduct->pivot->sale_price;
+                            } elseif ($promoProduct->pivot->discount_percent && $promoProduct->pivot->discount_percent > 0 && $price) {
+                                $salePrice = $price * (1 - $promoProduct->pivot->discount_percent / 100);
+                            }
                         }
                     }
                 }
@@ -108,8 +113,13 @@ class HomeController extends Controller
                         }
                     } elseif ($flashSale->flash_type === 'flash_sale') {
                         $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
-                        if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
-                            $salePrice = $promoProduct->pivot->sale_price;
+                        if ($promoProduct && $promoProduct->pivot) {
+                            // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                            if ($promoProduct->pivot->sale_price && $promoProduct->pivot->sale_price > 0) {
+                                $salePrice = $promoProduct->pivot->sale_price;
+                            } elseif ($promoProduct->pivot->discount_percent && $promoProduct->pivot->discount_percent > 0 && $price) {
+                                $salePrice = $price * (1 - $promoProduct->pivot->discount_percent / 100);
+                            }
                         }
                     }
                 }
@@ -170,9 +180,17 @@ class HomeController extends Controller
                     });
             } else {
                 $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function ($product) use ($flashSale) {
-                    $salePrice = $product->pivot->sale_price ?? null;
                     $variant = $product->variants->first();
                     $price = $variant ? $variant->price : null;
+                    $salePrice = null;
+                    
+                    // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                    if ($product->pivot->sale_price && $product->pivot->sale_price > 0) {
+                        $salePrice = $product->pivot->sale_price;
+                    } elseif ($product->pivot->discount_percent && $product->pivot->discount_percent > 0 && $price) {
+                        $salePrice = $price * (1 - $product->pivot->discount_percent / 100);
+                    }
+                    
                     $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
                     $product->flash_sale_price = $salePrice;
                     $product->discount_percent = $discountPercent;

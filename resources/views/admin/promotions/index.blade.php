@@ -16,8 +16,6 @@
         <div class="col-md-2">
             <select name="flash_type" class="form-select">
                 <option value="">-- Kiểu áp dụng --</option>
-                <option value="all" {{ request('flash_type') == 'all' ? 'selected' : '' }}>Toàn bộ sản phẩm</option>
-                <option value="category" {{ request('flash_type') == 'category' ? 'selected' : '' }}>Theo danh mục</option>
                 <option value="flash_sale" {{ request('flash_type') == 'flash_sale' ? 'selected' : '' }}>Flash Sale</option>
             </select>
         </div>
@@ -128,6 +126,12 @@
                                     <div class="text-muted">
                                         <i class="fas fa-gift fa-2x mb-3"></i>
                                         <p>Không có chương trình khuyến mãi nào</p>
+                                        <div class="mt-3">
+                                            <a href="{{ route('admin.products.index') }}" class="btn btn-primary">
+                                                <i class="fas fa-box me-1"></i> Quản lý sản phẩm
+                                            </a>
+                                            <p class="text-muted mt-2">Sử dụng "Giảm giá (%)" trực tiếp trong quản lý sản phẩm</p>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>

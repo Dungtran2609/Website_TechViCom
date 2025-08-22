@@ -225,12 +225,26 @@ class ClientProductController extends Controller
             if ($flashSale->flash_type === 'flash_sale') {
                 // Kiểm tra sản phẩm có trong promotion_product không
                 $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
-                if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
-                    $flashSaleInfo = [
-                        'sale_price' => $promoProduct->pivot->sale_price,
-                        'discount_percent' => null,
-                        'promotion' => $flashSale
-                    ];
+                if ($promoProduct && $promoProduct->pivot) {
+                    $variant = $product->variants->first();
+                    $price = $variant ? $variant->price : null;
+                    $salePrice = null;
+                    
+                    // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                    if ($promoProduct->pivot->sale_price && $promoProduct->pivot->sale_price > 0) {
+                        $salePrice = $promoProduct->pivot->sale_price;
+                    } elseif ($promoProduct->pivot->discount_percent && $promoProduct->pivot->discount_percent > 0 && $price) {
+                        $salePrice = $price * (1 - $promoProduct->pivot->discount_percent / 100);
+                    }
+                    
+                    if ($salePrice) {
+                        $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
+                        $flashSaleInfo = [
+                            'sale_price' => $salePrice,
+                            'discount_percent' => $discountPercent,
+                            'promotion' => $flashSale
+                        ];
+                    }
                 }
             } elseif ($flashSale->flash_type === 'category') {
                 // Kiểm tra sản phẩm thuộc danh mục được áp dụng

@@ -58,13 +58,18 @@ class AdminPromotionController extends Controller
     public function store(PromotionRequest $request)
     {
     $data = $request->validated();
-        // Tạo slug duy nhất
+        // Tạo slug duy nhất (kiểm tra cả soft deleted records)
         $baseSlug = Str::slug($data['name']);
         $slug = $baseSlug;
         $i = 1;
-        while (\App\Models\Promotion::where('slug', $slug)->exists()) {
+        while (\Illuminate\Support\Facades\DB::table('promotions')->where('slug', $slug)->exists()) {
             $slug = $baseSlug . '-' . $i;
             $i++;
+            // Tránh vòng lặp vô hạn
+            if ($i > 100) {
+                $slug = $baseSlug . '-' . time();
+                break;
+            }
         }
         $data['slug'] = $slug;
         // Nếu là kiểu category thì lưu discount_value và cập nhật sale_price cho các sản phẩm thuộc danh mục
@@ -92,23 +97,33 @@ class AdminPromotionController extends Controller
             }
         }
         if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {
-            if ($request->has('sale_prices')) {
-                $syncData = [];
-                foreach ($request->products as $pid) {
-                    $syncData[$pid] = [
-                        'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null
-                    ];
-                    // Lưu giá giảm cũ trước khi cập nhật giá flash sale
-                    \App\Models\ProductVariant::where('product_id', $pid)
-                        ->whereNull('old_sale_price')
-                        ->update(['old_sale_price' => DB::raw('sale_price')]);
-                    // Cập nhật sale_price cho tất cả variant của sản phẩm này
-                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null]);
+            $syncData = [];
+            foreach ($request->products as $pid) {
+                $syncData[$pid] = [
+                    'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null,
+                    'discount_percent' => isset($request->discount_percents[$pid]) ? $request->discount_percents[$pid] : null
+                ];
+                
+                // Lưu giá giảm cũ trước khi cập nhật giá flash sale
+                \App\Models\ProductVariant::where('product_id', $pid)
+                    ->whereNull('old_sale_price')
+                    ->update(['old_sale_price' => DB::raw('sale_price')]);
+                
+                // Cập nhật sale_price cho tất cả variant của sản phẩm này
+                if (isset($request->sale_prices[$pid]) && $request->sale_prices[$pid] > 0) {
+                    // Nếu có giá cố định
+                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => $request->sale_prices[$pid]]);
+                } elseif (isset($request->discount_percents[$pid]) && $request->discount_percents[$pid] > 0) {
+                    // Nếu có phần trăm giảm giá
+                    $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                    foreach ($variants as $variant) {
+                        $discountedPrice = round($variant->price * (1 - $request->discount_percents[$pid] / 100));
+                        $variant->sale_price = $discountedPrice;
+                        $variant->save();
+                    }
                 }
-                $promotion->products()->sync($syncData);
-            } else {
-                $promotion->products()->sync($request->products);
             }
+            $promotion->products()->sync($syncData);
         } else {
             // Nếu không phải flash_sale hoặc không kích hoạt thì không cập nhật sale_price, chỉ sync products
             $promotion->products()->sync($request->products ?? []);
@@ -137,7 +152,21 @@ class AdminPromotionController extends Controller
     {
         $promotion = Promotion::findOrFail($id);
     $data = $request->validated();
-        $data['slug'] = Str::slug($data['name']);
+        
+        // Tạo slug duy nhất cho update (kiểm tra cả soft deleted records)
+        $baseSlug = Str::slug($data['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (\Illuminate\Support\Facades\DB::table('promotions')->where('slug', $slug)->where('id', '!=', $id)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+            // Tránh vòng lặp vô hạn
+            if ($i > 100) {
+                $slug = $baseSlug . '-' . time();
+                break;
+            }
+        }
+        $data['slug'] = $slug;
         if ($data['flash_type'] === 'category') {
             $data['discount_type'] = 'percent';
             $data['discount_value'] = $request->category_discount_value ?? 10;
@@ -184,23 +213,33 @@ class AdminPromotionController extends Controller
             $promotion->categories()->detach();
         }
         if ($data['flash_type'] === 'flash_sale' && !empty($request->products) && $data['status'] == 1) {
-            if ($request->has('sale_prices')) {
-                $syncData = [];
-                foreach ($request->products as $pid) {
-                    $syncData[$pid] = [
-                        'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null
-                    ];
-                    // Lưu giá giảm cũ trước khi cập nhật giá flash sale
-                    \App\Models\ProductVariant::where('product_id', $pid)
-                        ->whereNull('old_sale_price')
-                        ->update(['old_sale_price' => DB::raw('sale_price')]);
-                    // Cập nhật sale_price cho tất cả variant của sản phẩm này
-                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null]);
+            $syncData = [];
+            foreach ($request->products as $pid) {
+                $syncData[$pid] = [
+                    'sale_price' => isset($request->sale_prices[$pid]) ? $request->sale_prices[$pid] : null,
+                    'discount_percent' => isset($request->discount_percents[$pid]) ? $request->discount_percents[$pid] : null
+                ];
+                
+                // Lưu giá giảm cũ trước khi cập nhật giá flash sale
+                \App\Models\ProductVariant::where('product_id', $pid)
+                    ->whereNull('old_sale_price')
+                    ->update(['old_sale_price' => DB::raw('sale_price')]);
+                
+                // Cập nhật sale_price cho tất cả variant của sản phẩm này
+                if (isset($request->sale_prices[$pid]) && $request->sale_prices[$pid] > 0) {
+                    // Nếu có giá cố định
+                    \App\Models\ProductVariant::where('product_id', $pid)->update(['sale_price' => $request->sale_prices[$pid]]);
+                } elseif (isset($request->discount_percents[$pid]) && $request->discount_percents[$pid] > 0) {
+                    // Nếu có phần trăm giảm giá
+                    $variants = \App\Models\ProductVariant::where('product_id', $pid)->get();
+                    foreach ($variants as $variant) {
+                        $discountedPrice = round($variant->price * (1 - $request->discount_percents[$pid] / 100));
+                        $variant->sale_price = $discountedPrice;
+                        $variant->save();
+                    }
                 }
-                $promotion->products()->sync($syncData);
-            } else {
-                $promotion->products()->sync($request->products);
             }
+            $promotion->products()->sync($syncData);
         } else {
             // Nếu không còn là flash_sale hoặc bị ẩn/hết hạn thì revert sale_price về old_sale_price cho các sản phẩm từng thuộc promotion này
             $oldProductIds = $promotion->products()->pluck('products.id')->toArray();

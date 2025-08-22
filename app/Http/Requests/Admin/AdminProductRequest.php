@@ -58,7 +58,6 @@ class AdminProductRequest extends FormRequest
                 })->count() > 0;
             });
             $this->merge(['variants' => $variants->all()]);
-
             $rules['variants'] = 'required|array|min:1';
             $rules['variants.*.price'] = 'required|integer|gt:0|max:999999999999';
             $rules['variants.*.stock'] = 'required|integer|min:0';

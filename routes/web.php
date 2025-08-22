@@ -76,6 +76,12 @@ Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('autho
 Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
+// Hóa đơn (Invoice) - phía client
+Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
+    Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('invoice.index');
+    Route::get('/invoices/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'show'])->name('invoice.show');
+
+});
 
 // Test cart functionality
 Route::get('/test-cart-page', function () {

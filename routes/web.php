@@ -561,9 +561,9 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::resource('', AdminNewsController::class)->parameters(['' => 'news']);
     });
     Route::resource('news-categories', AdminNewsCategoryController::class)->middleware(CheckPermission::class . ':manage_news-categories');
-    Route::prefix('news-comments')->name('news-comments.')->middleware(CheckPermission::class . ':manage_news_comments')->group(function () {
+    Route::prefix('news-comments')->name('news-comments.')->middleware(CheckPermission::class . ':manage_news-comments')->group(function () {
         Route::get('/', [AdminNewsCommentController::class, 'index'])->name('index');
-        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show');
+        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show'); 
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/toggle', [AdminNewsCommentController::class, 'toggleVisibility'])->name('toggle');
         Route::post('/{id}/reply', [AdminNewsCommentController::class, 'storeReply'])->name('reply');

@@ -508,12 +508,12 @@
                             document.getElementById('edit_ward_name').value = address.ward;
                             new bootstrap.Modal(document.getElementById('editAddressModal')).show();
                         } else {
-                            Swal.fire('Lỗi!', 'Không thể tải thông tin địa chỉ', 'error');
+                            Swal.fire('Lỗi!', 'Không thể tải thông tin địa chỉ', 'error', { timer: 3000 });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi tải dữ liệu', 'error');
+                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi tải dữ liệu', 'error', { timer: 3000 });
                     });
             };
 
@@ -538,9 +538,9 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire('Thành công', data.message, 'success').then(() => location.reload());
+                                Swal.fire('Thành công', data.message, 'success', { timer: 3000 }).then(() => location.reload());
                             } else {
-                                Swal.fire('Lỗi', data.message || 'Không thể đặt mặc định', 'error');
+                                Swal.fire('Lỗi', data.message || 'Không thể đặt mặc định', 'error', { timer: 3000 });
                             }
                         })
                         .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
@@ -570,9 +570,9 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data.success) {
-                                Swal.fire('Đã xóa', data.message, 'success').then(() => location.reload());
+                                Swal.fire('Đã xóa', data.message, 'success', { timer: 3000 }).then(() => location.reload());
                             } else {
-                                Swal.fire('Lỗi', data.message || 'Không thể xóa địa chỉ', 'error');
+                                Swal.fire('Lỗi', data.message || 'Không thể xóa địa chỉ', 'error', { timer: 3000 });
                             }
                         })
                         .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
@@ -605,9 +605,9 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Thành công', 'Cập nhật địa chỉ thành công', 'success').then(() => location.reload());
+                            Swal.fire('Thành công', 'Cập nhật địa chỉ thành công', 'success', { timer: 3000 }).then(() => location.reload());
                         } else {
-                            Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ', 'error');
+                            Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ', 'error', { timer: 3000 });
                         }
                     })
                     .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));

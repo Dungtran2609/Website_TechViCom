@@ -256,6 +256,14 @@ class ClientCheckoutController extends Controller
         // Xử lý thanh toán lại từ đơn hàng
         $orderId = $request->get('order_id') ?: session('repayment_order_id');
         $existingOrder = null;
+        
+        // Nếu có selectedParam (mua sản phẩm mới) thì xóa session repayment
+        if (!empty($selectedParam)) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            $orderId = null; // Reset orderId để không lấy đơn hàng cũ
+        }
+        
         if ($orderId && Auth::check()) {
             $existingOrder = Order::with(['orderItems.productVariant.product.productAllImages', 'orderItems.product.productAllImages'])
                 ->where('user_id', Auth::id())
@@ -331,8 +339,8 @@ class ClientCheckoutController extends Controller
         }
 
         /* ---------- ƯU TIÊN ?selected= ---------- */
-        // Chỉ xử lý selectedParam nếu không đang thanh toán lại
-        if (empty($cartItems) && !empty($selectedParam) && !$existingOrder) {
+        // Xử lý selectedParam (mua sản phẩm mới) - ưu tiên cao nhất
+        if (empty($cartItems) && !empty($selectedParam)) {
             session()->forget('buynow');
 
             if (Auth::check()) {
@@ -515,9 +523,17 @@ class ClientCheckoutController extends Controller
             }
         }
 
-        // Chỉ kiểm tra giỏ hàng trống nếu không đang thanh toán lại
+        // Nếu không có cartItems và không có existingOrder, xóa session repayment và redirect
         if (empty($cartItems) && !$existingOrder) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
             return redirect()->route('carts.index')->with('error', 'Giỏ hàng trống');
+        }
+        
+        // Nếu có cartItems từ giỏ hàng (không phải thanh toán lại), xóa session repayment
+        if (!empty($cartItems) && !$existingOrder && !$request->get('order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
         }
 
         // Nếu đang thanh toán lại nhưng không có cartItems, redirect về cart với thông báo lỗi

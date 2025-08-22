@@ -594,20 +594,50 @@
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                         body: JSON.stringify({ product_id: productId })
                     })
-                    .then(r => r.json())
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', response.headers);
+                        
+                        // Kiểm tra content-type
+                        const contentType = response.headers.get('content-type');
+                        console.log('Content-Type:', contentType);
+                        
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        } else {
+                            // Nếu không phải JSON, có thể là HTML redirect
+                            console.log('Non-JSON response detected, likely HTML redirect');
+                            throw new Error('Non-JSON response');
+                        }
+                    })
                     .then(data => {
-                        if (data.success){
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Xử lý thành công
                             icon.className = data.is_favorite ? 'fas fa-heart' : 'far fa-heart';
                             this.classList.toggle('active', !!data.is_favorite);
                             showToast(data.message);
+                        } else if (data.redirect) {
+                            // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                            console.log('Redirecting to:', data.redirect);
+                            showToast(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích');
+                            setTimeout(() => {
+                                window.location.href = data.redirect;
+                            }, 1500);
                         } else {
+                            // Lỗi khác
                             icon.className = originalIcon;
-                            showToast('Có lỗi xảy ra, vui lòng thử lại');
+                            showToast(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
                         }
                     })
-                    .catch(() => {
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Nếu có lỗi, có thể là do chưa đăng nhập
                         icon.className = originalIcon;
-                        showToast('Có lỗi xảy ra, vui lòng thử lại');
+                        showToast('Vui lòng đăng nhập để thêm vào yêu thích');
+                        setTimeout(() => {
+                            window.location.href = '{{ route("login") }}';
+                        }, 1500);
                     })
                     .finally(() => { this.disabled = false; });
                 });

@@ -1269,10 +1269,16 @@
                         
                         // Show toast message
                         toast(data.message, 'success');
+                    } else if (data.redirect) {
+                        // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                        toast(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích', 'error');
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
                     } else {
                         // Restore original state on error
                         icon.className = originalIcon;
-                        toast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                        toast(data.message || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
                     }
                 })
                 .catch(error => {

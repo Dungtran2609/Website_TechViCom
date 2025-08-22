@@ -15,8 +15,21 @@ class FavoriteController extends Controller
     /**
      * Thêm sản phẩm vào danh sách yêu thích
      */
-    public function toggle(Request $request): JsonResponse
+    public function toggle(Request $request)
     {
+        // Kiểm tra user đã đăng nhập chưa
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để thêm vào yêu thích',
+                    'redirect' => route('login')
+                ], 401);
+            } else {
+                return redirect()->route('login')->with('message', 'Vui lòng đăng nhập để thêm vào yêu thích');
+            }
+        }
+
         $request->validate([
             'product_id' => 'required|integer|exists:products,id'
         ]);
@@ -63,8 +76,21 @@ class FavoriteController extends Controller
     /**
      * Xóa sản phẩm khỏi danh sách yêu thích
      */
-    public function remove(Request $request): JsonResponse
+    public function remove(Request $request)
     {
+        // Kiểm tra user đã đăng nhập chưa
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để xóa khỏi yêu thích',
+                    'redirect' => route('login')
+                ], 401);
+            } else {
+                return redirect()->route('login')->with('message', 'Vui lòng đăng nhập để xóa khỏi yêu thích');
+            }
+        }
+
         $request->validate([
             'product_id' => 'required|integer|exists:products,id'
         ]);
@@ -85,8 +111,21 @@ class FavoriteController extends Controller
     /**
      * Kiểm tra trạng thái yêu thích của sản phẩm
      */
-    public function check(Request $request): JsonResponse
+    public function check(Request $request)
     {
+        // Kiểm tra user đã đăng nhập chưa
+        if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để kiểm tra yêu thích',
+                    'redirect' => route('login')
+                ], 401);
+            } else {
+                return redirect()->route('login')->with('message', 'Vui lòng đăng nhập để kiểm tra yêu thích');
+            }
+        }
+
         $request->validate([
             'product_ids' => 'required|array',
             'product_ids.*' => 'integer|exists:products,id'

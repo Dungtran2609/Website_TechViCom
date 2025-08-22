@@ -883,26 +883,47 @@
                         })
                     })
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', response.headers);
+                        
+                        // Kiểm tra content-type
+                        const contentType = response.headers.get('content-type');
+                        console.log('Content-Type:', contentType);
+                        
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        } else {
+                            // Nếu không phải JSON, có thể là HTML redirect
+                            console.log('Non-JSON response detected, likely HTML redirect');
+                            throw new Error('Non-JSON response');
                         }
-                        return response.json();
                     })
                     .then(data => {
+                        console.log('Response data:', data);
                         if (data.success) {
                             setHeart(this, data.is_favorite);
                             toast(data.message);
+                        } else if (data.redirect) {
+                            // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                            console.log('Redirecting to:', data.redirect);
+                            toast(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích');
+                            setTimeout(() => {
+                                window.location.href = data.redirect;
+                            }, 1500);
                         } else {
                             // Khôi phục trạng thái ban đầu nếu có lỗi
                             this.querySelector('i').className = originalIcon;
-                            toast('Có lỗi xảy ra, vui lòng thử lại');
+                            toast(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        // Khôi phục trạng thái ban đầu nếu có lỗi
+                        // Nếu có lỗi, có thể là do chưa đăng nhập
                         this.querySelector('i').className = originalIcon;
-                        toast('Có lỗi xảy ra, vui lòng thử lại');
+                        toast('Vui lòng đăng nhập để thêm vào yêu thích');
+                        setTimeout(() => {
+                            window.location.href = '{{ route("login") }}';
+                        }, 1500);
                     })
                     .finally(() => {
                         this.disabled = false;

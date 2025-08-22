@@ -284,6 +284,22 @@
             justify-content: center;
             box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
         }
+
+        /* Đảm bảo layout ổn định cho quantity và buttons */
+        .quantity-container {
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .action-buttons {
+            min-width: 200px;
+            flex-shrink: 0;
+        }
+
+        #qty {
+            min-width: 64px;
+            text-align: center;
+        }
     </style>
 @endpush
 
@@ -441,13 +457,13 @@
                         {{-- Quantity + Actions --}}
                         <div class="flex items-center gap-4">
                             <label class="text-sm font-medium">Số lượng:</label>
-                            <div class="flex items-center">
+                            <div class="flex items-center quantity-container">
                                 <button type="button" id="quantity-minus-btn"
                                     class="w-8 h-8 border border-gray-300 rounded-l-lg hover:bg-gray-100">
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
                                 <input id="qty" type="number" value="1" min="1"
-                                    class="w-12 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
+                                    class="w-16 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
                                     readonly>
                                 <button type="button" id="quantity-plus-btn"
                                     class="w-8 h-8 border border-gray-300 rounded-r-lg hover:bg-gray-100">
@@ -456,13 +472,13 @@
                             </div>
                         </div>
 
-                        <div class="space-y-3">
+                        <div class="space-y-3 action-buttons">
                             <button id="btn-add-cart" type="button"
-                                class="w-full btn-primary py-3 px-4 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full min-w-[200px] btn-primary py-3 px-4 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                                 <i class="fas fa-shopping-cart mr-2"></i> Thêm vào giỏ hàng
                             </button>
                             <button id="btn-buy-now" type="button"
-                                class="w-full bg-gray-800 text-white py-3 px-4 rounded-lg font-bold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full min-w-[200px] bg-gray-800 text-white py-3 px-4 rounded-lg font-bold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                                 Mua ngay
                             </button>
                         </div>
@@ -508,7 +524,7 @@
                             ->where('status', 'approved')
                             ->where('is_hidden', false)
                             ->whereNull('parent_id')
-                            ->with(['user', 'replies.user'])
+                            ->with(['user', 'replies.user', 'order'])
                             ->latest()
                             ->get();
                     @endphp
@@ -517,6 +533,7 @@
                         @php
                             $reviewStatus = \App\Helpers\CommentHelper::getReviewStatus($product->id);
                             $remainingDays = \App\Helpers\CommentHelper::getRemainingDaysToReview($product->id);
+                            $purchasedItems = \App\Helpers\CommentHelper::getPurchasedItems($product->id);
                         @endphp
                         @if ($reviewStatus['can_review'])
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
@@ -527,6 +544,46 @@
                                         Còn {{ $remainingDays }} ngày để đánh giá
                                     </div>
                                 </div>
+                                
+                                <!-- Hiển thị sản phẩm đã mua -->
+                                @if($purchasedItems->count() > 0)
+                                    <div class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <h4 class="font-medium text-gray-900 mb-3">Sản phẩm bạn đã mua:</h4>
+                                        <div class="space-y-3">
+                                            @foreach($purchasedItems as $item)
+                                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                    <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                                        @if($item->productVariant && $item->productVariant->image)
+                                                            <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                        @elseif($item->image_product)
+                                                            <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                        @elseif($item->productVariant && $item->productVariant->product && $item->productVariant->product->thumbnail)
+                                                            <img src="{{ asset('storage/' . ltrim($item->productVariant->product->thumbnail, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                        @else
+                                                            <div class="flex flex-col items-center justify-center text-gray-400">
+                                                                <i class="fas fa-image text-lg"></i>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <h5 class="font-medium text-gray-900">{{ $item->name_product }}</h5>
+                                                        @if($item->productVariant)
+                                                            <p class="text-sm text-gray-600">
+                                                                @foreach($item->productVariant->attributeValues as $attrValue)
+                                                                    <span class="inline-block bg-gray-200 px-2 py-1 rounded text-xs mr-1 mb-1">
+                                                                        {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
+                                                                    </span>
+                                                                @endforeach
+                                                            </p>
+                                                        @endif
+                                                        <p class="text-sm text-gray-500">Số lượng: {{ $item->quantity }} | Giá: {{ number_format($item->price) }}₫</p>
+                                                        <p class="text-xs text-gray-400">Đơn hàng: #{{ $item->order->order_number }} | Nhận hàng: {{ $item->order->received_at ? $item->order->received_at->format('d/m/Y') : 'N/A' }}</p>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                                 <form action="{{ route('products.comments.store', $product->id) }}" method="POST">
                                     @csrf
                                     <div class="mb-3">
@@ -626,6 +683,52 @@
                                                 <span class="text-sm text-gray-600 ml-1">{{ $cmt->rating }}/5</span>
                                             </div>
                                         @endif
+                                        
+                                        <!-- Hiển thị thông tin sản phẩm đã mua -->
+                                        @if($cmt->order)
+                                            @php
+                                                $orderItem = \App\Models\OrderItem::where('order_id', $cmt->order->id)
+                                                    ->where('product_id', $product->id)
+                                                    ->with(['productVariant.attributeValues.attribute', 'order'])
+                                                    ->first();
+                                            @endphp
+                                            @if($orderItem)
+                                                <div class="mb-3 p-3 bg-gray-50 rounded-lg border-l-4 border-[#ff6c2f]">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                                            @if($orderItem->productVariant && $orderItem->productVariant->image)
+                                                                <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->image, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                            @elseif($orderItem->image_product)
+                                                                <img src="{{ asset('storage/' . ltrim($orderItem->image_product, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                            @elseif($orderItem->productVariant && $orderItem->productVariant->product && $orderItem->productVariant->product->thumbnail)
+                                                                <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->product->thumbnail, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                            @else
+                                                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                                                    <i class="fas fa-image text-sm"></i>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                        <div class="flex-1">
+                                                            <h6 class="font-medium text-gray-900 text-sm">{{ $orderItem->name_product }}</h6>
+                                                            @if($orderItem->productVariant && $orderItem->productVariant->attributeValues->count() > 0)
+                                                                <p class="text-xs text-gray-600 mt-1">
+                                                                    @foreach($orderItem->productVariant->attributeValues as $attrValue)
+                                                                        <span class="inline-block bg-gray-200 px-1 py-0.5 rounded text-xs mr-1">
+                                                                            {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
+                                                                        </span>
+                                                                    @endforeach
+                                                                </p>
+                                                            @endif
+                                                            <p class="text-xs text-gray-500 mt-1">
+                                                                Số lượng: {{ $orderItem->quantity }} | 
+                                                                Đơn hàng: #{{ $orderItem->order->order_number }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endif
+                                        
                                         <p class="text-gray-800">{{ $cmt->content }}</p>
 
                                         @if ($cmt->replies->count() > 0)
@@ -1253,10 +1356,16 @@
                         
                         // Show toast message
                         toast(data.message, 'success');
+                    } else if (data.redirect) {
+                        // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                        toast(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích', 'error');
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
                     } else {
                         // Restore original state on error
                         icon.className = originalIcon;
-                        toast('Có lỗi xảy ra, vui lòng thử lại', 'error');
+                        toast(data.message || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
                     }
                 })
                 .catch(error => {

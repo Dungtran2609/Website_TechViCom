@@ -118,6 +118,25 @@
                         <i class="fas fa-{{ $config['icon'] }} me-2"></i>
                         {{ $config['text'] }}
                     </span>
+                    
+                    <!-- Trạng thái thanh toán -->
+                    @php
+                        $paymentStatusConfig = [
+                            'pending' => ['class' => 'bg-warning text-dark', 'text' => 'Chưa thanh toán', 'icon' => 'clock'],
+                            'processing' => ['class' => 'bg-info', 'text' => 'Đang xử lý thanh toán', 'icon' => 'spinner'],
+                            'paid' => ['class' => 'bg-success', 'text' => 'Đã thanh toán', 'icon' => 'check-circle'],
+                            'failed' => ['class' => 'bg-danger', 'text' => 'Thanh toán thất bại', 'icon' => 'times-circle'],
+                            'cancelled' => ['class' => 'bg-secondary', 'text' => 'Đã hủy thanh toán', 'icon' => 'ban']
+                        ];
+                        $paymentConfig = $paymentStatusConfig[$order->payment_status] ?? ['class' => 'bg-secondary', 'text' => $order->payment_status, 'icon' => 'question'];
+                    @endphp
+                    <div class="mt-2">
+                        <span class="badge {{ $paymentConfig['class'] }} fs-6 px-3 py-2">
+                            <i class="fas fa-{{ $paymentConfig['icon'] }} me-2"></i>
+                            {{ $paymentConfig['text'] }}
+                        </span>
+                    </div>
+                    
                     @if($order->status === 'returned' && $orderReturn && $orderReturn->status === 'pending')
                         <span class="badge bg-info ms-2">Chờ admin xác nhận trả hàng</span>
                     @endif
@@ -209,6 +228,86 @@
                         @endif
                     </div>
                 @endif
+                
+                <!-- Thông tin thanh toán -->
+                <div class="bg-white rounded-lg p-6 mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-credit-card me-2 text-orange-500"></i>
+                        Thông tin thanh toán
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <h6 class="font-semibold text-gray-700">Phương thức thanh toán:</h6>
+                            <p class="text-gray-600 mb-0">
+                                @switch($order->payment_method)
+                                    @case('cod')
+                                        <i class="fas fa-money-bill-wave me-2"></i>Thanh toán khi nhận hàng
+                                        @break
+                                    @case('bank_transfer')
+                                        <i class="fas fa-university me-2"></i>Chuyển khoản ngân hàng
+                                        @break
+                                    @case('credit_card')
+                                        <i class="fas fa-credit-card me-2"></i>Thẻ tín dụng
+                                        @break
+                                    @case('vietqr')
+                                        <i class="fas fa-qrcode me-2"></i>VietQR
+                                        @break
+                                    @default
+                                        {{ ucfirst($order->payment_method) }}
+                                @endswitch
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h6 class="font-semibold text-gray-700">Trạng thái thanh toán:</h6>
+                            <p class="text-gray-600 mb-0">
+                                <span class="badge {{ $paymentConfig['class'] }}">
+                                    <i class="fas fa-{{ $paymentConfig['icon'] }} me-1"></i>
+                                    {{ $paymentConfig['text'] }}
+                                </span>
+                            </p>
+                        </div>
+                        
+                        @if($order->paid_at)
+                            <div>
+                                <h6 class="font-semibold text-gray-700">Thời gian thanh toán:</h6>
+                                <p class="text-gray-600 mb-0">{{ $order->paid_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                        @endif
+                        
+                        @if($order->vnpay_transaction_id)
+                            <div>
+                                <h6 class="font-semibold text-gray-700">Mã giao dịch VNPay:</h6>
+                                <p class="text-gray-600 mb-0">{{ $order->vnpay_transaction_id }}</p>
+                            </div>
+                        @endif
+                        
+                        <!-- Nút thanh toán lại -->
+                        @if($order->status === 'pending' && in_array($order->payment_status, ['pending', 'processing', 'failed']) && $order->payment_method !== 'cod')
+                            <div class="mt-4">
+                                <a href="{{ route('checkout.index') }}?order_id={{ $order->id }}" 
+                                   class="btn btn-primary w-100">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    @if($order->payment_status === 'processing')
+                                        Chọn phương thức thanh toán khác
+                                    @else
+                                        Thanh toán lại
+                                    @endif
+                                </a>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    @if($order->payment_status === 'processing')
+                                        Thanh toán đang xử lý, bạn có thể chọn phương thức khác
+                                    @else
+                                        Chọn phương thức thanh toán khác
+                                    @endif
+                                </small>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                
                 <div class="bg-white rounded-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
                         <i class="fas fa-route me-2 text-orange-500"></i>
@@ -292,27 +391,6 @@
                         <div>
                             <h6 class="font-semibold text-gray-700">Địa chỉ:</h6>
                             <p class="text-gray-600 mb-0">{{ $order->recipient_address }}</p>
-                        </div>
-                        <div>
-                            <h6 class="font-semibold text-gray-700">Phương thức thanh toán:</h6>
-                            <p class="text-gray-600 mb-0">
-                                @switch($order->payment_method)
-                                    @case('cod')
-                                        <i class="fas fa-money-bill-wave me-2"></i>Thanh toán khi nhận hàng
-                                        @break
-                                    @case('bank_transfer')
-                                        <i class="fas fa-university me-2"></i>Chuyển khoản ngân hàng
-                                        @break
-                                    @case('credit_card')
-                                        <i class="fas fa-credit-card me-2"></i>Thẻ tín dụng
-                                        @break
-                                    @case('vietqr')
-                                        <i class="fas fa-qrcode me-2"></i>VietQR
-                                        @break
-                                    @default
-                                        {{ ucfirst($order->payment_method) }}
-                                @endswitch
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -512,6 +590,19 @@
                                     @endif
                                 </button>
                             @endif
+                        @endif
+
+                        <!-- Nút thanh toán lại trong Actions -->
+                        @if($order->status === 'pending' && in_array($order->payment_status, ['pending', 'processing', 'failed']) && $order->payment_method !== 'cod')
+                            <a href="{{ route('checkout.index') }}?order_id={{ $order->id }}" 
+                               class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>
+                                @if($order->payment_status === 'processing')
+                                    Chọn phương thức thanh toán khác
+                                @else
+                                    Thanh toán lại
+                                @endif
+                            </a>
                         @endif
 
                         <button class="btn btn-outline-info" onclick="window.print()">

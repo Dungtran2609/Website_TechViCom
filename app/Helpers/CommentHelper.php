@@ -196,6 +196,64 @@ class CommentHelper
     }
 
     /**
+     * Lấy danh sách sản phẩm đã mua và chưa đánh giá
+     */
+    public static function getPurchasedItems($productId)
+    {
+        if (!Auth::check()) {
+            return collect();
+        }
+
+        $user = Auth::user();
+        
+        // Lấy tất cả order items của sản phẩm này mà user đã mua và đã nhận hàng
+        $orderItems = OrderItem::whereHas('order', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->where('status', 'received');
+        })->where('product_id', $productId)
+          ->with(['productVariant.attributeValues.attribute', 'order'])
+          ->get();
+
+        if ($orderItems->isEmpty()) {
+            return collect();
+        }
+
+        $purchasedItems = collect();
+
+        foreach ($orderItems as $orderItem) {
+            $order = $orderItem->order;
+
+            // Chỉ cho phép đánh giá nếu có received_at
+            if (!$order->received_at) {
+                continue;
+            }
+
+            // Kiểm tra thời gian nhận hàng (15 ngày)
+            $receivedAt = is_string($order->received_at) ? \Carbon\Carbon::parse($order->received_at) : $order->received_at;
+            $daysSinceReceived = now()->diffInDays($receivedAt);
+            if ($daysSinceReceived < 0) {
+                $daysSinceReceived = 0;
+            }
+            if ($daysSinceReceived > 15) {
+                continue; // Bỏ qua đơn hàng hết thời gian
+            }
+
+            // Kiểm tra đã comment cho đơn hàng này chưa
+            $existingComment = ProductComment::where('user_id', $user->id)
+                                           ->where('product_id', $productId)
+                                           ->where('order_id', $order->id)
+                                           ->whereNull('parent_id')
+                                           ->first();
+
+            if (!$existingComment) {
+                $purchasedItems->push($orderItem);
+            }
+        }
+
+        return $purchasedItems;
+    }
+
+    /**
      * Kiểm tra xem có thể đánh giá không và trả về thông tin chi tiết
      */
     public static function getReviewStatus($productId)

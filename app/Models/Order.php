@@ -60,13 +60,13 @@ class Order extends Model
     /**
      * Trường kiểu ngày cần được cast sang Carbon
      */
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-        'shipped_at',
-        'paid_at',
-        'received_at',
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'paid_at' => 'datetime',
+        'received_at' => 'datetime',
     ];
 
 

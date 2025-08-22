@@ -1,133 +1,6 @@
 <!-- Header (all category items use the same icon) -->
 <header id="main-header" class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
-    <style>
-        /* Cart Sidebar */
-        #cart-sidebar {
-            height: 100vh;
-            max-height: 100vh;
-            display: flex;
-            flex-direction: column
-        }
-
-        #cart-items-container {
-            flex: 1;
-            overflow-y: auto
-        }
-
-        /* Dropdown shadows */
-        #categoryDropdown,
-        #accountDropdown {
-            box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
-            backdrop-filter: blur(10px)
-        }
-
-        /* Stable hover open: either :hover OR .open will show panel */
-        .dropdown-group {
-            position: relative
-        }
-
-        .dropdown-panel {
-            display: none;
-            pointer-events: auto
-        }
-
-        .dropdown-group:hover .dropdown-panel,
-        .dropdown-group.open .dropdown-panel {
-            display: block
-        }
-
-        /* Cart item animation */
-        .cart-item-enter {
-            animation: slideInRight .3s ease-out
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100px);
-                opacity: 0
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1
-            }
-        }
-
-        .category-item:hover {
-            transform: translateY(-2px);
-            transition: all .2s ease
-        }
-
-        /* Shared category icon look */
-        .cat-icon {
-            width: 2rem;
-            height: 2rem;
-            border-radius: .5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #FFF7ED
-        }
-
-        /* orange-50 */
-        .cat-icon i {
-            color: #F97316
-        }
-
-        /* orange-500 */
-
-        /* Responsive */
-        @media (max-width:768px) {
-            #cart-sidebar {
-                width: 100vw
-            }
-
-            #categoryDropdown {
-                width: 95vw;
-                left: 2.5vw !important;
-                max-width: none
-            }
-
-            #accountDropdown {
-                width: 280px;
-                right: 1rem !important;
-                left: auto !important
-            }
-
-            .container {
-                padding-left: .5rem;
-                padding-right: .5rem
-            }
-
-            input[type="text"] {
-                font-size: 16px
-            }
-        }
-
-        @media (max-width:640px) {
-            #categoryDropdown .grid-cols-2 {
-                grid-template-columns: 1fr
-            }
-
-            .container {
-                padding-left: .25rem;
-                padding-right: .25rem
-            }
-        }
-
-        /* Header scroll effect */
-        body {
-            padding-top: 80px; /* Adjust based on header height */
-        }
-
-        .header-hidden {
-            transform: translateY(-100%);
-        }
-
-        .header-visible {
-            transform: translateY(0);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('client_css/css/header-optimized.css') }}">
 
     <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between flex-nowrap gap-4">
@@ -640,7 +513,7 @@
             const isOutOfStock = (item.stock !== undefined && item.stock <= 0);
             return `<div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
-      <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
+    <img src="${item.type === 'simple' ? (item.thumbnail ? '/storage/' + item.thumbnail : '/images/default-product.jpg') : (item.image||'/images/default-product.jpg')}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
         <h4 class="font-medium text-gray-900 text-sm">
           <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">

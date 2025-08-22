@@ -5,7 +5,7 @@
 @section('content')
     <div class="bg-white py-4 shadow mb-8">
         <div class="items-center text-sm container mx-auto px-4">
-            <a href="{{ route('client.home') }}" class="text-gray-700 hover:text-custom-primary">Trang chủ</a>
+            <a href="{{ route('home') }}" class="text-gray-700 hover:text-custom-primary">Trang chủ</a>
             <span class="mx-2 text-gray-400">&gt;</span>
             <span class="font-semibold text-green-700">Liên hệ</span>
         </div>
@@ -191,7 +191,7 @@
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-gray-800">Địa chỉ</h3>
-                                        <p class="text-gray-600">Trường Cao đẳng FPT Polytechnic, Hà Nội</p>
+                                        <p class="text-gray-600">13 Trịnh Văn Bô, Nam Từ Liêm, Hà Nội</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center">
@@ -209,13 +209,14 @@
                         <div class="bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
                             <h2 class="text-2xl font-bold text-custom-primary mb-6">Kết nối với chúng tôi</h2>
                             <div class="flex space-x-4">
-                                <a href="#"
+                                <a href="https://www.facebook.com/profile.php?id=61579355081161"
                                     class="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition">
                                     <i class="fab fa-facebook-f"></i>
                                 </a>
-                                <a href="#"
-                                    class="bg-blue-400 text-white p-3 rounded-full hover:bg-blue-500 transition">
-                                    <i class="fab fa-twitter"></i>
+                                <a href="https://studio.youtube.com/channel/UCgjtfk_OjrfdyQNJphIMxmg"
+                                    class="bg-red-600 text-white p-3 rounded-full hover:bg-red-700 transition">
+                                    {{-- youtube --}}
+                                    <i class="fab fa-youtube"></i>
                                 </a>
                                 <a href="#"
                                     class="bg-pink-600 text-white p-3 rounded-full hover:bg-pink-700 transition">

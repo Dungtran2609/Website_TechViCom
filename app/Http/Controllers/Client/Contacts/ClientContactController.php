@@ -23,6 +23,8 @@ class ClientContactController extends Controller
         return view('client.contacts.index', compact('todayContactCount', 'hasReachedLimit'));
     }
 
+    
+
     public function store(Request $request)
     {
         // Kiểm tra giới hạn liên hệ

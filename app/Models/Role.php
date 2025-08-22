@@ -1,9 +1,11 @@
 <?php
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Role extends Model
 {
@@ -12,11 +14,14 @@ class Role extends Model
     ];
     use HasFactory, SoftDeletes;
 
+
     // Cho phép gán các thuộc tính
     protected $fillable = ['name', 'slug', 'status'];
 
+
     // Dùng soft delete
     protected $dates = ['deleted_at'];
+
 
     /**
      * Quan hệ nhiều-nhiều với bảng users qua bảng user_roles.
@@ -26,6 +31,7 @@ class Role extends Model
         return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id');
     }
 
+
     /**
      * Quan hệ nhiều-nhiều với bảng permissions qua bảng permission_role.
      */
@@ -33,6 +39,7 @@ class Role extends Model
     {
         return $this->belongsToMany(Permission::class, 'permission_role');
     }
+
 
     /**
      * Kiểm tra vai trò có một quyền cụ thể không
@@ -45,3 +52,6 @@ class Role extends Model
         return $this->permissions->contains('name', $permissionName);
     }
 }
+
+
+

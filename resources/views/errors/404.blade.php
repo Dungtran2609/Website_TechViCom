@@ -25,7 +25,7 @@
     <img src="https://media.giphy.com/media/14uQ3cOFteDaU/giphy.gif" alt="Not Found">
     <h1 class="display-4 text-warning fw-bold">404 - Không tìm thấy trang</h1>
     <p class="lead mb-4">Rất tiếc! Trang bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.</p>
-    <a href="{{ route('client.home') }}" class="btn btn-outline-primary">
+                    <a href="{{ route('home') }}" class="btn btn-outline-primary">
         <i class="bi bi-arrow-left-circle me-1"></i> Quay lại trang chủ
     </a>
 </div>

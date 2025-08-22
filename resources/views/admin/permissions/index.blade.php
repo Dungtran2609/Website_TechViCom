@@ -1,9 +1,11 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Phân quyền cho vai trò</h1>
     </div>
+
 
     @if ($roles->contains('name', 'user'))
         <div class="alert alert-info">
@@ -12,6 +14,7 @@
     @elseif (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+
 
     <!-- Bộ lọc tìm kiếm -->
     <form method="GET" action="{{ route('admin.permissions.index') }}" class="row g-3 mb-4 align-items-end">
@@ -36,14 +39,17 @@
         </div>
     </form>
 
+
     <form action="{{ route('admin.permissions.updateRoles') }}" method="POST">
         @csrf
+
 
         <div class="card">
             <div class="card-body">
                 <a href="{{ route('admin.permissions.list') }}" class="btn btn-success mb-3">
                     <i class="fas fa-list"></i> Danh sách phân quyền
                 </a>
+
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover text-center align-middle">
@@ -77,6 +83,7 @@
                     </table>
                 </div>
 
+
                 <div class="mt-4 text-end">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Cập nhật quyền
@@ -87,3 +94,6 @@
         </div>
     </form>
 @endsection
+
+
+

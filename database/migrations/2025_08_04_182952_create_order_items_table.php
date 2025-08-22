@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 
 return new class extends Migration {
-    public function up(): void {
+    public function up(): void
+    {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
@@ -22,7 +23,8 @@ return new class extends Migration {
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('order_items');
     }
 };

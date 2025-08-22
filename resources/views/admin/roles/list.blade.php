@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Quản lý vai trò</h1>
@@ -13,10 +14,12 @@
         </div>
     </div>
 
+
     <form method="GET" action="{{ route('admin.roles.index') }}" class="mb-4 d-flex gap-2 align-items-center">
         <input type="text" name="search" value="{{ request('search') }}" class="form-control w-25"
             placeholder="Tìm vai trò...">
         <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
+
 
         @if (request('search'))
             <a href="{{ route('admin.roles.index') }}" class="btn btn-secondary">
@@ -25,11 +28,13 @@
         @endif
     </form>
 
+
     @if (session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
         </div>
     @endif
+
 
     <div class="card">
         <div class="card-body">
@@ -100,3 +105,6 @@
         </div>
     </div>
 @endsection
+
+
+

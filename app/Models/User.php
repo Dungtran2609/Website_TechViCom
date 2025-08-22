@@ -1,5 +1,20 @@
 <?php
+
+
+
+
+
+
+
+
 namespace App\Models;
+
+
+
+
+
+
+
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -9,12 +24,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+
+
+
+
+
+
+
 class User extends Authenticatable
 {
     // Luôn eager load permissions khi lấy roles để tránh lỗi undefined method
     protected $with = ['roles.permissions'];
     // Thứ tự các Trait không quá quan trọng, nhưng đây là thứ tự phổ biến
     use  HasFactory, Notifiable, SoftDeletes, HasRoles;
+
+
+
+
+
+
+
+
     protected $fillable = [
         'name',
         'email',
@@ -26,10 +56,12 @@ class User extends Authenticatable
         'gender',
     ];
 
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
 
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -37,15 +69,40 @@ class User extends Authenticatable
         'birthday' => 'date', // Ép kiểu birthday về date
     ];
 
+
+
+
+
+
+
+
     protected $dates = ['deleted_at'];
+
+
+
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
+    }
+
+
+
 
     /**
      * Quan hệ nhiều-nhiều với Role.
      */
     public function roles(): BelongsToMany
     {
-    return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
     }
+
+
+
+
+
+
+
+
     /**
      * Quan hệ một-nhiều với UserAddress.
      */
@@ -53,6 +110,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAddress::class, 'user_id', 'id');
     }
+
+
+
+
 
 
 
@@ -69,6 +130,10 @@ class User extends Authenticatable
         // Giả sử cột tên vai trò trong bảng `roles` của bạn là 'name'. Nếu là 'slug', hãy đổi 'name' thành 'slug'.
         return $this->roles()->whereIn('name', $roles)->exists();
     }
+
+
+
+
 
 
 
@@ -92,19 +157,16 @@ class User extends Authenticatable
                 return true;
             }
         }
+
+
+
+
         return false;
     }
+
 
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id', 'id');
-    }
-
-    /**
-     * Quan hệ một-nhiều với FavoriteProduct.
-     */
-    public function favoriteProducts()
-    {
-        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
     }
 }

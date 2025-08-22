@@ -1,10 +1,13 @@
 <?php
 
+
 namespace App\Http\Middleware;
+
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 
 class CheckRole
 {
@@ -22,18 +25,25 @@ class CheckRole
     {
         $user = Auth::user();
 
+
         if (!$user) {
             return redirect()->route('login');
         }
 
+
         // Lấy danh sách slug các vai trò của người dùng
         $userRoles = $user->roles->pluck('slug')->toArray();
+
 
         // Nếu không có vai trò nào trùng khớp với danh sách yêu cầu
         if (!array_intersect($roles, $userRoles)) {
             abort(403, 'Bạn không có quyền truy cập. Cần vai trò: ' . implode(', ', $roles));
         }
 
+
         return $next($request);
     }
 }
+
+
+

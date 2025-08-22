@@ -149,6 +149,10 @@ class User extends Authenticatable
     public function hasPermission(string $permissionName): bool
     {
         foreach ($this->roles as $role) {
+            // Chỉ tính quyền từ vai trò đang hoạt động
+            if (isset($role->status) && !$role->status) {
+                continue;
+            }
             if ($role->permissions->contains('name', $permissionName)) {
                 return true;
             }

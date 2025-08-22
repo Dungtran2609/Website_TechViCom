@@ -11,9 +11,6 @@
             <a href="{{ route('admin.roles.trashed') }}" class="btn btn-danger">
                 <i class="fas fa-trash"></i> Thùng rác
             </a>
-            <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Thêm vai trò
-            </a>
         </div>
     </div>
 

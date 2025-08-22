@@ -79,8 +79,12 @@ Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
 // Hóa đơn (Invoice) - phía client
 Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('client.invoice.index');
-Route::post('/invoice/send-verification-code', [App\Http\Controllers\Client\InvoiceController::class, 'sendVerificationCode'])->name('client.invoice.send-code');
-Route::post('/invoice/verify-code', [App\Http\Controllers\Client\InvoiceController::class, 'verifyCode'])->name('client.invoice.verify-code');
+Route::post('/invoice/send-verification-code', [App\Http\Controllers\Client\InvoiceController::class, 'sendVerificationCode'])
+    ->name('client.invoice.send-code')
+    ->middleware('invoice.spam');
+Route::post('/invoice/verify-code', [App\Http\Controllers\Client\InvoiceController::class, 'verifyCode'])
+    ->name('client.invoice.verify-code')
+    ->middleware('invoice.spam');
 Route::get('/invoice/order/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
 Route::get('/invoice/download/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
 

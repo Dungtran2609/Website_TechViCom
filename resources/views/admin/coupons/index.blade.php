@@ -1,46 +1,73 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold">Danh sách mã giảm giá</h2>
-        <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
-            + Thêm mã mới
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Danh sách mã giảm giá</h1>
+    <a href="{{ route('admin.coupons.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Thêm mã mới
+    </a>
+</div>
+
+<form action="{{ route('admin.coupons.index') }}" method="GET" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <input type="text" name="keyword" value="{{ request('keyword') }}"
+               class="form-control" placeholder="Nhập mã cần tìm...">
+    </div>
+    <div class="col-md-2">
+        <select name="discount_type" class="form-select">
+            <option value="">-- Kiểu giảm --</option>
+            <option value="percent" {{ request('discount_type') == 'percent' ? 'selected' : '' }}>Phần trăm</option>
+            <option value="fixed" {{ request('discount_type') == 'fixed' ? 'selected' : '' }}>Cố định</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="apply_type" class="form-select">
+            <option value="">-- Kiểu áp dụng --</option>
+            <option value="all" {{ request('apply_type') == 'all' ? 'selected' : '' }}>Tất cả</option>
+            <option value="product" {{ request('apply_type') == 'product' ? 'selected' : '' }}>Theo sản phẩm</option>
+            <option value="category" {{ request('apply_type') == 'category' ? 'selected' : '' }}>Theo danh mục</option>
+            <option value="user" {{ request('apply_type') == 'user' ? 'selected' : '' }}>Theo người dùng</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="status" class="form-select">
+            <option value="">-- Trạng thái --</option>
+            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Kích hoạt</option>
+            <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Tạm dừng</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" placeholder="Từ ngày">
+    </div>
+    <div class="col-md-1 d-flex gap-1">
+        <button type="submit" class="btn btn-outline-primary" title="Tìm kiếm">
+            <i class="fas fa-search"></i>
+        </button>
+        <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary" title="Làm mới">
+            <i class="fas fa-times"></i>
         </a>
     </div>
+</form>
 
-    <form action="{{ route('admin.coupons.index') }}" method="GET" class="row g-2 mb-4">
-        <div class="col-md-4">
-            <input type="text" name="keyword" value="{{ request('keyword') }}"
-                   class="form-control" placeholder="Nhập mã cần tìm...">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-success">Tìm kiếm</button>
-        </div>
-        @if(request('keyword'))
-        <div class="col-auto">
-            <a href="{{ route('admin.coupons.index') }}" class="btn btn-link">Xoá tìm kiếm</a>
-        </div>
-        @endif
-    </form>
-
-    <div class="table-responsive">
-        <table class="simple-table">
-            <thead>
-                <tr>
-                    <th style="width: 13%">ID</th>
-                    <th style="width: 14%">Mã</th>
-                    <th style="width: 14%">Kiểu giảm</th>
-                    <th style="width: 14%">Kiểu áp dụng</th>
-                    <th style="width: 10%">Giá trị</th>
-                    <th style="width: 10%">Ngày bắt đầu</th>
-                    <th style="width: 10%">Ngày kết thúc</th>
-                    <th style="width: 7%">Trạng thái</th>
-                    <th style="width: 13%">Hành động</th>
-                </tr>
-            </thead>
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle table-hover table-centered">
+                <thead class="bg-light-subtle">
+                    <tr>
+                        <th>STT</th>
+                        <th>Mã</th>
+                        <th>Kiểu giảm</th>
+                        <th>Kiểu áp dụng</th>
+                        <th>Giá trị</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày kết thúc</th>
+                        <th>Trạng thái</th>
+                        <th width="120px">Hành động</th>
+                    </tr>
+                </thead>
             <tbody>
-                @foreach ($coupons as $coupon)
+                @forelse ($coupons as $coupon)
                     @php
                         $typeMapping = ['percent' => 'Phần trăm', 'fixed' => 'Cố định'];
                         $applyTypeMapping = [
@@ -50,151 +77,81 @@
                             'user' => 'Theo người dùng',
                         ];
                     @endphp
-                    <tr style="background: #fff; {{ $coupon->trashed() ? 'opacity:0.6;' : '' }}">
-                        <td><span class="badge bg-secondary">{{ $coupon->id }}</span></td>
-                        <td style="font-weight: 500; color: #222;">{{ $coupon->code }}</td>
-                        <td>{{ $typeMapping[$coupon->discount_type] ?? 'Không xác định' }}</td>
-                        <td>{{ $applyTypeMapping[$coupon->apply_type] ?? $coupon->apply_type }}</td>
-                        <td>{{ $coupon->discount_type === 'percent' ? $coupon->value . '%' : number_format($coupon->value, 0, ',', '.') . '₫' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($coupon->end_date)->format('d/m/Y') }}</td>
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>
+                            <span class="text-dark fw-medium">{{ $coupon->code }}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ $typeMapping[$coupon->discount_type] ?? 'Không xác định' }}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ $applyTypeMapping[$coupon->apply_type] ?? $coupon->apply_type }}</span>
+                        </td>
+                        <td>
+                            <span class="text-primary fw-medium">
+                                {{ $coupon->discount_type === 'percent' ? $coupon->value . '%' : number_format($coupon->value, 0, ',', '.') . '₫' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ \Carbon\Carbon::parse($coupon->start_date)->format('d/m/Y') }}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ \Carbon\Carbon::parse($coupon->end_date)->format('d/m/Y') }}</span>
+                        </td>
                         <td>
                             @if ($coupon->status)
-                                <span class="status-active">Kích hoạt</span>
+                                <span class="badge bg-success">Kích hoạt</span>
                             @else
-                                <span class="status-inactive">Tạm dừng</span>
+                                <span class="badge bg-warning text-dark">Tạm dừng</span>
                             @endif
                         </td>
                         <td>
-                            <div class="d-flex gap-2 justify-content-center align-items-center">
+                            <div class="d-flex gap-1">
                                 <a href="{{ route('admin.coupons.show', $coupon->id) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
-                                    <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
+                                    <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="{{ route('admin.coupons.edit', $coupon->id) }}" class="btn btn-light btn-sm" title="Sửa mã giảm giá">
-                                    <iconify-icon icon="solar:pen-broken" class="align-middle fs-18"></iconify-icon>
+                                    <i class="fas fa-edit"></i>
                                 </a>
                                 @if(!$coupon->trashed())
-                                    <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Bạn chắc chắn muốn xoá mã này?');">
+                                    <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xoá mã này?');">
                                         @csrf
                                         @method('DELETE')
                                         <input type="hidden" name="id" value="{{ $coupon->id }}">
-                                        <button type="submit" class="btn btn-light btn-sm" title="Xoá">
-                                            <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle fs-18 text-danger"></iconify-icon>
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Xoá">
+                                            <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
                                 @endif
                             </div>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-ticket-alt fa-2x mb-3"></i>
+                                <p>Không có mã giảm giá nào</p>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
+            </div>
     </div>
-        <div class="d-flex justify-content-end mb-2">
-            <a href="{{ route('admin.coupons.trash') }}" class="btn btn-outline-danger btn-sm">
-                <iconify-icon icon="solar:trash-bin-trash-broken" class="align-middle"></iconify-icon> Thùng rác
-            </a>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="{{ route('admin.coupons.trash') }}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-trash me-1"></i> Thùng rác
+                </a>
+            </div>
+            <div>
+                <!-- Pagination placeholder -->
+            </div>
         </div>
-@push('styles')
-<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-<style>
-    .simple-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background: #fafbfc;
-        border-radius: 14px;
-        overflow: hidden;
-        font-size: 15px;
-        box-shadow: 0 2px 8px 0 rgba(0,0,0,0.03);
-    }
-    .simple-table thead th {
-        font-weight: 600;
-        background: #f6f6f6;
-        color: #222;
-        border-bottom: 1.5px solid #ececec;
-        padding: 12px 10px;
-        text-align: left;
-    }
-    .simple-table tbody td {
-        padding: 10px 10px;
-        border-bottom: 1px solid #f0f0f0;
-        color: #222;
-        background: #fff;
-        vertical-align: middle;
-    }
-    .simple-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-    .simple-table tbody tr:hover {
-        background: #f7f7fa;
-    }
-    .status-active {
-        background: #ffe7a3;
-        color: #b8860b;
-        border-radius: 6px;
-        padding: 4px 12px;
-        font-weight: 500;
-        font-size: 14px;
-        display: inline-block;
-    }
-    .status-inactive {
-        background: #f8d7da;
-        color: #b02a37;
-        border-radius: 6px;
-        padding: 4px 12px;
-        font-weight: 500;
-        font-size: 14px;
-        display: inline-block;
-    }
-    .action-group {
-        display: flex;
-        gap: 6px;
-    }
-    .action-btn {
-        border: none;
-        outline: none;
-        background: #f1f3f6;
-        color: #222;
-        border-radius: 8px;
-        padding: 5px 13px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.15s;
-        margin: 0;
-        display: inline-block;
-        text-decoration: none;
-    }
-    .action-btn:hover, .action-btn:focus {
-        background: #e2e6ea;
-        color: #111;
-    }
-    .action-edit {
-        background: #e7f1ff;
-        color: #1766c2;
-    }
-    .action-edit:hover {
-        background: #d0e6ff;
-        color: #0d3a6b;
-    }
-    .action-delete {
-        background: #fbeaea;
-        color: #c82333;
-    }
-    .action-delete:hover {
-        background: #f5c6cb;
-        color: #721c24;
-    }
-    .action-restore {
-        background: #eaffea;
-        color: #218838;
-    }
-    .action-restore:hover {
-        background: #c3e6cb;
-        color: #155724;
-    }
-</style>
-@endpush
+    </div>
 </div>
 @endsection

@@ -160,88 +160,6 @@
     </div>
 </div>
 
-<!-- Chi tiết sản phẩm -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0">Chi tiết sản phẩm</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table align-middle table-hover table-centered">
-                <thead class="bg-light-subtle">
-                    <tr>
-                        <th>Ảnh</th>
-                        <th>Sản phẩm</th>
-                        <th>Thương hiệu</th>
-                        <th>Danh mục</th>
-                        <th>Biến thể</th>
-                        <th>Tồn kho</th>
-                        <th>Số lượng</th>
-                        <th>Giá</th>
-                        <th>Tổng</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($orderData['order_items'] as $item)
-                        <tr>
-                            <td style="width:80px;">
-                                @php
-                                    $imageUrl = null;
-                                    if (!empty($item['image_product_url'])) {
-                                        $imageUrl = $item['image_product_url'];
-                                    } elseif (!empty($item['product_thumbnail'])) {
-                                        $imageUrl = asset('storage/' . ltrim($item['product_thumbnail'], '/'));
-                                    }
-                                @endphp
-                                @if($imageUrl)
-                                    <img src="{{ $imageUrl }}" class="img-fluid rounded"
-                                         style="width:60px; height:60px; object-fit:cover;" alt="{{ $item['name_product'] }}"
-                                         onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                                @else
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                         style="width:60px; height:60px;">
-                                        <span class="text-muted small">Không có ảnh</span>
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                <div>
-                                    <h6 class="mb-0 text-dark fw-medium">{{ $item['name_product'] }}</h6>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="text-muted">{{ $item['brand_name'] }}</span>
-                            </td>
-                            <td>
-                                <span class="text-muted">{{ $item['category_name'] }}</span>
-                            </td>
-                            <td>
-                                @foreach($item['attributes'] as $attr)
-                                    <span class="badge bg-info text-dark me-1">{{ $attr['name'] }}: {{ $attr['value'] }}</span>
-                                @endforeach
-                            </td>
-                            <td>
-                                <span class="text-muted">{{ $item['stock'] }}</span>
-                            </td>
-                            <td>
-                                <span class="text-dark fw-medium">{{ $item['quantity'] }}</span>
-                            </td>
-                            <td>
-                                <span class="text-muted">{{ number_format($item['price'], 0) }} VND</span>
-                            </td>
-                            <td>
-                                <span class="text-dark fw-medium">{{ number_format($item['total'], 0) }} VND</span>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-
-        
 <!-- Hành động -->
 <div class="card">
     <div class="card-header">
@@ -334,4 +252,85 @@
         </div>
     </div>
 </div>
+
+<!-- Chi tiết sản phẩm -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Chi tiết sản phẩm</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle table-hover table-centered">
+                <thead class="bg-light-subtle">
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Sản phẩm</th>
+                        <th>Thương hiệu</th>
+                        <th>Danh mục</th>
+                        <th>Biến thể</th>
+                        <th>Tồn kho</th>
+                        <th>Số lượng</th>
+                        <th>Giá</th>
+                        <th>Tổng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($orderData['order_items'] as $item)
+                        <tr>
+                            <td style="width:80px;">
+                                @php
+                                    $imageUrl = null;
+                                    if (!empty($item['image_product_url'])) {
+                                        $imageUrl = $item['image_product_url'];
+                                    } elseif (!empty($item['product_thumbnail'])) {
+                                        $imageUrl = asset('storage/' . ltrim($item['product_thumbnail'], '/'));
+                                    }
+                                @endphp
+                                @if($imageUrl)
+                                    <img src="{{ $imageUrl }}" class="img-fluid rounded"
+                                         style="width:60px; height:60px; object-fit:cover;" alt="{{ $item['name_product'] }}"
+                                         onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                @else
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                         style="width:60px; height:60px;">
+                                        <span class="text-muted small">Không có ảnh</span>
+                                    </div>
+                                @endif
+                            </td>
+                            <td>
+                                <div>
+                                    <h6 class="mb-0 text-dark fw-medium">{{ $item['name_product'] }}</h6>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ $item['brand_name'] }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ $item['category_name'] }}</span>
+                            </td>
+                            <td>
+                                @foreach($item['attributes'] as $attr)
+                                    <span class="badge bg-info text-dark me-1">{{ $attr['name'] }}: {{ $attr['value'] }}</span>
+                                @endforeach
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ $item['stock'] }}</span>
+                            </td>
+                            <td>
+                                <span class="text-dark fw-medium">{{ $item['quantity'] }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ number_format($item['price'], 0) }} VND</span>
+                            </td>
+                            <td>
+                                <span class="text-dark fw-medium">{{ number_format($item['total'], 0) }} VND</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 @endsection

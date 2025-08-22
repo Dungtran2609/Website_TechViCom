@@ -20,7 +20,6 @@ class HomeController extends Controller
         $banners = Banner::where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->orderBy('stt')
-            ->limit(3)
             ->get();
 
         // Sản phẩm nổi bật: gắn cờ is_featured, trạng thái active

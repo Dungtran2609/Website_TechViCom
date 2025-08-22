@@ -16,6 +16,8 @@ class AdminPromotionController extends Controller
     public function index()
     {
         $query = Promotion::with(['coupons']);
+        
+        // Filter by keyword
         if (request('q')) {
             $q = request('q');
             $query->where(function($sub) use ($q) {
@@ -25,7 +27,23 @@ class AdminPromotionController extends Controller
                     ->orWhere('id', $q);
             });
         }
-        $promotions = $query->latest()->paginate(15)->appends(['q' => request('q')]);
+
+        // Filter by flash type
+        if (request('flash_type')) {
+            $query->where('flash_type', request('flash_type'));
+        }
+
+        // Filter by status
+        if (request('status') !== null && request('status') !== '') {
+            $query->where('status', request('status'));
+        }
+
+        // Filter by date from
+        if (request('date_from')) {
+            $query->where('start_date', '>=', request('date_from'));
+        }
+
+        $promotions = $query->latest()->paginate(15)->appends(request()->query());
         return view('admin.promotions.index', compact('promotions'));
     }
 

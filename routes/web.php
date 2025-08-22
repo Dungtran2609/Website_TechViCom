@@ -533,7 +533,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
     });
     // Product Comments
-    Route::prefix('product-comments')->name('products.comments.')->group(function () {
+    Route::prefix('products/comments')->name('products.comments.')->group(function () {
         Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
         Route::get('/', [ProductCommentAdminController::class, 'index'])->name('index');
         Route::get('/{id}', [ProductCommentAdminController::class, 'show'])->name('show');
@@ -543,6 +543,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
         Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
         Route::patch('/{id}/toggle-hidden', [ProductCommentAdminController::class, 'toggleHidden'])->name('toggle-hidden');
+        Route::post('/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('reply');
     });
 
 
@@ -634,12 +635,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             Route::resource('values', AdminAttributeValueController::class)->parameters(['values' => 'value']);
         });
 
-        Route::prefix('comments')->name('comments.')->group(function () {
-            Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
-            Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
-            Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
-            Route::resource('/', ProductCommentAdminController::class)->parameters(['' => 'id']);
-        });
+
     });
 
     // Orders Management
@@ -689,7 +685,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 
 Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->name('webhook.payos');
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
-Route::post('/product-comments/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('products.comments.reply');
+
 
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);

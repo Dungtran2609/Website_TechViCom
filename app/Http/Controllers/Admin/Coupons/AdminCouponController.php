@@ -24,17 +24,38 @@ class AdminCouponController extends Controller
         return view('admin.coupons.trash', compact('coupons'));
     }
     public function index(Request $request)
-{
-    $query = Coupon::latest();
+    {
+        $query = Coupon::latest();
 
-    if ($request->filled('keyword')) {
-        $query->where('code', 'like', '%' . $request->keyword . '%');
+        // Filter by keyword
+        if ($request->filled('keyword')) {
+            $query->where('code', 'like', '%' . $request->keyword . '%');
+        }
+
+        // Filter by discount type
+        if ($request->filled('discount_type')) {
+            $query->where('discount_type', $request->discount_type);
+        }
+
+        // Filter by apply type
+        if ($request->filled('apply_type')) {
+            $query->where('apply_type', $request->apply_type);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date from
+        if ($request->filled('date_from')) {
+            $query->where('start_date', '>=', $request->date_from);
+        }
+
+        $coupons = $query->get();
+
+        return view('admin.coupons.index', compact('coupons'));
     }
-
-    $coupons = $query->get();
-
-    return view('admin.coupons.index', compact('coupons'));
-}
 
 
     public function create()

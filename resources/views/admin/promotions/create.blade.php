@@ -1,216 +1,410 @@
                 // ...existing code...
-@extends('admin.layouts.app')
-@section('title', 'Tạo chương trình khuyến mãi')
+                @extends('admin.layouts.app')
 
-@section('content')
-<div class="container py-4">
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <strong>Thành công!</strong> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-        </div>
-    @endif
-    <h1 class="h4 fw-bold mb-4 text-dark">➕ Tạo chương trình khuyến mãi</h1>
-
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <form action="{{ route('admin.promotions.store') }}" method="POST">
-                @csrf
-
-                {{-- Coupon selection removed --}}
-
-                {{-- Tên chương trình --}}
-                <div class="mb-3">
-                    <label for="name" class="form-label fw-semibold">Tên chương trình</label>
-                    <input type="text" name="name" id="name" class="form-control" required>
-                </div>
-
-                {{-- Mô tả --}}
-                <div class="mb-3">
-                    <label for="description" class="form-label fw-semibold">Mô tả</label>
-                    <textarea name="description" id="description" rows="3" class="form-control"></textarea>
-                </div>
-
-                {{-- Kiểu áp dụng --}}
-                <div class="mb-3">
-                    <label for="flash_type" class="form-label fw-semibold">Kiểu áp dụng</label>
-                    <select name="flash_type" id="flash_type" class="form-select" required>
-                        <option value="all">Toàn bộ sản phẩm</option>
-                        <option value="category">Theo danh mục</option>
-                        <option value="flash_sale">Theo sản phẩm (Flash Sale)</option>
-                    </select>
-                </div>
-
-                {{-- Chọn danh mục --}}
-                <div class="mb-3" id="category-select" style="display:none;">
-                    <label class="form-label fw-semibold">Chọn danh mục</label>
-                    <div class="mb-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectAllCategories(true)">Chọn tất cả</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllCategories(false)">Bỏ chọn tất cả</button>
+                @section('content')
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1>Tạo chương trình khuyến mãi</h1>
+                        <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Quay lại
+                        </a>
                     </div>
-                    <div class="border rounded p-2 mb-2" style="max-height:220px;overflow:auto;">
-                        @foreach($categories as $category)
-                            <div class="form-check">
-                                <input class="form-check-input category-checkbox" type="checkbox" name="categories[]" id="category_{{ $category->id }}" value="{{ $category->id }}">
-                                <label class="form-check-label" for="category_{{ $category->id }}">{{ $category->name }}</label>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="mb-2">
-                        <label for="category_discount_value" class="form-label fw-semibold">Giảm giá (%) cho tất cả sản phẩm thuộc danh mục</label>
-                        <input type="number" min="1" max="100" step="1" class="form-control" name="category_discount_value" id="category_discount_value" value="{{ old('category_discount_value', 10) }}" placeholder="Nhập % giảm giá (ví dụ: 10)">
-                    </div>
-                </div>
-                <script>
-                function selectAllCategories(checked) {
-                    document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = checked);
-                }
-                </script>
 
-                {{-- Chọn sản phẩm --}}
-                <div class="mb-3" id="product-select" style="display:none;">
-                    <label class="form-label fw-semibold">Chọn sản phẩm</label>
-                    <div class="mb-2">
-                        <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="selectAllProducts(true)">Chọn tất cả</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllProducts(false)">Bỏ chọn tất cả</button>
-                    </div>
-                    <div class="border rounded p-2" style="max-height:220px;overflow:auto;">
-                        @foreach($products as $product)
-                            <div class="form-check d-flex align-items-center mb-2">
-                                <input class="form-check-input product-checkbox me-2" type="checkbox" name="products[]" id="product_{{ $product->id }}" value="{{ $product->id }}">
-                                <label class="form-check-label me-3" for="product_{{ $product->id }}">{{ $product->name }}</label>
-                                <input type="number" step="1000" min="0" class="form-control form-control-sm sale-price-input" name="sale_prices[{{ $product->id }}]" placeholder="Giá flash sale" style="width:130px; display:none;">
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                <script>
-                function selectAllProducts(checked) {
-                    document.querySelectorAll('.product-checkbox').forEach(cb => {
-                        cb.checked = checked;
-                        cb.dispatchEvent(new Event('change'));
-                    });
-                }
-                // Show sale price input if flash_type is flash_sale
-                function updateSalePriceInputs() {
-                    let flashType = document.getElementById('flash_type') ? document.getElementById('flash_type').value : '';
-                    document.querySelectorAll('.sale-price-input').forEach(function(input) {
-                        input.style.display = (flashType === 'flash_sale') ? 'inline-block' : 'none';
-                    });
-                }
-                // Hiển thị danh sách sản phẩm đã chọn
-                function updateSelectedProductsList() {
-                    let checked = Array.from(document.querySelectorAll('.product-checkbox:checked'));
-                    let ul = document.getElementById('selected-products-ul');
-                    let listDiv = document.getElementById('selected-products-list');
-                    ul.innerHTML = '';
-                    if (checked.length > 0) {
-                        checked.forEach(cb => {
-                            let name = cb.closest('.form-check').querySelector('label').innerText;
-                            let li = document.createElement('li');
-                            li.className = 'list-group-item';
-                            li.innerText = name;
-                            ul.appendChild(li);
-                        });
-                        listDiv.style.display = 'block';
-                    } else {
-                        listDiv.style.display = 'none';
-                    }
-                }
-                // Hiển thị sản phẩm thuộc danh mục đã chọn
-                function updateCategoryProductsList() {
-                    let checked = Array.from(document.querySelectorAll('.category-checkbox:checked'));
-                    let ul = document.getElementById('category-products-ul');
-                    let listDiv = document.getElementById('category-products-list');
-                    ul.innerHTML = '';
-                    if (checked.length > 0) {
-                        // Lấy id danh mục
-                        let categoryIds = checked.map(cb => cb.value);
-                        // Gọi ajax lấy sản phẩm theo danh mục
-                        fetch('/admin/ajax/products-by-categories?ids=' + categoryIds.join(','))
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data && data.length > 0) {
-                                    data.forEach(prod => {
-                                        let li = document.createElement('li');
-                                        li.className = 'list-group-item';
-                                        li.innerText = prod.name;
-                                        ul.appendChild(li);
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    <div class="card">
+                        <div class="card-body">
+                            <form action="{{ route('admin.promotions.store') }}" method="POST">
+                                @csrf
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{-- Tên chương trình --}}
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Tên chương trình <span
+                                                    class="text-danger">*</span> <small class="text-muted">(Tối thiểu 3 ký
+                                                    tự)</small></label>
+                                            <input type="text" name="name" id="name"
+                                                class="form-control @error('name') is-invalid @enderror"
+                                                value="{{ old('name') }}" minlength="3" maxlength="255"
+                                                placeholder="Nhập tên chương trình khuyến mãi...">
+                                            @error('name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{-- Kiểu áp dụng --}}
+                                        <div class="mb-3">
+                                            <label for="flash_type" class="form-label">Kiểu áp dụng <span
+                                                    class="text-danger">*</span></label>
+                                            <select name="flash_type" id="flash_type"
+                                                class="form-select @error('flash_type') is-invalid @enderror">
+                                                <option value="">-- Chọn kiểu áp dụng --</option>
+                                                <option value="all" {{ old('flash_type') == 'all' ? 'selected' : '' }}>
+                                                    Toàn bộ sản phẩm</option>
+                                                <option value="category"
+                                                    {{ old('flash_type') == 'category' ? 'selected' : '' }}>Theo danh mục
+                                                </option>
+                                                <option value="flash_sale"
+                                                    {{ old('flash_type') == 'flash_sale' ? 'selected' : '' }}>Theo sản phẩm
+                                                    (Flash Sale)</option>
+                                            </select>
+                                            @error('flash_type')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Mô tả --}}
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Mô tả <small class="text-muted">(Tối đa 1000
+                                            ký tự)</small></label>
+                                    <textarea name="description" id="description" rows="3"
+                                        class="form-control @error('description') is-invalid @enderror" maxlength="1000"
+                                        placeholder="Nhập mô tả chương trình khuyến mãi...">{{ old('description') }}</textarea>
+                                    <div class="form-text">
+                                        <span id="char-count">0</span>/1000 ký tự
+                                    </div>
+                                    @error('description')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- Chọn danh mục --}}
+                                <div class="mb-3" id="category-select" style="display:none;">
+                                    <label class="form-label">Chọn danh mục <span class="text-danger">*</span></label>
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                            onclick="selectAllCategories(true)">
+                                            <i class="fas fa-check-double me-1"></i>Chọn tất cả
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="selectAllCategories(false)">
+                                            <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
+                                        </button>
+                                    </div>
+                                    <div class="border rounded p-3 mb-3 @error('categories') border-danger @enderror"
+                                        style="max-height:220px;overflow:auto;">
+                                        <div class="row">
+                                            @foreach ($categories as $category)
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input category-checkbox" type="checkbox"
+                                                            name="categories[]" id="category_{{ $category->id }}"
+                                                            value="{{ $category->id }}"
+                                                            {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}>
+                                                        <label class="form-check-label"
+                                                            for="category_{{ $category->id }}">{{ $category->name }}</label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @error('categories')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
+                                    <div class="mb-2">
+                                        <label for="category_discount_value" class="form-label">Giảm giá (%) cho tất cả sản
+                                            phẩm thuộc danh mục</label>
+                                        <input type="number" min="1" max="100" step="1"
+                                            class="form-control @error('category_discount_value') is-invalid @enderror"
+                                            name="category_discount_value" id="category_discount_value"
+                                            value="{{ old('category_discount_value', 10) }}"
+                                            placeholder="Nhập % giảm giá (ví dụ: 10)">
+                                        @error('category_discount_value')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <script>
+                                    function selectAllCategories(checked) {
+                                        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = checked);
+                                    }
+                                </script>
+
+                                {{-- Chọn sản phẩm --}}
+                                <div class="mb-3" id="product-select" style="display:none;">
+                                    <label class="form-label">Chọn sản phẩm <span class="text-danger">*</span></label>
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                            onclick="selectAllProducts(true)">
+                                            <i class="fas fa-check-double me-1"></i>Chọn tất cả
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="selectAllProducts(false)">
+                                            <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
+                                        </button>
+                                    </div>
+                                    <div class="border rounded p-3 @error('products') border-danger @enderror"
+                                        style="max-height:220px;overflow:auto;">
+                                        <div class="row">
+                                            @foreach ($products as $product)
+                                                <div class="col-md-12 mb-2">
+                                                    <div class="form-check d-flex align-items-center">
+                                                        <input class="form-check-input product-checkbox me-2"
+                                                            type="checkbox" name="products[]"
+                                                            id="product_{{ $product->id }}" value="{{ $product->id }}"
+                                                            {{ in_array($product->id, old('products', [])) ? 'checked' : '' }}>
+                                                        <label class="form-check-label me-3 flex-grow-1"
+                                                            for="product_{{ $product->id }}">{{ $product->name }}</label>
+                                                        <input type="number" step="1000" min="0"
+                                                            class="form-control form-control-sm sale-price-input"
+                                                            name="sale_prices[{{ $product->id }}]"
+                                                            placeholder="Giá flash sale"
+                                                            style="width:130px; display:none;"
+                                                            value="{{ old('sale_prices.' . $product->id) }}">
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @error('products')
+                                        <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <script>
+                                    function selectAllProducts(checked) {
+                                        document.querySelectorAll('.product-checkbox').forEach(cb => {
+                                            cb.checked = checked;
+                                            cb.dispatchEvent(new Event('change'));
+                                        });
+                                    }
+                                    // Show sale price input if flash_type is flash_sale
+                                    function updateSalePriceInputs() {
+                                        let flashType = document.getElementById('flash_type') ? document.getElementById('flash_type').value : '';
+                                        document.querySelectorAll('.sale-price-input').forEach(function(input) {
+                                            input.style.display = (flashType === 'flash_sale') ? 'inline-block' : 'none';
+                                        });
+                                    }
+                                    // Hiển thị danh sách sản phẩm đã chọn
+                                    function updateSelectedProductsList() {
+                                        let checked = Array.from(document.querySelectorAll('.product-checkbox:checked'));
+                                        let ul = document.getElementById('selected-products-ul');
+                                        let listDiv = document.getElementById('selected-products-list');
+                                        ul.innerHTML = '';
+                                        if (checked.length > 0) {
+                                            checked.forEach(cb => {
+                                                let name = cb.closest('.form-check').querySelector('label').innerText;
+                                                let li = document.createElement('li');
+                                                li.className = 'list-group-item';
+                                                li.innerText = name;
+                                                ul.appendChild(li);
+                                            });
+                                            listDiv.style.display = 'block';
+                                        } else {
+                                            listDiv.style.display = 'none';
+                                        }
+                                    }
+                                    // Hiển thị sản phẩm thuộc danh mục đã chọn
+                                    function updateCategoryProductsList() {
+                                        let checked = Array.from(document.querySelectorAll('.category-checkbox:checked'));
+                                        let ul = document.getElementById('category-products-ul');
+                                        let listDiv = document.getElementById('category-products-list');
+                                        ul.innerHTML = '';
+                                        if (checked.length > 0) {
+                                            // Lấy id danh mục
+                                            let categoryIds = checked.map(cb => cb.value);
+                                            // Gọi ajax lấy sản phẩm theo danh mục
+                                            fetch('/admin/ajax/products-by-categories?ids=' + categoryIds.join(','))
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data && data.length > 0) {
+                                                        data.forEach(prod => {
+                                                            let li = document.createElement('li');
+                                                            li.className = 'list-group-item';
+                                                            li.innerText = prod.name;
+                                                            ul.appendChild(li);
+                                                        });
+                                                        listDiv.style.display = 'block';
+                                                    } else {
+                                                        listDiv.style.display = 'none';
+                                                    }
+                                                });
+                                        } else {
+                                            listDiv.style.display = 'none';
+                                        }
+                                    }
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        // If you have a flash_type select, listen to its change
+                                        let flashTypeSelect = document.getElementById('flash_type');
+                                        if (flashTypeSelect) {
+                                            flashTypeSelect.addEventListener('change', updateSalePriceInputs);
+                                            updateSalePriceInputs();
+                                        }
+                                        // Show/hide sale price input only for checked products
+                                        document.querySelectorAll('.product-checkbox').forEach(function(cb) {
+                                            cb.addEventListener('change', function() {
+                                                updateSelectedProductsList();
+                                                let saleInput = this.closest('.form-check').querySelector('.sale-price-input');
+                                                if (saleInput) {
+                                                    saleInput.style.display = (this.checked && (flashTypeSelect &&
+                                                        flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
+                                                }
+                                            });
+                                        });
+                                        document.querySelectorAll('.category-checkbox').forEach(function(cb) {
+                                            cb.addEventListener('change', function() {
+                                                updateCategoryProductsList();
+                                            });
+                                        });
                                     });
-                                    listDiv.style.display = 'block';
-                                } else {
-                                    listDiv.style.display = 'none';
+                                </script>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{-- Ngày bắt đầu --}}
+                                        <div class="mb-3">
+                                            <label for="start_date" class="form-label">Ngày bắt đầu <span
+                                                    class="text-danger">*</span> <small class="text-muted">(Từ hôm
+                                                    nay)</small></label>
+                                            <input type="datetime-local" name="start_date" id="start_date"
+                                                class="form-control @error('start_date') is-invalid @enderror"
+                                                value="{{ old('start_date') }}" min="{{ date('Y-m-d\TH:i') }}">
+                                            @error('start_date')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{-- Ngày kết thúc --}}
+                                        <div class="mb-3">
+                                            <label for="end_date" class="form-label">Ngày kết thúc <span
+                                                    class="text-danger">*</span> <small class="text-muted">(Sau ngày bắt
+                                                    đầu)</small></label>
+                                            <input type="datetime-local" name="end_date" id="end_date"
+                                                class="form-control @error('end_date') is-invalid @enderror"
+                                                value="{{ old('end_date') }}">
+                                            @error('end_date')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Trạng thái --}}
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Trạng thái <span
+                                            class="text-danger">*</span></label>
+                                    <select name="status" id="status"
+                                        class="form-select @error('status') is-invalid @enderror">
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Kích hoạt
+                                        </option>
+                                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Ẩn</option>
+                                    </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                {{-- Action --}}
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i> Huỷ
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i> Tạo chương trình
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Script hiển thị select theo type và validation ngày --}}
+                    <script>
+                        document.getElementById('flash_type').addEventListener('change', function() {
+                            document.getElementById('category-select').style.display = this.value === 'category' ? 'block' : 'none';
+                            document.getElementById('product-select').style.display = this.value === 'flash_sale' ? 'block' :
+                                'none';
+                        });
+
+                        // Validation ngày
+                        document.getElementById('start_date').addEventListener('change', function() {
+                            const startDate = this.value;
+                            const endDateInput = document.getElementById('end_date');
+
+                            if (startDate) {
+                                endDateInput.min = startDate;
+
+                                // Nếu end_date hiện tại nhỏ hơn start_date mới, xóa end_date
+                                if (endDateInput.value && endDateInput.value < startDate) {
+                                    endDateInput.value = '';
                                 }
-                            });
-                    } else {
-                        listDiv.style.display = 'none';
-                    }
-                }
-                document.addEventListener('DOMContentLoaded', function() {
-                    // If you have a flash_type select, listen to its change
-                    let flashTypeSelect = document.getElementById('flash_type');
-                    if (flashTypeSelect) {
-                        flashTypeSelect.addEventListener('change', updateSalePriceInputs);
-                        updateSalePriceInputs();
-                    }
-                    // Show/hide sale price input only for checked products
-                    document.querySelectorAll('.product-checkbox').forEach(function(cb) {
-                        cb.addEventListener('change', function() {
-                            updateSelectedProductsList();
-                            let saleInput = this.closest('.form-check').querySelector('.sale-price-input');
-                            if (saleInput) {
-                                saleInput.style.display = (this.checked && (flashTypeSelect && flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
                             }
                         });
-                    });
-                    document.querySelectorAll('.category-checkbox').forEach(function(cb) {
-                        cb.addEventListener('change', function() {
-                            updateCategoryProductsList();
+
+                        // Đảm bảo start_date không nhỏ hơn hôm nay
+                        document.getElementById('start_date').addEventListener('change', function() {
+                            const today = new Date().toISOString().slice(0, 16);
+                            if (this.value < today) {
+                                alert('Ngày bắt đầu phải từ hôm nay trở đi!');
+                                this.value = '';
+                            }
                         });
-                    });
-                });
-                </script>
 
-                {{-- Ngày bắt đầu / kết thúc --}}
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="start_date" class="form-label fw-semibold">Ngày bắt đầu</label>
-                        <input type="datetime-local" name="start_date" id="start_date" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="end_date" class="form-label fw-semibold">Ngày kết thúc</label>
-                        <input type="datetime-local" name="end_date" id="end_date" class="form-control">
-                    </div>
-                </div>
+                        // Đếm ký tự cho textarea
+                        document.getElementById('description').addEventListener('input', function() {
+                            const charCount = this.value.length;
+                            document.getElementById('char-count').textContent = charCount;
 
-                {{-- Trạng thái --}}
-                <div class="mb-3">
-                    <label for="status" class="form-label fw-semibold">Trạng thái</label>
-                    <select name="status" id="status" class="form-select">
-                        <option value="1">Kích hoạt</option>
-                        <option value="0">Ẩn</option>
-                    </select>
-                </div>
+                            // Thay đổi màu khi gần đạt giới hạn
+                            const charCountElement = document.getElementById('char-count');
+                            if (charCount > 900) {
+                                charCountElement.style.color = '#dc3545';
+                            } else if (charCount > 800) {
+                                charCountElement.style.color = '#fd7e14';
+                            } else {
+                                charCountElement.style.color = '#6c757d';
+                            }
+                        });
 
-                {{-- Action --}}
-                <div class="d-flex justify-content-end">
-                    <a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary me-2">
-                        <i class="bi bi-arrow-left"></i> Quay lại
-                    </a>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-plus-circle"></i> Tạo chương trình
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                        // Khởi tạo đếm ký tự khi trang load
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const description = document.getElementById('description');
+                            const charCount = description.value.length;
+                            document.getElementById('char-count').textContent = charCount;
+                        });
 
-{{-- Script hiển thị select theo type --}}
-<script>
-    document.getElementById('flash_type').addEventListener('change', function() {
-        document.getElementById('category-select').style.display = this.value === 'category' ? 'block' : 'none';
-        document.getElementById('product-select').style.display = this.value === 'flash_sale' ? 'block' : 'none';
-    });
-</script>
-@endsection
+                        // Form validation khi submit
+                        document.querySelector('form').addEventListener('submit', function(e) {
+                            const startDate = document.getElementById('start_date').value;
+                            const endDate = document.getElementById('end_date').value;
+                            const today = new Date().toISOString().slice(0, 16);
+
+                            // Kiểm tra ngày bắt đầu
+                            if (!startDate) {
+                                e.preventDefault();
+                                alert('Vui lòng chọn ngày bắt đầu!');
+                                document.getElementById('start_date').focus();
+                                return false;
+                            }
+
+                            if (startDate < today) {
+                                e.preventDefault();
+                                alert('Ngày bắt đầu phải từ hôm nay trở đi!');
+                                document.getElementById('start_date').focus();
+                                return false;
+                            }
+
+                            // Kiểm tra ngày kết thúc
+                            if (!endDate) {
+                                e.preventDefault();
+                                alert('Vui lòng chọn ngày kết thúc!');
+                                document.getElementById('end_date').focus();
+                                return false;
+                            }
+
+                            if (endDate <= startDate) {
+                                e.preventDefault();
+                                alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+                                document.getElementById('end_date').focus();
+                                return false;
+                            }
+                        });
+                    </script>
+                @endsection

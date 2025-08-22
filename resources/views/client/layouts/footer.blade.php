@@ -1,6 +1,26 @@
 <!-- Footer -->
-<footer class="bg-gray-900 text-white py-12">
-    <div class="container mx-auto px-4">
+<footer class="bg-gray-900 text-white">
+    <!-- Banner hệ thống cửa hàng -->
+    <div class="bg-gray-800 py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-bold text-white mb-2">Hệ thống Techvicom trên toàn quốc</h3>
+                    <p class="text-gray-300 text-sm">Bao gồm Cửa hàng Techvicom, Trung tâm Điện máy, Trung tâm Laptop, Techvicom Studio, Đại lý ủy quyền, Dự án doanh nghiệp</p>
+                </div>
+                <div>
+                    <a href="{{ route('client.invoice.index') }}" class="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-300">
+                        <i class="fas fa-search mr-2"></i>
+                        Tra cứu đơn hàng
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Nội dung footer chính -->
+    <div class="py-12">
+        <div class="container mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <!-- Logo và thông tin công ty -->
             <div class="col-span-1">
@@ -100,6 +120,7 @@
         <!-- Copyright -->
         <div class="border-t border-gray-700 mt-8 pt-6 text-center">
             <p class="text-gray-400 text-sm">&copy; 2025 Techvicom. All rights reserved.</p>
+        </div>
         </div>
     </div>
 </footer>

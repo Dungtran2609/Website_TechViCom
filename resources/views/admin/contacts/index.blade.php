@@ -29,19 +29,14 @@
                 @endforeach
             </select>
         </div>
-        <div class="col-md-2">
-            <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control" placeholder="Từ ngày">
-        </div>
-        <div class="col-md-2">
-            <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control" placeholder="Đến ngày">
-        </div>
+
         <div class="col-md-1">
             <button type="submit" class="btn btn-outline-primary w-100">
                 <i class="fas fa-search"></i>
             </button>
         </div>
     </div>
-    @if(request('keyword') || request('status') || request('handled_by') || request('date_from') || request('date_to'))
+    @if(request('keyword') || request('status') || request('handled_by'))
         <div class="mt-2">
             <a href="{{ route('admin.contacts.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-times"></i> Xóa bộ lọc
@@ -78,6 +73,7 @@
                         <th>Trạng thái</th>
                         <th>Người xử lý</th>
                         <th>Ngày gửi</th>
+                        <th>Ngày đã xử lý</th>
                         <th width="120px">Hành động</th>
                     </tr>
                 </thead>
@@ -133,6 +129,13 @@
                                 <span class="text-muted">{{ $contact->created_at->format('d/m/Y H:i') }}</span>
                             </td>
                             <td>
+                                @if($contact->responded_at)
+                                    <span class="text-success fw-medium">{{ $contact->responded_at->format('d/m/Y H:i') }}</span>
+                                @else
+                                    <span class="text-muted">Chưa xử lý</span>
+                                @endif
+                            </td>
+                            <td>
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('admin.contacts.show', $contact) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
                                         <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
@@ -156,7 +159,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center py-4">
+                            <td colspan="12" class="text-center py-4">
                                 <div class="text-muted">
                                     <i class="fas fa-envelope fa-2x mb-3"></i>
                                     <p>Không có liên hệ nào</p>

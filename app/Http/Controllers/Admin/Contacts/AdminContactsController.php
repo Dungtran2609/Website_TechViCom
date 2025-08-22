@@ -30,14 +30,7 @@ class AdminContactsController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Lọc theo ngày gửi
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
 
         // Lọc theo người xử lý
         if ($request->filled('handled_by')) {

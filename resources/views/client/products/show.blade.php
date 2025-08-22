@@ -687,44 +687,53 @@
                                         <!-- Hiển thị thông tin sản phẩm đã mua -->
                                         @if($cmt->order)
                                             @php
-                                                $orderItem = \App\Models\OrderItem::where('order_id', $cmt->order->id)
+                                                $orderItems = \App\Models\OrderItem::where('order_id', $cmt->order->id)
                                                     ->where('product_id', $product->id)
                                                     ->with(['productVariant.attributeValues.attribute', 'order'])
-                                                    ->first();
+                                                    ->get();
                                             @endphp
-                                            @if($orderItem)
-                                                <div class="mb-3 p-3 bg-gray-50 rounded-lg border-l-4 border-[#ff6c2f]">
-                                                    <div class="flex items-center gap-3">
-                                                        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                                            @if($orderItem->productVariant && $orderItem->productVariant->image)
-                                                                <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->image, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
-                                                            @elseif($orderItem->image_product)
-                                                                <img src="{{ asset('storage/' . ltrim($orderItem->image_product, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
-                                                            @elseif($orderItem->productVariant && $orderItem->productVariant->product && $orderItem->productVariant->product->thumbnail)
-                                                                <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->product->thumbnail, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
-                                                            @else
-                                                                <div class="flex flex-col items-center justify-center text-gray-400">
-                                                                    <i class="fas fa-image text-sm"></i>
+                                            @if($orderItems->count() > 0)
+                                                <div class="mb-3">
+                                                    <div class="text-xs text-gray-500 mb-2 font-medium">Sản phẩm đã mua trong đơn hàng #{{ $orderItems->first()->order->order_number ?? 'N/A' }}:</div>
+                                                    @foreach($orderItems as $orderItem)
+                                                        <div class="mb-2 p-3 bg-gray-50 rounded-lg border-l-4 border-[#ff6c2f]">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                                                                    @if($orderItem->productVariant && $orderItem->productVariant->image)
+                                                                        <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->image, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                                    @elseif($orderItem->image_product)
+                                                                        <img src="{{ asset('storage/' . ltrim($orderItem->image_product, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                                    @elseif($orderItem->productVariant && $orderItem->productVariant->product && $orderItem->productVariant->product->thumbnail)
+                                                                        <img src="{{ asset('storage/' . ltrim($orderItem->productVariant->product->thumbnail, '/')) }}" alt="{{ $orderItem->name_product }}" class="w-full h-full object-cover">
+                                                                    @else
+                                                                        <div class="flex flex-col items-center justify-center text-gray-400">
+                                                                            <span class="text-xs">IMG</span>
+                                                                        </div>
+                                                                    @endif
                                                                 </div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="flex-1">
-                                                            <h6 class="font-medium text-gray-900 text-sm">{{ $orderItem->name_product }}</h6>
-                                                            @if($orderItem->productVariant && $orderItem->productVariant->attributeValues->count() > 0)
-                                                                <p class="text-xs text-gray-600 mt-1">
-                                                                    @foreach($orderItem->productVariant->attributeValues as $attrValue)
-                                                                        <span class="inline-block bg-gray-200 px-1 py-0.5 rounded text-xs mr-1">
-                                                                            {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
+                                                                <div class="flex-1">
+                                                                    <h6 class="font-medium text-gray-900 text-sm">{{ $orderItem->name_product }}</h6>
+                                                                    @if($orderItem->productVariant && $orderItem->productVariant->attributeValues->count() > 0)
+                                                                        <div class="flex flex-wrap gap-1 mt-1">
+                                                                            @foreach($orderItem->productVariant->attributeValues as $attrValue)
+                                                                                <span class="inline-block bg-white border border-gray-200 px-2 py-1 rounded text-xs text-gray-700">
+                                                                                    {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    @endif
+                                                                    <div class="flex items-center justify-between mt-1">
+                                                                        <span class="text-xs text-gray-500">
+                                                                            Số lượng: {{ $orderItem->quantity }}
                                                                         </span>
-                                                                    @endforeach
-                                                                </p>
-                                                            @endif
-                                                            <p class="text-xs text-gray-500 mt-1">
-                                                                Số lượng: {{ $orderItem->quantity }} | 
-                                                                Đơn hàng: #{{ $orderItem->order->order_number }}
-                                                            </p>
+                                                                        <span class="text-xs text-gray-500">
+                                                                            Giá: {{ number_format($orderItem->price, 0, ',', '.') }}đ
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    @endforeach
                                                 </div>
                                             @endif
                                         @endif

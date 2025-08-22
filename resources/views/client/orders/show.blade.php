@@ -977,6 +977,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
                 var formData = new FormData();
+                formData.append('return_reason', clientNote);
                 formData.append('client_note', clientNote);
                 
                 fetch(`/client/orders/${orderId}/cancel`, {
@@ -1091,6 +1092,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
                 var formData = new FormData();
+                formData.append('cancel_reason', clientNote);
                 formData.append('client_note', clientNote);
                 
                 fetch(`/client/orders/${orderId}/request-return`, {
@@ -1130,7 +1132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function confirmReceived(orderId) {
     if (confirm('Bạn xác nhận đã nhận được hàng?')) {
-        fetch(`/client/orders/${orderId}/confirm-received`, {
+        fetch(`/client/orders/${orderId}/confirm-receipt`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

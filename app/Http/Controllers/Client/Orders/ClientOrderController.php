@@ -251,12 +251,14 @@ class ClientOrderController extends Controller
             ->where('status', 'pending')
             ->findOrFail($id);
 
-        $clientNote = request('client_note', '');
+        $request = request();
+        $cancelReason = $request->input('cancel_reason', 'Khách hủy');
+        $clientNote = $request->input('client_note', '');
 
         OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'cancel',
-            'reason'       => 'Khách hủy',
+            'reason'       => $cancelReason,
             'client_note'  => $clientNote,
             'status'       => 'pending',
             'requested_at' => now(),
@@ -291,18 +293,40 @@ class ClientOrderController extends Controller
             ->where('status', 'delivered')
             ->findOrFail($id);
 
-        $clientNote = request('client_note', '');
+        $request = request();
+        $returnReason = $request->input('return_reason', 'Khách hàng yêu cầu trả');
+        $clientNote = $request->input('client_note', '');
 
         OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'return',
-            'reason'       => 'Khách hàng yêu cầu trả',
+            'reason'       => $returnReason,
             'client_note'  => $clientNote,
             'status'       => 'pending',
             'requested_at' => now(),
         ]);
 
         return response()->json(['success' => true, 'message' => 'Yêu cầu trả hàng đã được gửi.']);
+    }
+
+    /** Xác nhận đã nhận hàng (khi đã giao hoặc đang giao) */
+    public function confirmReceipt($id)
+    {
+        $user  = Auth::user();
+        $order = Order::where('user_id', $user->id)->findOrFail($id);
+
+        if (!in_array($order->status, ['delivered', 'shipped'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ xác nhận khi đơn hàng đã giao hoặc đang giao!'
+            ], 400);
+        }
+
+        $order->status = 'received';
+        $order->received_at = now(); // Lưu thời gian nhận hàng
+        $order->save();
+
+        return response()->json(['success' => true, 'message' => 'Đã xác nhận nhận hàng!']);
     }
 
     /** Helper */

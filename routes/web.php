@@ -87,6 +87,9 @@ Route::get('/invoice/download/{id}', [App\Http\Controllers\Client\InvoiceControl
 // Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
     Route::get('/orders/{id}', [ClientOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/cancel', [ClientOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/request-return', [ClientOrderController::class, 'requestReturn'])->name('orders.request-return');
+    Route::post('/orders/{id}/confirm-receipt', [ClientOrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
 });
 
 Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {

@@ -23,6 +23,8 @@ class PromotionRequest extends FormRequest
             'categories' => 'array',
             'products' => 'array',
             'category_discount_value' => 'nullable|numeric|min:1|max:100',
+            'discount_percents.*' => 'nullable|numeric|min:0|max:100',
+            'sale_prices.*' => 'nullable|numeric|min:0',
         ];
 
         // Conditional validation based on flash_type

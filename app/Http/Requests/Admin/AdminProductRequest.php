@@ -1,12 +1,9 @@
 <?php
 
-
 namespace App\Http\Requests\Admin;
-
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-
 
 class AdminProductRequest extends FormRequest
 {
@@ -15,12 +12,10 @@ class AdminProductRequest extends FormRequest
         return true;
     }
 
-
     public function rules(): array
     {
         $product = $this->route('product');
         $productId = $product?->id;
-
 
         $rules = [
             'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($productId)],
@@ -38,10 +33,9 @@ class AdminProductRequest extends FormRequest
             'delete_images.*' => 'integer|exists:product_all_images,id',
         ];
 
-
         if ($this->input('type') === 'simple') {
-            $rules['price'] = 'required|numeric|min:0';
-            $rules['sale_price'] = ['nullable', 'numeric', 'min:0', 'lt:price'];
+            $rules['price'] = 'required|integer|gt:0|max:999999999999';
+            $rules['sale_price'] = ['nullable', 'integer', 'gt:0', 'lt:price', 'max:999999999999'];
             $rules['stock'] = 'required|integer|min:0';
             $rules['low_stock_amount'] = 'nullable|integer|min:0';
             $rules['weight'] = 'nullable|numeric|min:0';
@@ -51,7 +45,6 @@ class AdminProductRequest extends FormRequest
             $rules['attributes'] = 'nullable|array';
             $rules['attributes.*'] = 'nullable|exists:attribute_values,id';
         }
-
 
         if ($this->input('type') === 'variable') {
             // Lọc các biến thể: chỉ giữ lại biến thể có ít nhất 1 trường không rỗng
@@ -65,22 +58,18 @@ class AdminProductRequest extends FormRequest
                 })->count() > 0;
             });
             $this->merge(['variants' => $variants->all()]);
-
-
             $rules['variants'] = 'required|array|min:1';
-            $rules['variants.*.price'] = 'required|numeric|min:0';
+            $rules['variants.*.price'] = 'required|integer|gt:0|max:999999999999';
             $rules['variants.*.stock'] = 'required|integer|min:0';
             $rules['variants.*.low_stock_amount'] = 'nullable|integer|min:0';
             $rules['variants.*.attributes'] = 'required|array|min:1';
 
-
             if ($variants->count()) {
                 foreach (array_keys($variants->all()) as $key) {
-                    $rules["variants.{$key}.sale_price"] = ['nullable', 'numeric', 'min:0', 'lt:variants.' . $key . '.price'];
+                    $rules["variants.{$key}.sale_price"] = ['nullable', 'integer', 'gt:0', 'lt:variants.' . $key . '.price', 'max:999999999999'];
                     $rules["variants.{$key}.image"] = ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'];
                 }
             }
-
 
             $rules['variants.*.weight'] = 'nullable|numeric|min:0';
             $rules['variants.*.length'] = 'nullable|numeric|min:0';
@@ -88,10 +77,8 @@ class AdminProductRequest extends FormRequest
             $rules['variants.*.height'] = 'nullable|numeric|min:0';
         }
 
-
         return $rules;
     }
-
 
     public function messages(): array
     {
@@ -121,11 +108,13 @@ class AdminProductRequest extends FormRequest
             'delete_images.*.integer' => 'ID ảnh cần xóa phải là số nguyên.',
             'delete_images.*.exists' => 'ID ảnh cần xóa không hợp lệ.',
             'price.required' => 'Giá bán là bắt buộc.',
-            'price.numeric' => 'Giá bán phải là số.',
-            'price.min' => 'Giá bán phải lớn hơn hoặc bằng 0.',
+            'price.integer' => 'Giá bán phải là số nguyên.',
+            'price.gt' => 'Giá bán phải lớn hơn 0.',
+            'price.max' => 'Giá bán không được vượt quá 999,999,999,999.',
             'sale_price.lt' => 'Giá khuyến mãi phải thấp hơn giá bán.',
-            'sale_price.numeric' => 'Giá khuyến mãi phải là số.',
-            'sale_price.min' => 'Giá khuyến mãi phải lớn hơn hoặc bằng 0.',
+            'sale_price.integer' => 'Giá khuyến mãi phải là số nguyên.',
+            'sale_price.gt' => 'Giá khuyến mãi phải lớn hơn 0.',
+            'sale_price.max' => 'Giá khuyến mãi không được vượt quá 999,999,999,999.',
             'stock.required' => 'Tồn kho là bắt buộc.',
             'stock.integer' => 'Tồn kho phải là số nguyên.',
             'stock.min' => 'Tồn kho phải lớn hơn hoặc bằng 0.',
@@ -144,11 +133,13 @@ class AdminProductRequest extends FormRequest
             'variants.required' => 'Phải có ít nhất một biến thể.',
             'variants.array' => 'Dữ liệu biến thể không hợp lệ.',
             'variants.*.price.required' => 'Giá bán của biến thể là bắt buộc.',
-            'variants.*.price.numeric' => 'Giá bán của biến thể phải là số.',
-            'variants.*.price.min' => 'Giá bán của biến thể phải lớn hơn hoặc bằng 0.',
+            'variants.*.price.integer' => 'Giá bán của biến thể phải là số nguyên.',
+            'variants.*.price.gt' => 'Giá bán của biến thể phải lớn hơn 0.',
+            'variants.*.price.max' => 'Giá bán của biến thể không được vượt quá 999,999,999,999.',
             'variants.*.sale_price.lt' => 'Giá khuyến mãi của biến thể phải thấp hơn giá bán của biến thể đó.',
-            'variants.*.sale_price.numeric' => 'Giá khuyến mãi của biến thể phải là số.',
-            'variants.*.sale_price.min' => 'Giá khuyến mãi của biến thể phải lớn hơn hoặc bằng 0.',
+            'variants.*.sale_price.integer' => 'Giá khuyến mãi của biến thể phải là số nguyên.',
+            'variants.*.sale_price.gt' => 'Giá khuyến mãi của biến thể phải lớn hơn 0.',
+            'variants.*.sale_price.max' => 'Giá khuyến mãi của biến thể không được vượt quá 999,999,999,999.',
             'variants.*.stock.required' => 'Tồn kho của biến thể là bắt buộc.',
             'variants.*.stock.integer' => 'Tồn kho của biến thể phải là số nguyên.',
             'variants.*.stock.min' => 'Tồn kho của biến thể phải lớn hơn hoặc bằng 0.',

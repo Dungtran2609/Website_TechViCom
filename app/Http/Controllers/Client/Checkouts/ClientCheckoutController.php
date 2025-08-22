@@ -323,12 +323,10 @@ class ClientCheckoutController extends Controller
                     elseif ($item->product?->thumbnail) $image = 'storage/' . $item->product->thumbnail;
                     elseif ($item->product?->productAllImages?->count() > 0) $image = 'storage/' . $item->product->productAllImages->first()->image_path;
                     else $image = 'client_css/images/placeholder.svg';
-
                     $item->price = (float)$price;
                     $item->image = $image;
                     $item->cart_item_id = $buildKey($item->product?->id, $item->productVariant?->id);
                     $item->product_name = $item->product?->name ?? 'Unknown Product';
-
                     $subtotal += (float)$price * (int)$item->quantity;
                     $cartItems[] = $item;
                 }

@@ -44,11 +44,6 @@
                                             <select name="flash_type" id="flash_type"
                                                 class="form-select @error('flash_type') is-invalid @enderror">
                                                 <option value="">-- Chọn kiểu áp dụng --</option>
-                                                <option value="all" {{ old('flash_type') == 'all' ? 'selected' : '' }}>
-                                                    Toàn bộ sản phẩm</option>
-                                                <option value="category"
-                                                    {{ old('flash_type') == 'category' ? 'selected' : '' }}>Theo danh mục
-                                                </option>
                                                 <option value="flash_sale"
                                                     {{ old('flash_type') == 'flash_sale' ? 'selected' : '' }}>Theo sản phẩm
                                                     (Flash Sale)</option>
@@ -130,6 +125,18 @@
                                 {{-- Chọn sản phẩm --}}
                                 <div class="mb-3" id="product-select" style="display:none;">
                                     <label class="form-label">Chọn sản phẩm <span class="text-danger">*</span></label>
+                                    
+                                    {{-- Tìm kiếm sản phẩm --}}
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            <input type="text" id="product-search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="clearProductSearch()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div class="mb-2">
                                         <button type="button" class="btn btn-sm btn-outline-primary me-1"
                                             onclick="selectAllProducts(true)">
@@ -139,25 +146,42 @@
                                             onclick="selectAllProducts(false)">
                                             <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
                                         </button>
+                                        <span class="badge bg-info ms-2" id="product-count">0 sản phẩm được chọn</span>
                                     </div>
+                                    
                                     <div class="border rounded p-3 @error('products') border-danger @enderror"
-                                        style="max-height:220px;overflow:auto;">
-                                        <div class="row">
+                                        style="max-height:300px;overflow:auto;">
+                                        <div class="row" id="products-container">
                                             @foreach ($products as $product)
-                                                <div class="col-md-12 mb-2">
+                                                <div class="col-md-12 mb-2 product-item" data-name="{{ strtolower($product->name) }}">
                                                     <div class="form-check d-flex align-items-center">
                                                         <input class="form-check-input product-checkbox me-2"
                                                             type="checkbox" name="products[]"
                                                             id="product_{{ $product->id }}" value="{{ $product->id }}"
                                                             {{ in_array($product->id, old('products', [])) ? 'checked' : '' }}>
                                                         <label class="form-check-label me-3 flex-grow-1"
-                                                            for="product_{{ $product->id }}">{{ $product->name }}</label>
-                                                        <input type="number" step="1000" min="0"
-                                                            class="form-control form-control-sm sale-price-input"
-                                                            name="sale_prices[{{ $product->id }}]"
-                                                            placeholder="Giá flash sale"
-                                                            style="width:130px; display:none;"
-                                                            value="{{ old('sale_prices.' . $product->id) }}">
+                                                            for="product_{{ $product->id }}">
+                                                            <div class="d-flex flex-column">
+                                                                <span class="fw-medium">{{ $product->name }}</span>
+                                                            </div>
+                                                        </label>
+                                                                                                <div class="d-flex align-items-center gap-2">
+                                            <input type="number" step="0.01" min="0" max="100"
+                                                class="form-control form-control-sm discount-percent-input"
+                                                name="discount_percents[{{ $product->id }}]" 
+                                                placeholder="% giảm giá"
+                                                style="width:100px; display:none;"
+                                                value="{{ old('discount_percents.' . $product->id) }}">
+                                            <span class="text-muted small" style="width:60px;">%</span>
+                                            <span class="text-muted">hoặc</span>
+                                            <input type="number" step="1000" min="0"
+                                                class="form-control form-control-sm sale-price-input"
+                                                name="sale_prices[{{ $product->id }}]" 
+                                                placeholder="Giá cố định"
+                                                style="width:130px; display:none;"
+                                                value="{{ old('sale_prices.' . $product->id) }}">
+                                            <span class="text-muted small" style="width:60px;">₫</span>
+                                        </div>
                                                     </div>
                                                 </div>
                                             @endforeach
@@ -166,6 +190,10 @@
                                     @error('products')
                                         <div class="text-danger small">{{ $message }}</div>
                                     @enderror
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Nhập phần trăm giảm giá (0-100%) hoặc giá cố định cho từng sản phẩm. Sản phẩm không có giá trị sẽ không được áp dụng khuyến mãi.
+                                    </div>
                                 </div>
                                 <script>
                                     function selectAllProducts(checked) {
@@ -174,84 +202,71 @@
                                             cb.dispatchEvent(new Event('change'));
                                         });
                                     }
-                                    // Show sale price input if flash_type is flash_sale
-                                    function updateSalePriceInputs() {
+
+                                    function updateProductCount() {
+                                        const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+                                        document.getElementById('product-count').textContent = `${checkedCount} sản phẩm được chọn`;
+                                    }
+
+                                    function clearProductSearch() {
+                                        document.getElementById('product-search').value = '';
+                                        filterProducts('');
+                                    }
+
+                                    function filterProducts(searchTerm) {
+                                        const products = document.querySelectorAll('.product-item');
+                                        const term = searchTerm.toLowerCase();
+                                        
+                                        products.forEach(product => {
+                                            const name = product.getAttribute('data-name');
+                                            if (name.includes(term)) {
+                                                product.style.display = 'block';
+                                            } else {
+                                                product.style.display = 'none';
+                                            }
+                                        });
+                                    }
+
+                                    // Show discount inputs if flash_type is flash_sale
+                                    function updateDiscountInputs() {
                                         let flashType = document.getElementById('flash_type') ? document.getElementById('flash_type').value : '';
-                                        document.querySelectorAll('.sale-price-input').forEach(function(input) {
+                                        document.querySelectorAll('.discount-percent-input, .sale-price-input').forEach(function(input) {
                                             input.style.display = (flashType === 'flash_sale') ? 'inline-block' : 'none';
                                         });
                                     }
-                                    // Hiển thị danh sách sản phẩm đã chọn
-                                    function updateSelectedProductsList() {
-                                        let checked = Array.from(document.querySelectorAll('.product-checkbox:checked'));
-                                        let ul = document.getElementById('selected-products-ul');
-                                        let listDiv = document.getElementById('selected-products-list');
-                                        ul.innerHTML = '';
-                                        if (checked.length > 0) {
-                                            checked.forEach(cb => {
-                                                let name = cb.closest('.form-check').querySelector('label').innerText;
-                                                let li = document.createElement('li');
-                                                li.className = 'list-group-item';
-                                                li.innerText = name;
-                                                ul.appendChild(li);
-                                            });
-                                            listDiv.style.display = 'block';
-                                        } else {
-                                            listDiv.style.display = 'none';
-                                        }
-                                    }
-                                    // Hiển thị sản phẩm thuộc danh mục đã chọn
-                                    function updateCategoryProductsList() {
-                                        let checked = Array.from(document.querySelectorAll('.category-checkbox:checked'));
-                                        let ul = document.getElementById('category-products-ul');
-                                        let listDiv = document.getElementById('category-products-list');
-                                        ul.innerHTML = '';
-                                        if (checked.length > 0) {
-                                            // Lấy id danh mục
-                                            let categoryIds = checked.map(cb => cb.value);
-                                            // Gọi ajax lấy sản phẩm theo danh mục
-                                            fetch('/admin/ajax/products-by-categories?ids=' + categoryIds.join(','))
-                                                .then(res => res.json())
-                                                .then(data => {
-                                                    if (data && data.length > 0) {
-                                                        data.forEach(prod => {
-                                                            let li = document.createElement('li');
-                                                            li.className = 'list-group-item';
-                                                            li.innerText = prod.name;
-                                                            ul.appendChild(li);
-                                                        });
-                                                        listDiv.style.display = 'block';
-                                                    } else {
-                                                        listDiv.style.display = 'none';
-                                                    }
-                                                });
-                                        } else {
-                                            listDiv.style.display = 'none';
-                                        }
-                                    }
+
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        // If you have a flash_type select, listen to its change
+                                        // Search functionality
+                                        document.getElementById('product-search').addEventListener('input', function() {
+                                            filterProducts(this.value);
+                                        });
+
+                                        // Flash type change
                                         let flashTypeSelect = document.getElementById('flash_type');
                                         if (flashTypeSelect) {
-                                            flashTypeSelect.addEventListener('change', updateSalePriceInputs);
-                                            updateSalePriceInputs();
+                                            flashTypeSelect.addEventListener('change', updateDiscountInputs);
+                                            updateDiscountInputs();
                                         }
-                                        // Show/hide sale price input only for checked products
+
+                                        // Show/hide discount inputs only for checked products
                                         document.querySelectorAll('.product-checkbox').forEach(function(cb) {
                                             cb.addEventListener('change', function() {
-                                                updateSelectedProductsList();
-                                                let saleInput = this.closest('.form-check').querySelector('.sale-price-input');
-                                                if (saleInput) {
-                                                    saleInput.style.display = (this.checked && (flashTypeSelect &&
+                                                let discountInput = this.closest('.form-check').querySelector('.discount-percent-input');
+                                                let salePriceInput = this.closest('.form-check').querySelector('.sale-price-input');
+                                                if (discountInput) {
+                                                    discountInput.style.display = (this.checked && (flashTypeSelect &&
                                                         flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
                                                 }
+                                                if (salePriceInput) {
+                                                    salePriceInput.style.display = (this.checked && (flashTypeSelect &&
+                                                        flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
+                                                }
+                                                updateProductCount();
                                             });
                                         });
-                                        document.querySelectorAll('.category-checkbox').forEach(function(cb) {
-                                            cb.addEventListener('change', function() {
-                                                updateCategoryProductsList();
-                                            });
-                                        });
+
+                                        // Initialize count
+                                        updateProductCount();
                                     });
                                 </script>
 
@@ -375,6 +390,7 @@
                             const startDate = document.getElementById('start_date').value;
                             const endDate = document.getElementById('end_date').value;
                             const today = new Date().toISOString().slice(0, 16);
+                            const flashType = document.getElementById('flash_type').value;
 
                             // Kiểm tra ngày bắt đầu
                             if (!startDate) {
@@ -404,6 +420,33 @@
                                 alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
                                 document.getElementById('end_date').focus();
                                 return false;
+                            }
+
+                            // Kiểm tra sản phẩm và phần trăm giảm giá
+                            if (flashType === 'flash_sale') {
+                                const checkedProducts = document.querySelectorAll('.product-checkbox:checked');
+                                if (checkedProducts.length === 0) {
+                                    e.preventDefault();
+                                    alert('Vui lòng chọn ít nhất 1 sản phẩm!');
+                                    return false;
+                                }
+
+                                let hasDiscountValue = false;
+                                checkedProducts.forEach(product => {
+                                    const discountInput = product.closest('.form-check').querySelector('.discount-percent-input');
+                                    const salePriceInput = product.closest('.form-check').querySelector('.sale-price-input');
+                                    
+                                    if ((discountInput && discountInput.value && parseFloat(discountInput.value) > 0) ||
+                                        (salePriceInput && salePriceInput.value && parseFloat(salePriceInput.value) > 0)) {
+                                        hasDiscountValue = true;
+                                    }
+                                });
+
+                                if (!hasDiscountValue) {
+                                    e.preventDefault();
+                                    alert('Vui lòng nhập phần trăm giảm giá hoặc giá cố định cho ít nhất 1 sản phẩm!');
+                                    return false;
+                                }
                             }
                         });
                     </script>

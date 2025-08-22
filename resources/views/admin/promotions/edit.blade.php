@@ -44,10 +44,6 @@
                                 class="form-select @error('flash_type') is-invalid @enderror">
                                 @php $selectedType = request()->old('flash_type', $promotion->flash_type); @endphp
                                 <option value="">-- Chọn kiểu áp dụng --</option>
-                                <option value="all" {{ $selectedType == 'all' ? 'selected' : '' }}>Toàn bộ sản phẩm
-                                </option>
-                                <option value="category" {{ $selectedType == 'category' ? 'selected' : '' }}>Theo danh mục
-                                </option>
                                 <option value="flash_sale" {{ $selectedType == 'flash_sale' ? 'selected' : '' }}>Theo sản
                                     phẩm (Flash Sale)</option>
                             </select>
@@ -130,6 +126,18 @@
                 <div class="mb-3" id="product-select"
                     style="display:{{ $selectedType == 'flash_sale' ? 'block' : 'none' }};">
                     <label class="form-label">Chọn sản phẩm <span class="text-danger">*</span></label>
+                    
+                    {{-- Tìm kiếm sản phẩm --}}
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="product-search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearProductSearch()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="mb-2">
                         <button type="button" class="btn btn-sm btn-outline-primary me-1"
                             onclick="selectAllProducts(true)">
@@ -139,24 +147,42 @@
                             onclick="selectAllProducts(false)">
                             <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
                         </button>
+                        <span class="badge bg-info ms-2" id="product-count">0 sản phẩm được chọn</span>
                     </div>
+                    
                     <div class="border rounded p-3 @error('products') border-danger @enderror"
-                        style="max-height:220px;overflow:auto;">
-                        <div class="row">
+                        style="max-height:300px;overflow:auto;">
+                        <div class="row" id="products-container">
                             @foreach ($products as $product)
-                                <div class="col-md-12 mb-2">
+                                <div class="col-md-12 mb-2 product-item" data-name="{{ strtolower($product->name) }}">
                                     <div class="form-check d-flex align-items-center">
                                         <input class="form-check-input product-checkbox me-2" type="checkbox"
                                             name="products[]" id="product_{{ $product->id }}"
                                             value="{{ $product->id }}"
                                             {{ in_array($product->id, old('products', $promotion->products->pluck('id')->toArray())) ? 'checked' : '' }}>
                                         <label class="form-check-label me-3 flex-grow-1"
-                                            for="product_{{ $product->id }}">{{ $product->name }}</label>
-                                        <input type="number" step="1000" min="0"
-                                            class="form-control form-control-sm sale-price-input"
-                                            name="sale_prices[{{ $product->id }}]" placeholder="Giá flash sale"
-                                            style="width:130px; display:none;"
-                                            value="{{ old('sale_prices.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->sale_price) }}">
+                                            for="product_{{ $product->id }}">
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-medium">{{ $product->name }}</span>
+                                            </div>
+                                        </label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="number" step="0.01" min="0" max="100"
+                                                class="form-control form-control-sm discount-percent-input"
+                                                name="discount_percents[{{ $product->id }}]" 
+                                                placeholder="% giảm giá"
+                                                style="width:100px; display:none;"
+                                                value="{{ old('discount_percents.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->discount_percent ?? '') }}">
+                                            <span class="text-muted small" style="width:60px;">%</span>
+                                            <span class="text-muted">hoặc</span>
+                                            <input type="number" step="1000" min="0"
+                                                class="form-control form-control-sm sale-price-input"
+                                                name="sale_prices[{{ $product->id }}]" 
+                                                placeholder="Giá cố định"
+                                                style="width:130px; display:none;"
+                                                value="{{ old('sale_prices.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->sale_price) }}">
+                                            <span class="text-muted small" style="width:60px;">₫</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -165,6 +191,10 @@
                     @error('products')
                         <div class="text-danger small">{{ $message }}</div>
                     @enderror
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Nhập phần trăm giảm giá (0-100%) hoặc giá cố định cho từng sản phẩm. Sản phẩm không có giá trị sẽ không được áp dụng khuyến mãi.
+                    </div>
                 </div>
                 <script>
                     function selectAllProducts(checked) {
@@ -173,30 +203,71 @@
                             cb.dispatchEvent(new Event('change'));
                         });
                     }
-                    // Show sale price input if flash_type is flash_sale
-                    function updateSalePriceInputs() {
+
+                    function updateProductCount() {
+                        const checkedCount = document.querySelectorAll('.product-checkbox:checked').length;
+                        document.getElementById('product-count').textContent = `${checkedCount} sản phẩm được chọn`;
+                    }
+
+                    function clearProductSearch() {
+                        document.getElementById('product-search').value = '';
+                        filterProducts('');
+                    }
+
+                    function filterProducts(searchTerm) {
+                        const products = document.querySelectorAll('.product-item');
+                        const term = searchTerm.toLowerCase();
+                        
+                        products.forEach(product => {
+                            const name = product.getAttribute('data-name');
+                            if (name.includes(term)) {
+                                product.style.display = 'block';
+                            } else {
+                                product.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    // Show discount inputs if flash_type is flash_sale
+                    function updateDiscountInputs() {
                         let flashType = document.getElementById('flash_type') ? document.getElementById('flash_type').value : '';
-                        document.querySelectorAll('.sale-price-input').forEach(function(input) {
+                        document.querySelectorAll('.discount-percent-input, .sale-price-input').forEach(function(input) {
                             input.style.display = (flashType === 'flash_sale') ? 'inline-block' : 'none';
                         });
                     }
+
                     document.addEventListener('DOMContentLoaded', function() {
-                        // If you have a flash_type select, listen to its change
+                        // Search functionality
+                        document.getElementById('product-search').addEventListener('input', function() {
+                            filterProducts(this.value);
+                        });
+
+                        // Flash type change
                         let flashTypeSelect = document.getElementById('flash_type');
                         if (flashTypeSelect) {
-                            flashTypeSelect.addEventListener('change', updateSalePriceInputs);
-                            updateSalePriceInputs();
+                            flashTypeSelect.addEventListener('change', updateDiscountInputs);
+                            updateDiscountInputs();
                         }
-                        // Show/hide sale price input only for checked products
+
+                        // Show/hide discount inputs only for checked products
                         document.querySelectorAll('.product-checkbox').forEach(function(cb) {
                             cb.addEventListener('change', function() {
-                                let saleInput = this.closest('.form-check').querySelector('.sale-price-input');
-                                if (saleInput) {
-                                    saleInput.style.display = (this.checked && (flashTypeSelect &&
+                                let discountInput = this.closest('.form-check').querySelector('.discount-percent-input');
+                                let salePriceInput = this.closest('.form-check').querySelector('.sale-price-input');
+                                if (discountInput) {
+                                    discountInput.style.display = (this.checked && (flashTypeSelect &&
                                         flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
                                 }
+                                if (salePriceInput) {
+                                    salePriceInput.style.display = (this.checked && (flashTypeSelect &&
+                                        flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
+                                }
+                                updateProductCount();
                             });
                         });
+
+                        // Initialize count
+                        updateProductCount();
                     });
                 </script>
 
@@ -326,6 +397,63 @@
             const description = document.getElementById('description');
             const charCount = description.value.length;
             document.getElementById('char-count').textContent = charCount;
+
+            // Form validation khi submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                const flashType = document.getElementById('flash_type').value;
+
+                // Kiểm tra ngày bắt đầu
+                if (!startDate) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ngày bắt đầu!');
+                    document.getElementById('start_date').focus();
+                    return false;
+                }
+
+                // Kiểm tra ngày kết thúc
+                if (!endDate) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ngày kết thúc!');
+                    document.getElementById('end_date').focus();
+                    return false;
+                }
+
+                if (endDate <= startDate) {
+                    e.preventDefault();
+                    alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+                    document.getElementById('end_date').focus();
+                    return false;
+                }
+
+                // Kiểm tra sản phẩm và phần trăm giảm giá
+                if (flashType === 'flash_sale') {
+                    const checkedProducts = document.querySelectorAll('.product-checkbox:checked');
+                    if (checkedProducts.length === 0) {
+                        e.preventDefault();
+                        alert('Vui lòng chọn ít nhất 1 sản phẩm!');
+                        return false;
+                    }
+
+                    let hasDiscountValue = false;
+                    checkedProducts.forEach(product => {
+                        const discountInput = product.closest('.form-check').querySelector('.discount-percent-input');
+                        const salePriceInput = product.closest('.form-check').querySelector('.sale-price-input');
+                        
+                        if ((discountInput && discountInput.value && parseFloat(discountInput.value) > 0) ||
+                            (salePriceInput && salePriceInput.value && parseFloat(salePriceInput.value) > 0)) {
+                            hasDiscountValue = true;
+                        }
+                    });
+
+                    if (!hasDiscountValue) {
+                        e.preventDefault();
+                        alert('Vui lòng nhập phần trăm giảm giá hoặc giá cố định cho ít nhất 1 sản phẩm!');
+                        return false;
+                    }
+                }
+            });
         });
     </script>
 @endsection

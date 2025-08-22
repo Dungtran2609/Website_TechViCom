@@ -226,7 +226,7 @@ class ClientCartController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            \Log::error('cart.add failed', ['msg' => $e->getMessage()]);
+            Log::error('cart.add failed', ['msg' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng'

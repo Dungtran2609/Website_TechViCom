@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
+use App\Models\News;
+use App\Models\Brand;
 use App\Models\Banner;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Brand;
+use App\Models\Promotion;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
@@ -16,15 +18,15 @@ class HomeController extends Controller
     {
         // Lấy banner đang hoạt động
         $banners = Banner::where('start_date', '<=', now())
-                        ->where('end_date', '>=', now())
-                        ->orderBy('stt')
-                        ->limit(3)
-                        ->get();
+            ->where('end_date', '>=', now())
+            ->orderBy('stt')
+            ->limit(3)
+            ->get();
 
         // Sản phẩm nổi bật: gắn cờ is_featured, trạng thái active
         // Lấy chương trình flash sale đang diễn ra (cả kiểu flash_sale và category)
         $now = now();
-        $flashSale = \App\Models\Promotion::whereIn('flash_type', ['flash_sale', 'category'])
+        $flashSale = Promotion::whereIn('flash_type', ['flash_sale', 'category'])
             ->where('status', 1)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
@@ -34,10 +36,13 @@ class HomeController extends Controller
         $featuredProducts = Product::with(['brand', 'category', 'productAllImages', 'variants', 'productComments'])
             ->where('status', 'active')
             ->where('is_featured', true)
+            ->whereHas('brand', function ($q) {
+                $q->where('status', 1);
+            })
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
-            ->map(function($product) use ($flashSale) {
+            ->map(function ($product) use ($flashSale) {
                 $variant = $product->variants->first();
                 $price = $variant ? $variant->price : null;
                 $salePrice = null;
@@ -75,10 +80,13 @@ class HomeController extends Controller
 
         $hotProducts = Product::with(['brand', 'category', 'productAllImages', 'variants', 'productComments'])
             ->where('status', 'active')
+            ->whereHas('brand', function ($q) {
+                $q->where('status', 1);
+            })
             ->orderByDesc('view_count')
             ->limit(10)
             ->get()
-            ->map(function($product) use ($flashSale) {
+            ->map(function ($product) use ($flashSale) {
                 $variant = $product->variants->first();
                 $price = $variant ? $variant->price : null;
                 $salePrice = null;
@@ -125,8 +133,8 @@ class HomeController extends Controller
 
         // Lấy thương hiệu
         $brands = Brand::where('status', 1)
-                      ->limit(8)
-                      ->get();
+            ->limit(8)
+            ->get();
 
         // Lấy chương trình flash sale đang diễn ra (cả kiểu flash_sale và category) - đã lấy ở trên
         $flashSaleProducts = [];
@@ -141,11 +149,11 @@ class HomeController extends Controller
                     $allCategoryIds = array_merge($allCategoryIds, $childIds);
                 }
                 $allCategoryIds = array_unique($allCategoryIds);
-                $flashSaleProducts = \App\Models\Product::with(['variants', 'productComments'])
+                $flashSaleProducts = Product::with(['variants', 'productComments'])
                     ->where('status', 'active')
                     ->whereIn('category_id', $allCategoryIds)
                     ->get()
-                    ->map(function($product) use ($flashSale) {
+                    ->map(function ($product) use ($flashSale) {
                         $variant = $product->variants->first();
                         $price = $variant ? $variant->price : null;
                         $salePrice = null;
@@ -162,7 +170,7 @@ class HomeController extends Controller
                         return $product;
                     });
             } else {
-                $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function($product) use ($flashSale) {
+                $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function ($product) use ($flashSale) {
                     $salePrice = $product->pivot->sale_price ?? null;
                     $variant = $product->variants->first();
                     $price = $variant ? $variant->price : null;
@@ -175,7 +183,7 @@ class HomeController extends Controller
         }
 
         // Lấy bài viết mới nhất
-        $latestNews = \App\Models\News::orderByDesc('created_at')->limit(4)->get();
+        $latestNews = News::orderByDesc('created_at')->limit(4)->get();
 
         // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
         $favoriteProductIds = [];

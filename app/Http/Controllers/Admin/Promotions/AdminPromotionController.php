@@ -118,8 +118,16 @@ class AdminPromotionController extends Controller
     public function update(PromotionRequest $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
-    $data = $request->validated();
-        $data['slug'] = Str::slug($data['name']);
+        $data = $request->validated();
+        // Tạo slug duy nhất, bỏ qua chính promotion hiện tại
+        $baseSlug = Str::slug($data['name']);
+        $slug = $baseSlug;
+        $i = 1;
+        while (\App\Models\Promotion::where('slug', $slug)->where('id', '!=', $promotion->id)->exists()) {
+            $slug = $baseSlug . '-' . $i;
+            $i++;
+        }
+        $data['slug'] = $slug;
         if ($data['flash_type'] === 'category') {
             $data['discount_type'] = 'percent';
             $data['discount_value'] = $request->category_discount_value ?? 10;

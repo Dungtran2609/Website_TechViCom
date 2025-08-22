@@ -202,6 +202,7 @@ class AdminPermissionController extends Controller
     public function sync(Request $request)
     {
         $adminRole = Role::where('name', 'admin')->firstOrFail();
+
         $allRoutes = Route::getRoutes();
         $newPermissionsCount = 0;
         $restoredPermissionsCount = 0;
@@ -252,7 +253,25 @@ class AdminPermissionController extends Controller
             }
         }
 
-        // Tạo quyền tổng quát manage_{module} cho từng module admin
+        // Luôn tạo các quyền tổng quát cho các module chính nếu chưa có
+        $importantModules = ['categories', 'brands', 'attributes'];
+        foreach ($importantModules as $module) {
+            $manageName = 'manage_' . $module;
+            if (!in_array($manageName, $existingPermissionNames)) {
+                $newPermission = Permission::create([
+                    'name' => $manageName,
+                    'description' => "Quyền quản lý toàn bộ module {$module}",
+                    'module' => $module,
+                ]);
+                $adminRole->permissions()->attach($newPermission->id);
+                $newPermissionsCount++;
+            } elseif ($allDbPermissions->has($manageName) && $allDbPermissions[$manageName]->trashed()) {
+                $allDbPermissions[$manageName]->restore();
+                $restoredPermissionsCount++;
+            }
+        }
+
+        // Tạo quyền tổng quát manage_{module} cho từng module admin (tự động từ route)
         foreach (array_keys($modulePermissions) as $module) {
             $manageName = 'manage_' . $module;
             

@@ -117,17 +117,22 @@
                                             <iconify-icon icon="solar:pen-2-broken"
                                                 class="align-middle fs-18"></iconify-icon>
                                         </a>
-                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
-                                            class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-soft-danger btn-sm"
-                                                onclick="return confirm('Bạn có chắc muốn xoá người dùng này?')"
-                                                title="Xoá">
-                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
-                                                    class="align-middle fs-18"></iconify-icon>
-                                            </button>
-                                        </form>
+                                        @php
+                                            $isAdmin = $user->roles->contains(function($role) { return $role->name === 'admin'; });
+                                        @endphp
+                                        @if (!$isAdmin)
+                                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
+                                                class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-soft-danger btn-sm"
+                                                    onclick="return confirm('Bạn có chắc muốn xoá người dùng này?')"
+                                                    title="Xoá">
+                                                    <iconify-icon icon="solar:trash-bin-minimalistic-2-broken"
+                                                        class="align-middle fs-18"></iconify-icon>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

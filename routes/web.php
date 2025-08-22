@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -77,26 +78,21 @@ Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('ent
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
 // Hóa đơn (Invoice) - phía client
+Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('client.invoice.index');
+Route::post('/invoice/send-verification-code', [App\Http\Controllers\Client\InvoiceController::class, 'sendVerificationCode'])->name('client.invoice.send-code');
+Route::post('/invoice/verify-code', [App\Http\Controllers\Client\InvoiceController::class, 'verifyCode'])->name('client.invoice.verify-code');
+Route::get('/invoice/order/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
+Route::get('/invoice/download/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
+
+// Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
-    Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('invoice.index');
-    Route::get('/invoices/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'show'])->name('invoice.show');
-
+    Route::get('/orders/{id}', [ClientOrderController::class, 'show'])->name('orders.show');
 });
 
-// Test cart functionality
-Route::get('/test-cart-page', function () {
-    return view('test-cart');
-})->name('test-cart-page');
-
-// Test route for debugging cart
-Route::get('/test-cart', function () {
-    $cart = session()->get('cart', []);
-    return response()->json([
-        'session_cart' => $cart,
-        'session_id' => session()->getId(),
-        'count' => array_sum(array_column($cart, 'quantity'))
-    ]);
+Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {
+    Route::get('/edit', [ClientAccountController::class, 'edit'])->name('edit');
 });
+
 
 // Test add to cart (no CSRF for testing)
 Route::post('/test-add-cart', function (Request $request) {
@@ -267,6 +263,8 @@ Route::get('/test-session', function () {
         ]
     ]);
 });
+
+
 
 // Products
 Route::prefix('products')->name('products.')->group(function () {
@@ -518,16 +516,14 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             Route::get('trashed', [AdminAttributeController::class, 'trashed'])->name('trashed');
             Route::post('{attribute}/restore', [AdminAttributeController::class, 'restore'])->name('restore');
             Route::delete('{attribute}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('force-delete');
-            Route::prefix('{attribute}/values')->name('values.')->group(function() {
-                 Route::get('trashed', [AdminAttributeValueController::class, 'trashed'])->name('trashed');
-                 Route::post('{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('restore');
-                 Route::delete('{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
-                 Route::resource('/', AdminAttributeValueController::class)->parameters(['' => 'value']);
+            Route::prefix('{attribute}/values')->name('values.')->group(function () {
+                Route::get('trashed', [AdminAttributeValueController::class, 'trashed'])->name('trashed');
+                Route::post('{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('restore');
+                Route::delete('{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
+                Route::resource('/', AdminAttributeValueController::class)->parameters(['' => 'value']);
             });
             Route::resource('/', AdminAttributeController::class)->parameters(['' => 'attribute']);
         });
-
-
     });
 
     // Orders Management

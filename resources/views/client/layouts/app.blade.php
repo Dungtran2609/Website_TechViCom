@@ -49,58 +49,7 @@
         cursor: pointer;
         transition: box-shadow 0.3s, transform 0.3s;
     }
-
-    #contactChatBtn:hover {
-        box-shadow: 0 8px 32px rgba(0, 104, 255, 0.25);
-        transform: scale(1.08);
-    }
-
-    .offcanvas-contact {
-        border-radius: 1.2rem 1.2rem 0 0;
-        box-shadow: 0 8px 32px rgba(0, 104, 255, 0.10);
-        border: none;
-        background: #f7faff;
-        max-width: 370px;
-    }
-
-    .offcanvas-contact .offcanvas-header {
-        background: linear-gradient(135deg, #ff6c2f 0%, #0068ff 100%);
-        color: #fff;
-        border-radius: 1.2rem 1.2rem 0 0;
-        padding: 1.2rem 1.5rem;
-    }
-
-    .offcanvas-contact .offcanvas-body {
-        padding: 1.5rem;
-    }
-
-    .contact-chat-avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(0, 104, 255, 0.10);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-
-    .contact-chat-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0068ff;
-        margin-bottom: 0.5rem;
-    }
-
-    .contact-chat-desc {
-        color: #333;
-        font-size: 1rem;
-        margin-bottom: 1.2rem;
-    }
-
-    .contact-chat-actions .btn {
-        font-size: 1rem;
+            <!-- Chat với chúng tôi đã bị xóa -->
         padding: 0.75rem 1rem;
         border-radius: 0.75rem;
         margin-bottom: 0.5rem;
@@ -110,9 +59,6 @@
     .contact-chat-actions .btn-primary {
         background: linear-gradient(135deg, #0068ff 0%, #00c3ff 100%);
         border: none;
-    }
-
-    .contact-chat-actions .btn-outline-primary {
         border-color: #0068ff;
         color: #0068ff;
     }
@@ -325,26 +271,6 @@
         </div>
     </div>
 
-    <!-- Khung chatbot nổi, ẩn mặc định, ĐƯA RA NGOÀI CANVAS -->
-    <div class="chatbot-popup" id="chatbotContainer" style="display:none;">
-        <div class="chatbot-header">
-            <span><i class="fas fa-robot me-2"></i>TechViCom Bot</span>
-            <button class="btn-close-chat" id="closeChatbotBtn" aria-label="Đóng">&times;</button>
-        </div>
-        <div class="chat-box" id="chat-box">
-            <div class="message bot-message">
-                <span>Chào bạn, tôi là trợ lý ảo của TechViCom.<br>Bạn cần hỗ trợ gì? Hãy nhắn cho mình nhé!</span>
-            </div>
-        </div>
-        <form class="chat-input" onsubmit="return false;">
-            <input type="text" id="user-input" placeholder="Nhập tin nhắn..." autocomplete="off" aria-label="Nhập tin nhắn">
-            <button id="send-btn" type="button" aria-label="Gửi">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="currentColor">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                </svg>
-            </button>
-        </form>
-    </div>
 
     <button id="scrollToTopBtn" title="Lên đầu trang">
         <i class="fas fa-chevron-up"></i>

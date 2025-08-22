@@ -8,6 +8,7 @@ use App\Mail\DynamicMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
@@ -70,7 +71,20 @@ class InvoiceController extends Controller
                 'expires_in' => '10 phút'
             ])->render();
 
+            // Log thông tin debug
+            Log::info('Sending invoice verification email', [
+                'email' => $email,
+                'verification_code' => $verificationCode,
+                'orders_count' => $orders->count(),
+                'cache_key' => $cacheKey
+            ]);
+
+            // Gửi email thật
             Mail::to($email)->send(new DynamicMail($subject, $content));
+            
+            Log::info('Invoice verification email sent successfully', [
+                'email' => $email
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -78,6 +92,12 @@ class InvoiceController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Failed to send invoice verification email', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể gửi email. Vui lòng thử lại sau.'

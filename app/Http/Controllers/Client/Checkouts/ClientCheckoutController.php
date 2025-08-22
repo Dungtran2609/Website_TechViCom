@@ -736,10 +736,67 @@ class ClientCheckoutController extends Controller
                     $sessionCart = session()->get('cart', []);
                     if (empty($sessionCart)) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
 
+                    // Debug log để kiểm tra selectedIds
+                    Log::info('Checkout session cart processing', [
+                        'selected_ids' => $selectedIds,
+                        'selected_ids_array' => $selectedIdsArr,
+                        'session_cart_keys' => array_keys($sessionCart),
+                        'session_cart_count' => count($sessionCart)
+                    ]);
+
                     if (!empty($selectedIdsArr)) {
                         $filtered = [];
-                        foreach ($selectedIdsArr as $key) if (isset($sessionCart[$key])) $filtered[$key] = $sessionCart[$key];
-                        if (!empty($filtered)) $sessionCart = $filtered;
+                        foreach ($selectedIdsArr as $selectedKey) {
+                            // Thử xử lý format "product_id:variant_id" trước
+                            $parts = explode(':', $selectedKey);
+                            if (count($parts) === 2) {
+                                $productId = $parts[0];
+                                $variantId = $parts[1] === '0' ? 'default' : $parts[1];
+                                $sessionKey = $productId . '_' . $variantId;
+                                
+                                if (isset($sessionCart[$sessionKey])) {
+                                    $filtered[$sessionKey] = $sessionCart[$sessionKey];
+                                    Log::info('Added to filtered cart (product:variant format)', [
+                                        'selected_key' => $selectedKey, 
+                                        'session_key' => $sessionKey, 
+                                        'item' => $sessionCart[$sessionKey]
+                                    ]);
+                                    continue;
+                                }
+                            }
+                            
+                            // Nếu không tìm thấy, thử tìm theo product_id và variant_id trong session cart
+                            $found = false;
+                            foreach ($sessionCart as $sessionKey => $cartItem) {
+                                if ($cartItem['product_id'] == $selectedKey) {
+                                    $filtered[$sessionKey] = $cartItem;
+                                    Log::info('Added to filtered cart (by product_id)', [
+                                        'selected_key' => $selectedKey,
+                                        'session_key' => $sessionKey,
+                                        'item' => $cartItem
+                                    ]);
+                                    $found = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!$found) {
+                                Log::warning('Selected key not found in session cart', [
+                                    'selected_key' => $selectedKey,
+                                    'available_keys' => array_keys($sessionCart)
+                                ]);
+                            }
+                        }
+                        if (!empty($filtered)) {
+                            $sessionCart = $filtered;
+                            Log::info('Filtered session cart', [
+                                'filtered_keys' => array_keys($filtered),
+                                'filtered_count' => count($filtered)
+                            ]);
+                        } else {
+                            Log::warning('No items found in filtered cart, returning error');
+                            return redirect()->route('checkout.index')->with('error', 'Không tìm thấy sản phẩm đã chọn');
+                        }
                     }
 
                     foreach ($sessionCart as $ci) {
@@ -768,9 +825,12 @@ class ClientCheckoutController extends Controller
                     if (!empty($selectedIdsArr)) {
                         $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
                             ->where('user_id', Auth::id())->whereIn('id', $selectedIdsArr)->get();
-                        if ($dbCartItems->isEmpty()) { // id cart có thể đổi sau khi restore
-                            $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
-                                ->where('user_id', Auth::id())->get();
+                        if ($dbCartItems->isEmpty()) {
+                            Log::warning('Selected cart items not found for user', [
+                                'user_id' => Auth::id(),
+                                'selected_ids' => $selectedIdsArr
+                            ]);
+                            return redirect()->route('checkout.index')->with('error', 'Không tìm thấy sản phẩm đã chọn');
                         }
                     } else {
                         $dbCartItems = Cart::with(['product.productAllImages','product.variants','productVariant'])
@@ -1078,11 +1138,45 @@ class ClientCheckoutController extends Controller
                 session()->forget('buynow');
                 if ($source === 'session') {
                     $cart = session()->get('cart', []);
+                    $removedCount = 0;
                     foreach ($cartItems as $item) {
-                        $key = $item->product_id . ':' . ($item->variant_id ?? 0);
-                        unset($cart[$key]);
+                        // Tạo key giống như khi thêm vào cart (format: product_id_variant_id)
+                        $variantId = $item->variant_id ?? 'default';
+                        $key = $item->product_id . '_' . $variantId;
+                        
+                        if (isset($cart[$key])) {
+                            unset($cart[$key]);
+                            $removedCount++;
+                            Log::info('Removed from session cart', [
+                                'key' => $key,
+                                'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'quantity' => $item->quantity
+                            ]);
+                        } else {
+                            // Fallback: tìm kiếm theo product_id và variant_id
+                            foreach ($cart as $cartKey => $cartItem) {
+                                if ($cartItem['product_id'] == $item->product_id && 
+                                    ($cartItem['variant_id'] ?? null) == ($item->variant_id ?? null)) {
+                                    unset($cart[$cartKey]);
+                                    $removedCount++;
+                                    Log::info('Removed from session cart with fallback search', [
+                                        'expected_key' => $key,
+                                        'found_key' => $cartKey,
+                                        'product_id' => $item->product_id,
+                                        'variant_id' => $item->variant_id
+                                    ]);
+                                    break;
+                                }
+                            }
+                        }
                     }
                     session(['cart' => $cart]);
+                    Log::info('Session cart cleanup completed', [
+                        'items_processed' => count($cartItems),
+                        'items_removed' => $removedCount,
+                        'remaining_items' => count($cart)
+                    ]);
                 } elseif ($source === 'db') {
                     foreach ($cartItems as $item) {
                         Cart::where('user_id', Auth::id())

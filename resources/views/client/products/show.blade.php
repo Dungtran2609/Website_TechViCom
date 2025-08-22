@@ -284,6 +284,22 @@
             justify-content: center;
             box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
         }
+
+        /* Đảm bảo layout ổn định cho quantity và buttons */
+        .quantity-container {
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        .action-buttons {
+            min-width: 200px;
+            flex-shrink: 0;
+        }
+
+        #qty {
+            min-width: 64px;
+            text-align: center;
+        }
     </style>
 @endpush
 
@@ -441,13 +457,13 @@
                         {{-- Quantity + Actions --}}
                         <div class="flex items-center gap-4">
                             <label class="text-sm font-medium">Số lượng:</label>
-                            <div class="flex items-center">
+                            <div class="flex items-center quantity-container">
                                 <button type="button" id="quantity-minus-btn"
                                     class="w-8 h-8 border border-gray-300 rounded-l-lg hover:bg-gray-100">
                                     <i class="fas fa-minus text-xs"></i>
                                 </button>
                                 <input id="qty" type="number" value="1" min="1"
-                                    class="w-12 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
+                                    class="w-16 h-8 text-center border-t border-b border-gray-300 focus:outline-none"
                                     readonly>
                                 <button type="button" id="quantity-plus-btn"
                                     class="w-8 h-8 border border-gray-300 rounded-r-lg hover:bg-gray-100">
@@ -456,13 +472,13 @@
                             </div>
                         </div>
 
-                        <div class="space-y-3">
+                        <div class="space-y-3 action-buttons">
                             <button id="btn-add-cart" type="button"
-                                class="w-full btn-primary py-3 px-4 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full min-w-[200px] btn-primary py-3 px-4 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                                 <i class="fas fa-shopping-cart mr-2"></i> Thêm vào giỏ hàng
                             </button>
                             <button id="btn-buy-now" type="button"
-                                class="w-full bg-gray-800 text-white py-3 px-4 rounded-lg font-bold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full min-w-[200px] bg-gray-800 text-white py-3 px-4 rounded-lg font-bold hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                                 Mua ngay
                             </button>
                         </div>

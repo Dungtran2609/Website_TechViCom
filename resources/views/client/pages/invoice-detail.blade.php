@@ -74,7 +74,9 @@
                     <div class="border border-gray-200 rounded-xl p-6">
                         <div class="flex items-center space-x-4">
                                                          <div class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                 @if($item->productVariant && $item->productVariant->image)
+                                 @if(isset($item->product) && $item->product && $item->product->type === 'simple' && $item->product->thumbnail)
+                                     <img src="{{ asset('storage/' . ltrim($item->product->thumbnail, '/')) }}" alt="{{ $item->name_product ?? $item->product->name }}" class="w-full h-full object-cover">
+                                 @elseif($item->productVariant && $item->productVariant->image)
                                      <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
                                  @elseif($item->image_product)
                                      <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">

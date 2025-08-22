@@ -513,7 +513,7 @@
             const isOutOfStock = (item.stock !== undefined && item.stock <= 0);
             return `<div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
-      <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
+    <img src="${item.type === 'simple' ? (item.thumbnail ? '/storage/' + item.thumbnail : '/images/default-product.jpg') : (item.image||'/images/default-product.jpg')}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
         <h4 class="font-medium text-gray-900 text-sm">
           <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">

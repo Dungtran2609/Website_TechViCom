@@ -65,27 +65,37 @@ class ClientCartController extends Controller
                     $price = $variant->sale_price ?? $variant->price ?? 0;
                 }
                 $total += $price * $quantity;
-                // Lấy đúng trường ảnh
-                $image = asset('images/default-product.jpg');
+                // Lấy đúng trường ảnh - ưu tiên hình ảnh biến thể
+                $image = asset('client_css/images/placeholder.svg');
+                
+                // 1. Ưu tiên hình ảnh của biến thể cụ thể
                 if (is_object($cartItem) && isset($cartItem->productVariant) && $cartItem->productVariant && $cartItem->productVariant->image) {
                     $image = asset('storage/' . ltrim($cartItem->productVariant->image, '/'));
                 }
-                // Nếu là session cart và có variant_id
+                // 2. Nếu là session cart và có variant_id
                 elseif (!is_object($cartItem) && isset($cartItem['variant_id']) && $cartItem['variant_id']) {
                     $variant = \App\Models\ProductVariant::find($cartItem['variant_id']);
-                    $image = $variant && $variant->image ? asset('storage/' . ltrim($variant->image, '/')) : ($variant ? ($variant->sale_price ?? $variant->price) : 0);
+                    if ($variant && $variant->image) {
+                        $image = asset('storage/' . ltrim($variant->image, '/'));
+                    }
                 }
-                // Nếu có variant đầu tiên của product
+                // 3. Nếu sản phẩm có biến thể thì lấy ảnh biến thể đầu tiên
                 elseif ($product->variants && $product->variants->count() > 0) {
                     $variant = $product->variants->first();
-                    $image = $variant->image ? asset('storage/' . ltrim($variant->image, '/')) : ($variant->sale_price ?? $variant->price ?? 0);
+                    if ($variant && $variant->image) {
+                        $image = asset('storage/' . ltrim($variant->image, '/'));
+                    }
                 }
-                // Nếu không có thì fallback sang ảnh sản phẩm
+                // 4. Fallback sang thumbnail của sản phẩm
+                elseif ($product->thumbnail) {
+                    $image = asset('storage/' . ltrim($product->thumbnail, '/'));
+                }
+                // 5. Fallback sang ảnh đầu tiên của sản phẩm
                 elseif ($product->productAllImages && $product->productAllImages->count() > 0) {
                     $imgObj = $product->productAllImages->first();
-                    $imgField = $imgObj->image_url ?? $imgObj->image ?? null;
+                    $imgField = $imgObj->image_path ?? $imgObj->image_url ?? $imgObj->image ?? null;
                     if ($imgField) {
-                        $image = asset('uploads/products/' . ltrim($imgField, '/'));
+                        $image = asset('storage/' . ltrim($imgField, '/'));
                     }
                 }
                 $items[] = [
@@ -95,6 +105,8 @@ class ClientCartController extends Controller
                     'price' => $price,
                     'quantity' => $quantity,
                     'image' => $image,
+                    'type' => $product->type,
+                    'thumbnail' => $product->type === 'simple' && $product->thumbnail ? ltrim($product->thumbnail, '/') : null,
                     'variant' => is_object($cartItem) ? $cartItem->productVariant : null,
                     'stock' => isset($cartItem->productVariant) && $cartItem->productVariant ? $cartItem->productVariant->stock : ($product->stock ?? 0),
                 ];

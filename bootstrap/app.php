@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Đăng ký alias middleware của bạn
         $middleware->alias([
             'is_admin' => \App\Http\Middleware\IsAdmin::class,
+            'invoice.spam' => \App\Http\Middleware\InvoiceSpamMiddleware::class,
         ]);
 
         // Tự định nghĩa lại nhóm middleware 'web'

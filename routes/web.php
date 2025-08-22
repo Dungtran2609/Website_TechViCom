@@ -78,7 +78,7 @@ Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('ent
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
 // Hóa đơn (Invoice) - phía client
-Route::get('/invoices', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('client.invoice.index');
+Route::get('/invoice', [App\Http\Controllers\Client\InvoiceController::class, 'index'])->name('client.invoice.index');
 Route::post('/invoice/send-verification-code', [App\Http\Controllers\Client\InvoiceController::class, 'sendVerificationCode'])
     ->name('client.invoice.send-code')
     ->middleware('invoice.spam');
@@ -87,6 +87,12 @@ Route::post('/invoice/verify-code', [App\Http\Controllers\Client\InvoiceControll
     ->middleware('invoice.spam');
 Route::get('/invoice/order/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
 Route::get('/invoice/download/{id}', [App\Http\Controllers\Client\InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
+
+// Các chức năng thanh toán cho khách vãng lai
+Route::post('/invoice/order/{id}/confirm-payment', [App\Http\Controllers\Client\InvoiceController::class, 'confirmPayment'])->name('client.invoice.confirm-payment');
+Route::post('/invoice/order/{id}/pay-vnpay', [App\Http\Controllers\Client\InvoiceController::class, 'payWithVnpay'])->name('client.invoice.pay-vnpay');
+Route::post('/invoice/order/{id}/request-return', [App\Http\Controllers\Client\InvoiceController::class, 'requestReturn'])->name('client.invoice.request-return');
+Route::post('/invoice/order/{id}/confirm-receipt', [App\Http\Controllers\Client\InvoiceController::class, 'confirmReceipt'])->name('client.invoice.confirm-receipt');
 
 // Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {

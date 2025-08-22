@@ -340,6 +340,14 @@ class ClientAccountController extends Controller
             ], 404);
         }
 
+        // Kiểm tra xem địa chỉ có phải là mặc định không
+        if ($address->is_default) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa địa chỉ mặc định. Vui lòng đặt địa chỉ khác làm mặc định trước khi xóa.'
+            ], 400);
+        }
+
         $address->delete();
 
         return response()->json([

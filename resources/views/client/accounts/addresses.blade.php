@@ -124,12 +124,20 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="#"
-                                                onclick="deleteAddress({{ $address->id }})">
-                                                <i class="fas fa-trash me-2"></i>Xóa
-                                            </a>
-                                        </li>
+                                        @if(!$address->is_default)
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#"
+                                                    onclick="deleteAddress({{ $address->id }})">
+                                                    <i class="fas fa-trash me-2"></i>Xóa
+                                                </a>
+                                            </li>
+                                        @else
+                                            <li>
+                                                <a class="dropdown-item text-muted" href="#" disabled>
+                                                    <i class="fas fa-trash me-2"></i>Xóa (Không thể xóa địa chỉ mặc định)
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </div>

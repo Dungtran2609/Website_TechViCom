@@ -83,7 +83,20 @@ class StoreCouponRequest extends FormRequest
             'product_ids' => ['required_if:apply_type,product'],
             'category_ids' => ['required_if:apply_type,category'],
             'discount_type' => ['required', 'in:percent,fixed'],
-            'value' => ['required', 'numeric', 'min:1', 'max:100'],
+            'value' => [
+                'required', 
+                'numeric', 
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    $discountType = request('discount_type');
+                    if ($discountType === 'percent' && $value > 100) {
+                        $fail('Phần trăm giảm giá không được vượt quá 100%.');
+                    }
+                    if ($discountType === 'fixed' && $value > 10000000) {
+                        $fail('Số tiền giảm cố định không được vượt quá 10,000,000₫.');
+                    }
+                }
+            ],
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'min_order_value' => ['nullable', 'numeric', 'min:0'],
             'max_order_value' => ['nullable', 'numeric', 'min:0', 'gte:min_order_value'],

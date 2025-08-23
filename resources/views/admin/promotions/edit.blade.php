@@ -110,7 +110,8 @@
                             class="form-control @error('category_discount_value') is-invalid @enderror"
                             name="category_discount_value" id="category_discount_value"
                             value="{{ old('category_discount_value', $promotion->discount_value ?? 10) }}"
-                            placeholder="Nhập % giảm giá (ví dụ: 10)">
+                            placeholder="Nhập % giảm giá (ví dụ: 10)"
+                            oninput="validateCategoryDiscount(this)" maxlength="3">
                         @error('category_discount_value')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -172,15 +173,17 @@
                                                 name="discount_percents[{{ $product->id }}]" 
                                                 placeholder="% giảm giá"
                                                 style="width:100px; display:none;"
-                                                value="{{ old('discount_percents.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->discount_percent ?? '') }}">
+                                                value="{{ old('discount_percents.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->discount_percent ?? '') }}"
+                                                oninput="validateDiscountPercent(this, {{ $product->id }})">
                                             <span class="text-muted small" style="width:60px;">%</span>
                                             <span class="text-muted">hoặc</span>
-                                            <input type="number" step="1000" min="0"
+                                            <input type="number" step="1000" min="0" max="9999999"
                                                 class="form-control form-control-sm sale-price-input"
                                                 name="sale_prices[{{ $product->id }}]" 
                                                 placeholder="Giá cố định"
                                                 style="width:130px; display:none;"
-                                                value="{{ old('sale_prices.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->sale_price) }}">
+                                                value="{{ old('sale_prices.' . $product->id, optional(optional($promotion->products->find($product->id))->pivot)->sale_price) }}"
+                                                oninput="validateSalePrice(this, {{ $product->id }})">
                                             <span class="text-muted small" style="width:60px;">₫</span>
                                         </div>
                                     </div>
@@ -202,6 +205,11 @@
                             cb.checked = checked;
                             cb.dispatchEvent(new Event('change'));
                         });
+                        
+                        // Sắp xếp lại sau khi chọn tất cả
+                        setTimeout(() => {
+                            sortProductsBySelection();
+                        }, 100);
                     }
 
                     function updateProductCount() {
@@ -225,6 +233,33 @@
                             } else {
                                 product.style.display = 'none';
                             }
+                        });
+                    }
+
+                    // Function để sắp xếp sản phẩm theo trạng thái chọn
+                    function sortProductsBySelection() {
+                        const container = document.getElementById('products-container');
+                        const products = Array.from(container.querySelectorAll('.product-item'));
+                        
+                        // Tách sản phẩm đã chọn và chưa chọn
+                        const selectedProducts = [];
+                        const unselectedProducts = [];
+                        
+                        products.forEach(product => {
+                            const checkbox = product.querySelector('.product-checkbox');
+                            if (checkbox.checked) {
+                                selectedProducts.push(product);
+                            } else {
+                                unselectedProducts.push(product);
+                            }
+                        });
+                        
+                        // Sắp xếp lại: sản phẩm đã chọn lên đầu
+                        const sortedProducts = [...selectedProducts, ...unselectedProducts];
+                        
+                        // Cập nhật DOM
+                        sortedProducts.forEach(product => {
+                            container.appendChild(product);
                         });
                     }
 
@@ -263,29 +298,37 @@
                                         flashTypeSelect.value === 'flash_sale')) ? 'inline-block' : 'none';
                                 }
                                 updateProductCount();
+                                
+                                // Sắp xếp lại danh sách sản phẩm
+                                sortProductsBySelection();
                             });
                         });
 
                         // Initialize count
                         updateProductCount();
+                        
+                        // Sắp xếp ban đầu: sản phẩm đã chọn lên đầu
+                        sortProductsBySelection();
                     });
                 </script>
 
                 <div class="row">
                     <div class="col-md-6">
-                        {{-- Ngày bắt đầu --}}
-                        <div class="mb-3">
-                            <label for="start_date" class="form-label">Ngày bắt đầu <span class="text-danger">*</span>
-                                <small class="text-muted">(Từ hôm
-                                    nay)</small></label>
-                            <input type="datetime-local" name="start_date" id="start_date"
-                                class="form-control @error('start_date') is-invalid @enderror"
-                                value="{{ old('start_date', $promotion->start_date ? date('Y-m-d\TH:i', strtotime($promotion->start_date)) : '') }}"
-                                min="{{ date('Y-m-d\TH:i') }}">
-                            @error('start_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                        {{-- Ngày bắt đầu --}}
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Ngày bắt đầu <span class="text-danger">*</span>
+                        <small class="text-muted">(Từ hôm nay)</small></label>
+                    <input type="datetime-local" name="start_date" id="start_date"
+                        class="form-control @error('start_date') is-invalid @enderror"
+                        value="{{ old('start_date', $promotion->start_date ? date('Y-m-d\TH:i', strtotime($promotion->start_date)) : '') }}">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Nếu ngày bắt đầu đã qua, hệ thống sẽ tự động cập nhật thành thời gian hiện tại khi lưu.
+                    </div>
+                    @error('start_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
                     </div>
                     <div class="col-md-6">
                         {{-- Ngày kết thúc --}}
@@ -363,19 +406,19 @@
                 }
             });
 
-            // Đảm bảo start_date không nhỏ hơn hôm nay (chỉ khi tạo mới)
-            document.getElementById('start_date').addEventListener('change', function() {
-                const today = new Date().toISOString().slice(0, 16);
-                const currentValue = this.value;
-                const originalValue =
-                    '{{ $promotion->start_date ? date('Y-m-d\TH:i', strtotime($promotion->start_date)) : '' }}';
+            // Bỏ validation ngày bắt đầu < today vì sẽ được tự động cập nhật
+            // document.getElementById('start_date').addEventListener('change', function() {
+            //     const today = new Date().toISOString().slice(0, 16);
+            //     const currentValue = this.value;
+            //     const originalValue =
+            //         '{{ $promotion->start_date ? date('Y-m-d\TH:i', strtotime($promotion->start_date)) : '' }}';
 
-                // Chỉ validate nếu giá trị mới khác giá trị gốc
-                if (currentValue && currentValue < today && currentValue !== originalValue) {
-                    alert('Ngày bắt đầu phải từ hôm nay trở đi!');
-                    this.value = originalValue || '';
-                }
-            });
+            //     // Chỉ validate nếu giá trị mới khác giá trị gốc
+            //     if (currentValue && currentValue < today && currentValue !== originalValue) {
+            //         alert('Ngày bắt đầu phải từ hôm nay trở đi!');
+            //         this.value = originalValue || '';
+            //     }
+            // });
 
             // Đếm ký tự cho textarea
             document.getElementById('description').addEventListener('input', function() {
@@ -398,62 +441,315 @@
             const charCount = description.value.length;
             document.getElementById('char-count').textContent = charCount;
 
-            // Form validation khi submit
-            document.querySelector('form').addEventListener('submit', function(e) {
-                const startDate = document.getElementById('start_date').value;
-                const endDate = document.getElementById('end_date').value;
-                const flashType = document.getElementById('flash_type').value;
-
-                // Kiểm tra ngày bắt đầu
-                if (!startDate) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn ngày bắt đầu!');
-                    document.getElementById('start_date').focus();
-                    return false;
-                }
-
-                // Kiểm tra ngày kết thúc
-                if (!endDate) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn ngày kết thúc!');
-                    document.getElementById('end_date').focus();
-                    return false;
-                }
-
-                if (endDate <= startDate) {
-                    e.preventDefault();
-                    alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
-                    document.getElementById('end_date').focus();
-                    return false;
-                }
-
-                // Kiểm tra sản phẩm và phần trăm giảm giá
-                if (flashType === 'flash_sale') {
-                    const checkedProducts = document.querySelectorAll('.product-checkbox:checked');
-                    if (checkedProducts.length === 0) {
-                        e.preventDefault();
-                        alert('Vui lòng chọn ít nhất 1 sản phẩm!');
-                        return false;
-                    }
-
-                    let hasDiscountValue = false;
-                    checkedProducts.forEach(product => {
-                        const discountInput = product.closest('.form-check').querySelector('.discount-percent-input');
-                        const salePriceInput = product.closest('.form-check').querySelector('.sale-price-input');
-                        
-                        if ((discountInput && discountInput.value && parseFloat(discountInput.value) > 0) ||
-                            (salePriceInput && salePriceInput.value && parseFloat(salePriceInput.value) > 0)) {
-                            hasDiscountValue = true;
-                        }
-                    });
-
-                    if (!hasDiscountValue) {
-                        e.preventDefault();
-                        alert('Vui lòng nhập phần trăm giảm giá hoặc giá cố định cho ít nhất 1 sản phẩm!');
-                        return false;
+            // Real-time validation cho tên chương trình
+            document.getElementById('name').addEventListener('input', function() {
+                const name = this.value.trim();
+                if (name.length === 0) {
+                    showError('name', 'Tên chương trình là bắt buộc!');
+                } else if (name.length < 3) {
+                    showError('name', 'Tên chương trình phải có ít nhất 3 ký tự!');
+                } else if (name.length > 255) {
+                    showError('name', 'Tên chương trình không được vượt quá 255 ký tự!');
+                } else {
+                    this.classList.remove('is-invalid');
+                    const existingError = this.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
                     }
                 }
             });
+
+            // Real-time validation cho kiểu áp dụng
+            document.getElementById('flash_type').addEventListener('change', function() {
+                const value = this.value;
+                if (!value) {
+                    showError('flash_type', 'Vui lòng chọn kiểu áp dụng!');
+                } else if (!['all', 'category', 'flash_sale'].includes(value)) {
+                    showError('flash_type', 'Kiểu áp dụng không hợp lệ!');
+                } else {
+                    this.classList.remove('is-invalid');
+                    const existingError = this.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            });
+
+            // Real-time validation cho trạng thái
+            document.getElementById('status').addEventListener('change', function() {
+                if (!this.value) {
+                    showError('status', 'Vui lòng chọn trạng thái!');
+                } else {
+                    this.classList.remove('is-invalid');
+                    const existingError = this.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            });
+
+            // Form validation khi submit
+            document.querySelector('form').addEventListener('submit', function(e) {
+                // Clear previous error messages
+                clearAllErrors();
+
+                // Validation sẽ được xử lý ở backend
+                // Chỉ kiểm tra cơ bản ở frontend để UX tốt hơn
+                const name = document.getElementById('name').value.trim();
+                const flashType = document.getElementById('flash_type').value;
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                const status = document.getElementById('status').value;
+                const today = new Date().toISOString().slice(0, 16);
+
+                let hasError = false;
+
+                // Kiểm tra tên chương trình
+                if (!name) {
+                    showError('name', 'Tên chương trình là bắt buộc!');
+                    hasError = true;
+                } else if (name.length < 3) {
+                    showError('name', 'Tên chương trình phải có ít nhất 3 ký tự!');
+                    hasError = true;
+                } else if (name.length > 255) {
+                    showError('name', 'Tên chương trình không được vượt quá 255 ký tự!');
+                    hasError = true;
+                }
+
+                // Kiểm tra kiểu áp dụng
+                if (!flashType) {
+                    showError('flash_type', 'Vui lòng chọn kiểu áp dụng!');
+                    hasError = true;
+                } else if (!['all', 'category', 'flash_sale'].includes(flashType)) {
+                    showError('flash_type', 'Kiểu áp dụng không hợp lệ!');
+                    hasError = true;
+                }
+
+                // Kiểm tra trạng thái
+                if (status === null || status === '') {
+                    showError('status', 'Vui lòng chọn trạng thái!');
+                    hasError = true;
+                }
+
+                // Kiểm tra ngày bắt đầu
+                if (!startDate) {
+                    showError('start_date', 'Vui lòng chọn ngày bắt đầu!');
+                    hasError = true;
+                }
+                // Bỏ validation ngày bắt đầu < today vì sẽ được tự động cập nhật
+
+                // Kiểm tra ngày kết thúc
+                if (!endDate) {
+                    showError('end_date', 'Vui lòng chọn ngày kết thúc!');
+                    hasError = true;
+                } else if (endDate <= startDate) {
+                    showError('end_date', 'Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Function validate sale price (giới hạn 7 số)
+            function validateSalePrice(input, productId) {
+                const value = parseFloat(input.value);
+                const maxValue = 9999999; // Giới hạn 7 số
+                
+                // Giới hạn độ dài input
+                if (input.value.length > 7) {
+                    input.value = input.value.slice(0, 7);
+                }
+                
+                if (value < 0) {
+                    input.classList.add('is-invalid');
+                    if (!input.parentNode.querySelector('.invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Giá cố định phải lớn hơn 0';
+                        input.parentNode.appendChild(errorDiv);
+                    }
+                } else if (value > maxValue) {
+                    input.classList.add('is-invalid');
+                    if (!input.parentNode.querySelector('.invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Giá cố định tối đa 9,999,999₫';
+                        input.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+                    const existingError = input.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            }
+
+            // Function validate discount percent
+            function validateDiscountPercent(input, productId) {
+                const value = parseFloat(input.value);
+                
+                if (value < 0 || value > 100) {
+                    input.classList.add('is-invalid');
+                    if (!input.parentNode.querySelector('.invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Phần trăm giảm giá phải từ 0-100%';
+                        input.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+                    const existingError = input.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            }
+
+            // Function validate category discount
+            function validateCategoryDiscount(input) {
+                const value = parseFloat(input.value);
+                if (value < 1 || value > 100) {
+                    input.classList.add('is-invalid');
+                    if (!input.parentNode.querySelector('.invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Giá trị giảm giá phải từ 1-100%';
+                        input.parentNode.appendChild(errorDiv);
+                    }
+                } else if (value > 9223372036854775807) {
+                    input.classList.add('is-invalid');
+                    if (!input.parentNode.querySelector('.invalid-feedback')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = 'Giá trị giảm giá quá lớn';
+                        input.parentNode.appendChild(errorDiv);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+                    const existingError = input.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            }
+
+            // Function để hiển thị lỗi
+            function showError(fieldId, message) {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.classList.add('is-invalid');
+
+                    // Xóa error message cũ nếu có
+                    const existingError = field.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+
+                    // Tạo error message mới
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = message;
+                    field.parentNode.appendChild(errorDiv);
+                } else if (fieldId === 'products') {
+                    // Xử lý đặc biệt cho validation sản phẩm
+                    const productContainer = document.getElementById('product-select');
+                    if (productContainer) {
+                        // Xóa error message cũ nếu có
+                        const existingError = productContainer.querySelector('.text-danger');
+                        if (existingError && existingError.textContent.includes('sản phẩm')) {
+                            existingError.remove();
+                        }
+
+                        // Tạo error message mới
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'text-danger small';
+                        errorDiv.textContent = message;
+                        productContainer.appendChild(errorDiv);
+                    }
+                }
+            }
+
+            // Function để xóa tất cả lỗi
+            function clearAllErrors() {
+                document.querySelectorAll('.is-invalid').forEach(field => {
+                    field.classList.remove('is-invalid');
+                });
+                document.querySelectorAll('.invalid-feedback').forEach(error => {
+                    error.remove();
+                });
+                // Xóa lỗi sản phẩm và danh mục
+                document.querySelectorAll('.text-danger.small').forEach(error => {
+                    if (error.textContent.includes('sản phẩm') || error.textContent.includes('danh mục')) {
+                        error.remove();
+                    }
+                });
+            }
+
+            // Function để hiển thị lỗi từ backend
+            function showBackendErrors(errors) {
+                clearAllErrors();
+
+                Object.keys(errors).forEach(field => {
+                    const errorMessage = errors[field][0];
+                    showError(field, errorMessage);
+                });
+            }
+        });
+
+        // Xử lý lỗi từ Laravel validation
+        @if ($errors->any())
+            document.addEventListener('DOMContentLoaded', function() {
+                const errors = @json($errors->getMessages());
+                showBackendErrors(errors);
+            });
+        @endif
+
+                    // Real-time validation cho ngày bắt đầu
+            document.getElementById('start_date').addEventListener('change', function() {
+                const startDate = this.value;
+                const today = new Date().toISOString().slice(0, 16);
+
+                if (startDate && startDate < today) {
+                    // Hiển thị thông báo thân thiện thay vì lỗi
+                    const infoDiv = this.parentNode.querySelector('.form-text');
+                    if (infoDiv) {
+                        infoDiv.innerHTML = '<i class="fas fa-info-circle me-1 text-warning"></i>Ngày bắt đầu đã qua, sẽ được tự động cập nhật thành thời gian hiện tại khi lưu.';
+                        infoDiv.className = 'form-text text-warning';
+                    }
+                } else {
+                    // Khôi phục thông báo mặc định
+                    const infoDiv = this.parentNode.querySelector('.form-text');
+                    if (infoDiv) {
+                        infoDiv.innerHTML = '<i class="fas fa-info-circle me-1"></i>Nếu ngày bắt đầu đã qua, hệ thống sẽ tự động cập nhật thành thời gian hiện tại khi lưu.';
+                        infoDiv.className = 'form-text';
+                    }
+                    
+                    this.classList.remove('is-invalid');
+                    const existingError = this.parentNode.querySelector('.invalid-feedback');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                }
+            });
+
+        // Real-time validation cho ngày kết thúc
+        document.getElementById('end_date').addEventListener('change', function() {
+            const endDate = this.value;
+            const startDate = document.getElementById('start_date').value;
+
+            if (endDate && startDate && endDate <= startDate) {
+                showError('end_date', 'Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+            } else {
+                this.classList.remove('is-invalid');
+                const existingError = this.parentNode.querySelector('.invalid-feedback');
+                if (existingError) {
+                    existingError.remove();
+                }
+            }
         });
     </script>
 @endsection

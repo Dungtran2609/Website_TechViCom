@@ -4,13 +4,13 @@
 
 @section('content')
     <div class="bg-white py-4 shadow mb-8">
-        <div class="items-center text-sm container mx-auto px-4">
+        <div class="items-center text-sm techvicom-container">
             <a href="{{ route('home') }}" class="text-gray-700 hover:text-custom-primary">Trang chủ</a>
             <span class="mx-2 text-gray-400">&gt;</span>
             <span class="font-semibold text-green-700">Liên hệ</span>
         </div>
         <section class="py-12">
-            <div class="container mx-auto px-4">
+            <div class="techvicom-container">
                 <div class="text-center mb-12">
                     <h1 class="text-4xl font-extrabold text-custom-primary mb-2 tracking-tight">Liên hệ với TechViCom</h1>
                     <p class="text-lg text-gray-500">Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>

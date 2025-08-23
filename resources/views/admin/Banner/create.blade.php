@@ -6,17 +6,17 @@
         @csrf
         <div class="mb-3">
             <label for="image" class="form-label">Hình ảnh</label>
-            <input type="file" name="image" class="form-control" accept="image/*" required>
+            <input type="file" name="image" class="form-control" accept="image/*" >
             @error('image') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
         <div class="mb-3">
             <label for="start_date" class="form-label">Ngày bắt đầu</label>
-            <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}" required>
+            <input type="date" name="start_date" class="form-control" value="{{ old('start_date') }}" >
             @error('start_date') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
         <div class="mb-3">
             <label for="end_date" class="form-label">Ngày kết thúc</label>
-            <input type="date" name="end_date" class="form-control" value="{{ old('end_date') }}" required>
+            <input type="date" name="end_date" class="form-control" value="{{ old('end_date') }}" >
             @error('end_date') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
         <div class="mb-3">

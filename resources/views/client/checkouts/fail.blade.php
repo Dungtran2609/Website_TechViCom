@@ -109,7 +109,7 @@
     {{-- Header dùng chung --}}
     <div id="shared-header-container" class="no-print"></div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <div class="fail-container">
             <div class="fail-card">
                 <div class="fail-icon">

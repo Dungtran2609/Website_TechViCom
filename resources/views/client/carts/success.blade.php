@@ -57,7 +57,7 @@
     
     <!-- Success Steps -->
     <div class="bg-white border-b">
-        <div class="container mx-auto px-4 py-4">
+        <div class="techvicom-container py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div class="checkout-step completed flex items-center px-4 py-2 rounded-full bg-green-500 text-white">
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <!-- Success Message -->
         <div class="max-w-2xl mx-auto text-center">
             <!-- Success Icon -->
@@ -204,7 +204,7 @@
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4">
+        <div class="techvicom-container">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
                     <h4 class="text-lg font-semibold mb-4">Về Techvicom</h4>

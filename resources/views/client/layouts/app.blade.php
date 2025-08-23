@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="client-page">
 
 <head>
     <meta charset="UTF-8">

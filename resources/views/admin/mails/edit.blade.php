@@ -7,11 +7,11 @@
         @method('PUT')
         <div class="mb-3">
             <label class="form-label">Tên mẫu mail</label>
-            <input type="text" name="name" class="form-control" value="{{ $mail->name }}" required>
+            <input type="text" name="name" class="form-control" value="{{ $mail->name }}" >
         </div>
         <div class="mb-3">
             <label class="form-label">Tiêu đề</label>
-            <input type="text" name="subject" class="form-control" value="{{ $mail->subject }}" required>
+            <input type="text" name="subject" class="form-control" value="{{ $mail->subject }}" >
         </div>
         <div class="mb-3">
             <label class="form-label">Loại</label>
@@ -24,7 +24,7 @@
                 <span class="badge bg-secondary variable-insert" data-insert="{{ '{' }}{ $coupon_code }}">Mã giảm giá</span>
                 <span class="badge bg-secondary variable-insert" data-insert="{{ '{' }}{ date('d/m/Y') }}">Ngày hiện tại</span>
             </div>
-            <textarea name="content" id="content-textarea" class="form-control" rows="8" required>{{ $mail->content }}</textarea>
+            <textarea name="content" id="content-textarea" class="form-control" rows="8" >{{ $mail->content }}</textarea>
         </div>
         <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" name="is_active" value="1" {{ $mail->is_active ? 'checked' : '' }}>

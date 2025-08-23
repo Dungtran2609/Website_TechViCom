@@ -107,174 +107,24 @@ Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(functi
 });
 
 
-// Test add to cart (no CSRF for testing)
-Route::post('/test-add-cart', function (Request $request) {
-    error_log('TEST: Test add cart request: ' . json_encode($request->all()));
-    Log::info('Test add cart request: ', $request->all());
-    $cart = session()->get('cart', []);
-    error_log('TEST: Current cart: ' . json_encode($cart));
-    $cart['test_item'] = [
-        'product_id' => 1,
-        'quantity' => 1,
-        'variant_id' => null
-    ];
-    session()->put('cart', $cart);
-    session()->save();
-    error_log('TEST: Cart after save: ' . json_encode(session()->get('cart', [])));
-    Log::info('Test add cart session after: ', session()->get('cart', []));
-
-    return response()->json([
-        'success' => true,
-        'session_cart' => session()->get('cart', [])
-    ]);
-})->withoutMiddleware(['csrf']);
-
-// Debug cart API
-Route::get('/debug-cart-api', function () {
-    $controller = new \App\Http\Controllers\Client\Carts\ClientCartController();
-    $request = new \Illuminate\Http\Request();
-    $request->headers->set('Accept', 'application/json');
-
-    $response = $controller->index($request);
-    return $response;
-});
-
-// Debug cart data
-Route::get('/debug-cart-data', function () {
-    if (Auth::check()) {
-        $cartItems = \App\Models\Cart::with(['product.productAllImages', 'productVariant.attributeValues.attribute'])
-            ->where('user_id', Auth::id())
-            ->get();
-    } else {
-        $sessionCart = session()->get('cart', []);
-        $cartItems = [];
-
-        foreach ($sessionCart as $key => $item) {
-            $product = \App\Models\Product::with(['productAllImages', 'variants.attributeValues.attribute'])
-                ->find($item['product_id']);
-
-            if ($product) {
-                $cartItem = (object) [
-                    'id' => $key,
-                    'product' => $product,
-                    'product_id' => $item['product_id'],
-                    'variant_id' => $item['variant_id'],
-                    'quantity' => $item['quantity'],
-                    'productVariant' => $item['variant_id'] ? \App\Models\ProductVariant::with('attributeValues.attribute')->find($item['variant_id']) : null
-                ];
-                $cartItems[] = $cartItem;
-            }
-        }
-    }
-
-    return response()->json([
-        'type' => Auth::check() ? 'database' : 'session',
-        'user_id' => Auth::check() ? Auth::id() : null,
-        'session_id' => session()->getId(),
-        'cart_items' => $cartItems,
-        'session_cart' => session()->get('cart', [])
-    ]);
-});
-
 // Route resource cho promotions và mails (trong group admin)
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     // Coupon resource routes (thêm show, trash, restore, forceDelete)
-    Route::get('coupons/trash', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'trash'])->name('coupons.trash');
-    Route::put('coupons/{id}/restore', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'restore'])->name('coupons.restore');
-    Route::delete('coupons/{id}/force-delete', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'forceDelete'])->name('coupons.forceDelete');
-    Route::get('coupons/{coupon}', [App\Http\Controllers\Admin\Coupons\AdminCouponController::class, 'show'])->where('coupon', '[0-9]+')->name('coupons.show');
-    Route::resource('coupons', App\Http\Controllers\Admin\Coupons\AdminCouponController::class)->except(['show']);
+    Route::get('coupons/trash', [AdminCouponController::class, 'trash'])->name('coupons.trash');
+    Route::put('coupons/{id}/restore', [AdminCouponController::class, 'restore'])->name('coupons.restore');
+    Route::delete('coupons/{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('coupons.forceDelete');
+    Route::get('coupons/{coupon}', [AdminCouponController::class, 'show'])->where('coupon', '[0-9]+')->name('coupons.show');
+    Route::resource('coupons', AdminCouponController::class)->except(['show']);
     Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
     // Quản lý mail động
-    Route::get('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendForm'])->name('mails.send');
-    Route::post('mails/send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'send'])->name('mails.send');
-    Route::get('mails/trash', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'trash'])->name('mails.trash');
-    Route::post('mails/{mail}/restore', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'restore'])->name('mails.restore');
-    Route::delete('mails/{mail}/force-delete', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'forceDelete'])->name('mails.forceDelete');
-    Route::post('mails/{mail}/toggle-auto-send', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'toggleAutoSend'])->name('mails.toggleAutoSend');
-    Route::post('mails/{mail}/send-test', [App\Http\Controllers\Admin\Mails\AdminMailController::class, 'sendTest'])->name('mails.sendTest');
-    Route::resource('mails', App\Http\Controllers\Admin\Mails\AdminMailController::class)->names('mails');
-});
-
-// Test cart operations with debug
-Route::post('/debug-cart-update', function () {
-    $id = request('id');
-    $quantity = request('quantity');
-
-    $sessionId = session()->getId();
-    $cart = session()->get('cart', []);
-
-    $response = [
-        'request_data' => [
-            'id' => $id,
-            'quantity' => $quantity
-        ],
-        'session_info' => [
-            'session_id' => $sessionId,
-            'session_started' => session()->isStarted(),
-            'cart_before' => $cart,
-            'available_keys' => array_keys($cart),
-            'key_exists' => isset($cart[$id])
-        ]
-    ];
-
-    if (isset($cart[$id])) {
-        $cart[$id]['quantity'] = $quantity;
-        session()->put('cart', $cart);
-        session()->save();
-
-        $response['update_result'] = [
-            'success' => true,
-            'cart_after' => session()->get('cart', [])
-        ];
-    } else {
-        $response['update_result'] = [
-            'success' => false,
-            'message' => 'Key not found'
-        ];
-    }
-
-    return response()->json($response);
-})->withoutMiddleware(['csrf']);
-
-// Test session directly
-Route::get('/test-session', function () {
-    // Start session if not started
-    if (!session()->isStarted()) {
-        session()->start();
-    }
-
-    $sessionId = session()->getId();
-    $cart = session()->get('cart', []);
-
-    // Add or update cart
-    if (request('action') === 'add') {
-        $key = '1_default';
-        if (isset($cart[$key])) {
-            $cart[$key]['quantity'] += 1;
-        } else {
-            $cart[$key] = [
-                'product_id' => 1,
-                'variant_id' => null,
-                'quantity' => 1
-            ];
-        }
-        session()->put('cart', $cart);
-        session()->save();
-        $cart = session()->get('cart', []); // Refresh
-    }
-
-    return response()->json([
-        'session_started' => session()->isStarted(),
-        'session_id' => $sessionId,
-        'cart_before' => request('action') ? 'modified' : $cart,
-        'cart_after' => $cart,
-        'session_driver' => config('session.driver'),
-        'urls' => [
-            'add' => url('/test-session?action=add'),
-            'view' => url('/test-session')
-        ]
-    ]);
+    Route::get('mails/send', [AdminMailController::class, 'sendForm'])->name('mails.send');
+    Route::post('mails/send', [AdminMailController::class, 'send'])->name('mails.send');
+    Route::get('mails/trash', [AdminMailController::class, 'trash'])->name('mails.trash');
+    Route::post('mails/{mail}/restore', [AdminMailController::class, 'restore'])->name('mails.restore');
+    Route::delete('mails/{mail}/force-delete', [AdminMailController::class, 'forceDelete'])->name('mails.forceDelete');
+    Route::post('mails/{mail}/toggle-auto-send', [AdminMailController::class, 'toggleAutoSend'])->name('mails.toggleAutoSend');
+    Route::post('mails/{mail}/send-test', [AdminMailController::class, 'sendTest'])->name('mails.sendTest');
+    Route::resource('mails', AdminMailController::class)->names('mails');
 });
 
 
@@ -567,6 +417,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/toggle', [AdminNewsCommentController::class, 'toggleVisibility'])->name('toggle');
         Route::post('/{id}/reply', [AdminNewsCommentController::class, 'storeReply'])->name('reply');
+        Route::post('/{id}/like', [AdminNewsCommentController::class, 'like'])->name('like');
     });
 
     // Other Management
@@ -575,9 +426,15 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('logos', AdminLogoController::class)->names('logos');
     Route::prefix('contacts')->name('contacts.')->middleware(CheckPermission::class . ':manage_contacts')->group(function () {
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');
+        Route::get('trashed', [AdminContactsController::class, 'trashed'])->name('trashed');
         Route::get('{id}', [AdminContactsController::class, 'show'])->name('show');
+        Route::get('{id}/trashed', [AdminContactsController::class, 'showTrashed'])->name('show-trashed');
         Route::delete('{id}', [AdminContactsController::class, 'destroy'])->name('destroy');
+        Route::patch('{id}/restore', [AdminContactsController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminContactsController::class, 'forceDelete'])->name('force-delete');
         Route::patch('{id}/status', [AdminContactsController::class, 'markAsHandled'])->name('markAsHandled');
+        Route::patch('restore-multiple', [AdminContactsController::class, 'restoreMultiple'])->name('restore-multiple');
+        Route::delete('force-delete-multiple', [AdminContactsController::class, 'forceDeleteMultiple'])->name('force-delete-multiple');
     });
     Route::prefix('coupons')->name('coupons.')->middleware(CheckPermission::class . ':manage_coupons')->group(function () {
         Route::put('{coupon}/restore', [AdminCouponController::class, 'restore'])->name('restore');
@@ -602,41 +459,5 @@ Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->nam
 // Other global routes
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image')->middleware(['auth', 'is_admin']);
 
-/*
-|--------------------------------------------------------------------------
-| DEBUGGING ROUTES
-|--------------------------------------------------------------------------
-*/
-if (app()->environment('local')) {
-    Route::prefix('debug')->group(function () {
-        Route::get('/phpinfo', fn() => phpinfo());
-        Route::get('/test-add-to-cart', function () {
-            $cart = session()->get('cart', []);
-            $cart['test_product'] = ['product_id' => 1, 'quantity' => 1, 'variant_id' => null];
-            session(['cart' => $cart]);
-            return 'Product added. <a href="/carts">Go to cart</a>';
-        });
-        Route::get('/test-checkout-flow', function () {
-            session()->forget('cart');
-            session(['cart' => ['1_1' => ['product_id' => 1, 'variant_id' => 1, 'quantity' => 1, 'price' => 100000]]]);
-            return 'Test cart created. <a href="/checkout">Go to checkout</a>';
-        });
-        Route::get('/test-check-cart', function () {
-            return response()->json(session()->get('cart', []));
-        });
-        Route::get('/test-session', function () {
-            return response()->json([
-                'session_id' => session()->getId(),
-                'cart' => session()->get('cart', []),
-                'session_driver' => config('session.driver'),
-            ]);
-        });
-    });
-}
 
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION ROUTES
-|--------------------------------------------------------------------------
-*/
 require __DIR__ . '/auth.php';

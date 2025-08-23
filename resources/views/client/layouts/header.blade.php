@@ -1,8 +1,8 @@
 <!-- Header (all category items use the same icon) -->
-<header id="main-header" class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
+<header id="main-header" class="bg-white shadow-lg border-b border-gray-100 fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
     <link rel="stylesheet" href="{{ asset('client_css/css/header-optimized.css') }}">
 
-    <div class="container mx-auto px-4 py-3">
+    <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between flex-nowrap gap-4">
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
@@ -18,10 +18,10 @@
             <!-- Category (hover to open, stable) -->
             <div class="ml-2 lg:ml-6 dropdown-group">
                 <button
-                    class="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-orange-300 rounded-lg hover:bg-orange-50 transition"
+                    class="flex items-center space-x-2 px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                     data-dropdown="category">
-                    <i class="fas fa-bars text-gray-600"></i>
-                    <span class="hidden sm:inline text-gray-700 font-medium">Danh mục</span>
+                    <i class="fas fa-bars text-white"></i>
+                    <span class="hidden sm:inline text-white font-semibold">Danh mục</span>
                 </button>
 
                 <!-- Category Dropdown (ALL ITEMS USE SAME ICON) -->
@@ -114,24 +114,24 @@
             </div>
 
             <!-- Search -->
-            <div class="flex-1 max-w-2xl mx-2 lg:mx-6 w-full lg:w-auto">
-                <div class="relative">
+            <div class="flex-1 max-w-2xl mx-4 lg:mx-8 w-full lg:w-auto">
+                <div class="relative my-2">
                     <input type="text" id="header-search-input" placeholder="Nhập để tìm kiếm sản phẩm..."
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
+                        class="w-full px-5 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all duration-300 shadow-sm hover:shadow-md">
                     <button id="header-search-btn"
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500">
-                        <i class="fas fa-search"></i>
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200">
+                        <i class="fas fa-search text-lg"></i>
                     </button>
                 </div>
             </div>
 
             <!-- Right section -->
-            <div class="flex flex-nowrap items-center space-x-2 lg:space-x-3 justify-end">
+            <div class="flex flex-nowrap items-center space-x-3 lg:space-x-4 justify-end">
                 <!-- Account (hover to open, stable) -->
                 <div class="dropdown-group">
-                    <button
-                        class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                        data-dropdown="account">
+                                    <button
+                    class="flex items-center space-x-1 lg:space-x-2 px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                    data-dropdown="account">
                         @auth
                             @if (Auth::user()->image_profile && file_exists(public_path('uploads/users/' . Auth::user()->image_profile)))
                                 <img src="{{ asset('uploads/users/' . Auth::user()->image_profile) }}"
@@ -229,10 +229,10 @@
                 <!-- Cart (icon only) -->
                 <div class="relative">
                     <button id="cartMenuBtn"
-                        class="flex items-center px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition relative">
+                        class="flex items-center px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 relative">
                         <i class="fas fa-shopping-basket text-lg"></i>
                         <span
-                            class="absolute -top-2 -right-2 bg-[#ff6c2f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg animate-pulse"
                             id="cart-count">0</span>
                     </button>
                 </div>

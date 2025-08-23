@@ -199,12 +199,6 @@
                                             <i class="fas {{ $comment->is_hidden ? 'fa-eye' : 'fa-eye-slash' }}"></i>
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.products.comments.destroy', $comment->id) }}{{ request('product_id') ? '?product_id='.request('product_id') : '' }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn ẩn bình luận này?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Ẩn vĩnh viễn">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
                                 </div>
                             </td>
                         </tr>

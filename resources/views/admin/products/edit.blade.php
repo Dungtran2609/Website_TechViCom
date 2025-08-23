@@ -592,16 +592,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="discount_percent" class="form-label">Giảm giá (%)</label>
-                            <input type="number" class="form-control @error('discount_percent') is-invalid @enderror" 
-                                id="discount_percent" name="discount_percent" value="{{ old('discount_percent', $product->discount_percent) }}" 
-                                min="0" max="100" step="0.01">
-                            <div class="form-text">Nhập % giảm giá (0-100)</div>
-                            @error('discount_percent')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
                                 value="1" @checked(old('is_featured', $product->is_featured))>

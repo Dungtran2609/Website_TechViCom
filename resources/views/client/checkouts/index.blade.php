@@ -166,7 +166,7 @@
 
     {{-- Steps --}}
     <div class="bg-white border-b no-print">
-        <div class="container mx-auto px-4 py-4">
+        <div class="techvicom-container py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
@@ -193,7 +193,7 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM CHECKOUT (2/3) --}}
             <div class="lg:col-span-2 order-2 lg:order-1">
@@ -207,14 +207,14 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" required
+                                    <input type="text" id="fullname" name="recipient_name" 
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="fullname-error" class="text-xs text-red-500"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" required
+                                    <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="phone-error" class="text-xs text-red-500"></span>
@@ -222,13 +222,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" required
+                                <input type="email" id="email" name="recipient_email" 
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                 <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -273,7 +272,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
                                                     *</label>
-                                                <select id="province" name="province_code" required
+                                                <select id="province" name="province_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-city="{{ $defaultAddress?->city ?? '' }}"
                                                     @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
@@ -284,7 +283,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
                                                     *</label>
-                                                <select id="district" name="district_code" required
+                                                <select id="district" name="district_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-district="{{ $defaultAddress?->district ?? '' }}"
                                                     @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
@@ -295,7 +294,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
                                                     *</label>
-                                                <select id="ward" name="ward_code" required
+                                                <select id="ward" name="ward_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
                                                     @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
@@ -304,7 +303,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address" required rows="3"
+                                        <textarea id="address" name="recipient_address"  rows="3"
                                             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
@@ -414,7 +413,7 @@
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
                             <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
+                                <input type="checkbox" id="agree-terms"  class="mr-3 accent-orange-500">
                                 <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
                                         class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
                                     website</label>

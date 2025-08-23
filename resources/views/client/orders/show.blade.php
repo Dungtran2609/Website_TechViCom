@@ -84,7 +84,7 @@
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto px-4">
+    <div class="techvicom-container">
         <!-- Header -->
         <div class="order-detail-header rounded-lg p-6 text-white mb-6">
             <div class="d-flex align-items-center justify-content-between">
@@ -679,7 +679,7 @@
                                 
                                 <div class="mt-3" id="otherReasonDiv" style="display: none;">
                                     <label for="cancelReasonOther" class="form-label">Vui lòng mô tả lý do khác: <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="cancelReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." required></textarea>
+                                    <textarea class="form-control" id="cancelReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." ></textarea>
                                 </div>
                             </div>
                         </div>
@@ -763,7 +763,7 @@
                                 
                                 <div class="mt-3" id="otherReturnReasonDiv" style="display: none;">
                                     <label for="returnReasonOther" class="form-label">Vui lòng mô tả lý do khác: <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="returnReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." required></textarea>
+                                    <textarea class="form-control" id="returnReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." ></textarea>
                                 </div>
                             </div>
                         </div>

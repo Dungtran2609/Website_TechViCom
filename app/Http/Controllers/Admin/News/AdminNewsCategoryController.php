@@ -71,6 +71,12 @@ class AdminNewsCategoryController extends Controller
 
     public function destroy(NewsCategory $newsCategory)
     {
+        // Kiểm tra xem danh mục có bài viết nào không
+        if ($newsCategory->news()->count() > 0) {
+            return redirect()->route('admin.news-categories.index')
+                ->with('error', 'Không thể xóa danh mục này vì đang có bài viết thuộc danh mục. Vui lòng di chuyển hoặc xóa các bài viết trước khi xóa danh mục.');
+        }
+
         $newsCategory->delete();
 
         return redirect()->route('admin.news-categories.index')->with('success', 'Xóa danh mục thành công.');

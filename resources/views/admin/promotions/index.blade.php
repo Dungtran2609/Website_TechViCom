@@ -82,7 +82,9 @@
                             <th>STT</th>
                             <th>Tên chương trình</th>
                             <th>Kiểu áp dụng</th>
-                            <th>Thời gian</th>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày kết thúc</th>
+                            <th>Trạng thái thời gian</th>
                             <th>Trạng thái</th>
                             <th width="120px">Hành động</th>
                         </tr>
@@ -109,24 +111,37 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column gap-1">
+                                    @if ($promotion->start_date)
                                         <span class="text-muted small">
                                             <i class="fas fa-calendar-check text-success me-1"></i>
-                                            @if ($promotion->start_date)
-                                                {{ \Carbon\Carbon::parse($promotion->start_date)->format('d/m/Y H:i') }}
-                                            @else
-                                                --
-                                            @endif
+                                            {{ \Carbon\Carbon::parse($promotion->start_date)->format('d/m/Y H:i') }}
                                         </span>
+                                    @else
+                                        --
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($promotion->end_date)
                                         <span class="text-muted small">
                                             <i class="fas fa-calendar-times text-danger me-1"></i>
-                                            @if ($promotion->end_date)
-                                                {{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}
-                                            @else
-                                                --
-                                            @endif
+                                            {{ \Carbon\Carbon::parse($promotion->end_date)->format('d/m/Y H:i') }}
                                         </span>
-                                    </div>
+                                    @else
+                                        --
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(isset($promotion->time_status))
+                                        @if($promotion->time_status === 'active')
+                                            <span class="badge bg-success">Đang diễn ra</span>
+                                        @elseif($promotion->time_status === 'upcoming')
+                                            <span class="badge bg-info text-white">Sắp diễn ra</span>
+                                        @elseif($promotion->time_status === 'expired')
+                                            <span class="badge bg-danger text-white">Đã kết thúc</span>
+                                        @endif
+                                    @else
+                                        <span class="badge bg-secondary">Không xác định</span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if ($promotion->status)

@@ -2,15 +2,15 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Quản lý liên hệ người dùng</h1>
+    <h1>Thùng rác - Liên hệ đã xóa</h1>
     <div>
-        <a href="{{ route('admin.contacts.trashed') }}" class="btn btn-danger">
-            <i class="fas fa-trash me-1"></i> Thùng rác
+        <a href="{{ route('admin.contacts.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
         </a>
     </div>
 </div>
 
-<form method="GET" action="{{ route('admin.contacts.index') }}" class="mb-4">
+<form method="GET" action="{{ route('admin.contacts.trashed') }}" class="mb-4">
     <div class="row g-3">
         <div class="col-md-3">
             <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control" placeholder="Tìm theo tên, email, SĐT, tiêu đề...">
@@ -43,7 +43,7 @@
     </div>
     @if(request('keyword') || request('status') || request('handled_by'))
         <div class="mt-2">
-            <a href="{{ route('admin.contacts.index') }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ route('admin.contacts.trashed') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-times"></i> Xóa bộ lọc
             </a>
         </div>
@@ -57,38 +57,40 @@
 @endif
 
 @if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 4px solid #dc3545 !important;">
-        <div class="d-flex align-items-start">
-            <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
-            <div class="flex-grow-1">
-                <strong class="d-block mb-1">Không thể xóa liên hệ!</strong>
-                <div class="text-danger-emphasis">
-                    {{ session('error') }}
-                </div>
-            </div>
-            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+    <div class="alert alert-danger">
+        {{ session('error') }}
     </div>
 @endif
 
-<!-- Alert thông báo lỗi JavaScript (ẩn ban đầu) -->
-<div id="deleteErrorAlert" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 4px solid #dc3545 !important; display: none;">
-    <div class="d-flex align-items-start">
-        <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
-        <div class="flex-grow-1">
-            <strong class="d-block mb-1">Không thể xóa liên hệ!</strong>
-            <div id="deleteErrorMessage" class="text-danger-emphasis"></div>
-        </div>
-        <button type="button" class="btn-close ms-2" onclick="hideDeleteError()" aria-label="Close"></button>
-    </div>
-</div>
-
 <div class="card">
+    <div class="card-header bg-danger text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-trash me-2"></i>Liên hệ đã xóa ({{ $contacts->total() }})
+            </h5>
+            @if($contacts->count() > 0)
+                <div class="btn-group">
+                    <button type="button" class="btn btn-light btn-sm" onclick="selectAll()">
+                        <i class="fas fa-check-square me-1"></i>Chọn tất cả
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" onclick="restoreSelected()">
+                        <i class="fas fa-undo me-1"></i>Khôi phục đã chọn
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" onclick="forceDeleteSelected()">
+                        <i class="fas fa-trash-alt me-1"></i>Xóa vĩnh viễn
+                    </button>
+                </div>
+            @endif
+        </div>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table align-middle table-hover table-centered">
                 <thead class="bg-light-subtle">
                     <tr>
+                        <th width="50px">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
                         <th>STT</th>
                         <th>ID</th>
                         <th>Họ tên</th>
@@ -99,13 +101,16 @@
                         <th>Trạng thái</th>
                         <th>Người xử lý</th>
                         <th>Ngày gửi</th>
-                        <th>Ngày đã xử lý</th>
-                        <th width="120px">Hành động</th>
+                        <th>Ngày xóa</th>
+                        <th width="150px">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($contacts as $contact)
                         <tr>
+                            <td>
+                                <input type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" class="form-check-input contact-checkbox">
+                            </td>
                             <td>{{ $loop->iteration }}</td>
                             <td>
                                 <span class="badge bg-secondary">{{ $contact->id }}</span>
@@ -155,25 +160,25 @@
                                 <span class="text-muted">{{ $contact->created_at->format('d/m/Y H:i') }}</span>
                             </td>
                             <td>
-                                @if($contact->responded_at)
-                                    <span class="text-success fw-medium">{{ $contact->responded_at->format('d/m/Y H:i') }}</span>
-                                @else
-                                    <span class="text-muted">Chưa xử lý</span>
-                                @endif
+                                <span class="text-danger fw-medium">{{ $contact->deleted_at->format('d/m/Y H:i') }}</span>
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('admin.contacts.show', $contact) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
-                                        <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
+                                    <a href="{{ route('admin.contacts.show-trashed', $contact) }}" class="btn btn-light btn-sm" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
                                     </a>
-                                    
-                                    <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.contacts.restore', $contact) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-success btn-sm" title="Khôi phục">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.contacts.force-delete', $contact) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa vĩnh viễn liên hệ này? Hành động này không thể hoàn tác!')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-soft-danger btn-sm" 
-                                                onclick="return checkDeleteConditions({{ $contact->id }}, '{{ addslashes($contact->subject) }}', '{{ $contact->status }}', {{ $contact->is_read ? 'true' : 'false' }}, '{{ $contact->created_at->format('Y-m-d H:i:s') }}')" 
-                                                title="Xoá">
-                                            <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Xóa vĩnh viễn">
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -181,10 +186,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="text-center py-4">
+                            <td colspan="13" class="text-center py-4">
                                 <div class="text-muted">
-                                    <i class="fas fa-envelope fa-2x mb-3"></i>
-                                    <p>Không có liên hệ nào</p>
+                                    <i class="fas fa-trash fa-2x mb-3"></i>
+                                    <p>Không có liên hệ nào trong thùng rác</p>
                                 </div>
                             </td>
                         </tr>
@@ -198,87 +203,77 @@
         {{ $contacts->withQueryString()->links('pagination::bootstrap-5') }}
     </div>
 </div>
+
+<!-- Form ẩn cho bulk actions -->
+<form id="bulkRestoreForm" action="{{ route('admin.contacts.restore-multiple') }}" method="POST" style="display: none;">
+    @csrf
+    @method('PATCH')
+    <input type="hidden" name="contact_ids" id="restoreContactIds">
+</form>
+
+<form id="bulkForceDeleteForm" action="{{ route('admin.contacts.force-delete-multiple') }}" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+    <input type="hidden" name="contact_ids" id="forceDeleteContactIds">
+</form>
 @endsection
 
 @push('scripts')
 <script>
-function checkDeleteConditions(contactId, subject, status, isRead, createdAt) {
-    // Kiểm tra các điều kiện xóa
-    let errorMessage = '';
+function selectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
     
-    // Kiểm tra trạng thái
-    if (status === 'pending') {
-        errorMessage = `Không thể xóa liên hệ "${subject}" vì đang ở trạng thái chờ xử lý. Vui lòng xử lý liên hệ trước khi xóa.`;
-    } else if (status === 'in_progress') {
-        errorMessage = `Không thể xóa liên hệ "${subject}" vì đang được xử lý. Vui lòng hoàn thành việc xử lý trước khi xóa.`;
-    } else if (!isRead) {
-        errorMessage = `Không thể xóa liên hệ "${subject}" vì chưa được đọc. Vui lòng đọc và xử lý liên hệ trước khi xóa.`;
-    } else {
-        // Kiểm tra thời gian tạo (ít nhất 24h)
-        const createdDate = new Date(createdAt);
-        const now = new Date();
-        const hoursDiff = (now - createdDate) / (1000 * 60 * 60);
-        
-        if (hoursDiff < 24) {
-            errorMessage = `Không thể xóa liên hệ "${subject}" vì được tạo chưa đủ 24 giờ. Vui lòng đợi ít nhất 24 giờ sau khi tạo.`;
-        }
-    }
-    
-    // Nếu có lỗi, hiển thị alert và ngăn xóa
-    if (errorMessage) {
-        showDeleteError(errorMessage);
-        return false;
-    }
-    
-    // Nếu không có lỗi, hiển thị confirm và cho phép xóa
-    return confirm('Bạn có chắc muốn xoá liên hệ này?');
+    contactCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
 }
 
-function showDeleteError(message) {
-    document.getElementById('deleteErrorMessage').innerHTML = message;
-    const alert = document.getElementById('deleteErrorAlert');
-    alert.style.display = 'block';
-    
-    // Scroll đến alert
-    alert.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    // Tự động ẩn sau 5 giây
-    setTimeout(() => {
-        hideDeleteError();
-    }, 5000);
+function getSelectedContactIds() {
+    const checkboxes = document.querySelectorAll('.contact-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
 }
 
-function hideDeleteError() {
-    document.getElementById('deleteErrorAlert').style.display = 'none';
+function restoreSelected() {
+    const selectedIds = getSelectedContactIds();
+    if (selectedIds.length === 0) {
+        alert('Vui lòng chọn ít nhất một liên hệ để khôi phục');
+        return;
+    }
+    
+    if (confirm(`Bạn có chắc muốn khôi phục ${selectedIds.length} liên hệ đã chọn?`)) {
+        document.getElementById('restoreContactIds').value = JSON.stringify(selectedIds);
+        document.getElementById('bulkRestoreForm').submit();
+    }
 }
+
+function forceDeleteSelected() {
+    const selectedIds = getSelectedContactIds();
+    if (selectedIds.length === 0) {
+        alert('Vui lòng chọn ít nhất một liên hệ để xóa vĩnh viễn');
+        return;
+    }
+    
+    if (confirm(`Bạn có chắc muốn xóa vĩnh viễn ${selectedIds.length} liên hệ đã chọn? Hành động này không thể hoàn tác!`)) {
+        document.getElementById('forceDeleteContactIds').value = JSON.stringify(selectedIds);
+        document.getElementById('bulkForceDeleteForm').submit();
+    }
+}
+
+// Cập nhật trạng thái checkbox "Chọn tất cả"
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
+    
+    contactCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const allChecked = Array.from(contactCheckboxes).every(cb => cb.checked);
+            const anyChecked = Array.from(contactCheckboxes).some(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+        });
+    });
+});
 </script>
-@endpush
-
-@push('styles')
-<style>
-#deleteErrorAlert {
-    border-radius: 10px;
-    margin-bottom: 20px;
-    animation: slideInDown 0.3s ease-out;
-}
-
-#deleteErrorAlert .btn-close {
-    transition: all 0.3s ease;
-}
-
-#deleteErrorAlert .btn-close:hover {
-    transform: scale(1.1);
-}
-
-@keyframes slideInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
 @endpush

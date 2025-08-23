@@ -108,7 +108,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="techvicom-container py-8">
         <!-- Breadcrumb -->
         <nav class="mb-6">
             <ol class="flex items-center space-x-2 text-sm">

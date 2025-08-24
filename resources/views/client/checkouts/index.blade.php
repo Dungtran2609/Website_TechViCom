@@ -199,6 +199,25 @@
             <div class="lg:col-span-2 order-2 lg:order-1">
                 <form id="checkout-form" class="space-y-6">
                     @csrf
+                    
+                    {{-- Hiển thị lỗi validation --}}
+                    @if ($errors->any())
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start gap-3">
+                                <div class="text-red-600 mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-red-800 font-medium">Có lỗi xảy ra:</h4>
+                                    <ul class="text-red-700 text-sm mt-2 space-y-1">
+                                        @foreach ($errors->all() as $error)
+                                            <li>• {{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <input type="hidden" id="selected-input" name="selected" value="{{ request('selected') }}">
                     {{-- STEP 1 --}}
                     <div id="checkout-step-1" class="checkout-content">
@@ -209,23 +228,23 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
                                     <input type="text" id="fullname" name="recipient_name" 
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                    <span id="fullname-error" class="text-xs text-red-500"></span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_name') border-red-500 @enderror">
+                                    <span id="fullname-error" class="text-xs text-red-500">@error('recipient_name') {{ $message }} @enderror</span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
                                     <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                    <span id="phone-error" class="text-xs text-red-500"></span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_phone') border-red-500 @enderror">
+                                    <span id="phone-error" class="text-xs text-red-500">@error('recipient_phone') {{ $message }} @enderror</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                                 <input type="email" id="email" name="recipient_email" 
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                <span id="email-error" class="text-xs text-red-500"></span>
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_email') border-red-500 @enderror">
+                                <span id="email-error" class="text-xs text-red-500">@error('recipient_email') {{ $message }} @enderror</span>
                             </div>
                             <div class="form-group">
                                 @if (isset($addresses) && count($addresses) > 0)
@@ -994,7 +1013,7 @@
 
                 function setupStepNavigation() {
                     document.getElementById('next-step-1').addEventListener('click', () => {
-                        if (validateStep1()) goToStep(2);
+                        if (validateCheckoutForm()) goToStep(2);
                     });
                     document.getElementById('prev-step-2').addEventListener('click', () => goToStep(1));
                     document.getElementById('next-step-2').addEventListener('click', () => {
@@ -1671,5 +1690,279 @@
             }
         }
         updateStep1NextBtnVisibility(window.currentStep || 1);
+
+        // ===== CHECKOUT VALIDATION =====
+        function validateCheckoutForm() {
+            let isValid = true;
+
+            // Clear previous errors
+            clearValidationErrors();
+
+            // Validate required fields for step 1
+            const requiredFields = [
+                { name: 'recipient_name', label: 'Họ và tên' },
+                { name: 'recipient_phone', label: 'Số điện thoại' },
+                { name: 'recipient_email', label: 'Email' }
+            ];
+
+            requiredFields.forEach(field => {
+                const input = document.querySelector(`[name="${field.name}"]`);
+                if (!input || !input.value.trim()) {
+                    showFieldError(field.name, `${field.label} là bắt buộc`);
+                    isValid = false;
+                }
+            });
+
+            // Validate phone number format
+            const phoneInput = document.querySelector('[name="recipient_phone"]');
+            if (phoneInput && phoneInput.value.trim()) {
+                const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+                if (!phoneRegex.test(phoneInput.value.trim())) {
+                    showFieldError('recipient_phone', 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.');
+                    isValid = false;
+                }
+            }
+
+            // Validate email format
+            const emailInput = document.querySelector('[name="recipient_email"]');
+            if (emailInput && emailInput.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailInput.value.trim())) {
+                    showFieldError('recipient_email', 'Email không hợp lệ');
+                    isValid = false;
+                }
+            }
+
+            // Validate address selection
+            const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+            if (!selectedAddress) {
+                showFieldError('selected_address', 'Vui lòng chọn địa chỉ giao hàng');
+                isValid = false;
+            } else if (selectedAddress.value === 'new') {
+                // Validate new address fields
+                const addressFields = [
+                    { name: 'recipient_address', label: 'Địa chỉ' },
+                    { name: 'province_code', label: 'Tỉnh/thành phố' },
+                    { name: 'district_code', label: 'Quận/huyện' },
+                    { name: 'ward_code', label: 'Phường/xã' }
+                ];
+
+                addressFields.forEach(field => {
+                    const input = document.querySelector(`[name="${field.name}"]`);
+                    if (!input || !input.value.trim()) {
+                        showFieldError(field.name, `${field.label} là bắt buộc`);
+                        isValid = false;
+                    }
+                });
+
+                // Validate address length
+                const addressInput = document.querySelector('[name="recipient_address"]');
+                if (addressInput && addressInput.value.trim()) {
+                    if (addressInput.value.trim().length < 10) {
+                        showFieldError('recipient_address', 'Địa chỉ phải có ít nhất 10 ký tự');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // If validation fails, scroll to first error
+            if (!isValid) {
+                const firstError = document.querySelector('.border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            return isValid;
+        }
+
+        function validateStep2() {
+            let isValid = true;
+
+            // Clear previous errors
+            clearValidationErrors();
+
+            // Validate shipping method
+            const shippingMethod = document.querySelector('input[name="shipping_method_id"]:checked');
+            if (!shippingMethod) {
+                showFieldError('shipping_method_id', 'Vui lòng chọn phương thức vận chuyển');
+                isValid = false;
+            }
+
+            // Validate payment method
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (!paymentMethod) {
+                showFieldError('payment_method', 'Vui lòng chọn phương thức thanh toán');
+                isValid = false;
+            }
+
+            // If validation fails, scroll to first error
+            if (!isValid) {
+                const firstError = document.querySelector('.border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            return isValid;
+        }
+
+        function showFieldError(fieldName, message) {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                // Handle radio buttons differently
+                if (input.type === 'radio') {
+                    // Find the parent container and add error styling
+                    const container = input.closest('.payment-option, .form-group');
+                    if (container) {
+                        container.classList.add('border-red-500');
+                        
+                        // Find or create error span
+                        let errorSpan = document.getElementById(`${fieldName}-error`);
+                        if (!errorSpan) {
+                            errorSpan = document.createElement('span');
+                            errorSpan.id = `${fieldName}-error`;
+                            errorSpan.className = 'text-xs text-red-500 mt-1 block';
+                            container.appendChild(errorSpan);
+                        }
+                        errorSpan.textContent = message;
+                    }
+                } else {
+                    // Handle regular inputs
+                    input.classList.add('border-red-500');
+                    
+                    // Find or create error span
+                    let errorSpan = document.getElementById(`${fieldName}-error`);
+                    if (!errorSpan) {
+                        errorSpan = document.createElement('span');
+                        errorSpan.id = `${fieldName}-error`;
+                        errorSpan.className = 'text-xs text-red-500 mt-1 block';
+                        input.parentNode.appendChild(errorSpan);
+                    }
+                    errorSpan.textContent = message;
+                }
+            }
+        }
+
+        function clearValidationErrors() {
+            // Remove error styling from all inputs
+            document.querySelectorAll('input, select, textarea').forEach(input => {
+                input.classList.remove('border-red-500');
+            });
+
+            // Remove error styling from containers (for radio buttons)
+            document.querySelectorAll('.payment-option, .form-group').forEach(container => {
+                container.classList.remove('border-red-500');
+            });
+
+            // Clear error messages
+            document.querySelectorAll('[id$="-error"]').forEach(errorSpan => {
+                errorSpan.textContent = '';
+            });
+        }
+
+        // Add validation to form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    if (!validateCheckoutForm()) {
+                        e.preventDefault();
+                        // Scroll to first error
+                        const firstError = document.querySelector('.border-red-500');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            // Real-time validation
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+
+                input.addEventListener('input', function() {
+                    // Clear error when user starts typing
+                    if (this.classList.contains('border-red-500')) {
+                        this.classList.remove('border-red-500');
+                        const errorSpan = document.getElementById(`${this.name}-error`);
+                        if (errorSpan) {
+                            errorSpan.textContent = '';
+                        }
+                    }
+                });
+
+                // Clear errors for radio buttons when selected
+                if (input.type === 'radio') {
+                    input.addEventListener('change', function() {
+                        const container = this.closest('.payment-option, .form-group');
+                        if (container && container.classList.contains('border-red-500')) {
+                            container.classList.remove('border-red-500');
+                            const errorSpan = document.getElementById(`${this.name}-error`);
+                            if (errorSpan) {
+                                errorSpan.textContent = '';
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        function validateField(input) {
+            const fieldName = input.name;
+            const value = input.value.trim();
+
+            // Clear previous error
+            input.classList.remove('border-red-500');
+            const errorSpan = document.getElementById(`${fieldName}-error`);
+            if (errorSpan) {
+                errorSpan.textContent = '';
+            }
+
+            // Validate based on field type
+            switch (fieldName) {
+                case 'recipient_name':
+                    if (!value) {
+                        showFieldError(fieldName, 'Họ và tên là bắt buộc');
+                    } else if (value.length < 2) {
+                        showFieldError(fieldName, 'Họ và tên phải có ít nhất 2 ký tự');
+                    }
+                    break;
+
+                case 'recipient_phone':
+                    if (!value) {
+                        showFieldError(fieldName, 'Số điện thoại là bắt buộc');
+                    } else {
+                        const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+                        if (!phoneRegex.test(value)) {
+                            showFieldError(fieldName, 'Số điện thoại không hợp lệ');
+                        }
+                    }
+                    break;
+
+                case 'recipient_email':
+                    if (!value) {
+                        showFieldError(fieldName, 'Email là bắt buộc');
+                    } else {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            showFieldError(fieldName, 'Email không hợp lệ');
+                        }
+                    }
+                    break;
+
+                case 'recipient_address':
+                    if (!value) {
+                        showFieldError(fieldName, 'Địa chỉ là bắt buộc');
+                    } else if (value.length < 10) {
+                        showFieldError(fieldName, 'Địa chỉ phải có ít nhất 10 ký tự');
+                    }
+                    break;
+            }
+        }
     </script>
 @endpush

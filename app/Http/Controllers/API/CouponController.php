@@ -11,6 +11,15 @@ class CouponController extends Controller
 {
     public function list(Request $request)
     {
+        // Kiểm tra đăng nhập
+        if (!\Illuminate\Support\Facades\Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập để xem mã giảm giá',
+                'require_login' => true
+            ]);
+        }
+
         $subtotal = (float)$request->query('subtotal', 0);
         $now = Carbon::now();
         $coupons = Coupon::where('status', true)

@@ -236,6 +236,8 @@ class ClientCheckoutController extends Controller
         }
     }
 
+
+
     /* ============================== PAGE: index ============================== */
     public function index(Request $request)
     {

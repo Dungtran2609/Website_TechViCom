@@ -29,6 +29,15 @@ class HomeController extends Controller
             'session_id' => session()->getId()
         ]);
         
+        // Tự động xóa session thanh toán lại khi vào trang chủ
+        if (session()->has('repayment_order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            session()->forget('force_cod_for_order_id');
+            session()->forget('payment_cancelled_message');
+            Log::info('Auto-cleared repayment session on home page access');
+        }
+        
         // Lấy banner đang hoạt động
         $banners = Banner::where('start_date', '<=', now())
             ->where('end_date', '>=', now())

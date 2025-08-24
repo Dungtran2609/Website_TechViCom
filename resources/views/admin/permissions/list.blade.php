@@ -16,13 +16,13 @@
 
 
             {{-- Nút đồng bộ và dọn dẹp (thêm mới và xoá cũ) --}}
-            <form action="{{ route('admin.permissions.sync', ['prune' => 'true']) }}" method="POST" class="d-inline"
+            {{-- <form action="{{ route('admin.permissions.sync', ['prune' => 'true']) }}" method="POST" class="d-inline"
                   onsubmit="return confirm('Bạn có chắc chắn muốn xoá các quyền không còn tồn tại trong hệ thống? Hành động này không thể hoàn tác.')">
                 @csrf
                 <button type="submit" class="btn btn-dark">
                     <i class="fas fa-broom"></i> Dọn dẹp quyền
                 </button>
-            </form>
+            </form> --}}
 
 
             <a href="{{ route('admin.permissions.index') }}" class="btn btn-secondary">

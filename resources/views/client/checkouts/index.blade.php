@@ -581,7 +581,7 @@
                                     <div class="flex-1">
                                         <h4 class="text-sm font-medium text-blue-800 mb-1">Khuyến mãi đặc biệt</h4>
                                         <p class="text-xs text-blue-600 mb-2">Đăng nhập để nhận mã giảm giá và ưu đãi đặc biệt</p>
-                                        <a href="{{ route('login') }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
                                             <i class="fas fa-sign-in-alt mr-1"></i>
                                             Đăng nhập ngay
                                         </a>
@@ -659,8 +659,7 @@
             // Kiểm tra trạng thái đăng nhập
             const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
             if (!isLoggedIn) {
-                alert('Vui lòng đăng nhập để nhận khuyến mãi');
-                window.location.href = '{{ route("login") }}';
+                openAuthModal();
                 return;
             }
             
@@ -746,7 +745,7 @@
                         
                         // Kiểm tra nếu cần đăng nhập
                         if (data.require_login) {
-                            msg.innerHTML = data.message + ' <a href="/login" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
+                            msg.innerHTML = data.message + ' <a href="#" onclick="openAuthModal(); return false;" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
                             msg.className = 'mt-1 text-xs text-red-500';
                         } else {
                             msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
@@ -823,8 +822,7 @@
             // Kiểm tra trạng thái đăng nhập
             const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
             if (!isLoggedIn) {
-                alert('Vui lòng đăng nhập để xem danh sách khuyến mãi');
-                window.location.href = '{{ route("login") }}';
+                openAuthModal();
                 return;
             }
             
@@ -845,8 +843,7 @@
             // Kiểm tra trạng thái đăng nhập
             const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
             if (!isLoggedIn) {
-                alert('Vui lòng đăng nhập để xem danh sách khuyến mãi');
-                window.location.href = '{{ route("login") }}';
+                openAuthModal();
                 return;
             }
             

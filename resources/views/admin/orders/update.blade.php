@@ -18,6 +18,17 @@
         {{ session('success') }}
     </div>
 @endif
+
+<div class="alert alert-warning mb-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Lưu ý:</strong> Các trường sau đã bị vô hiệu hóa và không thể thay đổi:
+    <ul class="mb-0 mt-2">
+        <li>Phương thức thanh toán</li>
+        <li>Phương thức vận chuyển</li>
+        <li>Áp dụng Coupon</li>
+        <li>Phí vận chuyển</li>
+    </ul>
+</div>
 <form action="{{ route('admin.orders.updateOrders', $orderData['id']) }}" method="POST">
     @csrf
 
@@ -52,22 +63,24 @@
 
                 <div class="col-md-4">
                     <label for="payment_method" class="form-label fw-medium">Phương thức thanh toán</label>
-                    <select id="payment_method" name="payment_method" class="form-select" @if($orderData['status'] !== 'pending') disabled @endif>
+                    <select id="payment_method" name="payment_method" class="form-select" disabled>
                         <option value="credit_card" {{ $orderData['payment_method'] === 'credit_card' ? 'selected' : '' }}>Thẻ tín dụng/ghi nợ</option>
                         <option value="bank_transfer" {{ $orderData['payment_method'] === 'bank_transfer' ? 'selected' : '' }}>Chuyển khoản</option>
                         <option value="cod" {{ $orderData['payment_method'] === 'cod' ? 'selected' : '' }}>COD</option>
                     </select>
+                    <small class="text-muted">Không thể thay đổi phương thức thanh toán</small>
                 </div>
 
                 <div class="col-md-4">
                     <label for="shipping_method_id" class="form-label fw-medium">Phương thức vận chuyển</label>
-                    <select id="shipping_method_id" name="shipping_method_id" class="form-select" @if($orderData['status'] !== 'pending') disabled @endif>
+                    <select id="shipping_method_id" name="shipping_method_id" class="form-select" disabled>
                         @foreach($orderData['shipping_methods'] as $method)
                             <option value="{{ $method->id }}" {{ $orderData['shipping_method_id'] == $method->id ? 'selected' : '' }}>
                                 {{ $method->name }}
                             </option>
                         @endforeach
                     </select>
+                    <small class="text-muted">Không thể thay đổi phương thức vận chuyển</small>
                 </div>
             </div>
         </div>
@@ -108,7 +121,7 @@
         <div class="card-body">
             <div class="mb-3">
                 <label for="coupon_id" class="form-label fw-medium">Chọn coupon:</label>
-                <select name="coupon_id" id="coupon_id" class="form-select" @if($orderData['status'] !== 'pending') disabled @endif>
+                <select name="coupon_id" id="coupon_id" class="form-select" disabled>
                     <option value="">Không dùng coupon</option>
                     @foreach($orderData['coupons'] as $cp)
                         <option value="{{ $cp->id }}" {{ $orderData['coupon_id'] == $cp->id ? 'selected' : '' }}>
@@ -119,6 +132,7 @@
                         </option>
                     @endforeach
                 </select>
+                <small class="text-muted">Không thể thay đổi coupon</small>
             </div>
         </div>
     </div>
@@ -132,7 +146,8 @@
             <div class="mb-3">
                 <label for="shipping_fee" class="form-label fw-medium">Phí vận chuyển (VND)</label>
                 <input type="number" id="shipping_fee" name="shipping_fee" class="form-control"
-                    value="{{ old('shipping_fee', $orderData['shipping_fee'] ?? 0) }}" min="0" @if($orderData['status'] !== 'pending') readonly @endif>
+                    value="{{ old('shipping_fee', $orderData['shipping_fee'] ?? 0) }}" min="0" readonly>
+                <small class="text-muted">Không thể thay đổi phí vận chuyển</small>
             </div>
         </div>
     </div>

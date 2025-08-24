@@ -550,28 +550,46 @@
                         @endif
                     </div>
                     {{-- MÃ GIẢM GIÁ --}}
-                    <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
-                        <div class="flex items-center justify-between mb-2">
-                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
-                                giá</label>
-                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
-                                class="text-xs text-orange-600 underline">Danh sách</button>
+                    @auth
+                        <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
+                                    giá</label>
+                                <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
+                                    class="text-xs text-orange-600 underline">Danh sách</button>
+                            </div>
+                            <div class="flex space-x-2 mb-1">
+                                <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
+                                <button type="button" onclick="applyCheckoutCoupon()"
+                                    class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
+                                    dụng</button>
+                                <button type="button" onclick="clearCheckoutCoupon()"
+                                    class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
+                                    title="Hủy">×</button>
+                            </div>
+                            <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
+                            <div id="checkout-available-coupons"
+                                class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+                            </div>
                         </div>
-                        <div class="flex space-x-2 mb-1">
-                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
-                            <button type="button" onclick="applyCheckoutCoupon()"
-                                class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
-                                dụng</button>
-                            <button type="button" onclick="clearCheckoutCoupon()"
-                                class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
-                                title="Hủy">×</button>
+                    @else
+                        <div class="border-t pt-4 mb-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-gift text-blue-500 mr-3 text-lg"></i>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-blue-800 mb-1">Khuyến mãi đặc biệt</h4>
+                                        <p class="text-xs text-blue-600 mb-2">Đăng nhập để nhận mã giảm giá và ưu đãi đặc biệt</p>
+                                        <a href="{{ route('login') }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-sign-in-alt mr-1"></i>
+                                            Đăng nhập ngay
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
-                        <div id="checkout-available-coupons"
-                            class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
-                        </div>
-                    </div>
+                    @endauth
                     {{-- TỔNG TIỀN --}}
                     <div class="border-t pt-4 space-y-2">
                         <div class="flex justify-between"><span>Tạm tính:</span><span
@@ -638,6 +656,14 @@
 
         /* ===================== COUPON ===================== */
         function applyCheckoutCoupon() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                alert('Vui lòng đăng nhập để nhận khuyến mãi');
+                window.location.href = '{{ route("login") }}';
+                return;
+            }
+            
             const input = document.getElementById('checkout-coupon-code');
             const msg = document.getElementById('checkout-coupon-message');
             if (!input) return;
@@ -676,12 +702,29 @@
                 .filter(id => id && id !== '')
                 .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
 
+            // Lấy thông tin khách vãng lai nếu có
+            let guestEmail = '';
+            let guestPhone = '';
+            
+            // Kiểm tra form khách vãng lai
+            const guestEmailInput = document.querySelector('input[name="guest_email"]');
+            const guestPhoneInput = document.querySelector('input[name="guest_phone"]');
+            
+            if (guestEmailInput) {
+                guestEmail = guestEmailInput.value.trim();
+            }
+            if (guestPhoneInput) {
+                guestPhone = guestPhoneInput.value.trim();
+            }
+            
             const requestData = {
                 coupon_code: code,
                 subtotal,
                 cart_product_ids: cartProductIds,
                 cart_product_amounts: cartProductAmounts,
-                cart_category_ids: cartCategoryIds
+                cart_category_ids: cartCategoryIds,
+                guest_email: guestEmail,
+                guest_phone: guestPhone
             };
             
             console.log('Sending coupon request:', requestData);
@@ -700,8 +743,16 @@
                         localStorage.removeItem('appliedDiscount');
                         window.checkoutDiscount = 0;
                         input.classList.add('border-red-500');
-                        msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
-                        msg.className = 'mt-1 text-xs text-red-500';
+                        
+                        // Kiểm tra nếu cần đăng nhập
+                        if (data.require_login) {
+                            msg.innerHTML = data.message + ' <a href="/login" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        } else {
+                            msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        }
+                        
                         updateCheckoutTotal();
                         return;
                     }
@@ -769,6 +820,14 @@
         }
 
         function toggleCouponListCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                alert('Vui lòng đăng nhập để xem danh sách khuyến mãi');
+                window.location.href = '{{ route("login") }}';
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             const btn = document.getElementById('toggle-coupon-list');
             if (!box || !btn) return;
@@ -783,6 +842,14 @@
         }
 
         function loadAvailableCouponsCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                alert('Vui lòng đăng nhập để xem danh sách khuyến mãi');
+                window.location.href = '{{ route("login") }}';
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             if (!box) return;
             const subtotal = Number(window.checkoutSubtotal || 0);

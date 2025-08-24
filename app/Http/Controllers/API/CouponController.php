@@ -43,6 +43,16 @@ class CouponController extends Controller
         try {
             $couponCode = $request->input('coupon_code');
             $subtotal = $request->input('subtotal', 0);
+            $user = \Illuminate\Support\Facades\Auth::user();
+            
+            // Khách vãng lai không thể áp dụng coupon
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để nhận khuyến mãi',
+                    'require_login' => true
+                ]);
+            }
             
             // Find coupon in database
             $coupon = Coupon::where('code', $couponCode)
@@ -87,6 +97,43 @@ class CouponController extends Controller
                     'success' => false,
                     'message' => 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫'
                 ]);
+            }
+            
+            // Check max usage per user
+            if ($coupon->max_usage_per_user > 0) {
+                $user = \Illuminate\Support\Facades\Auth::user();
+                $usedCount = 0;
+                
+                if ($user) {
+                    // User đã đăng nhập - kiểm tra theo user_id
+                    $usedCount = \App\Models\Order::where('user_id', $user->id)
+                        ->where('coupon_code', $coupon->code)
+                        ->whereNull('deleted_at')
+                        ->count();
+                } else {
+                    // Khách vãng lai - kiểm tra theo email hoặc phone từ request
+                    $guestEmail = $request->input('guest_email');
+                    $guestPhone = $request->input('guest_phone');
+                    
+                    if ($guestEmail) {
+                        $usedCount = \App\Models\Order::where('guest_email', $guestEmail)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    } elseif ($guestPhone) {
+                        $usedCount = \App\Models\Order::where('guest_phone', $guestPhone)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    }
+                }
+                
+                if ($usedCount >= $coupon->max_usage_per_user) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.'
+                    ]);
+                }
             }
             
             // Calculate discount amount

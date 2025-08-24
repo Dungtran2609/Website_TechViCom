@@ -165,12 +165,12 @@
                                     <p class="text-gray-600 text-sm">Đăng nhập để trải nghiệm đầy đủ</p>
                                 </div>
                                 <div class="space-y-2">
-                                    <a href="{{ route('login') }}"
+                                    <button type="button" onclick="openAuthModalAndShowLogin()"
                                         class="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">Đăng
-                                        nhập</a>
-                                    <a href="{{ route('register') }}"
+                                        nhập</button>
+                                    <button type="button" onclick="openAuthModalAndShowRegister()"
                                         class="block w-full text-center border border-orange-500 text-orange-500 py-2 rounded-lg hover:bg-orange-50 transition">Đăng
-                                        ký</a>
+                                        ký</button>
                                 </div>
                             </div>
                         @else

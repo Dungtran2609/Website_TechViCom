@@ -592,18 +592,7 @@
                             @endif
                         @endif
 
-                        <!-- Nút thanh toán lại trong Actions -->
-                        @if($order->status === 'pending' && in_array($order->payment_status, ['pending', 'processing', 'failed']) && $order->payment_method !== 'cod')
-                            <a href="{{ route('checkout.index') }}?order_id={{ $order->id }}" 
-                               class="btn btn-primary">
-                                <i class="fas fa-credit-card me-2"></i>
-                                @if($order->payment_status === 'processing')
-                                    Chọn phương thức thanh toán khác
-                                @else
-                                    Thanh toán lại
-                                @endif
-                            </a>
-                        @endif
+                        
 
                         <button class="btn btn-outline-info" onclick="window.print()">
                             <i class="fas fa-print me-2"></i>

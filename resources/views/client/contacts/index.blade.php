@@ -3,7 +3,7 @@
 @section('title', 'Liên hệ - Techvicom')
 
 @section('content')
-    <div class="bg-white py-4 shadow mb-8">
+    <div>
         <div class="items-center text-sm techvicom-container">
             <a href="{{ route('home') }}" class="text-gray-700 hover:text-custom-primary">Trang chủ</a>
             <span class="mx-2 text-gray-400">&gt;</span>

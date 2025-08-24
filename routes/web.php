@@ -132,6 +132,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
 // Products
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
+    Route::post('/filter', [ClientProductController::class, 'filterProducts'])->name('filter');
     Route::get('/love', [ClientProductController::class, 'love'])->name('love');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
     Route::get('/{productId}/comments/filter', [ClientProductCommentController::class, 'filterComments'])->name('comments.filter');

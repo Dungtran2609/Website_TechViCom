@@ -18,8 +18,7 @@
         }
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <script src="../assets/js/component-loader.js"></script>
+    <link rel="stylesheet" href="{{ asset('client_css/css/style.css') }}">
     <style>
         .success-animation {
             animation: successPulse 2s ease-in-out infinite;

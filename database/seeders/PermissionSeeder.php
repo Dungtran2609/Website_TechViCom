@@ -9,7 +9,7 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('permissions')->insert([
+    DB::table('permissions')->insert([
             [
                 'name' => 'view_users',
                 'description' => 'Xem danh sách tài khoản',
@@ -35,6 +35,20 @@ class PermissionSeeder extends Seeder
                 'name' => 'manage_roles',
                 'description' => 'Quản lý các vai trò hệ thống',
                 'module' => 'roles',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'manage_attributes',
+                'description' => 'Quản lý thuộc tính sản phẩm',
+                'module' => 'attributes',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'manage_attribute_values',
+                'description' => 'Quản lý giá trị thuộc tính sản phẩm',
+                'module' => 'attribute_values',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

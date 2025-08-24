@@ -11,6 +11,7 @@ use App\Models\UserAddress;
 use App\Models\ShippingMethod;
 use App\Models\Coupon;
 use App\Services\VNPayService;
+use App\Http\Requests\Client\CheckoutRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -741,7 +742,7 @@ class ClientCheckoutController extends Controller
     }
 
     /* ============================== PROCESS CHECKOUT ============================== */
-    public function process(Request $request)
+    public function process(CheckoutRequest $request)
     {
         try {
             Log::info('Checkout process started', [
@@ -1340,6 +1341,18 @@ class ClientCheckoutController extends Controller
                 $originalFinalTotal = $originalSubtotal + $originalShippingFee - $originalDiscountAmount;
 
                 $order->update([
+                    // Cập nhật thông tin người nhận mới
+                    'recipient_name'     => $addressData['recipient_name'],
+                    'recipient_phone'    => $addressData['recipient_phone'],
+                    'recipient_email'    => $addressData['recipient_email'],
+                    'recipient_address'  => $addressData['recipient_address'],
+                    'province_code'      => $provinceCode,
+                    'district_code'      => $districtCode,
+                    'ward_code'          => $wardCode,
+                    'city'               => $provinceName,
+                    'district'           => $districtName,
+                    'ward'               => $wardName,
+                    
                     'payment_method'     => $request->payment_method,
                     'shipping_method_id' => $shippingMethodId,
                     'total_amount'       => $originalSubtotal, // Sử dụng giá cũ
@@ -1347,6 +1360,7 @@ class ClientCheckoutController extends Controller
                     'discount_amount'    => $originalDiscountAmount, // Sử dụng giá cũ
                     'coupon_code'        => $order->coupon_code, // Giữ nguyên coupon cũ
                     'final_total'        => $originalFinalTotal, // Sử dụng giá cũ
+                    'order_notes'        => $request->order_notes, // Cập nhật ghi chú mới
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                     'updated_at'         => now(),
                     // Reset các trường VNPay khi thanh toán lại
@@ -1431,6 +1445,7 @@ class ClientCheckoutController extends Controller
                     'discount_amount'    => $discountAmount,
                     'coupon_code'        => $couponCode,
                     'final_total'        => $finalTotal,
+                    'order_notes'        => $request->order_notes,
                     'status'             => 'pending',
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                 ];

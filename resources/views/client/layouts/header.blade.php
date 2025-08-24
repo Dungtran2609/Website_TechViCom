@@ -252,6 +252,7 @@
     </div>
 
     <div id="cart-footer" class="border-t border-gray-200 p-4 hidden">
+        @auth
         <div id="sidebar-coupon-box" class="mb-3">
             <div class="flex items-center justify-between mb-1">
                 <label class="block text-xs font-medium text-gray-600">Mã giảm giá</label>
@@ -272,6 +273,17 @@
                 class="mt-2 space-y-2 hidden max-h-40 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
             </div>
         </div>
+        @else
+        <div class="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-medium text-gray-600">Mã giảm giá</label>
+            </div>
+            <div class="text-xs text-gray-500 mb-2">
+                <i class="fas fa-lock mr-1"></i>
+                Vui lòng <a href="#" onclick="openAuthModal(); return false;" class="text-[#ff6c2f] hover:underline">đăng nhập</a> để sử dụng mã giảm giá
+            </div>
+        </div>
+        @endauth
 
         <div id="sidebar-discount-row" class="flex justify-between items-center mb-2 hidden">
             <span class="text-gray-600">Giảm giá:</span>
@@ -833,8 +845,25 @@
                     msg.className = 'text-xs mt-1 text-green-600';
                 } else {
                     localStorage.removeItem('appliedDiscount');
-                    msg.textContent = d.message || 'Mã không hợp lệ';
-                    msg.className = 'text-xs mt-1 text-red-500';
+                    if (d.require_login) {
+                        msg.textContent = 'Vui lòng đăng nhập để sử dụng mã giảm giá';
+                        msg.className = 'text-xs mt-1 text-red-500';
+                        // Thêm link đăng nhập
+                        const loginLink = document.createElement('a');
+                        loginLink.href = '#';
+                        loginLink.textContent = ' Đăng nhập ngay';
+                        loginLink.className = 'text-[#ff6c2f] hover:underline';
+                        loginLink.style.marginLeft = '5px';
+                        loginLink.onclick = function(e) {
+                            e.preventDefault();
+                            openAuthModal();
+                            return false;
+                        };
+                        msg.appendChild(loginLink);
+                    } else {
+                        msg.textContent = d.message || 'Mã không hợp lệ';
+                        msg.className = 'text-xs mt-1 text-red-500';
+                    }
                 }
                 recalcSelectedSubtotal();
             })
@@ -862,7 +891,12 @@
         if (!box) return;
         const subtotal = getSelectedRawSubtotal();
         fetch(`/api/coupons?subtotal=${subtotal}`).then(r => r.json()).then(d => {
-            if (!d.success) return;
+            if (!d.success) {
+                if (d.require_login) {
+                    box.innerHTML = '<div class="text-center p-2"><p class="text-gray-500 text-xs mb-1">Vui lòng đăng nhập để xem mã giảm giá</p><a href="#" onclick="openAuthModal(); return false;" class="text-[#ff6c2f] hover:underline text-xs">Đăng nhập ngay</a></div>';
+                }
+                return;
+            }
             if (!Array.isArray(d.coupons) || d.coupons.length === 0) {
                 box.innerHTML = '<p class="text-gray-500">Không có mã phù hợp</p>';
                 return

@@ -12,7 +12,7 @@
                 @method('PUT')
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-bookmark-star me-1 text-info"></i> Loại logo</label>
-                    <select name="type" class="form-select" required readonly disabled>
+                    <select name="type" class="form-select"  readonly disabled>
                         @if($logo->type == 'client')
                             <option value="client" selected>Logo trang chủ (client)</option>
                             <option value="admin" disabled>Logo admin/sidebar</option>

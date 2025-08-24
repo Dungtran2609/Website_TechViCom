@@ -6,7 +6,7 @@
     <main class="min-h-screen">
         <!-- Hero Section -->
         <section class="bg-gradient-to-r from-orange-500 to-red-500 text-white py-20">
-            <div class="container mx-auto px-4 text-center">
+            <div class="techvicom-container text-center">
                 <h1 class="text-5xl md:text-6xl font-bold mb-6">
                     <i class="fas fa-building mr-4"></i>
                     Về Techvicom
@@ -19,7 +19,7 @@
 
         <!-- Company Overview -->
         <section class="py-16 bg-white">
-            <div class="container mx-auto px-4">
+            <div class="techvicom-container">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
                         <h2 class="text-4xl font-bold text-gray-800 mb-6">Chúng tôi là ai?</h2>
@@ -56,7 +56,7 @@
 
         <!-- Core Values -->
         <section class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4">
+            <div class="techvicom-container">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
                         <h2 class="text-4xl font-bold text-gray-800 mb-6">Giá trị cốt lõi</h2>
@@ -137,7 +137,7 @@
 
         <!-- Call to Action -->
         <section class="py-16 bg-white">
-            <div class="container mx-auto px-4">
+            <div class="techvicom-container">
                 <div class="max-w-4xl mx-auto text-center">
                     <h2 class="text-4xl font-bold text-gray-800 mb-6">Sẵn sàng trải nghiệm?</h2>
                     <p class="text-xl text-gray-600 mb-8">

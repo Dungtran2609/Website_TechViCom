@@ -10,7 +10,7 @@
          alt="Store Background" 
          class="pointer-events-none select-none absolute opacity-10 md:opacity-20 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[700px] md:w-[900px] lg:w-[1100px] z-0" 
          style="filter: blur(2px);">
-    <div class="container mx-auto px-4 relative z-10">
+            <div class="techvicom-container relative z-10">
         <!-- Header -->
         <div class="flex flex-col items-center mb-12">
             <span class="text-5xl text-orange-500 mb-2"><i class="fas fa-store"></i></span>

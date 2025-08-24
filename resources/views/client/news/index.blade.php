@@ -3,7 +3,7 @@
 @section('title', 'Tin tức - TechViCom')
 
 @section('content')
-    <div class="container mx-auto px-4 py-12">
+    <div class="techvicom-container py-12">
         <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-lg">
             <a href="{{ route('home') }}" class="text-gray-700 hover:text-[#ff6c2f]">Trang chủ</a>

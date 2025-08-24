@@ -6,11 +6,11 @@
         @csrf
         <div class="mb-3">
             <label class="form-label">Tên mẫu mail</label>
-            <input type="text" name="name" class="form-control" required>
+            <input type="text" name="name" class="form-control" >
         </div>
         <div class="mb-3">
             <label class="form-label">Tiêu đề</label>
-            <input type="text" name="subject" class="form-control" required>
+            <input type="text" name="subject" class="form-control" >
         </div>
         <div class="mb-3">
             <label class="form-label">Loại</label>
@@ -23,7 +23,7 @@
                 <span class="badge bg-secondary variable-insert" data-insert="{{ '{' }}{ $coupon_code }}" style="cursor:pointer;min-width:90px;text-align:center;">Mã giảm giá</span>
                 <span class="badge bg-secondary variable-insert" data-insert="{{ '{' }}{ date('d/m/Y') }}" style="cursor:pointer;min-width:90px;text-align:center;">Ngày hiện tại</span>
             </div>
-            <textarea name="content" id="editor" required></textarea>
+            <textarea name="content" id="editor" ></textarea>
         </div>
         <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" name="is_active" value="1" checked>

@@ -43,9 +43,18 @@ class UpdateCouponRequest extends FormRequest
                 Rule::in(['percent', 'fixed'])
             ],
             'value' => [
-                'required',
-                'numeric',
-                'gt:0'
+                'required', 
+                'numeric', 
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    $discountType = request('discount_type');
+                    if ($discountType === 'percent' && $value > 100) {
+                        $fail('Phần trăm giảm giá không được vượt quá 100%.');
+                    }
+                    if ($discountType === 'fixed' && $value > 10000000) {
+                        $fail('Số tiền giảm cố định không được vượt quá 10,000,000₫.');
+                    }
+                }
             ],
             'max_discount_amount' => [
                 'nullable',

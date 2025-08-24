@@ -5,21 +5,21 @@
 @push('styles')
     <style>
         .pv-main {
+            position: relative;
             width: 100%;
-            height: 520px;
+            aspect-ratio: 1/1;
             background: #fff;
             border: 1px solid #eee;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
         .pv-main img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            image-rendering: auto;
         }
 
         .pv-thumbs {
@@ -33,22 +33,22 @@
         }
 
         .pv-thumb {
+            position: relative;
             width: 84px;
             height: 84px;
             border: 1px solid #e5e7eb;
             border-radius: 10px;
             background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
             transition: .15s;
             cursor: pointer;
         }
 
         .pv-thumb img {
-            width: 72px;
-            height: 72px;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            image-rendering: auto;
         }
 
         .pv-thumb:hover {
@@ -97,6 +97,55 @@
             font-size: 1rem !important;
             /* tất cả chữ bằng nhau */
             line-height: 1.75;
+        }
+
+        /* ===== PRODUCT CARD STYLES ===== */
+        .rp-card {
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .rp-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .rp-card .aspect-square {
+            aspect-ratio: 1/1;
+            overflow: hidden;
+        }
+
+        .rp-card img {
+            transition: all 0.3s ease;
+        }
+
+        .rp-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .rp-like {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .rp-like:hover {
+            background: #ff6c2f;
+            color: white;
+        }
+
+        .rp-like i.fas {
+            color: #ff6c2f;
         }
 
         .pv-longdesc h2,
@@ -545,13 +594,13 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Hiển thị sản phẩm đã mua -->
+                                <!-- Hiển thị form đánh giá cho từng đơn hàng -->
                                 @if($purchasedItems->count() > 0)
-                                    <div class="mb-4 p-4 bg-white rounded-lg border border-gray-200">
-                                        <h4 class="font-medium text-gray-900 mb-3">Sản phẩm bạn đã mua:</h4>
-                                        <div class="space-y-3">
-                                            @foreach($purchasedItems as $item)
-                                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <div class="space-y-6">
+                                        @foreach($purchasedItems as $item)
+                                            <div class="bg-white rounded-lg border border-gray-200 p-5">
+                                                <!-- Thông tin sản phẩm và đơn hàng -->
+                                                <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
                                                     <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                                                         @if($item->productVariant && $item->productVariant->image)
                                                             <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
@@ -577,41 +626,76 @@
                                                             </p>
                                                         @endif
                                                         <p class="text-sm text-gray-500">Số lượng: {{ $item->quantity }} | Giá: {{ number_format($item->price) }}₫</p>
-                                                        <p class="text-xs text-gray-400">Đơn hàng: #{{ $item->order->order_number }} | Nhận hàng: {{ $item->order->received_at ? $item->order->received_at->format('d/m/Y') : 'N/A' }}</p>
+                                                        <p class="text-xs text-gray-400">
+                                                            <i class="fas fa-shopping-cart mr-1"></i>
+                                                            Đơn hàng: #{{ $item->order->order_number }} | 
+                                                            <i class="fas fa-calendar-check mr-1"></i>
+                                                            Nhận hàng: {{ $item->order->received_at ? $item->order->received_at->format('d/m/Y') : 'N/A' }}
+                                                        </p>
+                                                        @if($item->order->received_at)
+                                                            @php
+                                                                $daysSinceReceived = now()->diffInDays($item->order->received_at);
+                                                                $daysLeft = 15 - $daysSinceReceived;
+                                                            @endphp
+                                                            @if($daysLeft > 0)
+                                                                <p class="text-xs text-[#ff6c2f] font-medium mt-1">
+                                                                    <i class="fas fa-clock mr-1"></i>
+                                                                    Còn {{ $daysLeft }} ngày để đánh giá
+                                                                </p>
+                                                            @else
+                                                                <p class="text-xs text-red-500 font-medium mt-1">
+                                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                                    Đã hết thời gian đánh giá
+                                                                </p>
+                                                            @endif
+                                                        @endif
                                                     </div>
                                                 </div>
-                                            @endforeach
-                                        </div>
+
+                                                <!-- Form đánh giá cho đơn hàng này -->
+                                                @if($item->order->received_at && (15 - now()->diffInDays($item->order->received_at)) > 0)
+                                                    <form action="{{ route('products.comments.store', $product->id) }}" method="POST" class="order-review-form">
+                                                        @csrf
+                                                        <input type="hidden" name="order_id" value="{{ $item->order->id }}">
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="block text-sm font-medium mb-1">Đánh giá <span class="text-red-500">*</span></label>
+                                                            <div class="flex items-center space-x-1">
+                                                                @for ($i = 1; $i <= 5; $i++)
+                                                                    <input type="radio" id="star{{ $item->order->id }}_{{ $i }}" name="rating"
+                                                                        value="{{ $i }}" class="sr-only">
+                                                                    <label for="star{{ $item->order->id }}_{{ $i }}"
+                                                                        class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400">
+                                                                        <i class="fas fa-star"></i>
+                                                                    </label>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="block text-sm font-medium mb-1">Nội dung <span class="text-red-500">*</span></label>
+                                                            <textarea name="content" rows="4" maxlength="500"
+                                                                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f]" 
+                                                                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+                                                            <div class="text-xs text-gray-500 mt-1">
+                                                                <span class="charCount">0</span>/500 ký tự
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <button type="submit" class="btn-primary px-5 py-2 rounded-md">
+                                                            <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá cho đơn hàng #{{ $item->order->order_number }}
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <div class="text-center py-4 text-gray-500">
+                                                        <i class="fas fa-clock text-2xl mb-2"></i>
+                                                        <p>Đã hết thời gian đánh giá cho đơn hàng này</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
-                                <form action="{{ route('products.comments.store', $product->id) }}" method="POST">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label class="block text-sm font-medium mb-1">Đánh giá <span class="text-red-500">*</span></label>
-                                        <div class="flex items-center space-x-1">
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                <input type="radio" id="star{{ $i }}" name="rating"
-                                                    value="{{ $i }}" class="sr-only" required>
-                                                <label for="star{{ $i }}"
-                                                    class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400">
-                                                    <i class="fas fa-star"></i>
-                                                </label>
-                                            @endfor
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="block text-sm font-medium mb-1">Nội dung <span class="text-red-500">*</span></label>
-                                        <textarea name="content" rows="4" maxlength="3000"
-                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f]" 
-                                            placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." required></textarea>
-                                        <div class="text-xs text-gray-500 mt-1">
-                                            <span id="charCount">0</span>/3000 ký tự
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn-primary px-5 py-2 rounded-md">
-                                        <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá
-                                    </button>
-                                </form>
                             </div>
                         @else
                             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -781,13 +865,40 @@
                                 <button type="button" class="rp-like favorite-once" data-product-id="{{ $rp->id }}" title="Yêu thích" onclick="event.preventDefault(); event.stopPropagation();">
                                     <i class="{{ in_array($rp->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                                 </button>
-                                <div class="aspect-square bg-gray-50 flex items-center justify-center">
+                                <div class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
                                     <img src="{{ $rp->thumbnail ? asset('storage/' . $rp->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                        alt="{{ $rp->name }}" class="max-w-full max-h-full object-contain p-3"
+                                        alt="{{ $rp->name }}" class="w-full h-full object-cover"
                                         onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                 </div>
                                 <div class="p-4">
                                     <h3 class="font-medium text-gray-900 mb-2 line-clamp-2">{{ $rp->name }}</h3>
+                                    
+                                    <div class="flex items-center mb-2">
+                                        @php
+                                            $avgRating = $rp->comments()->where('status', 'approved')->avg('rating') ?? 0;
+                                            $reviewCount = $rp->comments()->where('status', 'approved')->count();
+                                            $viewCount = $rp->view_count ?? 0;
+                                        @endphp
+                                        <div class="flex items-center">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                @if ($i <= floor($avgRating))
+                                                    <i class="fas fa-star text-yellow-400 text-sm"></i>
+                                                @elseif ($i - 0.5 <= $avgRating)
+                                                    <i class="fas fa-star-half-alt text-yellow-400 text-sm"></i>
+                                                @else
+                                                    <i class="far fa-star text-gray-300 text-sm"></i>
+                                                @endif
+                                            @endfor
+                                            <span class="text-xs text-gray-500 ml-1">({{ $reviewCount }})</span>
+                                        </div>
+                                        @if($viewCount > 0)
+                                            <div class="flex items-center ml-auto text-xs text-gray-500">
+                                                <i class="far fa-eye mr-1"></i>
+                                                {{ number_format($viewCount) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
                                     <p class="text-[#ff6c2f] font-bold">
                                         @if ($rp->type === 'simple' && $rp->variants->count() > 0)
                                             {{ number_format($rp->variants->first()->price) }}₫
@@ -1248,6 +1359,44 @@
             });
         }
 
+        // Character count for order review forms
+        document.querySelectorAll('.order-review-form textarea').forEach(textarea => {
+            const charCount = textarea.parentElement.querySelector('.charCount');
+            
+            textarea.addEventListener('input', function() {
+                const length = this.value.length;
+                charCount.textContent = length;
+                
+                if (length > 450) {
+                    charCount.classList.add('text-red-500');
+                } else {
+                    charCount.classList.remove('text-red-500');
+                }
+            });
+        });
+
+        // Star rating functionality for order forms
+        document.querySelectorAll('.order-review-form').forEach(form => {
+            const stars = form.querySelectorAll('input[type="radio"]');
+            const starLabels = form.querySelectorAll('label[for^="star"]');
+            
+            stars.forEach((star, index) => {
+                star.addEventListener('change', function() {
+                    // Reset all stars in this form
+                    starLabels.forEach(label => {
+                        label.querySelector('i').classList.remove('text-yellow-400');
+                        label.querySelector('i').classList.add('text-gray-300');
+                    });
+                    
+                    // Color stars up to selected
+                    for (let i = 0; i <= index; i++) {
+                        starLabels[i].querySelector('i').classList.remove('text-gray-300');
+                        starLabels[i].querySelector('i').classList.add('text-yellow-400');
+                    }
+                });
+            });
+        });
+
         /* ===== Rating Filter ===== */
         const ratingFilterBtns = document.querySelectorAll('.rating-filter-btn');
         const commentsContainer = document.getElementById('comments-container');
@@ -1369,7 +1518,7 @@
                         // Nếu server yêu cầu redirect (user chưa đăng nhập)
                         toast(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích', 'error');
                         setTimeout(() => {
-                            window.location.href = data.redirect;
+                            openAuthModal();
                         }, 1500);
                     } else {
                         // Restore original state on error

@@ -13,7 +13,7 @@
 }
 </style>
 <div class="bg-gradient-to-br from-gray-50 to-green-50 min-h-screen py-12">
-    <div class="container mx-auto px-4">
+            <div class="techvicom-container">
         <!-- Header Section -->
         <div class="text-center mb-12">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">

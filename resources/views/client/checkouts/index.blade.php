@@ -166,7 +166,7 @@
 
     {{-- Steps --}}
     <div class="bg-white border-b no-print">
-        <div class="container mx-auto px-4 py-4">
+        <div class="techvicom-container py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
@@ -193,7 +193,7 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM CHECKOUT (2/3) --}}
             <div class="lg:col-span-2 order-2 lg:order-1">
@@ -207,14 +207,14 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" required
+                                    <input type="text" id="fullname" name="recipient_name" 
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="fullname-error" class="text-xs text-red-500"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" required
+                                    <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="phone-error" class="text-xs text-red-500"></span>
@@ -222,13 +222,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" required
+                                <input type="email" id="email" name="recipient_email" 
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                 <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -273,7 +272,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
                                                     *</label>
-                                                <select id="province" name="province_code" required
+                                                <select id="province" name="province_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-city="{{ $defaultAddress?->city ?? '' }}"
                                                     @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
@@ -284,7 +283,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
                                                     *</label>
-                                                <select id="district" name="district_code" required
+                                                <select id="district" name="district_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-district="{{ $defaultAddress?->district ?? '' }}"
                                                     @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
@@ -295,7 +294,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
                                                     *</label>
-                                                <select id="ward" name="ward_code" required
+                                                <select id="ward" name="ward_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
                                                     @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
@@ -304,7 +303,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address" required rows="3"
+                                        <textarea id="address" name="recipient_address"  rows="3"
                                             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
@@ -414,7 +413,7 @@
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
                             <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
+                                <input type="checkbox" id="agree-terms"  class="mr-3 accent-orange-500">
                                 <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
                                         class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
                                     website</label>
@@ -551,28 +550,46 @@
                         @endif
                     </div>
                     {{-- MÃ GIẢM GIÁ --}}
-                    <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
-                        <div class="flex items-center justify-between mb-2">
-                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
-                                giá</label>
-                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
-                                class="text-xs text-orange-600 underline">Danh sách</button>
+                    @auth
+                        <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
+                                    giá</label>
+                                <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
+                                    class="text-xs text-orange-600 underline">Danh sách</button>
+                            </div>
+                            <div class="flex space-x-2 mb-1">
+                                <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
+                                <button type="button" onclick="applyCheckoutCoupon()"
+                                    class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
+                                    dụng</button>
+                                <button type="button" onclick="clearCheckoutCoupon()"
+                                    class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
+                                    title="Hủy">×</button>
+                            </div>
+                            <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
+                            <div id="checkout-available-coupons"
+                                class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+                            </div>
                         </div>
-                        <div class="flex space-x-2 mb-1">
-                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
-                            <button type="button" onclick="applyCheckoutCoupon()"
-                                class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
-                                dụng</button>
-                            <button type="button" onclick="clearCheckoutCoupon()"
-                                class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
-                                title="Hủy">×</button>
+                    @else
+                        <div class="border-t pt-4 mb-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-gift text-blue-500 mr-3 text-lg"></i>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-blue-800 mb-1">Khuyến mãi đặc biệt</h4>
+                                        <p class="text-xs text-blue-600 mb-2">Đăng nhập để nhận mã giảm giá và ưu đãi đặc biệt</p>
+                                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-sign-in-alt mr-1"></i>
+                                            Đăng nhập ngay
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
-                        <div id="checkout-available-coupons"
-                            class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
-                        </div>
-                    </div>
+                    @endauth
                     {{-- TỔNG TIỀN --}}
                     <div class="border-t pt-4 space-y-2">
                         <div class="flex justify-between"><span>Tạm tính:</span><span
@@ -639,6 +656,13 @@
 
         /* ===================== COUPON ===================== */
         function applyCheckoutCoupon() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const input = document.getElementById('checkout-coupon-code');
             const msg = document.getElementById('checkout-coupon-message');
             if (!input) return;
@@ -677,12 +701,29 @@
                 .filter(id => id && id !== '')
                 .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
 
+            // Lấy thông tin khách vãng lai nếu có
+            let guestEmail = '';
+            let guestPhone = '';
+            
+            // Kiểm tra form khách vãng lai
+            const guestEmailInput = document.querySelector('input[name="guest_email"]');
+            const guestPhoneInput = document.querySelector('input[name="guest_phone"]');
+            
+            if (guestEmailInput) {
+                guestEmail = guestEmailInput.value.trim();
+            }
+            if (guestPhoneInput) {
+                guestPhone = guestPhoneInput.value.trim();
+            }
+            
             const requestData = {
                 coupon_code: code,
                 subtotal,
                 cart_product_ids: cartProductIds,
                 cart_product_amounts: cartProductAmounts,
-                cart_category_ids: cartCategoryIds
+                cart_category_ids: cartCategoryIds,
+                guest_email: guestEmail,
+                guest_phone: guestPhone
             };
             
             console.log('Sending coupon request:', requestData);
@@ -701,8 +742,16 @@
                         localStorage.removeItem('appliedDiscount');
                         window.checkoutDiscount = 0;
                         input.classList.add('border-red-500');
-                        msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
-                        msg.className = 'mt-1 text-xs text-red-500';
+                        
+                        // Kiểm tra nếu cần đăng nhập
+                        if (data.require_login) {
+                            msg.innerHTML = data.message + ' <a href="#" onclick="openAuthModal(); return false;" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        } else {
+                            msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        }
+                        
                         updateCheckoutTotal();
                         return;
                     }
@@ -770,6 +819,13 @@
         }
 
         function toggleCouponListCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             const btn = document.getElementById('toggle-coupon-list');
             if (!box || !btn) return;
@@ -784,6 +840,13 @@
         }
 
         function loadAvailableCouponsCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             if (!box) return;
             const subtotal = Number(window.checkoutSubtotal || 0);

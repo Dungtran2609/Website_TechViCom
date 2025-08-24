@@ -365,163 +365,8 @@
                     </div>
 
                     <!-- Products Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-grid">
-                        @forelse($products as $product)
-                            @php
-                                $minFilter = request('min_price');
-                                $maxFilter = request('max_price');
-                                $selectedRams = collect(explode(',', request('ram', '')))
-                                    ->filter()
-                                    ->values();
-                                $selectedStorages = collect(explode(',', request('storage', '')))
-                                    ->filter()
-                                    ->values();
-
-                                $variants = $product->variants ?? collect();
-
-                                // Lọc theo RAM & Storage (trên cùng 1 biến thể)
-                                $variants = $variants->filter(function ($v) use ($selectedRams, $selectedStorages) {
-                                    $ok = true;
-                                    if ($selectedRams->count()) {
-                                        $ok =
-                                            $ok &&
-                                            $v->attributeValues->contains(function ($av) use ($selectedRams) {
-                                                if ((int) $av->attribute_id !== 2) {
-                                                    return false;
-                                                }
-                                                $val = strtolower((string) $av->value);
-                                                $val = (int) str_replace('gb', '', $val);
-                                                return in_array($val, $selectedRams->map(fn($x) => (int) $x)->all());
-                                            });
-                                    }
-                                    if ($ok && $selectedStorages->count()) {
-                                        $ok =
-                                            $ok &&
-                                            $v->attributeValues->contains(function ($av) use ($selectedStorages) {
-                                                if ((int) $av->attribute_id !== 3) {
-                                                    return false;
-                                                }
-                                                $val = strtolower((string) $av->value);
-                                                $gb = str_contains($val, 'tb')
-                                                    ? (int) str_replace('tb', '', $val) * 1024
-                                                    : (int) str_replace('gb', '', $val);
-                                                return in_array($gb, $selectedStorages->map(fn($x) => (int) $x)->all());
-                                            });
-                                    }
-                                    return $ok;
-                                });
-
-                                // Lọc theo GIÁ hiệu lực
-                                $variants = $variants->filter(function ($v) use ($minFilter, $maxFilter) {
-                                    $price = $v->sale_price && $v->sale_price < $v->price ? $v->sale_price : $v->price;
-                                    if ($minFilter && $price < $minFilter) {
-                                        return false;
-                                    }
-                                    if ($maxFilter && $price > $maxFilter) {
-                                        return false;
-                                    }
-                                    return true;
-                                });
-
-                                // Tính min/max
-                                if ($product->flash_sale_price && $variants->count()) {
-                                    // Nếu có giá flash sale, dùng giá này cho tất cả biến thể (giả định chỉ có 1 biến thể)
-                                    $minPrice = $maxPrice = $product->flash_sale_price;
-                                } elseif ($variants->count()) {
-                                    $prices = $variants->map(
-                                        fn($v) => $v->sale_price && $v->sale_price < $v->price
-                                            ? $v->sale_price
-                                            : $v->price,
-                                    );
-                                    $minPrice = $prices->min();
-                                    $maxPrice = $prices->max();
-                                } else {
-                                    $minPrice = null;
-                                    $maxPrice = null;
-                                }
-
-                                $stars = (int) round($product->avg_rating ?? 0);
-                                $reviewsCount = (int) ($product->reviews_count ?? 0);
-                            @endphp
-
-                            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group product-card"
-                                onclick="goToProductDetail({{ $product->id }})">
-                                <div class="relative product-image-wrap">
-                                    @php
-                                        $thumb = $product->thumbnail
-                                            ? asset('storage/' . $product->thumbnail)
-                                            : asset('client_css/images/placeholder.svg');
-                                    @endphp
-                                    <img src="{{ $thumb }}" alt="{{ $product->name }}" class="product-image"
-                                        onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-
-                                    {{-- Tim yêu thích: một chiều --}}
-                                    <button onclick="event.stopPropagation()" class="fav-btn favorite-once"
-                                        aria-label="Yêu thích" data-product-id="{{ $product->id }}">
-                                        <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
-                                    </button>
-                                </div>
-
-                                <div class="p-4">
-                                    <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-
-                                    {{-- GIÁ + Lượt xem --}}
-                                    <div class="flex items-center justify-between mb-2">
-                                        <div>
-                                            @if ($product->flash_sale_price && $variants->count())
-                                                <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
-                                                @php $variant = $variants->first(); @endphp
-                                                @if($variant && $variant->price > $product->flash_sale_price)
-                                                    <span class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
-                                                @endif
-                                                @if($product->discount_percent > 0)
-                                                    <span class="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded">-{{ $product->discount_percent }}%</span>
-                                                @endif
-                                            @elseif (!is_null($minPrice) && !is_null($maxPrice))
-                                                @if ($minPrice == $maxPrice)
-                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫</span>
-                                                @else
-                                                    <span class="text-lg font-bold text-[#ff6c2f]">{{ number_format($minPrice) }}₫ - {{ number_format($maxPrice) }}₫</span>
-                                                @endif
-                                            @else
-                                                <span class="text-lg font-bold text-[#ff6c2f]">0₫</span>
-                                            @endif
-                                        </div>
-                                        <div class="flex items-center text-gray-500 text-sm">
-                                            <i class="far fa-eye mr-1"></i>
-                                            <span>{{ number_format($product->view_count ?? 0) }}</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Đánh giá dưới giá --}}
-                                    <div class="flex items-center">
-                                        <div class="flex text-yellow-400 text-sm">
-                                            @for ($i = 1; $i <= 5; $i++)
-                                                @if ($i <= $stars)
-                                                    <i class="fas fa-star"></i>
-                                                @else
-                                                    <i class="far fa-star"></i>
-                                                @endif
-                                            @endfor
-                                        </div>
-                                        <span class="text-gray-500 text-sm ml-2">({{ $reviewsCount }})</span>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="col-span-full text-center py-12">
-                                <div
-                                    class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fas fa-search text-gray-400 text-3xl"></i>
-                                </div>
-                                <h3 class="text-lg font-semibold text-gray-600 mb-2">Không tìm thấy sản phẩm</h3>
-                                <p class="text-gray-500">Hãy thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc</p>
-                            </div>
-                        @endforelse
-
-                        @if ($products->hasPages())
-                            <div class="mt-8">{{ $products->links() }}</div>
-                        @endif
+                    <div id="products-container">
+                        @include('client.products.partials.product-grid', ['products' => $products, 'favoriteProductIds' => $favoriteProductIds])
                     </div>
                 </div>
             </div>
@@ -694,25 +539,7 @@
                 });
             }
 
-            // Category filter functionality
-            document.querySelectorAll('.toggle-subcategories').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const categoryId = this.dataset.categoryId;
-                    const subcategories = document.getElementById(`subcategories-${categoryId}`);
-                    const icon = this.querySelector('i');
-                    
-                    if (subcategories.style.display === 'none') {
-                        subcategories.style.display = 'block';
-                        icon.classList.remove('fa-chevron-down');
-                        icon.classList.add('fa-chevron-up');
-                    } else {
-                        subcategories.style.display = 'none';
-                        icon.classList.remove('fa-chevron-up');
-                        icon.classList.add('fa-chevron-down');
-                    }
-                });
-            });
+
 
             // Parent-child category relationship
             document.querySelectorAll('.parent-category').forEach(checkbox => {
@@ -922,7 +749,7 @@
                         this.querySelector('i').className = originalIcon;
                         toast('Vui lòng đăng nhập để thêm vào yêu thích');
                         setTimeout(() => {
-                            window.location.href = '{{ route("login") }}';
+                            openAuthModal();
                         }, 1500);
                     })
                     .finally(() => {
@@ -944,5 +771,238 @@
         function goToProductDetail(productId) {
             window.location.href = `/products/${productId}`;
         }
+
+        // AJAX Filtering
+        let filterTimeout;
+        const productsContainer = document.getElementById('products-container');
+        const loadingHtml = `
+            <div class="flex justify-center items-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span class="ml-3 text-gray-600">Đang tải sản phẩm...</span>
+            </div>
+        `;
+
+        function applyFilters() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                const formData = new FormData();
+                
+                // Category filters
+                const selectedCategories = [];
+                document.querySelectorAll('.category-filter:checked').forEach(cb => {
+                    selectedCategories.push(cb.value);
+                });
+                if (selectedCategories.length > 0) {
+                    formData.append('category', selectedCategories.join(','));
+                }
+
+                // Brand filters
+                const selectedBrands = [];
+                document.querySelectorAll('.brand-filter:checked').forEach(cb => {
+                    selectedBrands.push(cb.value);
+                });
+                if (selectedBrands.length > 0) {
+                    formData.append('brands', selectedBrands.join(','));
+                }
+
+                // RAM filters
+                const selectedRams = [];
+                document.querySelectorAll('.ram-filter:checked').forEach(cb => {
+                    selectedRams.push(cb.value);
+                });
+                if (selectedRams.length > 0) {
+                    formData.append('ram', selectedRams.join(','));
+                }
+
+                // Storage filters
+                const selectedStorages = [];
+                document.querySelectorAll('.storage-filter:checked').forEach(cb => {
+                    selectedStorages.push(cb.value);
+                });
+                if (selectedStorages.length > 0) {
+                    formData.append('storage', selectedStorages.join(','));
+                }
+
+                // Rating filter
+                const selectedRating = document.querySelector('.rating-filter:checked');
+                if (selectedRating) {
+                    formData.append('rating', selectedRating.value);
+                }
+
+                // Price range
+                const minPrice = document.getElementById('min-price')?.value;
+                const maxPrice = document.getElementById('max-price')?.value;
+                if (minPrice) formData.append('min_price', minPrice);
+                if (maxPrice) formData.append('max_price', maxPrice);
+
+                // Sort
+                const sortSelect = document.getElementById('sort-filter');
+                if (sortSelect) {
+                    formData.append('sort', sortSelect.value);
+                }
+
+                // Search
+                const searchInput = document.getElementById('search-input');
+                if (searchInput && searchInput.value.trim()) {
+                    formData.append('search', searchInput.value.trim());
+                }
+
+                // Show loading
+                productsContainer.innerHTML = loadingHtml;
+
+                // Send AJAX request
+                fetch('{{ route("products.filter") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        productsContainer.innerHTML = data.html;
+                        
+                        // Reinitialize favorite buttons
+                        initializeFavoriteButtons();
+                        
+                        // Update URL without page reload
+                        updateURL(formData);
+                    } else {
+                        productsContainer.innerHTML = `
+                            <div class="text-center py-12">
+                                <div class="text-red-500 text-lg mb-4">
+                                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                                    <p>Có lỗi xảy ra khi tải sản phẩm.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    productsContainer.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="text-red-500 text-lg mb-4">
+                                <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                                <p>Có lỗi xảy ra khi tải sản phẩm.</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }, 300); // Debounce 300ms
+        }
+
+        function updateURL(formData) {
+            const params = new URLSearchParams();
+            for (let [key, value] of formData.entries()) {
+                if (value) {
+                    params.append(key, value);
+                }
+            }
+            
+            const newURL = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.pushState({}, '', newURL);
+        }
+
+        function initializeFavoriteButtons() {
+            const favBtns = document.querySelectorAll('.favorite-btn');
+            favBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const productId = parseInt(this.dataset.productId);
+                    
+                    // Toggle heart icon
+                    const icon = this.querySelector('i');
+                    const isFavorite = icon.classList.contains('text-red-500');
+                    
+                    // Show loading
+                    icon.className = 'fas fa-spinner fa-spin';
+                    this.disabled = true;
+                    
+                    fetch('{{ route("accounts.favorites.toggle") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            icon.className = data.is_favorite ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-300';
+                        } else {
+                            // Restore original state
+                            icon.className = isFavorite ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-300';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Restore original state
+                        icon.className = isFavorite ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-300';
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                    });
+                });
+            });
+        }
+
+        // Add event listeners for filters
+        document.addEventListener('DOMContentLoaded', function() {
+            // Category filters
+            document.querySelectorAll('.category-filter').forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+
+            // Brand filters
+            document.querySelectorAll('.brand-filter').forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+
+            // RAM filters
+            document.querySelectorAll('.ram-filter').forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+
+            // Storage filters
+            document.querySelectorAll('.storage-filter').forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+
+            // Rating filters
+            document.querySelectorAll('.rating-filter').forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+
+            // Price range
+            const minPriceInput = document.getElementById('min-price');
+            const maxPriceInput = document.getElementById('max-price');
+            if (minPriceInput) {
+                minPriceInput.addEventListener('input', applyFilters);
+            }
+            if (maxPriceInput) {
+                maxPriceInput.addEventListener('input', applyFilters);
+            }
+
+            // Sort
+            const sortSelect = document.getElementById('sort-filter');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', applyFilters);
+            }
+
+            // Search
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+
+            // Initialize favorite buttons
+            initializeFavoriteButtons();
+        });
     </script>
 @endpush

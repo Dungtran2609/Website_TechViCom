@@ -372,7 +372,7 @@
 
         <div class="text-center auth-links mt-3">
             <span class="text-gray-600">Đã có tài khoản?</span>
-            <a href="{{ route('login') }}" class="ms-1">
+                                    <a href="#" onclick="openAuthModalAndShowLogin(); return false;" class="ms-1">
                 <i class="fas fa-sign-in-alt me-1"></i>
                 Đăng nhập ngay
             </a>

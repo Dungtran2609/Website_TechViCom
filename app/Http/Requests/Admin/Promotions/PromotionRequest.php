@@ -17,7 +17,7 @@ class PromotionRequest extends FormRequest
             'name' => 'required|string|max:255|min:3',
             'description' => 'nullable|string|max:1000',
             'flash_type' => 'required|in:all,category,flash_sale',
-            'start_date' => 'required|date|after_or_equal:today',
+            'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'status' => 'required|boolean',
             'categories' => 'array',
@@ -53,7 +53,7 @@ class PromotionRequest extends FormRequest
             'flash_type.in' => 'Kiểu chương trình không hợp lệ.',
             'start_date.required' => 'Ngày bắt đầu là bắt buộc.',
             'start_date.date' => 'Ngày bắt đầu không đúng định dạng.',
-            'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.',
+            // 'start_date.after_or_equal' => 'Ngày bắt đầu phải từ hôm nay trở đi.', // Bỏ validation này vì sẽ tự động cập nhật
             'end_date.required' => 'Ngày kết thúc là bắt buộc.',
             'end_date.date' => 'Ngày kết thúc không đúng định dạng.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',

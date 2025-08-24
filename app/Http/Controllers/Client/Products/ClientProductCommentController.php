@@ -26,6 +26,24 @@ class ClientProductCommentController extends Controller
             return back()->with('error', $message);
         }
 
+        // Lấy order_id từ request
+        $orderId = $request->input('order_id');
+        
+        if (!$orderId) {
+            return back()->with('error', 'Vui lòng chọn đơn hàng để đánh giá.');
+        }
+
+        // Kiểm tra xem user đã đánh giá sản phẩm này cho đơn hàng này chưa
+        $existingComment = ProductComment::where('user_id', $user->id)
+                                       ->where('product_id', $productId)
+                                       ->where('order_id', $orderId)
+                                       ->whereNull('parent_id')
+                                       ->first();
+
+        if ($existingComment) {
+            return back()->with('error', 'Bạn đã đánh giá sản phẩm này cho đơn hàng này rồi!');
+        }
+
         // Lấy order_id từ order đã nhận hàng và chưa đánh giá
         $orderItems = OrderItem::whereHas('order', function($query) use ($user) {
             $query->where('user_id', $user->id)
@@ -50,13 +68,13 @@ class ClientProductCommentController extends Controller
             }
 
             // Kiểm tra đã comment cho đơn hàng này chưa
-            $existingComment = ProductComment::where('user_id', $user->id)
-                                           ->where('product_id', $productId)
-                                           ->where('order_id', $order->id)
-                                           ->whereNull('parent_id')
-                                           ->first();
+            $existingCommentForOrder = ProductComment::where('user_id', $user->id)
+                                                   ->where('product_id', $productId)
+                                                   ->where('order_id', $order->id)
+                                                   ->whereNull('parent_id')
+                                                   ->first();
 
-            if (!$existingComment) {
+            if (!$existingCommentForOrder) {
                 $selectedOrder = $order;
                 break; // Tìm thấy đơn hàng phù hợp
             }

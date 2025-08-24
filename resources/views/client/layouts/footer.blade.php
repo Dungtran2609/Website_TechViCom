@@ -5,7 +5,7 @@
         <div class="container mx-auto px-4">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
-                    <h3 class="text-lg font-bold text-white mb-2">Hệ thống Techvicom trên toàn quốc</h3>
+                    <h3 class="text-lg font-bold text-white mb-2">Hệ thống Techvicom tại Hà Nội</h3>
                     <p class="text-gray-300 text-sm">Bao gồm Cửa hàng Techvicom, Trung tâm Điện máy, Trung tâm Laptop, Techvicom Studio, Đại lý ủy quyền, Dự án doanh nghiệp</p>
                 </div>
                 <div>

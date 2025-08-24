@@ -3,6 +3,11 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Quản lý liên hệ người dùng</h1>
+    <div>
+        <a href="{{ route('admin.contacts.trashed') }}" class="btn btn-danger">
+            <i class="fas fa-trash me-1"></i> Thùng rác
+        </a>
+    </div>
 </div>
 
 <form method="GET" action="{{ route('admin.contacts.index') }}" class="mb-4">
@@ -52,13 +57,34 @@
 @endif
 
 @if (session('error'))
-    <div class="alert alert-danger">
-        {{ session('error') }}
+    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 4px solid #dc3545 !important;">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
+            <div class="flex-grow-1">
+                <strong class="d-block mb-1">Không thể xóa liên hệ!</strong>
+                <div class="text-danger-emphasis">
+                    {{ session('error') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     </div>
 @endif
 
+<!-- Alert thông báo lỗi JavaScript (ẩn ban đầu) -->
+<div id="deleteErrorAlert" class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-left: 4px solid #dc3545 !important; display: none;">
+    <div class="d-flex align-items-start">
+        <i class="fas fa-exclamation-triangle me-3 mt-1 text-danger"></i>
+        <div class="flex-grow-1">
+            <strong class="d-block mb-1">Không thể xóa liên hệ!</strong>
+            <div id="deleteErrorMessage" class="text-danger-emphasis"></div>
+        </div>
+        <button type="button" class="btn-close ms-2" onclick="hideDeleteError()" aria-label="Close"></button>
+    </div>
+</div>
+
 <div class="card">
-    <div class="card-body">
+    <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table align-middle table-hover table-centered">
                 <thead class="bg-light-subtle">
@@ -141,19 +167,15 @@
                                         <iconify-icon icon="solar:eye-broken" class="align-middle fs-18"></iconify-icon>
                                     </a>
                                     
-                                    @if(in_array($contact->status, ['responded', 'rejected']))
-                                        <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-soft-danger btn-sm" onclick="return confirm('Bạn có chắc muốn xoá liên hệ này?')" title="Xoá">
-                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
-                                            </button>
-                                        </form>
-                                    @else
-                                        <button class="btn btn-soft-secondary btn-sm" disabled title="Chỉ có thể xóa liên hệ đã phản hồi hoặc bị từ chối">
+                                    <form action="{{ route('admin.contacts.destroy', $contact) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-soft-danger btn-sm" 
+                                                onclick="return checkDeleteConditions({{ $contact->id }}, '{{ addslashes($contact->subject) }}', '{{ $contact->status }}', {{ $contact->is_read ? 'true' : 'false' }}, '{{ $contact->created_at->format('Y-m-d H:i:s') }}')" 
+                                                title="Xoá">
                                             <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
                                         </button>
-                                    @endif
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -177,3 +199,86 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function checkDeleteConditions(contactId, subject, status, isRead, createdAt) {
+    // Kiểm tra các điều kiện xóa
+    let errorMessage = '';
+    
+    // Kiểm tra trạng thái
+    if (status === 'pending') {
+        errorMessage = `Không thể xóa liên hệ "${subject}" vì đang ở trạng thái chờ xử lý. Vui lòng xử lý liên hệ trước khi xóa.`;
+    } else if (status === 'in_progress') {
+        errorMessage = `Không thể xóa liên hệ "${subject}" vì đang được xử lý. Vui lòng hoàn thành việc xử lý trước khi xóa.`;
+    } else if (!isRead) {
+        errorMessage = `Không thể xóa liên hệ "${subject}" vì chưa được đọc. Vui lòng đọc và xử lý liên hệ trước khi xóa.`;
+    } else {
+        // Kiểm tra thời gian tạo (ít nhất 24h)
+        const createdDate = new Date(createdAt);
+        const now = new Date();
+        const hoursDiff = (now - createdDate) / (1000 * 60 * 60);
+        
+        if (hoursDiff < 24) {
+            errorMessage = `Không thể xóa liên hệ "${subject}" vì được tạo chưa đủ 24 giờ. Vui lòng đợi ít nhất 24 giờ sau khi tạo.`;
+        }
+    }
+    
+    // Nếu có lỗi, hiển thị alert và ngăn xóa
+    if (errorMessage) {
+        showDeleteError(errorMessage);
+        return false;
+    }
+    
+    // Nếu không có lỗi, hiển thị confirm và cho phép xóa
+    return confirm('Bạn có chắc muốn xoá liên hệ này?');
+}
+
+function showDeleteError(message) {
+    document.getElementById('deleteErrorMessage').innerHTML = message;
+    const alert = document.getElementById('deleteErrorAlert');
+    alert.style.display = 'block';
+    
+    // Scroll đến alert
+    alert.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Tự động ẩn sau 5 giây
+    setTimeout(() => {
+        hideDeleteError();
+    }, 5000);
+}
+
+function hideDeleteError() {
+    document.getElementById('deleteErrorAlert').style.display = 'none';
+}
+</script>
+@endpush
+
+@push('styles')
+<style>
+#deleteErrorAlert {
+    border-radius: 10px;
+    margin-bottom: 20px;
+    animation: slideInDown 0.3s ease-out;
+}
+
+#deleteErrorAlert .btn-close {
+    transition: all 0.3s ease;
+}
+
+#deleteErrorAlert .btn-close:hover {
+    transform: scale(1.1);
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+@endpush

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
-    <div class="container mx-auto px-4">
+    <div class="techvicom-container">
         <!-- Header -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">

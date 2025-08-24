@@ -236,6 +236,8 @@ class ClientCheckoutController extends Controller
         }
     }
 
+
+
     /* ============================== PAGE: index ============================== */
     public function index(Request $request)
     {
@@ -1209,13 +1211,40 @@ class ClientCheckoutController extends Controller
             }
             // Chỉ xử lý coupon mới nếu không phải thanh toán lại
             if (!$isRepayment && !empty($request->coupon_code)) {
+                // Khách vãng lai không thể áp dụng coupon
+                if (!Auth::check()) {
+                    return redirect()->route('checkout.index')->with('error', 'Vui lòng đăng nhập để nhận khuyến mãi');
+                }
+                
                 $couponCode = $request->coupon_code;
                 $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
-                if ($coupon && $coupon->max_usage_per_user > 0 && Auth::check()) {
-                    $usedCount = Order::where('user_id', Auth::id())
-                        ->where('coupon_code', $coupon->code)
-                        ->whereNull('deleted_at')
-                        ->count();
+                if ($coupon && $coupon->max_usage_per_user > 0) {
+                    $usedCount = 0;
+                    
+                    if (Auth::check()) {
+                        // User đã đăng nhập - kiểm tra theo user_id
+                        $usedCount = Order::where('user_id', Auth::id())
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    } else {
+                        // Khách vãng lai - kiểm tra theo email hoặc phone từ request
+                        $guestEmail = $request->input('guest_email');
+                        $guestPhone = $request->input('guest_phone');
+                        
+                        if ($guestEmail) {
+                            $usedCount = Order::where('guest_email', $guestEmail)
+                                ->where('coupon_code', $coupon->code)
+                                ->whereNull('deleted_at')
+                                ->count();
+                        } elseif ($guestPhone) {
+                            $usedCount = Order::where('guest_phone', $guestPhone)
+                                ->where('coupon_code', $coupon->code)
+                                ->whereNull('deleted_at')
+                                ->count();
+                        }
+                    }
+                    
                     if ($usedCount >= $coupon->max_usage_per_user) {
                         return redirect()->route('checkout.index')->with('error', 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.');
                     }

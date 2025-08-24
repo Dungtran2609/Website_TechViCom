@@ -237,7 +237,7 @@ class ClientAccountController extends Controller
     {
         $request->validate([
             'recipient_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^0\d{9}$/'],
             'address_line' => 'required|string|max:500',
             'city' => 'required|string|max:255',
             'district' => 'required|string|max:255',
@@ -247,7 +247,7 @@ class ClientAccountController extends Controller
             'recipient_name.required' => 'Vui lòng nhập tên người nhận.',
             'recipient_name.max' => 'Tên người nhận tối đa 255 ký tự.',
             'phone.required' => 'Vui lòng nhập số điện thoại.',
-            'phone.max' => 'Số điện thoại tối đa 20 ký tự.',
+            'phone.regex' => 'Số điện thoại phải bắt đầu bằng số 0 và gồm 10 số.',
             'address_line.required' => 'Vui lòng nhập địa chỉ chi tiết.',
             'address_line.max' => 'Địa chỉ chi tiết tối đa 500 ký tự.',
             'city.required' => 'Vui lòng chọn tỉnh/thành phố.',
@@ -338,6 +338,14 @@ class ClientAccountController extends Controller
                 'success' => false,
                 'message' => 'Địa chỉ không tồn tại'
             ], 404);
+        }
+
+        // Kiểm tra xem địa chỉ có phải là mặc định không
+        if ($address->is_default) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa địa chỉ mặc định. Vui lòng đặt địa chỉ khác làm mặc định trước khi xóa.'
+            ], 400);
         }
 
         $address->delete();

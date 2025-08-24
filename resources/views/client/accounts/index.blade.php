@@ -62,7 +62,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto px-4 account-container">
+            <div class="techvicom-container account-container">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-lg-3 mb-4">

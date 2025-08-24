@@ -57,7 +57,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto px-4">
+    <div class="techvicom-container">
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <!-- Header -->

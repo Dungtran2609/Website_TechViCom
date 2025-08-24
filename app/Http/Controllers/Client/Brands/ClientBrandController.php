@@ -26,11 +26,12 @@ class ClientBrandController extends Controller
 
 		// Lấy tất cả sản phẩm thuộc brand này
 		$products = Product::where('brand_id', $brand->id)
-			->where('status', 1)
+			->where('status', 'active')
 			->whereHas('brand', function ($q) {
-				$q->where('status', 1);
+				$q->where('status', true);
 			})
 			->with(['brand', 'category', 'productAllImages', 'variants'])
+			->orderBy('name', 'asc')
 			->paginate(12);
 
 		// Lấy tất cả brand để hiển thị sidebar hoặc breadcrumb

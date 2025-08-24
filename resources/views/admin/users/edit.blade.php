@@ -12,6 +12,12 @@
 
     <div class="card">
         <div class="card-body">
+            <!-- Hiển thị thông báo lỗi validate chung -->
+            @if ($errors->has('error'))
+                <div class="alert alert-danger">
+                    {{ $errors->first('error') }}
+                </div>
+            @endif
             <!-- Form chỉnh sửa -->
             <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -40,12 +46,18 @@
                 </div>
 
 
+                @php
+                    $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
+                @endphp
                 <!-- Tên người dùng -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Tên người dùng <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="name"
                            class="form-control @error('name') is-invalid @enderror"
-                           value="{{ old('name', $user->name) }}">
+                           value="{{ old('name', $user->name) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="name" value="{{ $user->name }}">
+                    @endif
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -57,7 +69,10 @@
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="email"
                            class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email', $user->email) }}">
+                           value="{{ old('email', $user->email) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="email" value="{{ $user->email }}">
+                    @endif
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -69,7 +84,7 @@
                     <label for="password" class="form-label">Mật khẩu mới</label>
                     <input type="password" name="password" id="password"
                            class="form-control @error('password') is-invalid @enderror"
-                           placeholder="Để trống nếu không muốn thay đổi">
+                           placeholder="Để trống nếu không muốn thay đổi" @if($onlyUserRole) readonly @endif>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -81,7 +96,7 @@
                     <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới</label>
                     <input type="password" name="password_confirmation" id="password_confirmation"
                            class="form-control @error('password_confirmation') is-invalid @enderror"
-                           placeholder="Xác nhận mật khẩu mới">
+                           placeholder="Xác nhận mật khẩu mới" @if($onlyUserRole) readonly @endif>
                     @error('password_confirmation')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -93,7 +108,10 @@
                     <label for="phone_number" class="form-label">Số điện thoại</label>
                     <input type="text" name="phone_number" id="phone_number"
                            class="form-control @error('phone_number') is-invalid @enderror"
-                           value="{{ old('phone_number', $user->phone_number) }}">
+                           value="{{ old('phone_number', $user->phone_number) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="phone_number" value="{{ $user->phone_number }}">
+                    @endif
                     @error('phone_number')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -105,7 +123,10 @@
                     <label for="birthday" class="form-label">Ngày sinh</label>
                     <input type="date" name="birthday" id="birthday"
                            class="form-control @error('birthday') is-invalid @enderror"
-                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}">
+                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="birthday" value="{{ $user->birthday }}">
+                    @endif
                     @error('birthday')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -115,12 +136,15 @@
                 <!-- Giới tính -->
                 <div class="mb-3">
                     <label for="gender" class="form-label">Giới tính</label>
-                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror">
+                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror" @if($onlyUserRole) disabled @endif>
                         <option value="">Chọn giới tính</option>
                         <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>Nam</option>
                         <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>Nữ</option>
                         <option value="other" {{ old('gender', $user->gender) === 'other' ? 'selected' : '' }}>Khác</option>
                     </select>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="gender" value="{{ $user->gender }}">
+                    @endif
                     @error('gender')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -166,6 +190,7 @@
                 @endphp
 
 
+                @if(!$onlyUserRole)
                 <div class="col-12 mb-3">
                     <label class="form-label font-semibold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
                     <input type="text" name="address_line" class="form-control mb-2 @error('address_line') is-invalid @enderror" id="edit_address_line" value="{{ old('address_line', $defaultAddress->address_line ?? '') }}" placeholder="Nhập số nhà, tên đường...">
@@ -204,6 +229,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
 
                 <!-- Địa chỉ mặc định -->

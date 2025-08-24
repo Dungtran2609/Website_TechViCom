@@ -121,70 +121,105 @@ class AdminUserController extends Controller
         return view('admin.users.edit', compact('user', 'roles', 'addresses'));
     }
 
-
-
-
     public function update(UserRequest $request, User $user)
-    {
-        // Nếu user chỉ có vai trò 'user' thì chỉ cho phép cập nhật trạng thái
-        $userRoleNames = $user->roles->pluck('name')->toArray();
-        if (count($userRoleNames) === 1 && in_array('user', $userRoleNames)) {
+{
+    // Lấy danh sách tên vai trò của người dùng
+    $userRoleNames = $user->roles->pluck('name')->toArray();
+
+    // ---- LOGIC ĐẶC BIỆT CHO VAI TRÒ 'USER' HOẶC 'CUSTOMER' ----
+    if (count($userRoleNames) === 1 && (in_array('user', $userRoleNames) || in_array('customer', $userRoleNames))) {
+
+        // Bước 1: Kiểm tra xem có bất kỳ nỗ lực thay đổi thông tin bị cấm hay không.
+        $forbiddenChangeAttempted = false;
+
+        // Danh sách các trường thông tin bị cấm chỉnh sửa
+        $forbiddenFields = ['name', 'email', 'phone_number', 'birthday', 'gender', 'address_line', 'ward', 'district', 'city'];
+
+        foreach ($forbiddenFields as $field) {
+            // So sánh giá trị từ request với giá trị hiện tại trong DB
+            // Dùng (string) để xử lý trường hợp một bên là null và một bên là chuỗi rỗng
+            if ((string)$request->input($field) !== (string)$user->{$field}) {
+                $forbiddenChangeAttempted = true;
+                break; // Tìm thấy một thay đổi bị cấm, không cần kiểm tra thêm
+            }
+        }
+
+        // Kiểm tra riêng cho mật khẩu và ảnh đại diện
+        if (!$forbiddenChangeAttempted && ($request->filled('password') || $request->hasFile('image_profile'))) {
+            $forbiddenChangeAttempted = true;
+        }
+
+        // Nếu phát hiện nỗ lực thay đổi thông tin bị cấm, trả về lỗi ngay lập tức.
+        if ($forbiddenChangeAttempted) {
+            return redirect()->back()->with('error', 'Không thể sửa tài khoản có vai trò là khách hàng.');
+        }
+
+        // Bước 2: Nếu không có thay đổi nào bị cấm, hãy kiểm tra xem có thay đổi nào được phép không.
+
+        // So sánh trạng thái
+        // Dùng boolean() để chuyển đổi các giá trị '0', '1', 'true', 'false' thành boolean
+        $statusChanged = $request->boolean('is_active') !== $user->is_active;
+
+        // So sánh vai trò (đây là cách so sánh mảng chính xác nhất)
+        $currentRoles = $user->roles->pluck('id')->sort()->values()->all();
+        $newRoles = collect($request->input('roles', []))->map(fn($id) => (int)$id)->sort()->values()->all();
+        $rolesChanged = $currentRoles !== $newRoles;
+
+        // Nếu có ít nhất một thay đổi được phép (trạng thái hoặc vai trò)
+        if ($statusChanged || $rolesChanged) {
+            // Thực hiện cập nhật
             $user->update(['is_active' => $request->is_active]);
-            return redirect()->route('admin.users.index')->with('success', 'Chỉ trạng thái tài khoản được cập nhật.');
-        } {
-            $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender', 'is_active']);
-
-
-            if ($request->password) {
-                $userData['password'] = Hash::make($request->password);
-            }
-
-
-            if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
-                if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
-                    Storage::disk('public')->delete($user->image_profile);
-                }
-                $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
-            } else {
-                // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
-                $userData['image_profile'] = $user->image_profile;
-            }
-
-
-            $user->update($userData);
             $user->roles()->sync($request->roles);
 
-
-
-
-            if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
-                $defaultAddress = $user->addresses->where('is_default', 1)->first() ?? $user->addresses->first();
-
-
-
-
-                if ($defaultAddress) {
-                    $defaultAddress->update([
-                        'address_line' => $request->address_line,
-                        'ward' => $request->ward,
-                        'district' => $request->district,
-                        'city' => $request->city,
-                        'is_default' => $request->is_default == 1,
-                    ]);
-                } else {
-                    $user->addresses()->create([
-                        'address_line' => $request->address_line,
-                        'ward' => $request->ward,
-                        'district' => $request->district,
-                        'city' => $request->city,
-                        'is_default' => true,
-                    ]);
-                }
-            }
-
-            return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được cập nhật thành công.');
+            return redirect()->route('admin.users.index')->with('success', 'Đã cập nhật trạng thái và vai trò của tài khoản thành công.');
+        } else {
+            // Nếu không có thay đổi nào được thực hiện (cả cấm và cho phép), vẫn báo lỗi theo yêu cầu.
+            return redirect()->back()->with('error', 'Không có thông tin nào được thay đổi.');
         }
+
+    } else {
+        // ---- LOGIC CŨ CHO CÁC VAI TRÒ KHÁC (ADMIN, MANAGER...) ----
+        $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender', 'is_active']);
+
+        if ($request->password) {
+            $userData['password'] = Hash::make($request->password);
+        }
+
+        if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
+            if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
+                Storage::disk('public')->delete($user->image_profile);
+            }
+            $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
+        }
+
+        $user->update($userData);
+        $user->roles()->sync($request->roles);
+
+        if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
+            $defaultAddress = $user->addresses->where('is_default', 1)->first() ?? $user->addresses->first();
+
+            if ($defaultAddress) {
+                $defaultAddress->update([
+                    'address_line' => $request->address_line,
+                    'ward' => $request->ward,
+                    'district' => $request->district,
+                    'city' => $request->city,
+                    'is_default' => $request->is_default == 1,
+                ]);
+            } else {
+                $user->addresses()->create([
+                    'address_line' => $request->address_line,
+                    'ward' => $request->ward,
+                    'district' => $request->district,
+                    'city' => $request->city,
+                    'is_default' => true,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được cập nhật thành công.');
     }
+}
 
     public function show(User $user)
     {
@@ -207,37 +242,20 @@ class AdminUserController extends Controller
             ]);
         }
 
-
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
             Storage::disk('public')->delete($user->image_profile);
         }
 
-
-
-
         $user->delete();
-
-
-
 
         return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được ẩn (soft delete).');
     }
-
-
-
-
-
-
-
 
     public function trashed()
     {
         $users = User::onlyTrashed()->with(['roles:id,name'])->paginate(10);
         return view('admin.users.trashed', compact('users'));
     }
-
-
-
 
     public function restore($id)
     {
@@ -246,20 +264,12 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.trashed')->with('success', 'Khôi phục tài khoản thành công.');
     }
 
-
-
-
     public function forceDelete($id)
     {
         $user = User::withTrashed()->findOrFail($id);
-
-
-
-
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.trashed')->with('error', 'Bạn không thể xóa chính mình vĩnh viễn.');
         }
-
 
         // Chỉ cho phép xóa vĩnh viễn nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
         // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
@@ -270,18 +280,11 @@ class AdminUserController extends Controller
             ]);
         }
 
-
         if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
             Storage::disk('public')->delete($user->image_profile);
         }
 
-
-
-
         $user->forceDelete();
-
-
-
 
         return redirect()->route('admin.users.trashed')->with('success', 'Tài khoản đã được xóa vĩnh viễn.');
     }
@@ -296,7 +299,7 @@ class AdminUserController extends Controller
     // }
 
 
-   public function addresses(User $user)
+    public function addresses(User $user)
     {
         $addresses = $user->addresses()->orderByDesc('is_default')->get();
         return view('admin.users.addresses.index', compact('user', 'addresses'));

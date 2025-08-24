@@ -26,8 +26,14 @@ class UserRequest extends FormRequest
             'phone_number' => ['nullable', 'string', 'max:15', 'regex:/^[0-9+\-\s]+$/'],
             'birthday' => ['nullable', 'date', 'before:today'],
             'gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
-            'roles' => ['required', 'array', 'min:1'],
-            'roles.*' => ['required', 'exists:roles,id'],
+
+            // === THAY ĐỔI QUAN TRỌNG Ở ĐÂY ===
+            // 1. Thay 'required' bằng 'nullable'.
+            // 2. Bỏ 'min:1' vì người dùng có thể không có vai trò nào.
+            'roles' => ['nullable', 'array'],
+            // 3. Đảm bảo mỗi vai trò được gửi lên phải tồn tại.
+            'roles.*' => ['exists:roles,id'],
+
             'is_active' => ['nullable', 'boolean'],
 
             // Validation cho hình ảnh
@@ -43,7 +49,7 @@ class UserRequest extends FormRequest
 
         return $rules;
     }
-
+    
     public function messages(): array
     {
         return [

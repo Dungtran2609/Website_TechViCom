@@ -68,7 +68,15 @@
     {{-- End main wrapper --}}
     @yield('scripts')
 
-    
+    <script>
+        @if(session('error'))
+            toastr.error("{{ session('error') }}");
+        @endif
+        @if(session('success'))
+            toastr.success("{{ session('success') }}");
+        @endif
+    </script>
+
 </body>
 
 </html>

@@ -25,7 +25,14 @@ class PermissionRoleSeeder extends Seeder
 
         // Gán quyền cho editor (role_id = 2)
         $editorPermissions = DB::table('permissions')
-    ->whereIn('name', ['view_users', 'edit_users', 'manage_content', 'manage_coupons'])
+    ->whereIn('name', [
+        'view_users',
+        'edit_users',
+        'manage_content',
+        'manage_coupons',
+        'manage_attributes',
+        'manage_attribute_values',
+    ])
     ->pluck('id')
     ->toArray();
 

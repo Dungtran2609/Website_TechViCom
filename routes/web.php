@@ -328,10 +328,10 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('products/attributes', AdminAttributeController::class)->names('products.attributes');
 
     // Quản lý giá trị thuộc tính
-    Route::prefix('products/attributes')->name('products.attributes.')->group(function () {
-        Route::get('{attribute}/values/trashed', [AdminAttributeValueController::class, 'trashed'])->name('values.trashed');
-        Route::post('values/{id}/restore', [AdminAttributeValueController::class, 'restore'])->name('values.restore');
-        Route::delete('values/{id}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('values.force-delete');
+    Route::prefix('products/attributes')->name('products.attributes.')->middleware(CheckPermission::class . ':manage_attributes')->group(function () {
+        Route::get('values/trashed', [AdminAttributeValueController::class, 'trashed'])->name('values.trashed');
+        Route::post('values/{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('values.restore');
+        Route::delete('values/{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('values.force-delete');
         Route::get('{attribute}/values', [AdminAttributeValueController::class, 'index'])->name('values.index');
         Route::post('{attribute}/values', [AdminAttributeValueController::class, 'store'])->name('values.store');
         Route::get('values/{value}/edit', [AdminAttributeValueController::class, 'edit'])->name('values.edit');
@@ -379,17 +379,24 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             Route::delete('{brand}/force-delete', [AdminBrandController::class, 'forceDelete'])->name('force-delete');
             Route::resource('/', AdminBrandController::class)->parameters(['' => 'brand']);
         });
-        Route::prefix('attributes')->name('attributes.')->middleware(CheckPermission::class . ':manage_attributes')->group(function () {
+        // Quản lý thuộc tính sản phẩm
+    Route::prefix('products/attributes')->name('products.attributes.')->middleware(CheckPermission::class . ':manage_attributes')->group(function () {
             Route::get('trashed', [AdminAttributeController::class, 'trashed'])->name('trashed');
-            Route::post('{attribute}/restore', [AdminAttributeController::class, 'restore'])->name('restore');
-            Route::delete('{attribute}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('force-delete');
-            Route::prefix('{attribute}/values')->name('values.')->group(function () {
+            Route::post('{id}/restore', [AdminAttributeController::class, 'restore'])->name('restore');
+            Route::delete('{id}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('force-delete');
+            Route::resource('/', AdminAttributeController::class)->parameters(['' => 'attribute'])->names('');
+
+            // Quản lý giá trị thuộc tính
+            Route::prefix('{attribute}/values')->name('values.')->middleware(CheckPermission::class . ':manage_attribute_values')->group(function () {
                 Route::get('trashed', [AdminAttributeValueController::class, 'trashed'])->name('trashed');
-                Route::post('{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('restore');
-                Route::delete('{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
-                Route::resource('/', AdminAttributeValueController::class)->parameters(['' => 'value']);
+                Route::post('restore/{id}', [AdminAttributeValueController::class, 'restore'])->name('restore');
+                Route::delete('force-delete/{id}', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
+                Route::get('/', [AdminAttributeValueController::class, 'index'])->name('index');
+                Route::post('/', [AdminAttributeValueController::class, 'store'])->name('store');
+                Route::get('edit/{value}', [AdminAttributeValueController::class, 'edit'])->name('edit');
+                Route::put('{value}', [AdminAttributeValueController::class, 'update'])->name('update');
+                Route::delete('{value}', [AdminAttributeValueController::class, 'destroy'])->name('destroy');
             });
-            Route::resource('/', AdminAttributeController::class)->parameters(['' => 'attribute']);
         });
     });
 
@@ -414,7 +421,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('news-categories', AdminNewsCategoryController::class)->middleware(CheckPermission::class . ':manage_news-categories');
     Route::prefix('news-comments')->name('news-comments.')->middleware(CheckPermission::class . ':manage_news-comments')->group(function () {
         Route::get('/', [AdminNewsCommentController::class, 'index'])->name('index');
-        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show'); 
+        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show');
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/toggle', [AdminNewsCommentController::class, 'toggleVisibility'])->name('toggle');
         Route::post('/{id}/reply', [AdminNewsCommentController::class, 'storeReply'])->name('reply');

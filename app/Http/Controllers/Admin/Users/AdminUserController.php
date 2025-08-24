@@ -126,64 +126,65 @@ class AdminUserController extends Controller
 
     public function update(UserRequest $request, User $user)
     {
-        $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender', 'is_active']);
+        // Nếu user chỉ có vai trò 'user' thì chỉ cho phép cập nhật trạng thái
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        if (count($userRoleNames) === 1 && in_array('user', $userRoleNames)) {
+            $user->update(['is_active' => $request->is_active]);
+            return redirect()->route('admin.users.index')->with('success', 'Chỉ trạng thái tài khoản được cập nhật.');
+        } {
+            $userData = $request->only(['name', 'email', 'phone_number', 'birthday', 'gender', 'is_active']);
 
 
-        if ($request->password) {
-            $userData['password'] = Hash::make($request->password);
-        }
-
-
-        if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
-            if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
-                Storage::disk('public')->delete($user->image_profile);
+            if ($request->password) {
+                $userData['password'] = Hash::make($request->password);
             }
-            $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
-        } else {
-            // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
-            $userData['image_profile'] = $user->image_profile;
-        }
 
 
-        $user->update($userData);
-        $user->roles()->sync($request->roles);
-
-
-
-
-        if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
-            $defaultAddress = $user->addresses->where('is_default', 1)->first() ?? $user->addresses->first();
-
-
-
-
-            if ($defaultAddress) {
-                $defaultAddress->update([
-                    'address_line' => $request->address_line,
-                    'ward' => $request->ward,
-                    'district' => $request->district,
-                    'city' => $request->city,
-                    'is_default' => $request->is_default == 1,
-                ]);
+            if ($request->hasFile('image_profile') && $request->file('image_profile')->isValid()) {
+                if ($user->image_profile && Storage::disk('public')->exists($user->image_profile)) {
+                    Storage::disk('public')->delete($user->image_profile);
+                }
+                $userData['image_profile'] = $request->file('image_profile')->store('profiles', 'public');
             } else {
-                $user->addresses()->create([
-                    'address_line' => $request->address_line,
-                    'ward' => $request->ward,
-                    'district' => $request->district,
-                    'city' => $request->city,
-                    'is_default' => true,
-                ]);
+                // Nếu không upload ảnh mới, giữ nguyên ảnh cũ
+                $userData['image_profile'] = $user->image_profile;
             }
+
+
+            $user->update($userData);
+            $user->roles()->sync($request->roles);
+
+
+
+
+            if ($request->filled(['address_line', 'ward', 'district', 'city'])) {
+                $defaultAddress = $user->addresses->where('is_default', 1)->first() ?? $user->addresses->first();
+
+
+
+
+                if ($defaultAddress) {
+                    $defaultAddress->update([
+                        'address_line' => $request->address_line,
+                        'ward' => $request->ward,
+                        'district' => $request->district,
+                        'city' => $request->city,
+                        'is_default' => $request->is_default == 1,
+                    ]);
+                } else {
+                    $user->addresses()->create([
+                        'address_line' => $request->address_line,
+                        'ward' => $request->ward,
+                        'district' => $request->district,
+                        'city' => $request->city,
+                        'is_default' => true,
+                    ]);
+                }
+            }
+
+            return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được cập nhật thành công.');
         }
-
-
-
-
-        return redirect()->route('admin.users.index')->with('success', 'Tài khoản đã được cập nhật thành công.');
     }
-
-
-
 
     public function show(User $user)
     {
@@ -191,15 +192,11 @@ class AdminUserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
-
-
-
     public function destroy(User $user)
     {
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.index')->with('error', 'Bạn không thể xóa chính mình.');
         }
-
 
         // Chỉ cho phép xóa nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
         // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
@@ -379,6 +376,3 @@ class AdminUserController extends Controller
         return redirect()->back()->with('success', 'Địa chỉ đã được xóa thành công.');
     }
 }
-
-
-

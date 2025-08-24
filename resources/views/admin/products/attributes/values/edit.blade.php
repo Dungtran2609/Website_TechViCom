@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <form action="{{ route('admin.products.attributes.values.update', $value->id) }}" method="POST">
+            <form action="{{ route('admin.products.attributes.values.update', $value->id) }}" method="POST">
             @csrf
             @method('PUT')
 

@@ -63,6 +63,23 @@
     @php
         // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
         $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
+        
+        // Kiểm tra spam chặn cho khách vãng lai
+        $guestVnpayLocked = false;
+        if (!Auth::check()) {
+            $cancelData = session('guest_vnpay_cancel_count', []);
+            $totalCount = 0;
+            $currentTime = time();
+            
+            // Chỉ tính những lần hủy trong vòng 24 giờ qua
+            foreach ($cancelData as $timestamp => $count) {
+                if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+                    $totalCount += $count;
+                }
+            }
+            
+            $guestVnpayLocked = $totalCount >= 3;
+        }
     @endphp
 
     @if (session('notification'))
@@ -149,7 +166,7 @@
 
     {{-- Steps --}}
     <div class="bg-white border-b no-print">
-        <div class="container mx-auto px-4 py-4">
+        <div class="techvicom-container py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
@@ -176,7 +193,7 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM CHECKOUT (2/3) --}}
             <div class="lg:col-span-2 order-2 lg:order-1">
@@ -190,14 +207,14 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" required
+                                    <input type="text" id="fullname" name="recipient_name" 
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="fullname-error" class="text-xs text-red-500"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" required
+                                    <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
                                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                     <span id="phone-error" class="text-xs text-red-500"></span>
@@ -205,13 +222,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" required
+                                <input type="email" id="email" name="recipient_email" 
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
                                 <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -256,7 +272,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
                                                     *</label>
-                                                <select id="province" name="province_code" required
+                                                <select id="province" name="province_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-city="{{ $defaultAddress?->city ?? '' }}"
                                                     @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
@@ -267,7 +283,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
                                                     *</label>
-                                                <select id="district" name="district_code" required
+                                                <select id="district" name="district_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-district="{{ $defaultAddress?->district ?? '' }}"
                                                     @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
@@ -278,7 +294,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
                                                     *</label>
-                                                <select id="ward" name="ward_code" required
+                                                <select id="ward" name="ward_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
                                                     @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
@@ -287,7 +303,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address" required rows="3"
+                                        <textarea id="address" name="recipient_address"  rows="3"
                                             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
@@ -343,18 +359,27 @@
                                 </div>
 
                                 {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
+                                @php
+                                    $isVnpayLocked = $vnpayLocked || $guestVnpayLocked;
+                                    $lockReason = '';
+                                    if ($vnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 24 giờ.';
+                                    } elseif ($guestVnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng thử lại sau 24 giờ.';
+                                    }
+                                @endphp
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
-                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
-                                    data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
+                                            {{ $isVnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                    data-payment="bank_transfer" data-disabled="{{ $isVnpayLocked ? 'true' : 'false' }}"
                                     data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
                                     <input type="radio" id="banking" name="payment_method" value="bank_transfer"
-                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
+                                        class="mr-3 accent-orange-500" {{ $isVnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
-                                        @if ($vnpayLocked)
+                                        @if ($isVnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 2 phút.
+                                                {{ $lockReason }}
                                             </p>
                                         @endif
                                     </div>
@@ -388,7 +413,7 @@
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
                             <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
+                                <input type="checkbox" id="agree-terms"  class="mr-3 accent-orange-500">
                                 <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
                                         class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
                                     website</label>
@@ -463,7 +488,8 @@
                                 @endphp
                                 <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item"
                                     data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}"
-                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
+                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}"
+                                    data-category-id="{{ $product?->category_id ?? '' }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @php
@@ -650,19 +676,23 @@
                 .filter(id => id && id !== '')
                 .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
 
+            const requestData = {
+                coupon_code: code,
+                subtotal,
+                cart_product_ids: cartProductIds,
+                cart_product_amounts: cartProductAmounts,
+                cart_category_ids: cartCategoryIds
+            };
+            
+            console.log('Sending coupon request:', requestData);
+            
             fetch('/api/apply-coupon', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken()
                 },
-                body: JSON.stringify({
-                    coupon_code: code,
-                    subtotal,
-                    cart_product_ids: cartProductIds,
-                    cart_product_amounts: cartProductAmounts,
-                    cart_category_ids: cartCategoryIds
-                })
+                body: JSON.stringify(requestData)
             })
                 .then(r => r.json())
                 .then(data => {
@@ -706,6 +736,17 @@
                     msg.textContent = data.coupon?.message || 'Áp dụng thành công';
                     msg.className = 'mt-1 text-xs text-green-600';
                     updateCheckoutTotal();
+                    
+                    // Ẩn danh sách coupon khi áp dụng thành công
+                    const couponBox = document.getElementById('checkout-available-coupons');
+                    const toggleBtn = document.getElementById('toggle-coupon-list');
+                    if (couponBox) {
+                        couponBox.classList.add('hidden');
+                        couponBox.innerHTML = '';
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.textContent = 'Danh sách';
+                    }
                 })
                 .catch(() => {
                     input.classList.add('border-red-500');

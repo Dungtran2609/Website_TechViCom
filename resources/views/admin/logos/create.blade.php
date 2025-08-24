@@ -11,14 +11,14 @@
                 @csrf
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-bookmark-star me-1 text-info"></i> Loại logo</label>
-                    <select name="type" class="form-select" required>
+                    <select name="type" class="form-select" >
                         <option value="client">Logo trang chủ (client)</option>
                         <option value="admin">Logo admin/sidebar</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold"><i class="bi bi-image me-1 text-primary"></i> Chọn ảnh logo <span class="text-danger">*</span></label>
-                    <input type="file" name="logo" class="form-control" required accept="image/*" onchange="previewLogo(event)">
+                    <input type="file" name="logo" class="form-control"  accept="image/*" onchange="previewLogo(event)">
                     <div class="mt-2" id="logo-preview"></div>
                 </div>
                 <div class="mb-3">

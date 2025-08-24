@@ -28,9 +28,9 @@
             <a href="{{ route('admin.permissions.index') }}" class="btn btn-secondary">
                 <i class="fas fa-shield-alt"></i> Phân quyền
             </a>
-            <a href="{{ route('admin.permissions.trashed') }}" class="btn btn-danger">
+            {{-- <a href="{{ route('admin.permissions.trashed') }}" class="btn btn-danger">
                 <i class="fas fa-trash-alt"></i> Thùng rác
-            </a>
+            </a> --}}
         </div>
     </div>
 
@@ -73,7 +73,7 @@
                             <th>ID</th>
                             <th>Tên quyền</th>
                             <th>Mô tả</th>
-                            <th>Hành động</th>
+                            {{-- <th>Hành động</th> --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -82,7 +82,7 @@
                                 <td>{{ $permission->id }}</td>
                                 <td>{{ $permission->name }}</td>
                                 <td>{{ $permission->description ?? 'Không có mô tả' }}</td>
-                                <td>
+                                {{-- <td>
                                     <a href="{{ route('admin.permissions.edit', $permission) }}"
                                        class="btn btn-sm btn-warning" title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
@@ -95,7 +95,7 @@
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
-                                </td>
+                                </td> --}}
                             </tr>
                         @empty
                             <tr>

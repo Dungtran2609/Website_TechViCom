@@ -3,7 +3,7 @@
 @section('title', 'Danh sách thương hiệu')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
+    <div class="techvicom-container py-8">
     <h1 class="text-3xl font-bold mb-8 text-center">Danh sách thương hiệu</h1>
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         @forelse ($brands as $brand)

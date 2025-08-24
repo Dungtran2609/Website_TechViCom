@@ -10,6 +10,7 @@ use App\Models\ShippingMethod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 
@@ -503,7 +504,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
                 'coupon_discount' => (int) ($order->discount_amount ?? $order->coupon_discount ?? 0),
                 'final_total' => (int) ($order->final_total ?? ($subtotal + (int) ($order->shipping_fee ?? 0) - (int) ($order->discount_amount ?? 0))),
                 'status' => $order->status,
-'status_vietnamese' => [
+                'status_vietnamese' => [
                     'pending' => 'Đang chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'shipped' => 'Đang giao hàng',
@@ -720,7 +721,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
 // Route test thêm sản phẩm vào giỏ hàng cho dev/test
 if (app()->environment('local')) {
-    \Route::get('/test-add-to-cart', function () {
+    Route::get('/test-add-to-cart', function () {
         $cart = session()->get('cart', []);
         $cart[] = [
             'product_id' => 1, // ID sản phẩm test, đổi nếu cần

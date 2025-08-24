@@ -347,3 +347,85 @@ img {
         padding-top: 0;
     }
 }
+
+/* ===== FPT SHOP STYLE CONTAINER ===== */
+/* Container styles - FPT Shop style */
+.techvicom-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    width: 100%;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1280px) {
+    .techvicom-container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .techvicom-container {
+        padding: 0 0.75rem;
+    }
+}
+
+/* Override default container classes for client pages */
+.client-page .container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+}
+
+.client-page .container.mx-auto {
+    max-width: 1200px !important;
+}
+
+/* Ensure all client content is constrained */
+.client-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Override all container classes in client pages */
+.client-page .container,
+.client-page .container-fluid,
+.client-page .max-w-6xl,
+.client-page .max-w-7xl {
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Additional overrides for specific cases */
+.client-page .max-w-6xl {
+    max-width: 1200px !important;
+}
+
+.client-page .max-w-7xl {
+    max-width: 1200px !important;
+}
+
+/* Ensure all main content areas are constrained */
+.client-page main {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Override any other max-width classes */
+.client-page [class*="max-w-"] {
+    max-width: 1200px !important;
+}
+
+/* Ensure proper spacing on large screens */
+@media (min-width: 1280px) {
+    .client-page .container,
+    .client-page .container-fluid,
+    .client-page .max-w-6xl,
+    .client-page .max-w-7xl {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}

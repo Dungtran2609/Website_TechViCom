@@ -2,29 +2,52 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
+use App\Models\News;
+use App\Models\Brand;
 use App\Models\Banner;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Brand;
+use App\Models\Promotion;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
     public function index()
     {
+        // Debug authentication
+        $user = Auth::user();
+        Log::info('Home page access', [
+            'is_authenticated' => Auth::check(),
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email
+            ] : null,
+            'session_id' => session()->getId()
+        ]);
+        
+        // Tự động xóa session thanh toán lại khi vào trang chủ
+        if (session()->has('repayment_order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            session()->forget('force_cod_for_order_id');
+            session()->forget('payment_cancelled_message');
+            Log::info('Auto-cleared repayment session on home page access');
+        }
+        
         // Lấy banner đang hoạt động
         $banners = Banner::where('start_date', '<=', now())
-                        ->where('end_date', '>=', now())
-                        ->orderBy('stt')
-                        ->limit(3)
-                        ->get();
+            ->where('end_date', '>=', now())
+            ->orderBy('stt')
+            ->get();
 
         // Sản phẩm nổi bật: gắn cờ is_featured, trạng thái active
         // Lấy chương trình flash sale đang diễn ra (cả kiểu flash_sale và category)
         $now = now();
-        $flashSale = \App\Models\Promotion::whereIn('flash_type', ['flash_sale', 'category'])
+        $flashSale = Promotion::whereIn('flash_type', ['flash_sale', 'category'])
             ->where('status', 1)
             ->where('start_date', '<=', $now)
             ->where('end_date', '>=', $now)
@@ -34,10 +57,13 @@ class HomeController extends Controller
         $featuredProducts = Product::with(['brand', 'category', 'productAllImages', 'variants', 'productComments'])
             ->where('status', 'active')
             ->where('is_featured', true)
+            ->whereHas('brand', function ($q) {
+                $q->where('status', 1);
+            })
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
-            ->map(function($product) use ($flashSale) {
+            ->map(function ($product) use ($flashSale) {
                 $variant = $product->variants->first();
                 $price = $variant ? $variant->price : null;
                 $salePrice = null;
@@ -60,8 +86,13 @@ class HomeController extends Controller
                         }
                     } elseif ($flashSale->flash_type === 'flash_sale') {
                         $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
-                        if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
-                            $salePrice = $promoProduct->pivot->sale_price;
+                        if ($promoProduct && $promoProduct->pivot) {
+                            // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                            if ($promoProduct->pivot->sale_price && $promoProduct->pivot->sale_price > 0) {
+                                $salePrice = $promoProduct->pivot->sale_price;
+                            } elseif ($promoProduct->pivot->discount_percent && $promoProduct->pivot->discount_percent > 0 && $price) {
+                                $salePrice = $price * (1 - $promoProduct->pivot->discount_percent / 100);
+                            }
                         }
                     }
                 }
@@ -75,10 +106,13 @@ class HomeController extends Controller
 
         $hotProducts = Product::with(['brand', 'category', 'productAllImages', 'variants', 'productComments'])
             ->where('status', 'active')
+            ->whereHas('brand', function ($q) {
+                $q->where('status', 1);
+            })
             ->orderByDesc('view_count')
             ->limit(10)
             ->get()
-            ->map(function($product) use ($flashSale) {
+            ->map(function ($product) use ($flashSale) {
                 $variant = $product->variants->first();
                 $price = $variant ? $variant->price : null;
                 $salePrice = null;
@@ -101,8 +135,13 @@ class HomeController extends Controller
                         }
                     } elseif ($flashSale->flash_type === 'flash_sale') {
                         $promoProduct = $flashSale->products()->where('products.id', $product->id)->first();
-                        if ($promoProduct && $promoProduct->pivot && $promoProduct->pivot->sale_price) {
-                            $salePrice = $promoProduct->pivot->sale_price;
+                        if ($promoProduct && $promoProduct->pivot) {
+                            // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                            if ($promoProduct->pivot->sale_price && $promoProduct->pivot->sale_price > 0) {
+                                $salePrice = $promoProduct->pivot->sale_price;
+                            } elseif ($promoProduct->pivot->discount_percent && $promoProduct->pivot->discount_percent > 0 && $price) {
+                                $salePrice = $price * (1 - $promoProduct->pivot->discount_percent / 100);
+                            }
                         }
                     }
                 }
@@ -125,8 +164,8 @@ class HomeController extends Controller
 
         // Lấy thương hiệu
         $brands = Brand::where('status', 1)
-                      ->limit(8)
-                      ->get();
+            ->limit(8)
+            ->get();
 
         // Lấy chương trình flash sale đang diễn ra (cả kiểu flash_sale và category) - đã lấy ở trên
         $flashSaleProducts = [];
@@ -141,11 +180,11 @@ class HomeController extends Controller
                     $allCategoryIds = array_merge($allCategoryIds, $childIds);
                 }
                 $allCategoryIds = array_unique($allCategoryIds);
-                $flashSaleProducts = \App\Models\Product::with(['variants', 'productComments'])
+                $flashSaleProducts = Product::with(['variants', 'productComments'])
                     ->where('status', 'active')
                     ->whereIn('category_id', $allCategoryIds)
                     ->get()
-                    ->map(function($product) use ($flashSale) {
+                    ->map(function ($product) use ($flashSale) {
                         $variant = $product->variants->first();
                         $price = $variant ? $variant->price : null;
                         $salePrice = null;
@@ -162,10 +201,18 @@ class HomeController extends Controller
                         return $product;
                     });
             } else {
-                $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function($product) use ($flashSale) {
-                    $salePrice = $product->pivot->sale_price ?? null;
+                $flashSaleProducts = $flashSale->products()->with(['variants', 'productComments'])->get()->map(function ($product) use ($flashSale) {
                     $variant = $product->variants->first();
                     $price = $variant ? $variant->price : null;
+                    $salePrice = null;
+                    
+                    // Ưu tiên giá cố định, nếu không có thì dùng phần trăm
+                    if ($product->pivot->sale_price && $product->pivot->sale_price > 0) {
+                        $salePrice = $product->pivot->sale_price;
+                    } elseif ($product->pivot->discount_percent && $product->pivot->discount_percent > 0 && $price) {
+                        $salePrice = $price * (1 - $product->pivot->discount_percent / 100);
+                    }
+                    
                     $discountPercent = ($price && $salePrice && $price > 0) ? round(100 * ($price - $salePrice) / $price) : 0;
                     $product->flash_sale_price = $salePrice;
                     $product->discount_percent = $discountPercent;
@@ -175,7 +222,7 @@ class HomeController extends Controller
         }
 
         // Lấy bài viết mới nhất
-        $latestNews = \App\Models\News::orderByDesc('created_at')->limit(4)->get();
+        $latestNews = News::orderByDesc('created_at')->limit(4)->get();
 
         // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
         $favoriteProductIds = [];

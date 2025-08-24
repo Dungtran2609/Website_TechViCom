@@ -28,6 +28,7 @@ class Product extends Model
         'brand_id',
         'category_id',
         'is_featured',
+        'discount_percent',
         'view_count',
         'price',
         'compare_price',
@@ -159,5 +160,27 @@ class Product extends Model
                 : $min;
         }
         return null;
+    }
+
+    /**
+     * Tính giá sau khi áp dụng discount_percent
+     */
+    public function getDiscountedPriceAttribute()
+    {
+        if ($this->discount_percent > 0) {
+            if ($this->type === 'simple' && $this->variants->count() > 0) {
+                $originalPrice = $this->variants->first()->price;
+                return round($originalPrice * (1 - $this->discount_percent / 100));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Kiểm tra xem sản phẩm có đang giảm giá không
+     */
+    public function getIsOnSaleAttribute()
+    {
+        return $this->discount_percent > 0;
     }
 }

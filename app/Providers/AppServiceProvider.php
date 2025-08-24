@@ -27,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set timezone cho toàn bộ ứng dụng
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+        
         Paginator::useBootstrapFive();
 
     // Đăng ký observer cho User

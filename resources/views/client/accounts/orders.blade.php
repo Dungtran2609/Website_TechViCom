@@ -22,7 +22,7 @@
 
 
     <div class="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
-        <div class="container mx-auto px-4">
+        <div class="techvicom-container">
             <!-- Header Section -->
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mb-4">

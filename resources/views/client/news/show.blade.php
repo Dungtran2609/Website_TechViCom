@@ -3,10 +3,10 @@
 @section('title', $news->title . ' - TechViCom')
 
 @section('content')
-    <div class="container mx-auto px-4 py-10">
+    <div class="techvicom-container py-10">
         <!-- Breadcrumb -->
         <nav class="bg-white border-b border-gray-200 py-3 mb-6">
-            <div class="container mx-auto px-4">
+            <div class="techvicom-container">
                 <div class="flex items-center space-x-2 text-sm">
                     <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
                     <i class="fas fa-chevron-right text-gray-400 text-xs"></i>

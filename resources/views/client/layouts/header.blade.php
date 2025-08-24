@@ -1,8 +1,8 @@
 <!-- Header (all category items use the same icon) -->
-<header id="main-header" class="bg-white shadow-sm border-b fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
+<header id="main-header" class="bg-white shadow-lg border-b border-gray-100 fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
     <link rel="stylesheet" href="{{ asset('client_css/css/header-optimized.css') }}">
 
-    <div class="container mx-auto px-4 py-3">
+    <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between flex-nowrap gap-4">
             <!-- Logo -->
             <div class="flex items-center flex-shrink-0">
@@ -18,12 +18,11 @@
             <!-- Category (hover to open, stable) -->
             <div class="ml-2 lg:ml-6 dropdown-group">
                 <button
-                    class="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-orange-300 rounded-lg hover:bg-orange-50 transition"
+                    class="flex items-center space-x-2 px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                     data-dropdown="category">
-                    <i class="fas fa-bars text-gray-600"></i>
-                    <span class="hidden sm:inline text-gray-700 font-medium">Danh mục</span>
+                    <i class="fas fa-bars text-white"></i>
+                    <span class="hidden sm:inline text-white font-semibold">Danh mục</span>
                 </button>
-
                 <!-- Category Dropdown (ALL ITEMS USE SAME ICON) -->
                 <div id="categoryDropdown"
                     class="dropdown-panel absolute top-full left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
@@ -32,7 +31,6 @@
                             <i class="fas fa-th-large text-orange-500 mr-2"></i>
                             Danh mục sản phẩm
                         </h3>
-
                         <div class="grid grid-cols-2 gap-2">
                             @if (isset($categories) && $categories->count() > 0)
                                 @foreach ($categories->take(6) as $category)
@@ -49,59 +47,8 @@
                                         </div>
                                     </a>
                                 @endforeach
-                            @else
-                                <!-- Fallback items, same icon for all -->
-                                <a href="{{ route('products.index') }}?category=phone"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Điện thoại</span>
-                                        <p class="text-xs text-gray-500">Smartphone</p>
-                                    </div>
-                                </a>
-                                <a href="{{ route('products.index') }}?category=laptop"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Laptop</span>
-                                        <p class="text-xs text-gray-500">Máy tính xách tay</p>
-                                    </div>
-                                </a>
-                                <a href="{{ route('products.index') }}?category=tablet"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Tablet</span>
-                                        <p class="text-xs text-gray-500">Máy tính bảng</p>
-                                    </div>
-                                </a>
-                                <a href="{{ route('products.index') }}?category=watch"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Đồng hồ</span>
-                                        <p class="text-xs text-gray-500">Smart Watch</p>
-                                    </div>
-                                </a>
-                                <a href="{{ route('products.index') }}?category=accessory"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Phụ kiện</span>
-                                        <p class="text-xs text-gray-500">Tai nghe, sạc, bao da...</p>
-                                    </div>
-                                </a>
-                                <a href="{{ route('products.index') }}?category=gaming"
-                                    class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                    <div class="cat-icon mr-3 group-hover:scale-110 transition-transform"><i
-                                            class="fas fa-tags text-sm"></i></div>
-                                    <div><span class="text-gray-700 font-medium">Gaming</span>
-                                        <p class="text-xs text-gray-500">Thiết bị chơi game</p>
-                                    </div>
-                                </a>
-                            @endif
+                            @endcan
                         </div>
-
                         <div class="mt-4 pt-3 border-t border-gray-200">
                             <a href="{{ route('categories.index') }}"
                                 class="flex items-center justify-center text-orange-600 hover:text-orange-700 font-medium transition">
@@ -114,24 +61,45 @@
             </div>
 
             <!-- Search -->
-            <div class="flex-1 max-w-2xl mx-2 lg:mx-6 w-full lg:w-auto">
-                <div class="relative">
+            <div class="flex-1 max-w-2xl mx-4 lg:mx-8 w-full lg:w-auto">
+                <div class="relative my-2">
                     <input type="text" id="header-search-input" placeholder="Nhập để tìm kiếm sản phẩm..."
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400">
+                        class="w-full px-5 py-3.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all duration-300 shadow-sm hover:shadow-md">
                     <button id="header-search-btn"
-                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500">
-                        <i class="fas fa-search"></i>
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors duration-200">
+                        <i class="fas fa-search text-lg"></i>
                     </button>
+                    
+                    <!-- Search History Dropdown -->
+                    <div id="search-history-dropdown" class="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 z-50 hidden">
+                        <div class="p-3 border-b border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-semibold text-gray-700">Lịch sử tìm kiếm</h4>
+                                <button id="clear-search-history" class="text-xs text-red-500 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-trash mr-1"></i>Xóa tất cả
+                                </button>
+                            </div>
+                        </div>
+                        <div id="search-history-list" class="max-h-60 overflow-y-auto">
+                            <!-- Search history items will be populated here -->
+                        </div>
+                        <div id="search-suggestions" class="p-3 border-t border-gray-100 hidden">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Gợi ý tìm kiếm</h4>
+                            <div id="suggestions-list" class="space-y-1">
+                                <!-- Suggestions will be populated here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Right section -->
-            <div class="flex flex-nowrap items-center space-x-2 lg:space-x-3 justify-end">
+            <div class="flex flex-nowrap items-center space-x-3 lg:space-x-4 justify-end">
                 <!-- Account (hover to open, stable) -->
                 <div class="dropdown-group">
-                    <button
-                        class="flex items-center space-x-1 lg:space-x-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
-                        data-dropdown="account">
+                                    <button
+                    class="flex items-center space-x-1 lg:space-x-2 px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
+                    data-dropdown="account">
                         @auth
                             @if (Auth::user()->image_profile && file_exists(public_path('uploads/users/' . Auth::user()->image_profile)))
                                 <img src="{{ asset('uploads/users/' . Auth::user()->image_profile) }}"
@@ -165,12 +133,12 @@
                                     <p class="text-gray-600 text-sm">Đăng nhập để trải nghiệm đầy đủ</p>
                                 </div>
                                 <div class="space-y-2">
-                                    <a href="{{ route('login') }}"
+                                    <button type="button" onclick="openAuthModalAndShowLogin()"
                                         class="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition">Đăng
-                                        nhập</a>
-                                    <a href="{{ route('register') }}"
+                                        nhập</button>
+                                    <button type="button" onclick="openAuthModalAndShowRegister()"
                                         class="block w-full text-center border border-orange-500 text-orange-500 py-2 rounded-lg hover:bg-orange-50 transition">Đăng
-                                        ký</a>
+                                        ký</button>
                                 </div>
                             </div>
                         @else
@@ -229,10 +197,10 @@
                 <!-- Cart (icon only) -->
                 <div class="relative">
                     <button id="cartMenuBtn"
-                        class="flex items-center px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition relative">
+                        class="flex items-center px-4 lg:px-5 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 relative">
                         <i class="fas fa-shopping-basket text-lg"></i>
                         <span
-                            class="absolute -top-2 -right-2 bg-[#ff6c2f] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold shadow-lg animate-pulse"
                             id="cart-count">0</span>
                     </button>
                 </div>
@@ -328,6 +296,76 @@
 
 <!-- Overlay -->
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+<style>
+    /* Search History Dropdown Styles */
+    #search-history-dropdown {
+        animation: slideDown 0.2s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .search-history-item {
+        transition: all 0.2s ease;
+    }
+    
+    .search-history-item:hover {
+        background-color: #f8fafc;
+    }
+    
+    .suggestion-item {
+        transition: all 0.2s ease;
+    }
+    
+    .suggestion-item:hover {
+        background-color: #f8fafc;
+    }
+    
+    .remove-history-item {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .search-history-item:hover .remove-history-item {
+        opacity: 1;
+    }
+    
+    /* Highlight search terms */
+    mark {
+        background-color: #fef3c7;
+        color: #92400e;
+        padding: 0 2px;
+        border-radius: 2px;
+    }
+    
+    /* Scrollbar styling for search history */
+    #search-history-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #search-history-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    #search-history-list::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    #search-history-list::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>
 
 <script>
     /* Header scroll effect */
@@ -427,6 +465,27 @@
             document.body.style.overflow = '';
         }
         window.closeCartSidebar = closeCartSidebar;
+        
+        // Category submenu toggle functionality
+        document.querySelectorAll('.toggle-submenu').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const categoryId = this.dataset.categoryId;
+                const submenu = document.getElementById(`submenu-${categoryId}`);
+                const icon = this.querySelector('i');
+                
+                // Toggle submenu
+                if (submenu.style.display === 'none') {
+                    submenu.style.display = 'block';
+                    this.classList.add('active');
+                } else {
+                    submenu.style.display = 'none';
+                    this.classList.remove('active');
+                }
+            });
+        });
         if (closeCartBtn) closeCartBtn.addEventListener('click', closeCartSidebar);
         if (cartOverlay) cartOverlay.addEventListener('click', closeCartSidebar);
 
@@ -439,7 +498,10 @@
 
         function performHeaderSearch() {
             const s = headerSearchInput.value.trim();
-            if (s) window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(s)}`;
+            if (s) {
+                addToSearchHistory(s);
+                window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(s)}`;
+            }
         }
         if (headerSearchBtn) headerSearchBtn.addEventListener('click', performHeaderSearch);
         if (headerSearchInput) headerSearchInput.addEventListener('keypress', e => {
@@ -449,6 +511,9 @@
         loadCartItems();
         const checkoutNowBtn = document.getElementById('sidebar-checkout-now');
         if (checkoutNowBtn) checkoutNowBtn.addEventListener('click', handleSidebarCheckout);
+        
+        // Search History Management
+        initSearchHistory();
     });
 
     function updateAuthenticationUI(isLoggedIn, userData = null) {
@@ -513,7 +578,7 @@
             const isOutOfStock = (item.stock !== undefined && item.stock <= 0);
             return `<div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cart-item-enter" data-id="${item.id}">
       <input type="checkbox" class="sidebar-item-checkbox w-4 h-4 text-[#ff6c2f] border-gray-300 rounded focus:ring-[#ff6c2f]" value="${item.id}" ${isOutOfStock ? 'disabled' : ''}>
-      <img src="${item.image||'/images/default-product.jpg'}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
+    <img src="${item.type === 'simple' ? (item.thumbnail ? '/storage/' + item.thumbnail : '/images/default-product.jpg') : (item.image||'/images/default-product.jpg')}" alt="${item.name}" class="w-14 h-14 object-cover rounded-lg">
       <div class="flex-1">
         <h4 class="font-medium text-gray-900 text-sm">
           <a href="/products/${item.product_id}" class="hover:text-[#ff6c2f] transition-colors">
@@ -932,4 +997,306 @@
     window.clearSidebarCoupon = clearSidebarCoupon;
     window.recalcSelectedSubtotal = recalcSelectedSubtotal;
     window.handleSidebarCheckout = handleSidebarCheckout;
+
+    // Search History Functions
+    function initSearchHistory() {
+        const searchInput = document.getElementById('header-search-input');
+        const searchDropdown = document.getElementById('search-history-dropdown');
+        const clearHistoryBtn = document.getElementById('clear-search-history');
+        
+        if (!searchInput || !searchDropdown) return;
+        
+        // Show dropdown on focus
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim() === '') {
+                showSearchHistory();
+            } else {
+                showSearchSuggestions(this.value);
+            }
+        });
+        
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+                hideSearchDropdown();
+            }
+        });
+        
+        // Handle input changes
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            if (query === '') {
+                showSearchHistory();
+            } else {
+                showSearchSuggestions(query);
+            }
+        });
+        
+        // Handle Enter key
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    addToSearchHistory(query);
+                    hideSearchDropdown();
+                }
+            }
+        });
+        
+        // Clear history button
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (confirm('Bạn có chắc muốn xóa tất cả lịch sử tìm kiếm?')) {
+                    clearSearchHistory();
+                    hideSearchDropdown();
+                }
+            });
+        }
+    }
+    
+    function showSearchHistory() {
+        const dropdown = document.getElementById('search-history-dropdown');
+        const historyList = document.getElementById('search-history-list');
+        const suggestions = document.getElementById('search-suggestions');
+        
+        if (!dropdown || !historyList) return;
+        
+        const history = getSearchHistory();
+        
+        if (history.length === 0) {
+            historyList.innerHTML = `
+                <div class="p-4 text-center text-gray-500">
+                    <i class="fas fa-search text-2xl mb-2"></i>
+                    <p class="text-sm">Chưa có lịch sử tìm kiếm</p>
+                </div>
+            `;
+        } else {
+            historyList.innerHTML = history.map(item => `
+                <div class="search-history-item flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" data-query="${item.query}">
+                    <div class="flex items-center flex-1">
+                        <i class="fas fa-history text-gray-400 mr-3 text-sm"></i>
+                        <span class="text-gray-700">${item.query}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-400">${formatSearchDate(item.timestamp)}</span>
+                        <button class="remove-history-item text-gray-400 hover:text-red-500 transition-colors" data-query="${item.query}">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add click handlers for history items
+            historyList.querySelectorAll('.search-history-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (!e.target.closest('.remove-history-item')) {
+                        const query = this.dataset.query;
+                        document.getElementById('header-search-input').value = query;
+                        performSearch(query);
+                        hideSearchDropdown();
+                    }
+                });
+            });
+            
+            // Add click handlers for remove buttons
+            historyList.querySelectorAll('.remove-history-item').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const query = this.dataset.query;
+                    removeFromSearchHistory(query);
+                    showSearchHistory(); // Refresh the list
+                });
+            });
+        }
+        
+        suggestions.classList.add('hidden');
+        dropdown.classList.remove('hidden');
+    }
+    
+    function showSearchSuggestions(query) {
+        const dropdown = document.getElementById('search-history-dropdown');
+        const historyList = document.getElementById('search-history-list');
+        const suggestions = document.getElementById('search-suggestions');
+        const suggestionsList = document.getElementById('suggestions-list');
+        
+        if (!dropdown || !suggestions || !suggestionsList) return;
+        
+        // Filter history for suggestions
+        const history = getSearchHistory().filter(item => 
+            item.query.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        // Show filtered history
+        if (history.length > 0) {
+            historyList.innerHTML = history.map(item => `
+                <div class="search-history-item flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" data-query="${item.query}">
+                    <div class="flex items-center flex-1">
+                        <i class="fas fa-history text-gray-400 mr-3 text-sm"></i>
+                        <span class="text-gray-700">${highlightQuery(item.query, query)}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-400">${formatSearchDate(item.timestamp)}</span>
+                        <button class="remove-history-item text-gray-400 hover:text-red-500 transition-colors" data-query="${item.query}">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add click handlers
+            historyList.querySelectorAll('.search-history-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    if (!e.target.closest('.remove-history-item')) {
+                        const query = this.dataset.query;
+                        document.getElementById('header-search-input').value = query;
+                        performSearch(query);
+                        hideSearchDropdown();
+                    }
+                });
+            });
+            
+            historyList.querySelectorAll('.remove-history-item').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const query = this.dataset.query;
+                    removeFromSearchHistory(query);
+                    showSearchSuggestions(document.getElementById('header-search-input').value);
+                });
+            });
+        } else {
+            historyList.innerHTML = `
+                <div class="p-4 text-center text-gray-500">
+                    <i class="fas fa-search text-2xl mb-2"></i>
+                    <p class="text-sm">Không tìm thấy lịch sử phù hợp</p>
+                </div>
+            `;
+        }
+        
+        // Show popular suggestions
+        const popularSuggestions = getPopularSuggestions(query);
+        if (popularSuggestions.length > 0) {
+            suggestionsList.innerHTML = popularSuggestions.map(suggestion => `
+                <div class="suggestion-item flex items-center p-2 hover:bg-gray-50 cursor-pointer rounded" data-query="${suggestion}">
+                    <i class="fas fa-lightbulb text-yellow-400 mr-3 text-sm"></i>
+                    <span class="text-gray-700">${highlightQuery(suggestion, query)}</span>
+                </div>
+            `).join('');
+            
+            suggestionsList.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const query = this.dataset.query;
+                    document.getElementById('header-search-input').value = query;
+                    performSearch(query);
+                    hideSearchDropdown();
+                });
+            });
+            
+            suggestions.classList.remove('hidden');
+        } else {
+            suggestions.classList.add('hidden');
+        }
+        
+        dropdown.classList.remove('hidden');
+    }
+    
+    function hideSearchDropdown() {
+        const dropdown = document.getElementById('search-history-dropdown');
+        if (dropdown) {
+            dropdown.classList.add('hidden');
+        }
+    }
+    
+    function addToSearchHistory(query) {
+        if (!query.trim()) return;
+        
+        let history = getSearchHistory();
+        
+        // Remove existing entry if exists
+        history = history.filter(item => item.query.toLowerCase() !== query.toLowerCase());
+        
+        // Add new entry at the beginning
+        history.unshift({
+            query: query.trim(),
+            timestamp: Date.now()
+        });
+        
+        // Keep only last 10 searches
+        history = history.slice(0, 10);
+        
+        localStorage.setItem('searchHistory', JSON.stringify(history));
+    }
+    
+    function getSearchHistory() {
+        try {
+            const history = localStorage.getItem('searchHistory');
+            return history ? JSON.parse(history) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    
+    function removeFromSearchHistory(query) {
+        let history = getSearchHistory();
+        history = history.filter(item => item.query !== query);
+        localStorage.setItem('searchHistory', JSON.stringify(history));
+    }
+    
+    function clearSearchHistory() {
+        localStorage.removeItem('searchHistory');
+    }
+    
+    function formatSearchDate(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        
+        const minutes = Math.floor(diff / (1000 * 60));
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (minutes < 1) return 'Vừa xong';
+        if (minutes < 60) return `${minutes} phút trước`;
+        if (hours < 24) return `${hours} giờ trước`;
+        if (days < 7) return `${days} ngày trước`;
+        
+        return date.toLocaleDateString('vi-VN');
+    }
+    
+    function highlightQuery(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<mark class="bg-yellow-200 px-1 rounded">$1</mark>');
+    }
+    
+    function getPopularSuggestions(query) {
+        // Popular search suggestions based on query
+        const suggestions = {
+            'iphone': ['iPhone 15 Pro', 'iPhone 14', 'iPhone 13', 'iPhone 12'],
+            'samsung': ['Samsung Galaxy S24', 'Samsung Galaxy A55', 'Samsung Galaxy Tab'],
+            'laptop': ['Laptop Gaming', 'Laptop Văn phòng', 'MacBook', 'Dell'],
+            'tai nghe': ['Tai nghe Bluetooth', 'Tai nghe có dây', 'AirPods', 'Sony'],
+            'điện thoại': ['iPhone', 'Samsung', 'Xiaomi', 'OPPO'],
+            'máy tính': ['Laptop', 'PC Gaming', 'MacBook', 'Máy tính bảng']
+        };
+        
+        for (const [key, values] of Object.entries(suggestions)) {
+            if (query.toLowerCase().includes(key.toLowerCase())) {
+                return values.filter(suggestion => 
+                    suggestion.toLowerCase().includes(query.toLowerCase())
+                );
+            }
+        }
+        
+        return [];
+    }
+    
+    function performSearch(query) {
+        if (query.trim()) {
+            window.location.href = `{{ route('products.index') }}?search=${encodeURIComponent(query)}`;
+        }
+    }
 </script>

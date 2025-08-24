@@ -56,13 +56,6 @@ class AdminBannerController extends Controller
 
     public function create()
     {
-        if (\App\Models\Banner::count() >= 3) {
-            // Quay về trang index và hiển thị thông báo
-            return redirect()
-                ->route('admin.banner.index') // Đổi route này thành route index banner của bạn
-                ->with('error', 'Đã đủ 3 banner, không thể thêm mới.');
-        }
-
         return view('admin.banner.create');
     }
 

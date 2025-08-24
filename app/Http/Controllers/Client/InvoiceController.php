@@ -8,6 +8,7 @@ use App\Mail\DynamicMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
@@ -70,7 +71,20 @@ class InvoiceController extends Controller
                 'expires_in' => '10 phút'
             ])->render();
 
+            // Log thông tin debug
+            Log::info('Sending invoice verification email', [
+                'email' => $email,
+                'verification_code' => $verificationCode,
+                'orders_count' => $orders->count(),
+                'cache_key' => $cacheKey
+            ]);
+
+            // Gửi email thật
             Mail::to($email)->send(new DynamicMail($subject, $content));
+            
+            Log::info('Invoice verification email sent successfully', [
+                'email' => $email
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -78,6 +92,12 @@ class InvoiceController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Failed to send invoice verification email', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể gửi email. Vui lòng thử lại sau.'
@@ -227,6 +247,205 @@ class InvoiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Tính năng tải hóa đơn PDF đang được phát triển'
+        ]);
+    }
+
+    /**
+     * Hủy đơn hàng (cho khách vãng lai)
+     */
+    public function cancelOrder($id)
+    {
+        $verifiedEmail = session('invoice_verified_email');
+        
+        if (!$verifiedEmail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng xác thực email trước khi thực hiện thao tác này'
+            ], 401);
+        }
+
+        $order = Order::where(function($query) use ($verifiedEmail) {
+            $query->where('guest_email', $verifiedEmail)
+                  ->orWhereHas('user', function($q) use ($verifiedEmail) {
+                      $q->where('email', $verifiedEmail);
+                  });
+        })
+        ->where('status', 'pending')
+        ->findOrFail($id);
+
+        $request = request();
+        $cancelReason = $request->input('cancel_reason', 'Khách hủy');
+        $clientNote = $request->input('client_note', '');
+
+        // Tạo yêu cầu hủy đơn
+        \App\Models\OrderReturn::create([
+            'order_id'     => $order->id,
+            'type'         => 'cancel',
+            'reason'       => $cancelReason,
+            'client_note'  => $clientNote,
+            'status'       => 'pending',
+            'requested_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Yêu cầu hủy đơn hàng đã được gửi. Admin sẽ duyệt yêu cầu này.'
+        ]);
+    }
+
+    /**
+     * Xác nhận thanh toán (cho khách vãng lai)
+     */
+    public function confirmPayment($id)
+    {
+        $verifiedEmail = session('invoice_verified_email');
+        
+        if (!$verifiedEmail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng xác thực email trước khi thực hiện thao tác này'
+            ], 401);
+        }
+
+        $order = Order::where(function($query) use ($verifiedEmail) {
+            $query->where('guest_email', $verifiedEmail)
+                  ->orWhereHas('user', function($q) use ($verifiedEmail) {
+                      $q->where('email', $verifiedEmail);
+                  });
+        })
+        ->whereIn('status', ['pending', 'processing'])
+        ->whereIn('payment_status', ['pending', 'processing'])
+        ->findOrFail($id);
+
+        $order->payment_status = 'paid';
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xác nhận thanh toán!'
+        ]);
+    }
+
+    /**
+     * Yêu cầu trả hàng (cho khách vãng lai)
+     */
+    public function requestReturn($id)
+    {
+        $verifiedEmail = session('invoice_verified_email');
+        
+        if (!$verifiedEmail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng xác thực email trước khi thực hiện thao tác này'
+            ], 401);
+        }
+
+        $order = Order::where(function($query) use ($verifiedEmail) {
+            $query->where('guest_email', $verifiedEmail)
+                  ->orWhereHas('user', function($q) use ($verifiedEmail) {
+                      $q->where('email', $verifiedEmail);
+                  });
+        })
+        ->where('status', 'delivered')
+        ->findOrFail($id);
+
+        $request = request();
+        $returnReason = $request->input('return_reason', 'Khách hàng yêu cầu trả');
+        $clientNote = $request->input('client_note', '');
+
+        \App\Models\OrderReturn::create([
+            'order_id'     => $order->id,
+            'type'         => 'return',
+            'reason'       => $returnReason,
+            'client_note'  => $clientNote,
+            'status'       => 'pending',
+            'requested_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Yêu cầu trả hàng đã được gửi.'
+        ]);
+    }
+
+    /**
+     * Thanh toán VNPay (cho khách vãng lai)
+     */
+    public function payWithVnpay($id)
+    {
+        $verifiedEmail = session('invoice_verified_email');
+        
+        if (!$verifiedEmail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng xác thực email trước khi thực hiện thao tác này'
+            ], 401);
+        }
+
+        $order = Order::where(function($query) use ($verifiedEmail) {
+            $query->where('guest_email', $verifiedEmail)
+                  ->orWhereHas('user', function($q) use ($verifiedEmail) {
+                      $q->where('email', $verifiedEmail);
+                  });
+        })
+        ->whereIn('status', ['pending', 'processing'])
+        ->whereIn('payment_status', ['pending', 'processing'])
+        ->findOrFail($id);
+
+        try {
+            // Sử dụng VNPayService từ checkout controller
+            $vnpayService = new \App\Services\VNPayService();
+            $paymentUrl = $vnpayService->createPaymentUrl($order);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Đang chuyển hướng đến trang thanh toán VNPay...',
+                'payment_url' => $paymentUrl
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi tạo thanh toán VNPay: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Xác nhận đã nhận hàng (cho khách vãng lai)
+     */
+    public function confirmReceipt($id)
+    {
+        $verifiedEmail = session('invoice_verified_email');
+        
+        if (!$verifiedEmail) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng xác thực email trước khi thực hiện thao tác này'
+            ], 401);
+        }
+
+        $order = Order::where(function($query) use ($verifiedEmail) {
+            $query->where('guest_email', $verifiedEmail)
+                  ->orWhereHas('user', function($q) use ($verifiedEmail) {
+                      $q->where('email', $verifiedEmail);
+                  });
+        })
+        ->findOrFail($id);
+
+        if (!in_array($order->status, ['delivered', 'shipped'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ xác nhận khi đơn hàng đã giao hoặc đang giao!'
+            ], 400);
+        }
+
+        $order->status = 'received';
+        $order->received_at = now();
+        $order->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã xác nhận nhận hàng!'
         ]);
     }
 }

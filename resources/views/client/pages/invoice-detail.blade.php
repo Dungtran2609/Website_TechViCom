@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen py-12">
-    <div class="container mx-auto px-4">
+    <div class="techvicom-container">
         <!-- Header -->
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
@@ -35,7 +35,7 @@
                         <div class="space-y-2 text-sm">
                             <p><span class="font-medium">Mã đơn hàng:</span> {{ 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</p>
                             <p><span class="font-medium">Ngày đặt:</span> {{ $order->created_at->format('d/m/Y H:i') }}</p>
-                            <p><span class="font-medium">Phương thức thanh toán:</span> {{ $order->payment_method_vietnamese }}</p>
+                            <p><span class="font-medium">Phương thức thanh toán:</span> {{ getPaymentMethodName($order->payment_method) }}</p>
                             @if($order->shippingMethod)
                                 <p><span class="font-medium">Phương thức giao hàng:</span> {{ $order->shippingMethod->name }}</p>
                             @endif
@@ -74,7 +74,9 @@
                     <div class="border border-gray-200 rounded-xl p-6">
                         <div class="flex items-center space-x-4">
                                                          <div class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                 @if($item->productVariant && $item->productVariant->image)
+                                 @if(isset($item->product) && $item->product && $item->product->type === 'simple' && $item->product->thumbnail)
+                                     <img src="{{ asset('storage/' . ltrim($item->product->thumbnail, '/')) }}" alt="{{ $item->name_product ?? $item->product->name }}" class="w-full h-full object-cover">
+                                 @elseif($item->productVariant && $item->productVariant->image)
                                      <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
                                  @elseif($item->image_product)
                                      <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
@@ -172,6 +174,58 @@
                 </div>
             </div>
 
+            <!-- Order Actions -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Thao tác đơn hàng</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Xác nhận thanh toán - Hiển thị khi đơn hàng pending và chưa thanh toán -->
+                    @if($order->status === 'pending' && $order->payment_status === 'pending')
+                    <button onclick="confirmPayment({{ $order->id }})" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        Xác nhận thanh toán
+                    </button>
+                    @endif
+
+                    <!-- Thanh toán VNPay - Hiển thị khi đơn hàng đang xử lý thanh toán -->
+                    @if($order->payment_status === 'processing')
+                    <button onclick="payWithVnpay({{ $order->id }})" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        Thanh toán VNPay
+                    </button>
+                    @endif
+
+                    <!-- Yêu cầu trả hàng -->
+                    @if($order->status === 'delivered')
+                    <button onclick="requestReturn({{ $order->id }})" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                        <i class="fas fa-undo mr-2"></i>
+                        Yêu cầu trả hàng
+                    </button>
+                    @endif
+
+                    <!-- Xác nhận nhận hàng -->
+                    @if(in_array($order->status, ['delivered', 'shipped']))
+                    <button onclick="confirmReceipt({{ $order->id }})" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                        <i class="fas fa-check mr-2"></i>
+                        Xác nhận nhận hàng
+                    </button>
+                    @endif
+
+                    <!-- Tải hóa đơn -->
+                    <button onclick="downloadInvoice({{ $order->id }})" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                        <i class="fas fa-download mr-2"></i>
+                        Tải hóa đơn
+                    </button>
+                </div>
+
+                <!-- Thông báo trạng thái -->
+                <div id="actionMessage" class="mt-4 hidden">
+                    <div class="p-4 rounded-lg">
+                        <p id="actionMessageText"></p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="bg-white rounded-2xl shadow-xl p-8">
                 <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -179,11 +233,6 @@
                         <i class="fas fa-arrow-left mr-2"></i>
                         Quay lại
                     </a>
-                    
-                    <button onclick="downloadInvoice({{ $order->id }})" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300">
-                        <i class="fas fa-download mr-2"></i>
-                        Tải hóa đơn PDF
-                    </button>
                     
                     <a href="{{ route('client.contacts.index') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300">
                         <i class="fas fa-headset mr-2"></i>
@@ -219,6 +268,135 @@
 </style>
 
 <script>
+// Xác nhận thanh toán
+function confirmPayment(orderId) {
+    if (!confirm('Bạn có chắc chắn muốn xác nhận thanh toán cho đơn hàng này?')) {
+        return;
+    }
+
+    fetch(`/invoice/order/${orderId}/confirm-payment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi xác nhận thanh toán', 'error');
+    });
+}
+
+// Thanh toán VNPay
+function payWithVnpay(orderId) {
+    if (!confirm('Bạn có chắc chắn muốn thanh toán qua VNPay cho đơn hàng này?')) {
+        return;
+    }
+
+    fetch(`/invoice/order/${orderId}/pay-vnpay`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            // Chuyển hướng đến trang thanh toán VNPay
+            if (data.payment_url) {
+                setTimeout(() => {
+                    window.location.href = data.payment_url;
+                }, 1500);
+            }
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi tạo thanh toán VNPay', 'error');
+    });
+}
+
+
+
+// Yêu cầu trả hàng
+function requestReturn(orderId) {
+    const reason = prompt('Lý do trả hàng (không bắt buộc):');
+    const note = prompt('Ghi chú thêm (không bắt buộc):');
+
+    fetch(`/invoice/order/${orderId}/request-return`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            return_reason: reason || 'Khách hàng yêu cầu trả',
+            client_note: note || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi yêu cầu trả hàng', 'error');
+    });
+}
+
+// Xác nhận nhận hàng
+function confirmReceipt(orderId) {
+    if (!confirm('Bạn có chắc chắn đã nhận hàng?')) {
+        return;
+    }
+
+    fetch(`/invoice/order/${orderId}/confirm-receipt`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi xác nhận nhận hàng', 'error');
+    });
+}
+
+// Tải hóa đơn
 function downloadInvoice(orderId) {
     fetch(`/invoice/download/${orderId}`, {
         method: 'GET',
@@ -236,6 +414,7 @@ function downloadInvoice(orderId) {
     });
 }
 
+// Hiển thị thông báo
 function showAlert(message, type) {
     const alert = document.createElement('div');
     alert.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
@@ -282,5 +461,16 @@ function getPaymentStatusColor($status) {
         'failed' => 'bg-red-100 text-red-800'
     ];
     return $colors[$status] ?? 'bg-gray-100 text-gray-800';
+}
+
+// Helper function để lấy tên phương thức thanh toán
+function getPaymentMethodName($method) {
+    $methods = [
+        'cod' => 'Thanh toán khi nhận hàng',
+        'credit_card' => 'Thẻ tín dụng',
+        'bank_transfer' => 'Chuyển khoản ngân hàng',
+        'vnpay' => 'VNPay'
+    ];
+    return $methods[$method] ?? $method;
 }
 @endphp

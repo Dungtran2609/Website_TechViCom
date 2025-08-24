@@ -13,7 +13,7 @@ class ProductCommentAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ProductComment::with(['product', 'user', 'replies'])
+        $query = ProductComment::with(['product', 'user', 'replies', 'order'])
             ->whereNull('parent_id'); // Chỉ lấy bình luận gốc
 
         if ($request->filled('product_id')) {
@@ -48,7 +48,7 @@ class ProductCommentAdminController extends Controller
 
     public function show($id)
     {
-        $comment = ProductComment::with(['product', 'user'])->findOrFail($id);
+        $comment = ProductComment::with(['product', 'user', 'order'])->findOrFail($id);
         return view('admin.products.comments.show', compact('comment'));
     }
 

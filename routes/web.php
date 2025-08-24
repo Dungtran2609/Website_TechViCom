@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -76,18 +77,62 @@ Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('autho
 Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 
-// Tra cứu hóa đơn
-Route::prefix('invoice')->name('client.invoice.')->group(function () {
-    Route::get('/', [InvoiceController::class, 'index'])->name('index');
-    Route::post('/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])->name('send-code');
-    Route::post('/verify-code', [InvoiceController::class, 'verifyCode'])->name('verify-code');
-    Route::get('/order/{id}', [InvoiceController::class, 'showOrder'])->name('show-order');
-    Route::get('/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('download');
+// Hóa đơn (Invoice) - phía client
+Route::get('/invoice', [InvoiceController::class, 'index'])->name('client.invoice.index');
+Route::post('/invoice/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])
+    ->name('client.invoice.send-code')
+    ->middleware('invoice.spam');
+Route::post('/invoice/verify-code', [InvoiceController::class, 'verifyCode'])
+    ->name('client.invoice.verify-code')
+    ->middleware('invoice.spam');
+Route::get('/invoice/order/{id}', [InvoiceController::class, 'showOrder'])->name('client.invoice.show-order');
+Route::get('/invoice/download/{id}', [InvoiceController::class, 'downloadInvoice'])->name('client.invoice.download');
+
+// Các chức năng thanh toán cho khách vãng lai
+Route::post('/invoice/order/{id}/confirm-payment', [InvoiceController::class, 'confirmPayment'])->name('client.invoice.confirm-payment');
+Route::post('/invoice/order/{id}/pay-vnpay', [InvoiceController::class, 'payWithVnpay'])->name('client.invoice.pay-vnpay');
+Route::post('/invoice/order/{id}/request-return', [InvoiceController::class, 'requestReturn'])->name('client.invoice.request-return');
+Route::post('/invoice/order/{id}/confirm-receipt', [InvoiceController::class, 'confirmReceipt'])->name('client.invoice.confirm-receipt');
+
+// Đơn hàng (Orders) - phía client
+Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
+    Route::get('/orders/{id}', [ClientOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/cancel', [ClientOrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/request-return', [ClientOrderController::class, 'requestReturn'])->name('orders.request-return');
+    Route::post('/orders/{id}/confirm-receipt', [ClientOrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
 });
 
-// Sản phẩm, Danh mục, Thương hiệu (Phía Client)
+Route::middleware(['auth'])->prefix('accounts')->name('accounts.')->group(function () {
+    Route::get('/edit', [ClientAccountController::class, 'edit'])->name('edit');
+});
+
+
+// Route resource cho promotions và mails (trong group admin)
+Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Coupon resource routes (thêm show, trash, restore, forceDelete)
+    Route::get('coupons/trash', [AdminCouponController::class, 'trash'])->name('coupons.trash');
+    Route::put('coupons/{id}/restore', [AdminCouponController::class, 'restore'])->name('coupons.restore');
+    Route::delete('coupons/{id}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('coupons.forceDelete');
+    Route::get('coupons/{coupon}', [AdminCouponController::class, 'show'])->where('coupon', '[0-9]+')->name('coupons.show');
+    Route::resource('coupons', AdminCouponController::class)->except(['show']);
+    Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
+    // Quản lý mail động
+    Route::get('mails/send', [AdminMailController::class, 'sendForm'])->name('mails.send');
+    Route::post('mails/send', [AdminMailController::class, 'send'])->name('mails.send');
+    Route::get('mails/trash', [AdminMailController::class, 'trash'])->name('mails.trash');
+    Route::post('mails/{mail}/restore', [AdminMailController::class, 'restore'])->name('mails.restore');
+    Route::delete('mails/{mail}/force-delete', [AdminMailController::class, 'forceDelete'])->name('mails.forceDelete');
+    Route::post('mails/{mail}/toggle-auto-send', [AdminMailController::class, 'toggleAutoSend'])->name('mails.toggleAutoSend');
+    Route::post('mails/{mail}/send-test', [AdminMailController::class, 'sendTest'])->name('mails.sendTest');
+    Route::resource('mails', AdminMailController::class)->names('mails');
+});
+
+
+
+// Products
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ClientProductController::class, 'index'])->name('index');
+    Route::post('/filter', [ClientProductController::class, 'filterProducts'])->name('filter');
     Route::get('/love', [ClientProductController::class, 'love'])->name('love');
     Route::get('/{id}', [ClientProductController::class, 'show'])->name('show');
     Route::get('/{productId}/comments/filter', [ClientProductCommentController::class, 'filterComments'])->name('comments.filter');
@@ -146,7 +191,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('/tin-tuc/comment/{id}/reply', [ClientNewsController::class, 'replyComment'])->name('news-comments.reply');
     });
     Route::prefix('contacts')->name('contacts.')->group(function () {
-        Route::get('/', [ClientContactController::class, 'create'])->name('index');
+        Route::get('/', [ClientContactController::class, 'index'])->name('index');
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 });
@@ -193,6 +238,9 @@ Route::prefix('api')->name('api.')->group(function () {
     Route::get('/coupons', [ClientCouponController::class, 'listAvailableCoupons']);
 });
 
+// Route cho apply coupon (không có prefix api)
+Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
+
 /*
 |--------------------------------------------------------------------------
 | ADMIN ROUTES
@@ -209,9 +257,95 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::get('{user}/addresses', [AdminUserController::class, 'addresses'])->name('addresses.index');
         Route::post('{user}/addresses', [AdminUserController::class, 'addAddress'])->name('addresses.store');
         Route::put('addresses/{address}', [AdminUserController::class, 'updateAddress'])->name('addresses.update');
-        Route::delete('addresses/{address}', [AdminUserController::class, 'destroyAddress'])->name('addresses.destroy');
-        Route::resource('', AdminUserController::class)->parameters(['' => 'user']);
+        Route::delete('addresses/{address}', [AdminUserController::class, 'deleteAddress'])->name('addresses.destroy');
+
+        // Resource chính cho user
+        Route::resource('', AdminUserController::class)
+            ->parameters(['' => 'user'])
+            ->names([
+                'index' => 'index',
+                'create' => 'create',
+                'store' => 'store',
+                'show' => 'show',
+                'edit' => 'edit',
+                'update' => 'update',
+                'destroy' => 'destroy',
+            ]);
     });
+
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [AdminOrderController::class, 'index'])->name('index');
+        Route::get('trashed', [AdminOrderController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminOrderController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminOrderController::class, 'forceDelete'])->name('forceDelete');
+        Route::post('{id}/update-status', [AdminOrderController::class, 'updateOrders'])->name('updateOrders');
+        Route::get('returns', [AdminOrderController::class, 'returnsIndex'])->name('returns');
+        Route::post('returns/{id}/process', [AdminOrderController::class, 'processReturn'])->name('process-return');
+        Route::get('{id}', [AdminOrderController::class, 'show'])->name('show');
+        Route::get('{id}/edit', [AdminOrderController::class, 'edit'])->name('edit');
+        Route::put('{id}', [AdminOrderController::class, 'updateOrders'])->name('update');
+        Route::delete('{id}', [AdminOrderController::class, 'destroy'])->name('destroy');
+        Route::post('{id}/reset-vnpay-counter', [AdminOrderController::class, 'resetVnpayCancelCount'])->name('reset-vnpay-counter');
+    });
+
+    // ... (Thêm lại các khối route admin khác của bạn vào đây)
+    // Quản lý danh mục sản phẩm
+    Route::prefix('products/categories')->name('products.categories.')->group(function () {
+        Route::get('trashed', [AdminCategoryController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminCategoryController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminCategoryController::class, 'forceDelete'])->name('force-delete');
+        Route::resource('/', AdminCategoryController::class)->parameters(['' => 'category'])->names('');
+    });
+    // Product Comments
+    Route::prefix('products/comments')->name('products.comments.')->group(function () {
+        Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
+        Route::get('/', [ProductCommentAdminController::class, 'index'])->name('index');
+        Route::get('/{id}', [ProductCommentAdminController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ProductCommentAdminController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ProductCommentAdminController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ProductCommentAdminController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/approve', [ProductCommentAdminController::class, 'approve'])->name('approve');
+        Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
+        Route::patch('/{id}/toggle-hidden', [ProductCommentAdminController::class, 'toggleHidden'])->name('toggle-hidden');
+        Route::post('/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('reply');
+    });
+
+
+    // Banners
+    Route::resource('banner', AdminBannerController::class);
+    // Quản lý thương hiệu sản phẩm
+    Route::prefix('products/brands')->name('products.brands.')->group(function () {
+        Route::get('trashed', [AdminBrandController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminBrandController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminBrandController::class, 'forceDelete'])->name('force-delete');
+        Route::resource('/', AdminBrandController::class)->parameters(['' => 'brand'])->names('');
+    });
+
+    // Quản lý thuộc tính sản phẩm
+    Route::get('products/attributes/trashed', [AdminAttributeController::class, 'trashed'])->name('products.attributes.trashed');
+    Route::post('products/attributes/{id}/restore', [AdminAttributeController::class, 'restore'])->name('products.attributes.restore');
+    Route::delete('products/attributes/{id}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('products.attributes.force-delete');
+    Route::resource('products/attributes', AdminAttributeController::class)->names('products.attributes');
+
+    // Quản lý giá trị thuộc tính
+    Route::prefix('products/attributes')->name('products.attributes.')->group(function () {
+        Route::get('{attribute}/values/trashed', [AdminAttributeValueController::class, 'trashed'])->name('values.trashed');
+        Route::post('values/{id}/restore', [AdminAttributeValueController::class, 'restore'])->name('values.restore');
+        Route::delete('values/{id}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('values.force-delete');
+        Route::get('{attribute}/values', [AdminAttributeValueController::class, 'index'])->name('values.index');
+        Route::post('{attribute}/values', [AdminAttributeValueController::class, 'store'])->name('values.store');
+        Route::get('values/{value}/edit', [AdminAttributeValueController::class, 'edit'])->name('values.edit');
+        Route::put('values/{value}', [AdminAttributeValueController::class, 'update'])->name('values.update');
+        Route::delete('values/{value}', [AdminAttributeValueController::class, 'destroy'])->name('values.destroy');
+    });
+
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('trashed', [AdminProductController::class, 'trashed'])->name('trashed');
+        Route::post('{id}/restore', [AdminProductController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
+        Route::resource('/', AdminProductController::class)->parameters(['' => 'product'])->names('');
+    });
+    // ==== Roles ====
     Route::prefix('roles')->middleware(CheckRole::class . ':admin')->name('roles.')->group(function () {
         Route::get('list', [AdminRoleController::class, 'list'])->name('list');
         Route::post('update-users', [AdminRoleController::class, 'updateUsers'])->name('updateUsers');
@@ -249,26 +383,14 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             Route::get('trashed', [AdminAttributeController::class, 'trashed'])->name('trashed');
             Route::post('{attribute}/restore', [AdminAttributeController::class, 'restore'])->name('restore');
             Route::delete('{attribute}/force-delete', [AdminAttributeController::class, 'forceDelete'])->name('force-delete');
-            Route::prefix('{attribute}/values')->name('values.')->group(function() {
-                 Route::get('trashed', [AdminAttributeValueController::class, 'trashed'])->name('trashed');
-                 Route::post('{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('restore');
-                 Route::delete('{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
-                 Route::resource('/', AdminAttributeValueController::class)->parameters(['' => 'value']);
+            Route::prefix('{attribute}/values')->name('values.')->group(function () {
+                Route::get('trashed', [AdminAttributeValueController::class, 'trashed'])->name('trashed');
+                Route::post('{value}/restore', [AdminAttributeValueController::class, 'restore'])->name('restore');
+                Route::delete('{value}/force-delete', [AdminAttributeValueController::class, 'forceDelete'])->name('force-delete');
+                Route::resource('/', AdminAttributeValueController::class)->parameters(['' => 'value']);
             });
             Route::resource('/', AdminAttributeController::class)->parameters(['' => 'attribute']);
         });
-        Route::prefix('comments')->name('comments.')->group(function () {
-            Route::get('/products-with-comments', [ProductCommentAdminController::class, 'productsWithComments'])->name('products-with-comments');
-            Route::patch('/{id}/toggle-hidden', [ProductCommentAdminController::class, 'toggleHidden'])->name('toggle-hidden');
-            Route::patch('/{id}/toggle', [ProductCommentAdminController::class, 'toggleStatus'])->name('toggle');
-            Route::post('/{id}/reply', [ProductCommentAdminController::class, 'reply'])->name('reply');
-            Route::resource('/', ProductCommentAdminController::class)->parameters(['' => 'id']);
-        });
-        // === ĐẶT ROUTE CỦA PRODUCT (CHA) XUỐNG CUỐI CÙNG ===
-        Route::get('trashed', [AdminProductController::class, 'trashed'])->name('trashed');
-        Route::post('{product}/restore', [AdminProductController::class, 'restore'])->name('restore');
-        Route::delete('{product}/force-delete', [AdminProductController::class, 'forceDelete'])->name('force-delete');
-        Route::resource('/', AdminProductController::class)->parameters(['' => 'product']);
     });
 
     // Orders Management
@@ -290,12 +412,13 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
         Route::resource('', AdminNewsController::class)->parameters(['' => 'news']);
     });
     Route::resource('news-categories', AdminNewsCategoryController::class)->middleware(CheckPermission::class . ':manage_news-categories');
-    Route::prefix('news-comments')->name('news-comments.')->middleware(CheckPermission::class . ':manage_news_comments')->group(function () {
+    Route::prefix('news-comments')->name('news-comments.')->middleware(CheckPermission::class . ':manage_news-comments')->group(function () {
         Route::get('/', [AdminNewsCommentController::class, 'index'])->name('index');
-        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show');
+        Route::get('/{news_id}', [AdminNewsCommentController::class, 'show'])->name('show'); 
         Route::delete('/{id}', [AdminNewsCommentController::class, 'destroy'])->name('destroy');
         Route::patch('/{id}/toggle', [AdminNewsCommentController::class, 'toggleVisibility'])->name('toggle');
         Route::post('/{id}/reply', [AdminNewsCommentController::class, 'storeReply'])->name('reply');
+        Route::post('/{id}/like', [AdminNewsCommentController::class, 'like'])->name('like');
     });
 
     // Other Management
@@ -304,33 +427,28 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('logos', AdminLogoController::class)->names('logos');
     Route::prefix('contacts')->name('contacts.')->middleware(CheckPermission::class . ':manage_contacts')->group(function () {
         Route::get('/', [AdminContactsController::class, 'index'])->name('index');
+        Route::get('trashed', [AdminContactsController::class, 'trashed'])->name('trashed');
         Route::get('{id}', [AdminContactsController::class, 'show'])->name('show');
+        Route::get('{id}/trashed', [AdminContactsController::class, 'showTrashed'])->name('show-trashed');
         Route::delete('{id}', [AdminContactsController::class, 'destroy'])->name('destroy');
+        Route::patch('{id}/restore', [AdminContactsController::class, 'restore'])->name('restore');
+        Route::delete('{id}/force-delete', [AdminContactsController::class, 'forceDelete'])->name('force-delete');
         Route::patch('{id}/status', [AdminContactsController::class, 'markAsHandled'])->name('markAsHandled');
+        Route::patch('restore-multiple', [AdminContactsController::class, 'restoreMultiple'])->name('restore-multiple');
+        Route::delete('force-delete-multiple', [AdminContactsController::class, 'forceDeleteMultiple'])->name('force-delete-multiple');
     });
     Route::prefix('coupons')->name('coupons.')->middleware(CheckPermission::class . ':manage_coupons')->group(function () {
         Route::put('{coupon}/restore', [AdminCouponController::class, 'restore'])->name('restore');
         Route::delete('{coupon}/force-delete', [AdminCouponController::class, 'forceDelete'])->name('forceDelete');
         Route::resource('/', AdminCouponController::class)->parameters(['' => 'coupon'])->except(['show']);
     });
-    Route::prefix('mails')->name('mails.')->middleware(CheckPermission::class . ':manage_mails')->group(function () {
-        Route::get('/send', [AdminMailController::class, 'sendForm'])->name('send');
-        Route::post('/send', [AdminMailController::class, 'send'])->name('send.submit');
-        Route::get('/trash', [AdminMailController::class, 'trash'])->name('trash');
-        Route::post('/{mail}/restore', [AdminMailController::class, 'restore'])->name('restore');
-        Route::delete('/{mail}/force-delete', [AdminMailController::class, 'forceDelete'])->name('forceDelete');
-        Route::post('/{mail}/toggle-auto-send', [AdminMailController::class, 'toggleAutoSend'])->name('toggleAutoSend');
-        Route::post('/{mail}/send-test', [AdminMailController::class, 'sendTest'])->name('sendTest');
-        Route::resource('/', AdminMailController::class)->parameters(['' => 'mail']);
-    });
 });
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL & WEBHOOK ROUTES
-|--------------------------------------------------------------------------
-*/
-// Social Login
+
+Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->name('webhook.payos');
+Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image');
+
+
 Route::get('auth/google', [SocialController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [SocialController::class, 'handleGoogleCallback']);
 Route::get('auth/facebook', [SocialController::class, 'redirectToFacebook'])->name('auth.facebook');
@@ -342,41 +460,5 @@ Route::post('/webhooks/payos', [WebhookController::class, 'handlePayment'])->nam
 // Other global routes
 Route::post('admin/news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('admin.news.upload-image')->middleware(['auth', 'is_admin']);
 
-/*
-|--------------------------------------------------------------------------
-| DEBUGGING ROUTES
-|--------------------------------------------------------------------------
-*/
-if (app()->environment('local')) {
-    Route::prefix('debug')->group(function () {
-        Route::get('/phpinfo', fn() => phpinfo());
-        Route::get('/test-add-to-cart', function () {
-            $cart = session()->get('cart', []);
-            $cart['test_product'] = ['product_id' => 1, 'quantity' => 1, 'variant_id' => null];
-            session(['cart' => $cart]);
-            return 'Product added. <a href="/carts">Go to cart</a>';
-        });
-        Route::get('/test-checkout-flow', function () {
-            session()->forget('cart');
-            session(['cart' => ['1_1' => ['product_id' => 1, 'variant_id' => 1, 'quantity' => 1, 'price' => 100000]]]);
-            return 'Test cart created. <a href="/checkout">Go to checkout</a>';
-        });
-        Route::get('/test-check-cart', function () {
-            return response()->json(session()->get('cart', []));
-        });
-        Route::get('/test-session', function () {
-            return response()->json([
-                'session_id' => session()->getId(),
-                'cart' => session()->get('cart', []),
-                'session_driver' => config('session.driver'),
-            ]);
-        });
-    });
-}
 
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATION ROUTES
-|--------------------------------------------------------------------------
-*/
 require __DIR__ . '/auth.php';

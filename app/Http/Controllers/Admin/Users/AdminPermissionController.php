@@ -18,8 +18,12 @@ class AdminPermissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Permission::query();
+        // Tự động đồng bộ quyền khi truy cập trang index (chỉ GET request)
+        if ($request->isMethod('get')) {
+            $this->sync($request);
+        }
 
+        $query = Permission::query();
         // Tìm kiếm theo tên hoặc mô tả quyền
         if ($request->filled('permission_name')) {
             $search = $request->permission_name;
@@ -41,15 +45,12 @@ class AdminPermissionController extends Controller
                 $q->whereIn('roles.id', $roleIds);
             });
         }
-
         // Luôn lấy cả quyền tổng quát manage_{module}
         $query->orWhere(function($q) {
             $q->where('name', 'like', 'manage\_%');
         });
-
-    $permissions = $query->with('roles')->orderByDesc('id')->get();
-
-    return view('admin.permissions.index', compact('permissions', 'roles', 'modules'));
+        $permissions = $query->with('roles')->orderByDesc('id')->get();
+        return view('admin.permissions.index', compact('permissions', 'roles', 'modules'));
     }
 
     /**
@@ -57,8 +58,12 @@ class AdminPermissionController extends Controller
      */
     public function list(Request $request)
     {
-        $query = Permission::query();
+        // Tự động đồng bộ quyền khi truy cập trang list (chỉ GET request)
+        if ($request->isMethod('get')) {
+            $this->sync($request);
+        }
 
+        $query = Permission::query();
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
@@ -66,19 +71,15 @@ class AdminPermissionController extends Controller
                   ->orWhere('description', 'like', "%{$search}%");
             });
         }
-
         $modules = Permission::select('module')->distinct()->pluck('module')->filter()->values();
         if ($request->filled('module')) {
             $query->where('module', $request->input('module'));
         }
-
         // Luôn lấy cả quyền tổng quát manage_{module}
         $query->orWhere(function($q) {
             $q->where('name', 'like', 'manage\_%');
         });
-
         $permissions = $query->orderByDesc('id')->paginate(10);
-
         return view('admin.permissions.list', compact('permissions', 'modules'));
     }
 

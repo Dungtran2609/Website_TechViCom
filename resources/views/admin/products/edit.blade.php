@@ -77,20 +77,138 @@
 
                             <div class="tab-pane" id="tab-data" role="tabpanel">
                                 <div class="d-flex justify-content-end mb-3 position-relative">
-                                    <div class="w-100 position-relative">
+                                    <div class="d-flex w-100" style="gap: 8px; justify-content: flex-end;">
+                                        <button type="button" class="btn btn-outline-orange" id="btnBulkEditVariants"
+                                            style="display:none;">Cập nhật hàng loạt</button>
                                         <select class="form-select w-auto @error('type') is-invalid @enderror"
                                             name="type" id="productType">
                                             <option value="simple" @selected(old('type', $product->type) == 'simple')>Sản phẩm đơn</option>
                                             <option value="variable" @selected(old('type', $product->type) == 'variable')>Sản phẩm biến thể</option>
                                         </select>
-                                        @error('type')
-                                            <div class="text-danger fw-semibold mt-2 d-flex align-items-center"
-                                                style="font-size: 1rem;">
-                                                <span class="me-1" style="font-size:1.2em;">&#9888;&#65039;</span>
-                                                {{ $message }}
-                                            </div>
-                                        @enderror
                                     </div>
+                                    @error('type')
+                                        <div class="text-danger fw-semibold mt-2 d-flex align-items-center"
+                                            style="font-size: 1rem;">
+                                            <span class="me-1" style="font-size:1.2em;">&#9888;&#65039;</span>
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
+                                    <!-- Modal cập nhật hàng loạt -->
+                                    <div class="modal fade" id="bulkEditModal" tabindex="-1"
+                                        aria-labelledby="bulkEditModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="bulkEditModalLabel">Cập nhật thông tin hàng
+                                                        loạt cho biến thể</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Giá bán</label>
+                                                        <input type="number" class="form-control" id="bulkPrice">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Giá khuyến mãi</label>
+                                                        <input type="number" class="form-control" id="bulkSalePrice">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tồn kho</label>
+                                                        <input type="number" class="form-control" id="bulkStock">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Ngưỡng tồn kho thấp</label>
+                                                        <input type="number" class="form-control" id="bulkLowStock">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Cân nặng (kg)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkWeight">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Dài (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkLength">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Rộng (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkWidth">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Cao (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkHeight">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Đóng</button>
+                                                    <button type="button" class="btn btn-primary" id="applyBulkEdit">Áp
+                                                        dụng</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @push('scripts')
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                // Hiện nút bulk edit khi là sản phẩm biến thể
+                                                const productTypeSelect = document.getElementById('productType');
+                                                const btnBulkEdit = document.getElementById('btnBulkEditVariants');
+
+                                                function toggleBulkEditBtn() {
+                                                    if (productTypeSelect.value === 'variable') {
+                                                        btnBulkEdit.style.display = '';
+                                                    } else {
+                                                        btnBulkEdit.style.display = 'none';
+                                                    }
+                                                }
+                                                productTypeSelect.addEventListener('change', toggleBulkEditBtn);
+                                                toggleBulkEditBtn();
+
+                                                // Modal logic
+                                                const bulkEditModal = document.getElementById('bulkEditModal');
+                                                const applyBulkEdit = document.getElementById('applyBulkEdit');
+                                                btnBulkEdit.addEventListener('click', function() {
+                                                    // Reset các trường modal
+                                                    bulkEditModal.querySelectorAll('input').forEach(i => i.value = '');
+                                                    const modal = new bootstrap.Modal(bulkEditModal);
+                                                    modal.show();
+                                                });
+                                                applyBulkEdit.addEventListener('click', function() {
+                                                    // Lấy giá trị các trường modal
+                                                    const price = document.getElementById('bulkPrice').value;
+                                                    const salePrice = document.getElementById('bulkSalePrice').value;
+                                                    const stock = document.getElementById('bulkStock').value;
+                                                    const lowStock = document.getElementById('bulkLowStock').value;
+                                                    const weight = document.getElementById('bulkWeight').value;
+                                                    const length = document.getElementById('bulkLength').value;
+                                                    const width = document.getElementById('bulkWidth').value;
+                                                    const height = document.getElementById('bulkHeight').value;
+                                                    // Áp dụng cho tất cả biến thể
+                                                    const wrapper = document.getElementById('variantsWrapper');
+                                                    if (!wrapper) return;
+                                                    wrapper.querySelectorAll('.accordion-item').forEach(item => {
+                                                        if (price) item.querySelector('input[name$="[price]"]').value = price;
+                                                        if (salePrice) item.querySelector('input[name$="[sale_price]"]').value =
+                                                            salePrice;
+                                                        if (stock) item.querySelector('input[name$="[stock]"]').value = stock;
+                                                        if (lowStock) item.querySelector('input[name$="[low_stock_amount]"]').value =
+                                                            lowStock;
+                                                        if (weight) item.querySelector('input[name$="[weight]"]').value = weight;
+                                                        if (length) item.querySelector('input[name$="[length]"]').value = length;
+                                                        if (width) item.querySelector('input[name$="[width]"]').value = width;
+                                                        if (height) item.querySelector('input[name$="[height]"]').value = height;
+                                                    });
+                                                    // Đóng modal
+                                                    const modal = bootstrap.Modal.getInstance(bulkEditModal);
+                                                    modal.hide();
+                                                });
+                                            });
+                                        </script>
+                                    @endpush
                                 </div>
 
                                 @php $simpleVariant = $product->type == 'simple' ? $product->variants->first() : null; @endphp
@@ -100,8 +218,9 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Giá bán <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control @error('price') is-invalid @enderror"
-                                                name="price" value="{{ old('price', $simpleVariant?->price) }}">
+                                            <input type="number"
+                                                class="form-control @error('price') is-invalid @enderror" name="price"
+                                                value="{{ old('price', $simpleVariant?->price) }}">
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -118,8 +237,9 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Tồn kho <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control @error('stock') is-invalid @enderror"
-                                                name="stock" value="{{ old('stock', $simpleVariant?->stock) }}">
+                                            <input type="number"
+                                                class="form-control @error('stock') is-invalid @enderror" name="stock"
+                                                value="{{ old('stock', $simpleVariant?->stock) }}">
                                             @error('stock')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -492,10 +612,10 @@
                                                 <div class="fw-bold mb-1">${a.attrName}:</div>
                                                 <div class="d-flex flex-wrap gap-2">
                                                     ${a.values.map(v => `
-                                                                                                                                                                                                                                                    <label class="form-check form-check-inline mb-0">
-                                                                                                                                                                                                                                                        <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
-                                                                                                                                                                                                                                                        <span class="form-check-label">${v.value}</span>
-                                                                                                                                                                                                                                                    </label>`).join('')}
+                                                                                                                                                                                                                                                                                    <label class="form-check form-check-inline mb-0">
+                                                                                                                                                                                                                                                                                        <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
+                                                                                                                                                                                                                                                                                        <span class="form-check-label">${v.value}</span>
+                                                                                                                                                                                                                                                                                    </label>`).join('')}
                                                     <button type="button" class="btn btn-sm btn-danger ms-2 btnRemoveVariantAttr" data-id="${a.attrId}">Xóa</button>
                                                 </div>
                                                 ${(Array.isArray(a.valIds) ? a.valIds : []).map(valId => `<input type="hidden" name="variant_attributes[${a.attrId}][]" value="${valId}">`).join('')}
@@ -592,7 +712,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
+
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
                                 value="1" @checked(old('is_featured', $product->is_featured))>

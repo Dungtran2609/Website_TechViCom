@@ -73,11 +73,131 @@
                             </div>
                             <div class="tab-pane" id="tab-data" role="tabpanel">
                                 <div class="d-flex justify-content-end mb-3">
-                                    <select class="form-select w-auto @error('type') is-invalid @enderror" name="type"
-                                        id="productType">
-                                        <option value="simple" @selected(old('type', 'simple') == 'simple')>Sản phẩm đơn</option>
-                                        <option value="variable" @selected(old('type') == 'variable')>Sản phẩm biến thể</option>
-                                    </select>
+                                    <div class="d-flex w-100" style="gap: 8px; justify-content: flex-end;">
+                                        <button type="button" class="btn btn-warning" id="btnBulkEditVariants"
+                                            style="display:none;">Chỉnh sửa hàng loạt</button>
+                                        <select class="form-select w-auto @error('type') is-invalid @enderror"
+                                            name="type" id="productType">
+                                            <option value="simple" @selected(old('type', 'simple') == 'simple')>Sản phẩm đơn</option>
+                                            <option value="variable" @selected(old('type') == 'variable')>Sản phẩm biến thể</option>
+                                        </select>
+                                    </div>
+                                    <!-- Modal chỉnh sửa hàng loạt -->
+                                    <div class="modal fade" id="bulkEditModal" tabindex="-1"
+                                        aria-labelledby="bulkEditModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="bulkEditModalLabel">Chỉnh sửa thông tin hàng
+                                                        loạt cho biến thể</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Giá bán</label>
+                                                        <input type="number" class="form-control" id="bulkPrice">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Giá khuyến mãi</label>
+                                                        <input type="number" class="form-control" id="bulkSalePrice">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Tồn kho</label>
+                                                        <input type="number" class="form-control" id="bulkStock">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Ngưỡng tồn kho thấp</label>
+                                                        <input type="number" class="form-control" id="bulkLowStock">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Cân nặng (kg)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkWeight">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Dài (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkLength">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Rộng (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkWidth">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Cao (cm)</label>
+                                                        <input type="number" step="0.01" class="form-control"
+                                                            id="bulkHeight">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Đóng</button>
+                                                    <button type="button" class="btn btn-primary" id="applyBulkEdit">Áp
+                                                        dụng</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @push('scripts')
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                // Hiện nút bulk edit khi là sản phẩm biến thể
+                                                const productTypeSelect = document.getElementById('productType');
+                                                const btnBulkEdit = document.getElementById('btnBulkEditVariants');
+
+                                                function toggleBulkEditBtn() {
+                                                    if (productTypeSelect.value === 'variable') {
+                                                        btnBulkEdit.style.display = '';
+                                                    } else {
+                                                        btnBulkEdit.style.display = 'none';
+                                                    }
+                                                }
+                                                productTypeSelect.addEventListener('change', toggleBulkEditBtn);
+                                                toggleBulkEditBtn();
+
+                                                // Modal logic
+                                                const bulkEditModal = document.getElementById('bulkEditModal');
+                                                const applyBulkEdit = document.getElementById('applyBulkEdit');
+                                                btnBulkEdit.addEventListener('click', function() {
+                                                    // Reset các trường modal
+                                                    bulkEditModal.querySelectorAll('input').forEach(i => i.value = '');
+                                                    const modal = new bootstrap.Modal(bulkEditModal);
+                                                    modal.show();
+                                                });
+                                                applyBulkEdit.addEventListener('click', function() {
+                                                    // Lấy giá trị các trường modal
+                                                    const price = document.getElementById('bulkPrice').value;
+                                                    const salePrice = document.getElementById('bulkSalePrice').value;
+                                                    const stock = document.getElementById('bulkStock').value;
+                                                    const lowStock = document.getElementById('bulkLowStock').value;
+                                                    const weight = document.getElementById('bulkWeight').value;
+                                                    const length = document.getElementById('bulkLength').value;
+                                                    const width = document.getElementById('bulkWidth').value;
+                                                    const height = document.getElementById('bulkHeight').value;
+                                                    // Áp dụng cho tất cả biến thể
+                                                    const wrapper = document.getElementById('variantsWrapper');
+                                                    if (!wrapper) return;
+                                                    wrapper.querySelectorAll('.accordion-item').forEach(item => {
+                                                        if (price) item.querySelector('input[name$="[price]"]').value = price;
+                                                        if (salePrice) item.querySelector('input[name$="[sale_price]"]').value =
+                                                            salePrice;
+                                                        if (stock) item.querySelector('input[name$="[stock]"]').value = stock;
+                                                        if (lowStock) item.querySelector('input[name$="[low_stock_amount]"]').value =
+                                                            lowStock;
+                                                        if (weight) item.querySelector('input[name$="[weight]"]').value = weight;
+                                                        if (length) item.querySelector('input[name$="[length]"]').value = length;
+                                                        if (width) item.querySelector('input[name$="[width]"]').value = width;
+                                                        if (height) item.querySelector('input[name$="[height]"]').value = height;
+                                                    });
+                                                    // Đóng modal
+                                                    const modal = bootstrap.Modal.getInstance(bulkEditModal);
+                                                    modal.hide();
+                                                });
+                                            });
+                                        </script>
+                                    @endpush
                                     @error('type')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -87,8 +207,9 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Giá bán <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control @error('price') is-invalid @enderror"
-                                                name="price" value="{{ old('price') }}">
+                                            <input type="number"
+                                                class="form-control @error('price') is-invalid @enderror" name="price"
+                                                value="{{ old('price') }}">
                                             @error('price')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -104,8 +225,9 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Tồn kho <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control @error('stock') is-invalid @enderror"
-                                                name="stock" value="{{ old('stock') }}">
+                                            <input type="number"
+                                                class="form-control @error('stock') is-invalid @enderror" name="stock"
+                                                value="{{ old('stock') }}">
                                             @error('stock')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -168,7 +290,178 @@
                                         <button type="button" class="btn btn-outline-primary mt-2"
                                             id="generateVariantsBtn">Tạo biến thể</button>
                                     </div>
-                                    <div id="variantsWrapper" class="mt-3"></div>
+                                    <div id="variantsWrapper" class="mt-3">
+                                        @php
+                                            $oldVariants = old('variants');
+                                        @endphp
+                                        @if (is_array($oldVariants))
+                                            <div class="accordion">
+                                                @foreach ($oldVariants as $index => $variant)
+                                                    <div class="accordion-item">
+                                                        <h2 class="accordion-header">
+                                                            <button class="accordion-button" type="button"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#collapse{{ $index }}">
+                                                                @php
+                                                                    $attValues = [];
+                                                                    if (
+                                                                        !empty($variant['attributes']) &&
+                                                                        is_array($variant['attributes'])
+                                                                    ) {
+                                                                        $attValues = \App\Models\AttributeValue::whereIn(
+                                                                            'id',
+                                                                            $variant['attributes'],
+                                                                        )
+                                                                            ->pluck('value')
+                                                                            ->toArray();
+                                                                    }
+                                                                @endphp
+                                                                {{ $attValues ? implode(' / ', $attValues) : 'Biến thể mặc định' }}
+                                                            </button>
+                                                        </h2>
+                                                        <div id="collapse{{ $index }}"
+                                                            class="accordion-collapse collapse show">
+                                                            <div class="accordion-body">
+                                                                <input type="hidden"
+                                                                    name="variants[{{ $index }}][id]"
+                                                                    value="{{ $variant['id'] ?? '' }}">
+                                                                @if (!empty($variant['attributes']) && is_array($variant['attributes']))
+                                                                    @foreach ($variant['attributes'] as $attId)
+                                                                        <input type="hidden"
+                                                                            name="variants[{{ $index }}][attributes][]"
+                                                                            value="{{ $attId }}">
+                                                                    @endforeach
+                                                                @endif
+                                                                <div class="row mb-3">
+                                                                    <div class="col-md-9">
+                                                                        <label class="form-label">Ảnh riêng cho biến
+                                                                            thể</label>
+                                                                        <input type="file"
+                                                                            class="form-control form-control-sm"
+                                                                            name="variants[{{ $index }}][image]"
+                                                                            accept="image/*">
+                                                                        @error('variants.' . $index . '.image')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-3 d-flex align-items-end">
+                                                                        <div class="form-check form-switch">
+                                                                            <input class="form-check-input"
+                                                                                type="checkbox"
+                                                                                name="variants[{{ $index }}][is_active]"
+                                                                                value="1"
+                                                                                {{ !isset($variant['is_active']) || $variant['is_active'] ? 'checked' : '' }}>
+                                                                            <label class="form-check-label">Hoạt
+                                                                                động</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <h6 class="mb-3">Thông tin chính</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label">Giá bán <span
+                                                                                class="text-danger">*</span></label>
+                                                                        <input type="number"
+                                                                            class="form-control @error('variants.' . $index . '.price') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][price]"
+                                                                            value="{{ $variant['price'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.price')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label">Giá khuyến mãi</label>
+                                                                        <input type="number"
+                                                                            class="form-control @error('variants.' . $index . '.sale_price') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][sale_price]"
+                                                                            value="{{ $variant['sale_price'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.sale_price')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label">Tồn kho <span
+                                                                                class="text-danger">*</span></label>
+                                                                        <input type="number"
+                                                                            class="form-control @error('variants.' . $index . '.stock') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][stock]"
+                                                                            value="{{ $variant['stock'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.stock')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label">Ngưỡng tồn kho
+                                                                            thấp</label>
+                                                                        <input type="number"
+                                                                            class="form-control @error('variants.' . $index . '.low_stock_amount') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][low_stock_amount]"
+                                                                            value="{{ $variant['low_stock_amount'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.low_stock_amount')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                </div>
+                                                                <hr>
+                                                                <h6 class="mb-3">Thông tin vận chuyển</h6>
+                                                                <div class="row">
+                                                                    <div class="col-md-3 mb-3">
+                                                                        <label class="form-label">Cân nặng (kg)</label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control @error('variants.' . $index . '.weight') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][weight]"
+                                                                            value="{{ $variant['weight'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.weight')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-3 mb-3">
+                                                                        <label class="form-label">Dài (cm)</label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control @error('variants.' . $index . '.length') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][length]"
+                                                                            value="{{ $variant['length'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.length')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-3 mb-3">
+                                                                        <label class="form-label">Rộng (cm)</label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control @error('variants.' . $index . '.width') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][width]"
+                                                                            value="{{ $variant['width'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.width')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                    <div class="col-md-3 mb-3">
+                                                                        <label class="form-label">Cao (cm)</label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control @error('variants.' . $index . '.height') is-invalid @enderror"
+                                                                            name="variants[{{ $index }}][height]"
+                                                                            value="{{ $variant['height'] ?? '' }}">
+                                                                        @error('variants.' . $index . '.height')
+                                                                            <div class="invalid-feedback">{{ $message }}
+                                                                            </div>
+                                                                        @enderror
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                             <div class="tab-pane" id="tab-shipping" role="tabpanel">
@@ -480,11 +773,11 @@
             <div class="fw-bold mb-1">${a.attrName}:</div>
             <div class="d-flex flex-wrap gap-2">
                 ${a.values.map(v => `
-                                <label class="form-check form-check-inline mb-0">
-                                    <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
-                                    <span class="form-check-label">${v.value}</span>
-                                </label>
-                            `).join('')}
+                                        <label class="form-check form-check-inline mb-0">
+                                            <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
+                                            <span class="form-check-label">${v.value}</span>
+                                        </label>
+                                    `).join('')}
                 <button type="button" class="btn btn-sm btn-danger ms-2 btnRemoveVariantAttr" data-id="${a.attrId}">Xóa</button>
             </div>
             ${(Array.isArray(a.valIds) ? a.valIds : []).map(valId => `<input type="hidden" name="variant_attributes[${a.attrId}][]" value="${valId}">`).join('')}
@@ -611,8 +904,3 @@
         </script>
     @endsection
 @endpush
-
-
-
-
-

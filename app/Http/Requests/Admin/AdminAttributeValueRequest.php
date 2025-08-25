@@ -34,8 +34,14 @@ class AdminAttributeValueRequest extends FormRequest
         if ($type === 'number') {
             $rules['value'] = 'required|numeric|unique:attribute_values,value,' . $id;
         } elseif ($type === 'color') {
-            $rules['value'] = 'required|string|max:100|unique:attribute_values,value,' . $id;
-            $rules['color_code'] = 'required|string|max:20|regex:/^#[0-9a-fA-F]{3,6}$/';
+            $rules['value'] = 'required|string|max:100|unique:attribute_values,value,' . $id . ',id,attribute_id,' . $attributeId;
+            $rules['color_code'] = [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^#[0-9a-fA-F]{3,6}$/',
+                'unique:attribute_values,color_code,' . $id . ',id,attribute_id,' . $attributeId
+            ];
         } else { // text, select, ...
             $rules['value'] = 'required|string|max:100|unique:attribute_values,value,' . $id;
         }
@@ -56,6 +62,7 @@ class AdminAttributeValueRequest extends FormRequest
             'color_code.string'  => 'Mã màu phải là chuỗi ký tự.',
             'color_code.max'     => 'Mã màu không được vượt quá 20 ký tự.',
             'color_code.regex'   => 'Mã màu phải đúng định dạng hex, ví dụ: #fff hoặc #ffffff.',
+            'color_code.unique'  => 'Mã màu này đã tồn tại trong thuộc tính này.',
         ];
     }
 }

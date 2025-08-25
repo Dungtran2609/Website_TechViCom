@@ -12,7 +12,7 @@
         }
 
         .checkout-step.active {
-            background: #ea580c;
+            background: #ff6c2f;
             color: #fff
         }
 
@@ -31,15 +31,15 @@
         }
 
         .payment-option:hover {
-            border-color: #ea580c;
+            border-color: #ff6c2f;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
         }
 
         .payment-option.selected {
-            border-color: #ea580c;
+            border-color: #ff6c2f;
             background: #fff7ed;
-            box-shadow: 0 4px 12px rgba(234, 88, 12, .2)
+            box-shadow: 0 4px 12px rgba(255, 108, 47, .2)
         }
 
         #checkout-success {
@@ -235,7 +235,8 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
                                     <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_phone') border-red-500 @enderror">
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 phone-input @error('recipient_phone') border-red-500 @enderror"
+                                        pattern="[0-9]*" inputmode="numeric" maxlength="11">
                                     <span id="phone-error" class="text-xs text-red-500">@error('recipient_phone') {{ $message }} @enderror</span>
                                 </div>
                             </div>
@@ -411,7 +412,7 @@
                                 class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
                                     class="fas fa-arrow-left mr-2"></i>Quay lại</button>
                             <button type="button" id="next-step-2"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Bước
+                                class="px-6 py-3 bg-[#ff6c2f] text-white rounded-lg font-semibold hover:bg-[#e55a28] transition flex items-center">Bước
                                 tiếp theo<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
@@ -443,7 +444,7 @@
                                 class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
                                     class="fas fa-arrow-left mr-2"></i>Quay lại</button>
                             <button type="button" id="confirm-order"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Xác
+                                class="px-6 py-3 bg-[#ff6c2f] text-white rounded-lg font-semibold hover:bg-[#e55a28] transition flex items-center">Xác
                                 nhận<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
@@ -579,9 +580,10 @@
                             </div>
                             <div class="flex space-x-2 mb-1">
                                 <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
+                                    value="{{ $appliedCoupon ? $appliedCoupon->code : '' }}"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#ff6c2f] text-sm">
                                 <button type="button" onclick="applyCheckoutCoupon()"
-                                    class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
+                                    class="px-4 py-2 bg-[#ff6c2f] text-white rounded hover:bg-[#e55a28] text-sm">Áp
                                     dụng</button>
                                 <button type="button" onclick="clearCheckoutCoupon()"
                                     class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
@@ -621,7 +623,7 @@
                         </div>
                         <div class="flex justify-between text-lg font-semibold border-t pt-2"><span>Tổng cộng:</span><span
                                 id="total-amount"
-                                class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
+                                class="text-[#ff6c2f]">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
                         </div>
                     </div>
                     
@@ -1064,7 +1066,7 @@
                     if (active <= 3) {
                         const act = document.getElementById(`step-${active}`);
                         act.classList.remove('bg-gray-200', 'text-gray-600');
-                        act.classList.add('active', 'bg-orange-500', 'text-white');
+                        act.classList.add('active', 'bg-[#ff6c2f]', 'text-white');
                         const num = act.querySelector('span.w-6.h-6');
                         if (num) {
                             num.classList.remove('bg-gray-400', 'text-white');
@@ -1765,7 +1767,7 @@
                 }
             }
 
-            // If validation fails, scroll to first error
+            // Nếu kiểm tra thất bại, cuộn đến lỗi đầu tiên
             if (!isValid) {
                 const firstError = document.querySelector('.border-red-500');
                 if (firstError) {
@@ -1779,24 +1781,24 @@
         function validateStep2() {
             let isValid = true;
 
-            // Clear previous errors
+            // Xóa lỗi trước đó
             clearValidationErrors();
 
-            // Validate shipping method
+            // Kiểm tra phương thức vận chuyển
             const shippingMethod = document.querySelector('input[name="shipping_method_id"]:checked');
             if (!shippingMethod) {
                 showFieldError('shipping_method_id', 'Vui lòng chọn phương thức vận chuyển');
                 isValid = false;
             }
 
-            // Validate payment method
+            // Kiểm tra phương thức thanh toán
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
             if (!paymentMethod) {
                 showFieldError('payment_method', 'Vui lòng chọn phương thức thanh toán');
                 isValid = false;
             }
 
-            // If validation fails, scroll to first error
+            // Nếu kiểm tra thất bại, cuộn đến lỗi đầu tiên
             if (!isValid) {
                 const firstError = document.querySelector('.border-red-500');
                 if (firstError) {
@@ -1810,14 +1812,14 @@
         function showFieldError(fieldName, message) {
             const input = document.querySelector(`[name="${fieldName}"]`);
             if (input) {
-                // Handle radio buttons differently
+                // Xử lý radio buttons khác biệt
                 if (input.type === 'radio') {
-                    // Find the parent container and add error styling
+                    // Tìm container cha và thêm style lỗi
                     const container = input.closest('.payment-option, .form-group');
                     if (container) {
                         container.classList.add('border-red-500');
                         
-                        // Find or create error span
+                        // Tìm hoặc tạo span lỗi
                         let errorSpan = document.getElementById(`${fieldName}-error`);
                         if (!errorSpan) {
                             errorSpan = document.createElement('span');
@@ -1828,10 +1830,10 @@
                         errorSpan.textContent = message;
                     }
                 } else {
-                    // Handle regular inputs
+                    // Xử lý input thường
                     input.classList.add('border-red-500');
                     
-                    // Find or create error span
+                    // Tìm hoặc tạo span lỗi
                     let errorSpan = document.getElementById(`${fieldName}-error`);
                     if (!errorSpan) {
                         errorSpan = document.createElement('span');
@@ -1845,30 +1847,30 @@
         }
 
         function clearValidationErrors() {
-            // Remove error styling from all inputs
+            // Xóa style lỗi từ tất cả input
             document.querySelectorAll('input, select, textarea').forEach(input => {
                 input.classList.remove('border-red-500');
             });
 
-            // Remove error styling from containers (for radio buttons)
+            // Xóa style lỗi từ containers (cho radio buttons)
             document.querySelectorAll('.payment-option, .form-group').forEach(container => {
                 container.classList.remove('border-red-500');
             });
 
-            // Clear error messages
+            // Xóa thông báo lỗi
             document.querySelectorAll('[id$="-error"]').forEach(errorSpan => {
                 errorSpan.textContent = '';
             });
         }
 
-        // Add validation to form submission
+        // Thêm validation cho form submission
         document.addEventListener('DOMContentLoaded', function() {
             const checkoutForm = document.getElementById('checkout-form');
             if (checkoutForm) {
                 checkoutForm.addEventListener('submit', function(e) {
                     if (!validateCheckoutForm()) {
                         e.preventDefault();
-                        // Scroll to first error
+                        // Cuộn đến lỗi đầu tiên
                         const firstError = document.querySelector('.border-red-500');
                         if (firstError) {
                             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1878,7 +1880,7 @@
                 });
             }
 
-            // Real-time validation
+            // Validation thời gian thực
             const inputs = document.querySelectorAll('input, select, textarea');
             inputs.forEach(input => {
                 input.addEventListener('blur', function() {
@@ -1886,7 +1888,7 @@
                 });
 
                 input.addEventListener('input', function() {
-                    // Clear error when user starts typing
+                    // Xóa lỗi khi người dùng bắt đầu gõ
                     if (this.classList.contains('border-red-500')) {
                         this.classList.remove('border-red-500');
                         const errorSpan = document.getElementById(`${this.name}-error`);
@@ -1964,5 +1966,79 @@
                     break;
             }
         }
+
+        // Validation cho input số điện thoại - chỉ cho phép nhập số
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý tất cả input có class phone-input
+            const phoneInputs = document.querySelectorAll('.phone-input');
+            
+            phoneInputs.forEach(function(input) {
+                // Chỉ cho phép nhập số
+                input.addEventListener('input', function(e) {
+                    // Loại bỏ tất cả ký tự không phải số
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+                
+                // Ngăn chặn paste text không phải số
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                    this.value = numbersOnly;
+                });
+                
+                // Ngăn chặn keydown cho các phím không phải số
+                input.addEventListener('keydown', function(e) {
+                    // Cho phép: backspace, delete, tab, escape, enter, arrow keys
+                    if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                        // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true)) {
+                        return;
+                    }
+                    // Cho phép số từ 0-9
+                    if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                        return;
+                    }
+                    e.preventDefault();
+                });
+            });
+            
+            // Hiển thị thông báo và discount amount khi trang load nếu có mã giảm giá được áp dụng tự động
+            @if($appliedCoupon && $couponMessage)
+                const msg = document.getElementById('checkout-coupon-message');
+                const discountRow = document.getElementById('discount-row');
+                const discountAmount = document.getElementById('discount-amount');
+                const totalAmount = document.getElementById('total-amount');
+                
+                if (msg) {
+                    msg.textContent = '{{ $couponMessage }}';
+                    msg.className = 'mt-1 text-xs text-green-500';
+                }
+                
+                if (discountRow && discountAmount && totalAmount) {
+                    const discount = {{ $discountAmount ?? 0 }};
+                    if (discount > 0) {
+                        discountRow.style.display = 'flex';
+                        discountAmount.textContent = '-{{ number_format($discountAmount ?? 0) }}₫';
+                        
+                        // Cập nhật tổng tiền
+                        const subtotal = {{ $subtotal ?? 0 }};
+                        const shippingFee = {{ ($subtotal ?? 0) >= 3000000 ? 0 : 50000 }};
+                        const finalTotal = subtotal + shippingFee - discount;
+                        totalAmount.textContent = '{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000) - ($discountAmount ?? 0)) }}₫';
+                        
+                        // Lưu vào localStorage để sử dụng trong form submission
+                        window.checkoutDiscount = discount;
+                        localStorage.setItem('appliedDiscount', JSON.stringify({
+                            code: '{{ $appliedCoupon->code ?? "" }}',
+                            amount: discount
+                        }));
+                    }
+                }
+            @endif
+        });
     </script>
 @endpush

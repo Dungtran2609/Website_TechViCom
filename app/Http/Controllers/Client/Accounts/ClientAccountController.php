@@ -279,12 +279,22 @@ class ClientAccountController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'recipient_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'regex:/^0\d{9}$/'],
             'address_line' => 'required|string|max:500',
             'city' => 'required|string|max:255',
             'district' => 'required|string|max:255',
             'ward' => 'required|string|max:255',
             'is_default' => 'boolean'
+        ], [
+            'recipient_name.required' => 'Vui lòng nhập tên người nhận.',
+            'recipient_name.max' => 'Tên người nhận tối đa 255 ký tự.',
+            'phone.required' => 'Vui lòng nhập số điện thoại.',
+            'phone.regex' => 'Số điện thoại phải bắt đầu bằng số 0 và gồm 10 số.',
+            'address_line.required' => 'Vui lòng nhập địa chỉ chi tiết.',
+            'address_line.max' => 'Địa chỉ chi tiết tối đa 500 ký tự.',
+            'city.required' => 'Vui lòng chọn tỉnh/thành phố.',
+            'district.required' => 'Vui lòng chọn quận/huyện.',
+            'ward.required' => 'Vui lòng chọn phường/xã.',
         ]);
         if ($validator->fails()) {
             if ($request->ajax() || $request->wantsJson()) {

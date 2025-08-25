@@ -264,7 +264,15 @@ class ClientCheckoutController extends Controller
         if (!empty($selectedParam)) {
             session()->forget('repayment_order_id');
             session()->forget('show_repayment_message');
+            session()->forget('applied_coupon'); // Xóa mã giảm giá đã áp dụng
             $orderId = null; // Reset orderId để không lấy đơn hàng cũ
+        }
+        
+        // Nếu không có order_id trong request, xóa session repayment
+        if (!$request->get('order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            session()->forget('applied_coupon');
         }
         
         if ($orderId && Auth::check()) {
@@ -537,6 +545,7 @@ class ClientCheckoutController extends Controller
         if (!empty($cartItems) && !$existingOrder && !$request->get('order_id')) {
             session()->forget('repayment_order_id');
             session()->forget('show_repayment_message');
+            session()->forget('applied_coupon'); // Xóa mã giảm giá đã áp dụng
         }
 
         // Nếu đang thanh toán lại nhưng không có cartItems, redirect về cart với thông báo lỗi
@@ -637,23 +646,70 @@ class ClientCheckoutController extends Controller
         $appliedCoupon = null;
         $discountAmount = 0;
         $couponMessage = null;
-        if ($request->filled('coupon_code')) {
-            $couponCode = $request->input('coupon_code');
+        
+        // Tự động áp dụng mã giảm giá từ đơn hàng cũ khi thanh toán lại
+        // Chỉ áp dụng khi thực sự đang thanh toán lại (có order_id trong request)
+        $isRepayment = $request->get('order_id') && !empty($request->get('order_id'));
+        
+        // Đối với đơn hàng mới, không áp dụng mã giảm giá tự động
+        if (!$isRepayment) {
+            $appliedCoupon = null;
+            $discountAmount = 0;
+            $couponMessage = null;
+        }
+        
+        if ($isRepayment && $existingOrder && $existingOrder->coupon_code) {
+            $couponCode = $existingOrder->coupon_code;
             $coupon = Coupon::where('code', $couponCode)
-                ->where('status', 1)
-                ->where(function ($q) {
-                    $q->whereNull('deleted_at');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-                })
+                ->where('status', true)
+                ->whereNull('deleted_at')
                 ->first();
 
             if ($coupon) {
-                if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                // Kiểm tra thời gian hiệu lực
+                $now = Carbon::now();
+                if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+                    $couponMessage = 'Mã giảm giá chưa có hiệu lực';
+                } elseif ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+                    $couponMessage = 'Mã giảm giá đã hết hạn';
+                } elseif ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                    $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+                } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                    $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+                } else {
+                    if ($coupon->discount_type === 'percent') {
+                        $discountAmount = $subtotal * ($coupon->value / 100);
+                        if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                            $discountAmount = $coupon->max_discount_amount;
+                        }
+                    } else {
+                        $discountAmount = $coupon->value;
+                    }
+                    $discountAmount = min($discountAmount, $subtotal);
+                    $appliedCoupon = $coupon;
+                    $couponMessage = 'Áp dụng mã thành công! (Tự động áp dụng lại từ đơn hàng cũ)';
+                }
+            } else {
+                $couponMessage = 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa';
+            }
+        }
+        
+        // Nếu có mã giảm giá mới được nhập
+        if ($request->filled('coupon_code')) {
+            $couponCode = $request->input('coupon_code');
+            $coupon = Coupon::where('code', $couponCode)
+                ->where('status', true)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($coupon) {
+                // Kiểm tra thời gian hiệu lực
+                $now = Carbon::now();
+                if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+                    $couponMessage = 'Mã giảm giá chưa có hiệu lực';
+                } elseif ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+                    $couponMessage = 'Mã giảm giá đã hết hạn';
+                } elseif ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
                     $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
                 } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
                     $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
@@ -671,9 +727,10 @@ class ClientCheckoutController extends Controller
                     $couponMessage = 'Áp dụng mã thành công!';
                 }
             } else {
-                $couponMessage = 'Mã giảm giá không hợp lệ hoặc đã hết hạn';
+                $couponMessage = 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa';
             }
         }
+
 
         return view('client.checkouts.index', compact(
             'cartItems',
@@ -700,15 +757,30 @@ class ClientCheckoutController extends Controller
         ]);
 
         $coupon = Coupon::where('code', $request->coupon_code)
-            ->where('status', 1)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->where('status', true)
+            ->whereNull('deleted_at')
             ->first();
 
         if (!$coupon) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
+                'message' => 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa',
+            ]);
+        }
+
+        // Kiểm tra thời gian hiệu lực
+        $now = Carbon::now();
+        if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá chưa có hiệu lực',
+            ]);
+        }
+        
+        if ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá đã hết hạn',
             ]);
         }
 
@@ -1210,8 +1282,8 @@ class ClientCheckoutController extends Controller
                 $discountAmount = 0;
                 $couponCode = null;
             }
-            // Chỉ xử lý coupon mới nếu không phải thanh toán lại
-            if (!$isRepayment && !empty($request->coupon_code)) {
+            // Xử lý coupon cho thanh toán mới hoặc thanh toán lại
+            if (!empty($request->coupon_code)) {
                 // Khách vãng lai không thể áp dụng coupon
                 if (!Auth::check()) {
                     return redirect()->route('checkout.index')->with('error', 'Vui lòng đăng nhập để nhận khuyến mãi');
@@ -1219,7 +1291,9 @@ class ClientCheckoutController extends Controller
                 
                 $couponCode = $request->coupon_code;
                 $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
-                if ($coupon && $coupon->max_usage_per_user > 0) {
+                
+                // Chỉ kiểm tra số lần sử dụng coupon nếu không phải thanh toán lại
+                if (!$isRepayment && $coupon && $coupon->max_usage_per_user > 0) {
                     $usedCount = 0;
                     
                     if (Auth::check()) {
@@ -1249,6 +1323,15 @@ class ClientCheckoutController extends Controller
                     if ($usedCount >= $coupon->max_usage_per_user) {
                         return redirect()->route('checkout.index')->with('error', 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.');
                     }
+                }
+                
+                // Debug log cho thanh toán lại
+                if ($isRepayment) {
+                    Log::info('Repayment coupon processing - skipping usage limit check', [
+                        'order_id' => $repaymentOrderId,
+                        'coupon_code' => $couponCode,
+                        'reason' => 'Coupon already used in original order'
+                    ]);
                 }
                 if ($coupon) {
                     $now = Carbon::now();
@@ -2320,15 +2403,27 @@ class ClientCheckoutController extends Controller
             if ($qty <= 0) continue;
 
             if ($item->variant_id) {
+                // Kiểm tra tồn kho trước khi trừ
+                $variant = DB::table('product_variants')->where('id', $item->variant_id)->first();
+                if (!$variant || (int)$variant->stock < $qty) {
+                    throw new \RuntimeException("Biến thể sản phẩm không đủ tồn kho. Hiện có: " . ($variant ? (int)$variant->stock : 0) . ", cần: {$qty}");
+                }
+                
                 $affected = DB::table('product_variants')
                     ->where('id', $item->variant_id)
-                    ->where('stock', '>=', $qty)
+                    ->whereRaw('CAST(stock AS SIGNED) >= ?', [$qty])
                     ->decrement('stock', $qty);
                 if (!$affected) throw new \RuntimeException('Biến thể sản phẩm không đủ tồn kho.');
             } else {
+                // Kiểm tra tồn kho trước khi trừ
+                $product = DB::table('products')->where('id', $item->product_id)->first();
+                if (!$product || (int)$product->stock < $qty) {
+                    throw new \RuntimeException("Sản phẩm không đủ tồn kho. Hiện có: " . ($product ? (int)$product->stock : 0) . ", cần: {$qty}");
+                }
+                
                 $affected = DB::table('products')
                     ->where('id', $item->product_id)
-                    ->where('stock', '>=', $qty)
+                    ->whereRaw('CAST(stock AS SIGNED) >= ?', [$qty])
                     ->decrement('stock', $qty);
                 if (!$affected) throw new \RuntimeException('Sản phẩm không đủ tồn kho.');
             }

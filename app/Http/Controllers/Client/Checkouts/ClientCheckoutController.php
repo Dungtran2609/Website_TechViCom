@@ -106,6 +106,10 @@ class ClientCheckoutController extends Controller
             $order->increment('vnpay_cancel_count');
             $order->refresh();
             $count = (int)$order->vnpay_cancel_count;
+            
+            // Lưu thời gian hủy cuối cùng vào session
+            $lastCancelTimeKey = "last_vnpay_cancel_time_order_{$order->id}";
+            session([$lastCancelTimeKey => now()->toDateTimeString()]);
         } else {
             $p = $this->cancelCounterPath($order);
             $n = $this->getCancelCount($order) + 1;
@@ -117,7 +121,8 @@ class ClientCheckoutController extends Controller
         Log::info('VNPay cancel count incremented', [
             'order_id' => $order->id,
             'new_count' => $count,
-            'user_id' => Auth::id()
+            'user_id' => Auth::id(),
+            'last_cancel_time' => now()->toDateTimeString()
         ]);
 
         return $count;
@@ -176,10 +181,31 @@ class ClientCheckoutController extends Controller
     /** Kiểm tra xem có thể reset counter không (sau 2 phút) */
     private function canResetCancelCount(Order $order): bool
     {
-        // Reset sau 2 phút kể từ lần hủy cuối (để test)
-        $lastCancelTime = $order->updated_at;
+        // Lấy thời gian hủy cuối cùng từ session hoặc file
+        $lastCancelTime = null;
+        
+        if (Schema::hasColumn('orders', 'vnpay_cancel_count')) {
+            // Nếu có cột vnpay_cancel_count, lưu thời gian hủy cuối trong session
+            $lastCancelTimeKey = "last_vnpay_cancel_time_order_{$order->id}";
+            $lastCancelTimeStr = session($lastCancelTimeKey);
+            if ($lastCancelTimeStr) {
+                $lastCancelTime = \Carbon\Carbon::parse($lastCancelTimeStr);
+            }
+        } else {
+            // Nếu dùng file, lấy thời gian file được tạo
+            $p = $this->cancelCounterPath($order);
+            if (file_exists($p)) {
+                $lastCancelTime = \Carbon\Carbon::createFromTimestamp(filemtime($p));
+            }
+        }
+        
+        // Nếu không có thời gian hủy cuối, không reset
+        if (!$lastCancelTime) {
+            return false;
+        }
+        
+        // Reset sau 2 phút kể từ lần hủy cuối
         $resetTime = $lastCancelTime->addMinutes(2);
-
         $canReset = now()->isAfter($resetTime);
 
         // Debug log
@@ -194,6 +220,58 @@ class ClientCheckoutController extends Controller
         return $canReset;
     }
 
+    /** Kiểm tra xem user có bị chặn VNPay không (trong 2 phút) */
+    private function isUserVnpayBlocked(): bool
+    {
+        if (!Auth::check()) {
+            // Kiểm tra cho khách vãng lai
+            $guestCancelCount = $this->getGuestCancelCount();
+            return $guestCancelCount >= 3;
+        }
+
+        // Kiểm tra cho user đăng nhập
+        $userOrders = Order::where('user_id', Auth::id())
+            ->where('payment_method', 'bank_transfer')
+            ->get();
+
+        $totalCancelCount = 0;
+        $hasRecentCancel = false;
+        $lastCancelTime = null;
+
+        foreach ($userOrders as $userOrder) {
+            $cancelCount = $this->getCancelCount($userOrder);
+            $totalCancelCount += $cancelCount;
+
+            // Kiểm tra thời gian hủy cuối cùng
+            if (Schema::hasColumn('orders', 'vnpay_cancel_count')) {
+                $lastCancelTimeKey = "last_vnpay_cancel_time_order_{$userOrder->id}";
+                $lastCancelTimeStr = session($lastCancelTimeKey);
+                if ($lastCancelTimeStr) {
+                    $cancelTime = \Carbon\Carbon::parse($lastCancelTimeStr);
+                    if (!$lastCancelTime || $cancelTime->isAfter($lastCancelTime)) {
+                        $lastCancelTime = $cancelTime;
+                    }
+                }
+            }
+        }
+
+        // Nếu có hủy gần đây (trong 2 phút) và tổng số lần hủy >= 3
+        if ($lastCancelTime && $totalCancelCount >= 3) {
+            $resetTime = $lastCancelTime->addMinutes(2);
+            $hasRecentCancel = now()->isBefore($resetTime);
+        }
+
+        Log::info('Checking if user VNPay blocked', [
+            'user_id' => Auth::id(),
+            'total_cancel_count' => $totalCancelCount,
+            'last_cancel_time' => $lastCancelTime,
+            'has_recent_cancel' => $hasRecentCancel,
+            'is_blocked' => $hasRecentCancel && $totalCancelCount >= 3
+        ]);
+
+        return $hasRecentCancel && $totalCancelCount >= 3;
+    }
+
     /** Reset counter nếu đã đủ thời gian */
     private function resetCancelCountIfNeeded(Order $order): void
     {
@@ -203,6 +281,10 @@ class ClientCheckoutController extends Controller
         if ($this->canResetCancelCount($order)) {
             if (Schema::hasColumn('orders', 'vnpay_cancel_count')) {
                 $order->update(['vnpay_cancel_count' => 0]);
+                
+                // Xóa thời gian hủy cuối cùng khỏi session
+                $lastCancelTimeKey = "last_vnpay_cancel_time_order_{$order->id}";
+                session()->forget($lastCancelTimeKey);
             } else {
                 $p = $this->cancelCounterPath($order);
                 if (file_exists($p)) {
@@ -264,7 +346,15 @@ class ClientCheckoutController extends Controller
         if (!empty($selectedParam)) {
             session()->forget('repayment_order_id');
             session()->forget('show_repayment_message');
+            session()->forget('applied_coupon'); // Xóa mã giảm giá đã áp dụng
             $orderId = null; // Reset orderId để không lấy đơn hàng cũ
+        }
+        
+        // Nếu không có order_id trong request, xóa session repayment
+        if (!$request->get('order_id')) {
+            session()->forget('repayment_order_id');
+            session()->forget('show_repayment_message');
+            session()->forget('applied_coupon');
         }
         
         if ($orderId && Auth::check()) {
@@ -537,6 +627,7 @@ class ClientCheckoutController extends Controller
         if (!empty($cartItems) && !$existingOrder && !$request->get('order_id')) {
             session()->forget('repayment_order_id');
             session()->forget('show_repayment_message');
+            session()->forget('applied_coupon'); // Xóa mã giảm giá đã áp dụng
         }
 
         // Nếu đang thanh toán lại nhưng không có cartItems, redirect về cart với thông báo lỗi
@@ -579,81 +670,99 @@ class ClientCheckoutController extends Controller
         $vnpayLocked = false;
         $forcedId = session('force_cod_for_order_id');
 
-        // Kiểm tra đơn hàng cụ thể nếu có
-        if ($forcedId) {
-            if ($o = Order::find($forcedId)) {
-                $this->resetCancelCountIfNeeded($o);
-                $orderVnpayCancelCount = $this->getCancelCount($o);
-                // Chặn VNPay nếu >=3 lần hủy
-                if ($orderVnpayCancelCount >= 3) {
-                    $vnpayLocked = true;
+        // Kiểm tra xem user có bị chặn VNPay không (trong 2 phút)
+        $vnpayLocked = $this->isUserVnpayBlocked();
+        
+        if ($vnpayLocked) {
+            // Lấy tổng số lần hủy để hiển thị
+            if (Auth::check()) {
+                $userOrders = Order::where('user_id', Auth::id())
+                    ->where('payment_method', 'bank_transfer')
+                    ->get();
+                $totalCancelCount = 0;
+                foreach ($userOrders as $userOrder) {
+                    $totalCancelCount += $this->getCancelCount($userOrder);
                 }
-            }
-        }
-
-        // Kiểm tra tất cả đơn hàng VNPay của user để chặn VNPay
-        if (Auth::check()) {
-            $userOrders = Order::where('user_id', Auth::id())
-                ->where('payment_method', 'bank_transfer')
-                ->get();
-
-            $totalCancelCount = 0;
-            foreach ($userOrders as $userOrder) {
-                $this->resetCancelCountIfNeeded($userOrder);
-                $cancelCount = $this->getCancelCount($userOrder);
-                $totalCancelCount += $cancelCount;
-
-                Log::info('Checking order for VNPay lock', [
-                    'order_id' => $userOrder->id,
-                    'cancel_count' => $cancelCount,
-                    'total_cancel_count' => $totalCancelCount
-                ]);
-            }
-
-            // Chặn VNPay nếu tổng số lần hủy >=3
-            if ($totalCancelCount >= 3) {
-                $vnpayLocked = true;
                 $orderVnpayCancelCount = $totalCancelCount;
-                Log::info('VNPay locked due to total spam for logged user', [
-                    'user_id' => Auth::id(),
-                    'total_cancel_count' => $totalCancelCount
-                ]);
+            } else {
+                $orderVnpayCancelCount = $this->getGuestCancelCount();
             }
-        } else {
-            // Kiểm tra spam chặn cho khách vãng lai
-            $guestCancelCount = $this->getGuestCancelCount();
             
-            if ($guestCancelCount >= 3) {
-                $vnpayLocked = true;
-                $orderVnpayCancelCount = $guestCancelCount;
-                Log::info('VNPay locked due to total spam for guest', [
-                    'session_id' => session()->getId(),
-                    'guest_cancel_count' => $guestCancelCount
-                ]);
-            }
+            Log::info('VNPay locked for user', [
+                'user_id' => Auth::id(),
+                'total_cancel_count' => $orderVnpayCancelCount,
+                'is_guest' => !Auth::check()
+            ]);
         }
 
         // Preview coupon (tùy chọn – giữ nguyên code cũ)
         $appliedCoupon = null;
         $discountAmount = 0;
         $couponMessage = null;
-        if ($request->filled('coupon_code')) {
-            $couponCode = $request->input('coupon_code');
+        
+        // Tự động áp dụng mã giảm giá từ đơn hàng cũ khi thanh toán lại
+        // Chỉ áp dụng khi thực sự đang thanh toán lại (có order_id trong request)
+        $isRepayment = $request->get('order_id') && !empty($request->get('order_id'));
+        
+        // Đối với đơn hàng mới, không áp dụng mã giảm giá tự động
+        if (!$isRepayment) {
+            $appliedCoupon = null;
+            $discountAmount = 0;
+            $couponMessage = null;
+        }
+        
+        if ($isRepayment && $existingOrder && $existingOrder->coupon_code) {
+            $couponCode = $existingOrder->coupon_code;
             $coupon = Coupon::where('code', $couponCode)
-                ->where('status', 1)
-                ->where(function ($q) {
-                    $q->whereNull('deleted_at');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-                })
-                ->where(function ($q) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-                })
+                ->where('status', true)
+                ->whereNull('deleted_at')
                 ->first();
 
             if ($coupon) {
-                if ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                // Kiểm tra thời gian hiệu lực
+                $now = Carbon::now();
+                if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+                    $couponMessage = 'Mã giảm giá chưa có hiệu lực';
+                } elseif ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+                    $couponMessage = 'Mã giảm giá đã hết hạn';
+                } elseif ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
+                    $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
+                } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
+                    $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
+                } else {
+                    if ($coupon->discount_type === 'percent') {
+                        $discountAmount = $subtotal * ($coupon->value / 100);
+                        if ($coupon->max_discount_amount && $discountAmount > $coupon->max_discount_amount) {
+                            $discountAmount = $coupon->max_discount_amount;
+                        }
+                    } else {
+                        $discountAmount = $coupon->value;
+                    }
+                    $discountAmount = min($discountAmount, $subtotal);
+                    $appliedCoupon = $coupon;
+                    $couponMessage = 'Áp dụng mã thành công! (Tự động áp dụng lại từ đơn hàng cũ)';
+                }
+            } else {
+                $couponMessage = 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa';
+            }
+        }
+        
+        // Nếu có mã giảm giá mới được nhập
+        if ($request->filled('coupon_code')) {
+            $couponCode = $request->input('coupon_code');
+            $coupon = Coupon::where('code', $couponCode)
+                ->where('status', true)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($coupon) {
+                // Kiểm tra thời gian hiệu lực
+                $now = Carbon::now();
+                if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+                    $couponMessage = 'Mã giảm giá chưa có hiệu lực';
+                } elseif ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+                    $couponMessage = 'Mã giảm giá đã hết hạn';
+                } elseif ($coupon->min_order_value && $subtotal < $coupon->min_order_value) {
                     $couponMessage = 'Đơn hàng chưa đạt giá trị tối thiểu ' . number_format($coupon->min_order_value) . '₫';
                 } elseif ($coupon->max_order_value && $subtotal > $coupon->max_order_value) {
                     $couponMessage = 'Đơn hàng vượt quá giá trị tối đa ' . number_format($coupon->max_order_value) . '₫';
@@ -671,9 +780,10 @@ class ClientCheckoutController extends Controller
                     $couponMessage = 'Áp dụng mã thành công!';
                 }
             } else {
-                $couponMessage = 'Mã giảm giá không hợp lệ hoặc đã hết hạn';
+                $couponMessage = 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa';
             }
         }
+
 
         return view('client.checkouts.index', compact(
             'cartItems',
@@ -700,15 +810,30 @@ class ClientCheckoutController extends Controller
         ]);
 
         $coupon = Coupon::where('code', $request->coupon_code)
-            ->where('status', 1)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
+            ->where('status', true)
+            ->whereNull('deleted_at')
             ->first();
 
         if (!$coupon) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
+                'message' => 'Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa',
+            ]);
+        }
+
+        // Kiểm tra thời gian hiệu lực
+        $now = Carbon::now();
+        if ($coupon->start_date && $now->lt(Carbon::parse($coupon->start_date))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá chưa có hiệu lực',
+            ]);
+        }
+        
+        if ($coupon->end_date && $now->gt(Carbon::parse($coupon->end_date))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá đã hết hạn',
             ]);
         }
 
@@ -749,55 +874,20 @@ class ClientCheckoutController extends Controller
                 'payment_method'   => $request->payment_method,
                 'shipping_method'  => $request->shipping_method,
                 'user_id'          => Auth::id(),
-                'selected_address' => $request->selected_address ?? null
+                'selected_address' => $request->selected_address ?? null,
+                'is_guest'         => !Auth::check(),
+                'request_data'     => $request->all()
             ]);
 
-            /* Chặn VNPay nếu user đã hủy >=3 lần */
+            /* Chặn VNPay nếu user đã hủy >=3 lần trong 2 phút */
             if (($request->payment_method ?? '') === 'bank_transfer') {
-                if (Auth::check()) {
-                    // Kiểm tra tổng số lần hủy VNPay của user đăng nhập
-                    $userOrders = Order::where('user_id', Auth::id())
-                        ->where('payment_method', 'bank_transfer')
-                        ->get();
-
-                    $totalCancelCount = 0;
-                    foreach ($userOrders as $userOrder) {
-                        $this->resetCancelCountIfNeeded($userOrder);
-                        $cancelCount = $this->getCancelCount($userOrder);
-                        $totalCancelCount += $cancelCount;
-                    }
-
-                    Log::info('Checking VNPay spam protection for logged user in process', [
+                if ($this->isUserVnpayBlocked()) {
+                    Log::info('VNPay blocked in process - user has recent cancellations', [
                         'user_id' => Auth::id(),
-                        'total_cancel_count' => $totalCancelCount,
-                        'orders_count' => $userOrders->count()
+                        'is_guest' => !Auth::check()
                     ]);
-
-                    if ($totalCancelCount >= 3) {
-                        Log::info('VNPay blocked due to total spam for logged user in process', [
-                            'user_id' => Auth::id(),
-                            'total_cancel_count' => $totalCancelCount
-                        ]);
-                        return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
-                    }
-                } else {
-                    // Kiểm tra tổng số lần hủy VNPay của khách vãng lai
-                    $guestCancelCount = $this->getGuestCancelCount();
-                    
-                    Log::info('Checking VNPay spam protection for guest in process', [
-                        'session_id' => session()->getId(),
-                        'guest_cancel_count' => $guestCancelCount
-                    ]);
-
-                    if ($guestCancelCount >= 3) {
-                        Log::info('VNPay blocked due to total spam for guest in process', [
-                            'session_id' => session()->getId(),
-                            'guest_cancel_count' => $guestCancelCount
-                        ]);
-                        return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
-                    }
+                    return redirect()->route('checkout.fail')
+                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                 }
             }
 
@@ -958,7 +1048,17 @@ class ClientCheckoutController extends Controller
             } elseif (!$isRepayment) {
                 if (!Auth::check()) {
                     $sessionCart = session()->get('cart', []);
-                    if (empty($sessionCart)) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    Log::info('Guest checkout - session cart processing', [
+                        'session_cart_count' => count($sessionCart),
+                        'session_cart_keys' => array_keys($sessionCart),
+                        'selected_ids' => $selectedIds,
+                        'selected_ids_array' => $selectedIdsArr
+                    ]);
+                    
+                    if (empty($sessionCart)) {
+                        Log::warning('Guest checkout - empty session cart');
+                        return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    }
 
                     // Debug log để kiểm tra selectedIds
                     Log::info('Checkout session cart processing', [
@@ -1051,7 +1151,17 @@ class ClientCheckoutController extends Controller
                                         : 'client_css/images/placeholder.svg')),
                         ]);
                     }
-                    if ($cartItems->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    if ($cartItems->isEmpty()) {
+                        Log::warning('Guest checkout - cart items is empty after processing', [
+                            'session_cart_count' => count($sessionCart),
+                            'cart_items_count' => $cartItems->count()
+                        ]);
+                        return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    }
+                    Log::info('Guest checkout - cart items processed successfully', [
+                        'cart_items_count' => $cartItems->count(),
+                        'source' => $source
+                    ]);
                     $source = 'session';
                 } else {
                     if (!empty($selectedIdsArr) && !$isRetryAfterCancel) {
@@ -1210,8 +1320,8 @@ class ClientCheckoutController extends Controller
                 $discountAmount = 0;
                 $couponCode = null;
             }
-            // Chỉ xử lý coupon mới nếu không phải thanh toán lại
-            if (!$isRepayment && !empty($request->coupon_code)) {
+            // Xử lý coupon cho thanh toán mới hoặc thanh toán lại
+            if (!empty($request->coupon_code)) {
                 // Khách vãng lai không thể áp dụng coupon
                 if (!Auth::check()) {
                     return redirect()->route('checkout.index')->with('error', 'Vui lòng đăng nhập để nhận khuyến mãi');
@@ -1219,7 +1329,9 @@ class ClientCheckoutController extends Controller
                 
                 $couponCode = $request->coupon_code;
                 $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
-                if ($coupon && $coupon->max_usage_per_user > 0) {
+                
+                // Chỉ kiểm tra số lần sử dụng coupon nếu không phải thanh toán lại
+                if (!$isRepayment && $coupon && $coupon->max_usage_per_user > 0) {
                     $usedCount = 0;
                     
                     if (Auth::check()) {
@@ -1249,6 +1361,15 @@ class ClientCheckoutController extends Controller
                     if ($usedCount >= $coupon->max_usage_per_user) {
                         return redirect()->route('checkout.index')->with('error', 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.');
                     }
+                }
+                
+                // Debug log cho thanh toán lại
+                if ($isRepayment) {
+                    Log::info('Repayment coupon processing - skipping usage limit check', [
+                        'order_id' => $repaymentOrderId,
+                        'coupon_code' => $couponCode,
+                        'reason' => 'Coupon already used in original order'
+                    ]);
                 }
                 if ($coupon) {
                     $now = Carbon::now();
@@ -1676,52 +1797,15 @@ class ClientCheckoutController extends Controller
                 return redirect()->route('checkout.success', $order->id)->with('success', 'Đơn hàng đã được thanh toán');
             }
 
-            // CHẶN nếu user đã hủy >= 3 lần tổng cộng
-            if (Auth::check()) {
-                $userOrders = Order::where('user_id', Auth::id())
-                    ->where('payment_method', 'bank_transfer')
-                    ->get();
-
-                $totalCancelCount = 0;
-                foreach ($userOrders as $userOrder) {
-                    $this->resetCancelCountIfNeeded($userOrder);
-                    $cancelCount = $this->getCancelCount($userOrder);
-                    $totalCancelCount += $cancelCount;
-                }
-
-                Log::info('Checking VNPay spam protection in vnpay_payment for logged user', [
+            // CHẶN nếu user đã hủy >= 3 lần trong 2 phút
+            if ($this->isUserVnpayBlocked()) {
+                Log::info('VNPay blocked in vnpay_payment - user has recent cancellations', [
                     'user_id' => Auth::id(),
-                    'total_cancel_count' => $totalCancelCount,
-                    'orders_count' => $userOrders->count()
+                    'is_guest' => !Auth::check()
                 ]);
-
-                if ($totalCancelCount >= 3) {
-                    Log::info('VNPay blocked due to total spam in vnpay_payment for logged user', [
-                        'user_id' => Auth::id(),
-                        'total_cancel_count' => $totalCancelCount
-                    ]);
-                    session()->forget('repayment_order_id');
-                    return redirect()->route('checkout.fail')
-                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
-                }
-            } else {
-                // Kiểm tra spam chặn cho khách vãng lai
-                $guestCancelCount = $this->getGuestCancelCount();
-                
-                Log::info('Checking VNPay spam protection in vnpay_payment for guest', [
-                    'session_id' => session()->getId(),
-                    'guest_cancel_count' => $guestCancelCount
-                ]);
-
-                if ($guestCancelCount >= 3) {
-                    Log::info('VNPay blocked due to total spam in vnpay_payment for guest', [
-                        'session_id' => session()->getId(),
-                        'guest_cancel_count' => $guestCancelCount
-                    ]);
-                    session()->forget('repayment_order_id');
-                    return redirect()->route('checkout.fail')
-                        ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
-                }
+                session()->forget('repayment_order_id');
+                return redirect()->route('checkout.fail')
+                    ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
             }
 
             $txnRef = sprintf('VNP-%s-%s-%04d', $order->id, now()->format('YmdHis'), random_int(0, 9999));
@@ -2320,15 +2404,27 @@ class ClientCheckoutController extends Controller
             if ($qty <= 0) continue;
 
             if ($item->variant_id) {
+                // Kiểm tra tồn kho trước khi trừ
+                $variant = DB::table('product_variants')->where('id', $item->variant_id)->first();
+                if (!$variant || (int)$variant->stock < $qty) {
+                    throw new \RuntimeException("Biến thể sản phẩm không đủ tồn kho. Hiện có: " . ($variant ? (int)$variant->stock : 0) . ", cần: {$qty}");
+                }
+                
                 $affected = DB::table('product_variants')
                     ->where('id', $item->variant_id)
-                    ->where('stock', '>=', $qty)
+                    ->whereRaw('CAST(stock AS SIGNED) >= ?', [$qty])
                     ->decrement('stock', $qty);
                 if (!$affected) throw new \RuntimeException('Biến thể sản phẩm không đủ tồn kho.');
             } else {
+                // Kiểm tra tồn kho trước khi trừ
+                $product = DB::table('products')->where('id', $item->product_id)->first();
+                if (!$product || (int)$product->stock < $qty) {
+                    throw new \RuntimeException("Sản phẩm không đủ tồn kho. Hiện có: " . ($product ? (int)$product->stock : 0) . ", cần: {$qty}");
+                }
+                
                 $affected = DB::table('products')
                     ->where('id', $item->product_id)
-                    ->where('stock', '>=', $qty)
+                    ->whereRaw('CAST(stock AS SIGNED) >= ?', [$qty])
                     ->decrement('stock', $qty);
                 if (!$affected) throw new \RuntimeException('Sản phẩm không đủ tồn kho.');
             }

@@ -654,7 +654,7 @@
 
                                                 <!-- Form đánh giá cho đơn hàng này -->
                                                 @if($item->order->received_at && (15 - now()->diffInDays($item->order->received_at)) > 0)
-                                                    <form action="{{ route('products.comments.store', $product->id) }}" method="POST" class="order-review-form">
+                                                    <form action="{{ route('products.comments.store', $product->id) }}" method="POST" class="order-review-form" onsubmit="console.log('Form submitted');">
                                                         @csrf
                                                         <input type="hidden" name="order_id" value="{{ $item->order->id }}">
                                                         

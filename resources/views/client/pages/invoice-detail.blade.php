@@ -179,13 +179,28 @@
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Thao tác đơn hàng</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <!-- Xác nhận thanh toán - Hiển thị khi đơn hàng pending và chưa thanh toán -->
-                    @if($order->status === 'pending' && $order->payment_status === 'pending')
-                    <button onclick="confirmPayment({{ $order->id }})" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
-                        <i class="fas fa-credit-card mr-2"></i>
-                        Xác nhận thanh toán
-                    </button>
+                                    <!-- Hủy đơn hàng - Hiển thị khi đơn hàng pending và chưa thanh toán -->
+                @if($order->status === 'pending' && $order->payment_status === 'pending')
+                    @php
+                        // Kiểm tra xem đã có yêu cầu hủy chưa
+                        $hasCancelRequest = \App\Models\OrderReturn::where('order_id', $order->id)
+                            ->where('type', 'cancel')
+                            ->whereIn('status', ['pending', 'approved'])
+                            ->exists();
+                    @endphp
+                    
+                    @if($hasCancelRequest)
+                        <button disabled class="bg-gray-400 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed opacity-60">
+                            <i class="fas fa-times mr-2"></i>
+                            Đã yêu cầu hủy
+                        </button>
+                    @else
+                        <button onclick="cancelOrder({{ $order->id }})" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                            <i class="fas fa-times mr-2"></i>
+                            Hủy đơn hàng
+                        </button>
                     @endif
+                @endif
 
                     <!-- Thanh toán VNPay - Hiển thị khi đơn hàng đang xử lý thanh toán -->
                     @if($order->payment_status === 'processing')
@@ -197,10 +212,25 @@
 
                     <!-- Yêu cầu trả hàng -->
                     @if($order->status === 'delivered')
-                    <button onclick="requestReturn({{ $order->id }})" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
-                        <i class="fas fa-undo mr-2"></i>
-                        Yêu cầu trả hàng
-                    </button>
+                        @php
+                            // Kiểm tra xem đã có yêu cầu trả hàng chưa
+                            $hasReturnRequest = \App\Models\OrderReturn::where('order_id', $order->id)
+                                ->where('type', 'return')
+                                ->whereIn('status', ['pending', 'approved'])
+                                ->exists();
+                        @endphp
+                        
+                        @if($hasReturnRequest)
+                            <button disabled class="bg-gray-400 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed opacity-60">
+                                <i class="fas fa-undo mr-2"></i>
+                                Đã yêu cầu trả hàng
+                            </button>
+                        @else
+                            <button onclick="requestReturn({{ $order->id }})" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300">
+                                <i class="fas fa-undo mr-2"></i>
+                                Yêu cầu trả hàng
+                            </button>
+                        @endif
                     @endif
 
                     <!-- Xác nhận nhận hàng -->
@@ -224,6 +254,74 @@
                         <p id="actionMessageText"></p>
                     </div>
                 </div>
+
+                <!-- Thông báo yêu cầu hủy đơn hàng -->
+                @if($order->status === 'pending' && $order->payment_status === 'pending')
+                    @php
+                        $cancelRequest = \App\Models\OrderReturn::where('order_id', $order->id)
+                            ->where('type', 'cancel')
+                            ->whereIn('status', ['pending', 'approved'])
+                            ->first();
+                    @endphp
+                    
+                    @if($cancelRequest)
+                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-yellow-600 mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-yellow-800">Yêu cầu hủy đơn hàng</h4>
+                                    <p class="text-sm text-yellow-700 mt-1">
+                                        <strong>Lý do:</strong> {{ $cancelRequest->reason }}
+                                        @if($cancelRequest->client_note)
+                                            <br><strong>Ghi chú:</strong> {{ $cancelRequest->client_note }}
+                                        @endif
+                                        <br><strong>Trạng thái:</strong> 
+                                        @if($cancelRequest->status === 'pending')
+                                            <span class="text-yellow-600">Đang chờ xử lý</span>
+                                        @elseif($cancelRequest->status === 'approved')
+                                            <span class="text-green-600">Đã được duyệt</span>
+                                        @endif
+                                        <br><strong>Thời gian yêu cầu:</strong> {{ $cancelRequest->requested_at->format('d/m/Y H:i') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
+
+                <!-- Thông báo yêu cầu trả hàng -->
+                @if($order->status === 'delivered')
+                    @php
+                        $returnRequest = \App\Models\OrderReturn::where('order_id', $order->id)
+                            ->where('type', 'return')
+                            ->whereIn('status', ['pending', 'approved'])
+                            ->first();
+                    @endphp
+                    
+                    @if($returnRequest)
+                        <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-undo text-orange-600 mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-orange-800">Yêu cầu trả hàng</h4>
+                                    <p class="text-sm text-orange-700 mt-1">
+                                        <strong>Lý do:</strong> {{ $returnRequest->reason }}
+                                        @if($returnRequest->client_note)
+                                            <br><strong>Ghi chú:</strong> {{ $returnRequest->client_note }}
+                                        @endif
+                                        <br><strong>Trạng thái:</strong> 
+                                        @if($returnRequest->status === 'pending')
+                                            <span class="text-orange-600">Đang chờ xử lý</span>
+                                        @elseif($returnRequest->status === 'approved')
+                                            <span class="text-green-600">Đã được duyệt</span>
+                                        @endif
+                                        <br><strong>Thời gian yêu cầu:</strong> {{ $returnRequest->requested_at->format('d/m/Y H:i') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
 
             <!-- Action Buttons -->
@@ -244,6 +342,52 @@
     </div>
 </div>
 
+<!-- Modal chọn lý do trả hàng -->
+<div id="returnReasonModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="hideReturnReasonModal()">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto shadow-2xl transform transition-all" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Chọn lý do trả hàng</h3>
+            <button onclick="hideReturnReasonModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <label for="returnReason" class="block text-sm font-medium text-gray-700 mb-2">
+                Lý do trả hàng <span class="text-red-500">*</span>
+            </label>
+            <select id="returnReason" onchange="toggleCustomReturnReason()" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <option value="">-- Chọn lý do trả hàng --</option>
+                <option value="Sản phẩm bị lỗi">Sản phẩm bị lỗi</option>
+                <option value="Sản phẩm không đúng mô tả">Sản phẩm không đúng mô tả</option>
+                <option value="Sản phẩm bị hỏng khi vận chuyển">Sản phẩm bị hỏng khi vận chuyển</option>
+                <option value="Kích thước không phù hợp">Kích thước không phù hợp</option>
+                <option value="Màu sắc không đúng">Màu sắc không đúng</option>
+                <option value="Chất lượng không như mong đợi">Chất lượng không như mong đợi</option>
+                <option value="Đổi ý không muốn mua">Đổi ý không muốn mua</option>
+                <option value="Nhận nhầm sản phẩm">Nhận nhầm sản phẩm</option>
+                <option value="custom">Lý do khác</option>
+            </select>
+        </div>
+        
+        <div id="customReturnReasonDiv" class="mb-4 hidden">
+            <label for="customReturnReason" class="block text-sm font-medium text-gray-700 mb-2">
+                Nhập lý do trả hàng <span class="text-red-500">*</span>
+            </label>
+            <textarea id="customReturnReason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Vui lòng nhập lý do trả hàng..."></textarea>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="hideReturnReasonModal()" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                Hủy
+            </button>
+            <button onclick="confirmReturnRequest()" class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                Xác nhận trả hàng
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Custom animations */
 @keyframes fadeInUp {
@@ -257,6 +401,17 @@
     }
 }
 
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
 .bg-white {
     animation: fadeInUp 0.6s ease-out;
 }
@@ -265,26 +420,91 @@
 .bg-white:hover {
     transform: translateY(-2px);
 }
+
+/* Modal styles */
+#cancelReasonModal, #returnReasonModal {
+    backdrop-filter: blur(4px);
+}
+
+#cancelReasonModal .bg-white, #returnReasonModal .bg-white {
+    animation: modalFadeIn 0.3s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Responsive modal */
+@media (max-width: 640px) {
+    #cancelReasonModal .bg-white, #returnReasonModal .bg-white {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+}
 </style>
 
 <script>
-// Xác nhận thanh toán
-function confirmPayment(orderId) {
-    if (!confirm('Bạn có chắc chắn muốn xác nhận thanh toán cho đơn hàng này?')) {
+// Hủy đơn hàng
+function cancelOrder(orderId) {
+    // Hiển thị modal chọn lý do hủy
+    showCancelReasonModal(orderId);
+}
+
+// Hiển thị modal chọn lý do hủy
+function showCancelReasonModal(orderId) {
+    const modal = document.getElementById('cancelReasonModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.setAttribute('data-order-id', orderId);
+        // Đảm bảo modal ở giữa màn hình
+        modal.scrollTop = 0;
+        document.body.style.overflow = 'hidden'; // Ngăn scroll background
+    }
+}
+
+// Xác nhận hủy đơn hàng với lý do
+function confirmCancelOrder() {
+    const modal = document.getElementById('cancelReasonModal');
+    const orderId = modal.getAttribute('data-order-id');
+    const reasonSelect = document.getElementById('cancelReason');
+    const customReason = document.getElementById('customCancelReason');
+    
+    let reason = reasonSelect.value;
+    let clientNote = '';
+    
+    if (reason === 'custom') {
+        reason = customReason.value.trim();
+        if (!reason) {
+            alert('Vui lòng nhập lý do hủy đơn hàng');
+            return;
+        }
+    } else if (reason === '') {
+        alert('Vui lòng chọn lý do hủy đơn hàng');
         return;
     }
+    
+    if (reason === 'other') {
+        clientNote = prompt('Vui lòng mô tả chi tiết lý do hủy:') || '';
+    }
 
-    fetch(`/invoice/order/${orderId}/confirm-payment`, {
+    // Ẩn modal
+    hideCancelReasonModal();
+
+    fetch(`/invoice/order/${orderId}/cancel`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
+        },
+        body: JSON.stringify({
+            cancel_reason: reason,
+            client_note: clientNote
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showAlert(data.message, 'success');
+            // Cập nhật trạng thái nút ngay lập tức
+            updateCancelButtonStatus();
             setTimeout(() => {
                 location.reload();
             }, 2000);
@@ -294,8 +514,33 @@ function confirmPayment(orderId) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('Có lỗi xảy ra khi xác nhận thanh toán', 'error');
+        showAlert('Có lỗi xảy ra khi hủy đơn hàng', 'error');
     });
+}
+
+// Cập nhật trạng thái nút hủy đơn hàng
+function updateCancelButtonStatus() {
+    const cancelButton = document.querySelector('button[onclick^="cancelOrder"]');
+    if (cancelButton) {
+        cancelButton.disabled = true;
+        cancelButton.className = 'bg-gray-400 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed opacity-60';
+        cancelButton.innerHTML = '<i class="fas fa-times mr-2"></i>Đã yêu cầu hủy';
+        cancelButton.removeAttribute('onclick');
+    }
+}
+
+// Ẩn modal chọn lý do hủy
+function hideCancelReasonModal() {
+    const modal = document.getElementById('cancelReasonModal');
+    if (modal) {
+        modal.style.display = 'none';
+        // Reset form
+        document.getElementById('cancelReason').value = '';
+        document.getElementById('customCancelReason').value = '';
+        document.getElementById('customReasonDiv').style.display = 'none';
+        // Khôi phục scroll background
+        document.body.style.overflow = '';
+    }
 }
 
 // Thanh toán VNPay
@@ -335,8 +580,49 @@ function payWithVnpay(orderId) {
 
 // Yêu cầu trả hàng
 function requestReturn(orderId) {
-    const reason = prompt('Lý do trả hàng (không bắt buộc):');
-    const note = prompt('Ghi chú thêm (không bắt buộc):');
+    // Hiển thị modal chọn lý do trả hàng
+    showReturnReasonModal(orderId);
+}
+
+// Hiển thị modal chọn lý do trả hàng
+function showReturnReasonModal(orderId) {
+    const modal = document.getElementById('returnReasonModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.setAttribute('data-order-id', orderId);
+        // Đảm bảo modal ở giữa màn hình
+        modal.scrollTop = 0;
+        document.body.style.overflow = 'hidden'; // Ngăn scroll background
+    }
+}
+
+// Xác nhận yêu cầu trả hàng với lý do
+function confirmReturnRequest() {
+    const modal = document.getElementById('returnReasonModal');
+    const orderId = modal.getAttribute('data-order-id');
+    const reasonSelect = document.getElementById('returnReason');
+    const customReason = document.getElementById('customReturnReason');
+    
+    let reason = reasonSelect.value;
+    let clientNote = '';
+    
+    if (reason === 'custom') {
+        reason = customReason.value.trim();
+        if (!reason) {
+            alert('Vui lòng nhập lý do trả hàng');
+            return;
+        }
+    } else if (reason === '') {
+        alert('Vui lòng chọn lý do trả hàng');
+        return;
+    }
+    
+    if (reason === 'other') {
+        clientNote = prompt('Vui lòng mô tả chi tiết lý do trả hàng:') || '';
+    }
+
+    // Ẩn modal
+    hideReturnReasonModal();
 
     fetch(`/invoice/order/${orderId}/request-return`, {
         method: 'POST',
@@ -345,14 +631,16 @@ function requestReturn(orderId) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify({
-            return_reason: reason || 'Khách hàng yêu cầu trả',
-            client_note: note || ''
+            return_reason: reason,
+            client_note: clientNote
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showAlert(data.message, 'success');
+            // Cập nhật trạng thái nút ngay lập tức
+            updateReturnButtonStatus();
             setTimeout(() => {
                 location.reload();
             }, 2000);
@@ -364,6 +652,31 @@ function requestReturn(orderId) {
         console.error('Error:', error);
         showAlert('Có lỗi xảy ra khi yêu cầu trả hàng', 'error');
     });
+}
+
+// Ẩn modal chọn lý do trả hàng
+function hideReturnReasonModal() {
+    const modal = document.getElementById('returnReasonModal');
+    if (modal) {
+        modal.style.display = 'none';
+        // Reset form
+        document.getElementById('returnReason').value = '';
+        document.getElementById('customReturnReason').value = '';
+        document.getElementById('customReturnReasonDiv').style.display = 'none';
+        // Khôi phục scroll background
+        document.body.style.overflow = '';
+    }
+}
+
+// Cập nhật trạng thái nút trả hàng
+function updateReturnButtonStatus() {
+    const returnButton = document.querySelector('button[onclick^="requestReturn"]');
+    if (returnButton) {
+        returnButton.disabled = true;
+        returnButton.className = 'bg-gray-400 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed opacity-60';
+        returnButton.innerHTML = '<i class="fas fa-undo mr-2"></i>Đã yêu cầu trả hàng';
+        returnButton.removeAttribute('onclick');
+    }
 }
 
 // Xác nhận nhận hàng
@@ -437,7 +750,76 @@ function showAlert(message, type) {
         alert.remove();
     }, 5000);
 }
+
+// Xử lý hiển thị/ẩn lý do tùy chỉnh
+function toggleCustomReason() {
+    const reasonSelect = document.getElementById('cancelReason');
+    const customDiv = document.getElementById('customReasonDiv');
+    
+    if (reasonSelect.value === 'custom') {
+        customDiv.style.display = 'block';
+    } else {
+        customDiv.style.display = 'none';
+    }
+}
+
+// Xử lý hiển thị/ẩn lý do tùy chỉnh cho trả hàng
+function toggleCustomReturnReason() {
+    const reasonSelect = document.getElementById('returnReason');
+    const customDiv = document.getElementById('customReturnReasonDiv');
+    
+    if (reasonSelect.value === 'custom') {
+        customDiv.style.display = 'block';
+    } else {
+        customDiv.style.display = 'none';
+    }
+}
 </script>
+
+<!-- Modal chọn lý do hủy đơn hàng -->
+<div id="cancelReasonModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="hideCancelReasonModal()">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto shadow-2xl transform transition-all" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Chọn lý do hủy đơn hàng</h3>
+            <button onclick="hideCancelReasonModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-2">
+                Lý do hủy đơn hàng <span class="text-red-500">*</span>
+            </label>
+            <select id="cancelReason" onchange="toggleCustomReason()" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                <option value="">-- Chọn lý do hủy --</option>
+                <option value="Đổi ý không muốn mua">Đổi ý không muốn mua</option>
+                <option value="Tìm thấy sản phẩm rẻ hơn">Tìm thấy sản phẩm rẻ hơn</option>
+                <option value="Đặt nhầm sản phẩm">Đặt nhầm sản phẩm</option>
+                <option value="Đặt nhầm số lượng">Đặt nhầm số lượng</option>
+                <option value="Đặt nhầm địa chỉ giao hàng">Đặt nhầm địa chỉ giao hàng</option>
+                <option value="Thời gian giao hàng quá lâu">Thời gian giao hàng quá lâu</option>
+                <option value="Không còn nhu cầu">Không còn nhu cầu</option>
+                <option value="custom">Lý do khác</option>
+            </select>
+        </div>
+        
+        <div id="customReasonDiv" class="mb-4 hidden">
+            <label for="customCancelReason" class="block text-sm font-medium text-gray-700 mb-2">
+                Nhập lý do hủy <span class="text-red-500">*</span>
+            </label>
+            <textarea id="customCancelReason" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Vui lòng nhập lý do hủy đơn hàng..."></textarea>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="hideCancelReasonModal()" class="px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                Hủy
+            </button>
+            <button onclick="confirmCancelOrder()" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                Xác nhận hủy
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @php

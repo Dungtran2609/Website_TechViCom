@@ -182,8 +182,8 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label font-semibold">Số điện thoại <span
                                         class="text-danger">*</span></label>
-                                <input type="tel" name="phone" class="form-control" placeholder="Nhập số điện thoại"
-                                    value="{{ old('phone') }}">
+                                <input type="tel" name="phone" class="form-control phone-input" placeholder="Nhập số điện thoại"
+                                    value="{{ old('phone') }}" pattern="[0-9]*" inputmode="numeric" maxlength="11">
                                 @error('phone')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
@@ -271,35 +271,41 @@
                                         class="text-danger">*</span></label>
                                 <input type="text" name="recipient_name" class="form-control"
                                     id="edit_recipient_name">
+                                <span id="edit_recipient_name_error" class="text-danger small" style="display: none;"></span>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label font-semibold">Số điện thoại <span
                                         class="text-danger">*</span></label>
-                                <input type="tel" name="phone" class="form-control" id="edit_phone">
+                                <input type="tel" name="phone" class="form-control phone-input" id="edit_phone" pattern="[0-9]*" inputmode="numeric" maxlength="11">
+                                <span id="edit_phone_error" class="text-danger small" style="display: none;"></span>
                             </div>
                             <div class="col-12 mb-3">
                                 <label class="form-label font-semibold">Địa chỉ chi tiết <span
                                         class="text-danger">*</span></label>
                                 <input type="text" name="address_line" class="form-control mb-2"
                                     id="edit_address_line">
+                                <span id="edit_address_line_error" class="text-danger small" style="display: none;"></span>
                                 <div class="row">
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_province" name="city_code" class="form-control">
                                             <option value="">Chọn tỉnh/thành phố</option>
                                         </select>
                                         <input type="hidden" name="city" id="edit_city_name">
+                                        <span id="edit_city_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_district" name="district_code" class="form-control">
                                             <option value="">Chọn quận/huyện</option>
                                         </select>
                                         <input type="hidden" name="district" id="edit_district_name">
+                                        <span id="edit_district_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_ward" name="ward_code" class="form-control">
                                             <option value="">Chọn phường/xã</option>
                                         </select>
                                         <input type="hidden" name="ward" id="edit_ward_name">
+                                        <span id="edit_ward_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                 </div>
                             </div>
@@ -417,7 +423,18 @@
             let editCityNameInput = document.getElementById('edit_city_name');
             let editDistrictNameInput = document.getElementById('edit_district_name');
             let editWardNameInput = document.getElementById('edit_ward_name');
+            // Function để xóa tất cả lỗi
+            function clearAllErrors() {
+                const errorSpans = document.querySelectorAll('[id$="_error"]');
+                errorSpans.forEach(span => {
+                    span.textContent = '';
+                    span.style.display = 'none';
+                });
+            }
+
             window.editAddress = function(addressId) {
+                // Xóa tất cả lỗi trước khi mở modal
+                clearAllErrors();
                 fetch(`/accounts/addresses/${addressId}/edit`)
                     .then(response => response.json())
                     .then(data => {
@@ -649,10 +666,19 @@
                                     timer: 3000
                                 }).then(() => location.reload());
                             } else {
-                                Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ',
-                                'error', {
-                                    timer: 3000
-                                });
+                                // Hiển thị lỗi dưới từng ô input thay vì popup
+                                clearAllErrors();
+                                if (data.errors) {
+                                    Object.keys(data.errors).forEach(field => {
+                                        const errorSpan = document.getElementById(`edit_${field}_error`);
+                                        if (errorSpan) {
+                                            errorSpan.textContent = data.errors[field][0];
+                                            errorSpan.style.display = 'block';
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ', 'error');
+                                }
                             }
                         })
                         .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
@@ -672,7 +698,92 @@
             }
         });
 
+        // Validation cho input số điện thoại - chỉ cho phép nhập số và tự động thêm số 0
         document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý tất cả input có class phone-input
+            const phoneInputs = document.querySelectorAll('.phone-input');
+            
+            phoneInputs.forEach(function(input) {
+                // Chỉ cho phép nhập số
+                input.addEventListener('input', function(e) {
+                    // Loại bỏ tất cả ký tự không phải số
+                    let value = this.value.replace(/[^0-9]/g, '');
+                    
+                    // Nếu bắt đầu nhập và không bắt đầu bằng 0, tự động thêm 0
+                    if (value.length > 0 && !value.startsWith('0')) {
+                        value = '0' + value;
+                    }
+                    
+                    // Giới hạn tối đa 10 số (bao gồm số 0 đầu)
+                    if (value.length > 10) {
+                        value = value.substring(0, 10);
+                    }
+                    
+                    this.value = value;
+                });
+                
+                // Ngăn chặn paste text không phải số
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    let numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                    
+                    // Nếu không bắt đầu bằng 0, tự động thêm 0
+                    if (numbersOnly.length > 0 && !numbersOnly.startsWith('0')) {
+                        numbersOnly = '0' + numbersOnly;
+                    }
+                    
+                    // Giới hạn tối đa 10 số
+                    if (numbersOnly.length > 10) {
+                        numbersOnly = numbersOnly.substring(0, 10);
+                    }
+                    
+                    this.value = numbersOnly;
+                });
+                
+                // Ngăn chặn keydown cho các phím không phải số
+                input.addEventListener('keydown', function(e) {
+                    // Cho phép: backspace, delete, tab, escape, enter, arrow keys
+                    if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                        // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true)) {
+                        return;
+                    }
+                    // Cho phép số từ 0-9
+                    if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                        return;
+                    }
+                    e.preventDefault();
+                });
+                
+                // Kiểm tra khi blur (rời khỏi ô input)
+                input.addEventListener('blur', function() {
+                    let value = this.value.trim();
+                    
+                    // Nếu có giá trị và không bắt đầu bằng 0, tự động thêm 0
+                    if (value.length > 0 && !value.startsWith('0')) {
+                        this.value = '0' + value;
+                    }
+                    
+                    // Hiển thị thông báo lỗi nếu không đúng format
+                    const errorSpan = this.parentNode.querySelector('[id$="_error"]');
+                    if (errorSpan) {
+                        if (value.length > 0 && value.length < 10) {
+                            errorSpan.textContent = 'Số điện thoại phải có 10 số.';
+                            errorSpan.style.display = 'block';
+                        } else if (value.length > 0 && !value.startsWith('0')) {
+                            errorSpan.textContent = 'Số điện thoại phải bắt đầu bằng số 0.';
+                            errorSpan.style.display = 'block';
+                        } else {
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
             @if ($errors->any())
                 var addModal = new bootstrap.Modal(document.getElementById('addAddressModal'));
                 addModal.show();

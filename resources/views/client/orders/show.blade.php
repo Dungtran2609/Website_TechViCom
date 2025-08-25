@@ -5,7 +5,54 @@
 @push('styles')
 <style>
     .order-detail-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #ff6c2f 0%, #e55a28 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .order-detail-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .status-badge {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: none;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .status-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .status-badge:hover::before {
+        left: 100%;
     }
     
     .order-timeline {
@@ -19,54 +66,142 @@
         left: 0.75rem;
         top: 1rem;
         bottom: 1rem;
-        width: 2px;
-        background: #e5e7eb;
+        width: 3px;
+        background: linear-gradient(180deg, #ff6c2f 0%, #e55a28 100%);
+        border-radius: 2px;
     }
     
     .timeline-item {
         position: relative;
         margin-bottom: 2rem;
-        padding: 1rem;
+        padding: 1.5rem;
         background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 108, 47, 0.1);
+    }
+    
+    .timeline-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
     
     .timeline-item::before {
         content: '';
         position: absolute;
-        left: -1.625rem;
-        top: 1.25rem;
-        width: 1rem;
-        height: 1rem;
-        background: #10b981;
+        left: -1.75rem;
+        top: 1.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 0 0 3px #e5e7eb;
+        border: 4px solid white;
+        box-shadow: 0 0 0 3px #e5e7eb, 0 4px 12px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s ease;
     }
     
     .timeline-item.current::before {
-        background: #ff6c2f;
-        box-shadow: 0 0 0 3px #ff6c2f, 0 0 0 6px white, 0 0 0 8px #e5e7eb;
+        background: linear-gradient(135deg, #ff6c2f 0%, #e55a28 100%);
+        box-shadow: 0 0 0 3px #ff6c2f, 0 0 0 6px white, 0 0 0 8px #e5e7eb, 0 4px 12px rgba(255, 108, 47, 0.4);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 3px #ff6c2f, 0 0 0 6px white, 0 0 0 8px #e5e7eb, 0 4px 12px rgba(255, 108, 47, 0.4); }
+        50% { box-shadow: 0 0 0 3px #ff6c2f, 0 0 0 6px white, 0 0 0 8px #e5e7eb, 0 4px 20px rgba(255, 108, 47, 0.6); }
+        100% { box-shadow: 0 0 0 3px #ff6c2f, 0 0 0 6px white, 0 0 0 8px #e5e7eb, 0 4px 12px rgba(255, 108, 47, 0.4); }
     }
     
     .timeline-item.pending::before {
-        background: #6b7280;
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        box-shadow: 0 0 0 3px #6b7280, 0 4px 12px rgba(107, 114, 128, 0.3);
     }
     
     .product-item {
         transition: all 0.3s ease;
         border: 1px solid #e5e7eb;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: white;
     }
     
     .product-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        border-color: #ff6c2f;
+    }
+    
+    .product-image {
+        transition: all 0.3s ease;
+    }
+    
+    .product-item:hover .product-image {
+        transform: scale(1.05);
     }
     
     .summary-card {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
         border: 1px solid #e5e7eb;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .action-button {
+        transition: all 0.3s ease;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border: none;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #ff6c2f 0%, #e55a28 100%);
+        color: white;
+    }
+    
+    .btn-danger-custom {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+    
+    .btn-success-custom {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .alert-custom {
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 1.25rem;
+    }
+    
+    .alert-info-custom {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1e40af;
+    }
+    
+    .alert-warning-custom {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+    }
+    
+    .alert-success-custom {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
+    }
+    
+    .alert-danger-custom {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #991b1b;
     }
     
     @media (max-width: 768px) {
@@ -75,7 +210,16 @@
         }
         
         .timeline-item::before {
-            left: -1.375rem;
+            left: -1.5rem;
+        }
+        
+        .order-detail-header {
+            padding: 1.5rem !important;
+        }
+        
+        .status-badge {
+            font-size: 0.875rem !important;
+            padding: 0.5rem 1rem !important;
         }
     }
 </style>
@@ -86,17 +230,18 @@
     <div class="bg-gray-50 min-h-screen py-8">
     <div class="techvicom-container">
         <!-- Header -->
-        <div class="order-detail-header rounded-lg p-6 text-white mb-6">
-            <div class="d-flex align-items-center justify-content-between">
+        <div class="order-detail-header rounded-2xl p-8 text-white mb-8">
+            <div class="d-flex align-items-center justify-content-between position-relative">
                 <div>
-                    <div class="d-flex align-items-center mb-3">
+                    <div class="d-flex align-items-center mb-4">
                         <a href="{{ route('accounts.orders') }}" 
-                           class="text-white/80 hover:text-white text-decoration-none me-3">
-                            <i class="fas fa-arrow-left"></i>
+                           class="text-white/80 hover:text-white text-decoration-none me-4 transition-all duration-300 hover:scale-110">
+                            <i class="fas fa-arrow-left text-xl"></i>
                         </a>
-                        <h1 class="text-2xl font-bold mb-0">Chi tiết đơn hàng #{{ $order->random_code ?? $order->code ?? ('DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}</h1>
+                        <h1 class="text-3xl font-bold mb-0">Chi tiết đơn hàng #{{ $order->random_code ?? $order->code ?? ('DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT)) }}</h1>
                     </div>
-                    <p class="text-white/80 mb-0">
+                    <p class="text-white/90 mb-0 text-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>
                         Đặt ngày {{ $order->created_at ? $order->created_at->format('d/m/Y H:i') : 'N/A' }}
                     </p>
                 </div>
@@ -114,7 +259,7 @@
                         $config = $statusConfig[$order->status] ?? ['class' => 'bg-secondary', 'text' => $order->status, 'icon' => 'question'];
                         $orderReturn = $order->returns()->latest()->first();
                     @endphp
-                    <span class="badge {{ $config['class'] }} fs-6 px-3 py-2">
+                    <span class="status-badge badge {{ $config['class'] }} fs-6 px-4 py-3 rounded-pill">
                         <i class="fas fa-{{ $config['icon'] }} me-2"></i>
                         {{ $config['text'] }}
                     </span>
@@ -130,26 +275,26 @@
                         ];
                         $paymentConfig = $paymentStatusConfig[$order->payment_status] ?? ['class' => 'bg-secondary', 'text' => $order->payment_status, 'icon' => 'question'];
                     @endphp
-                    <div class="mt-2">
-                        <span class="badge {{ $paymentConfig['class'] }} fs-6 px-3 py-2">
+                    <div class="mt-3">
+                        <span class="status-badge badge {{ $paymentConfig['class'] }} fs-6 px-4 py-3 rounded-pill">
                             <i class="fas fa-{{ $paymentConfig['icon'] }} me-2"></i>
                             {{ $paymentConfig['text'] }}
                         </span>
                     </div>
                     
                     @if($order->status === 'returned' && $orderReturn && $orderReturn->status === 'pending')
-                        <span class="badge bg-info ms-2">Chờ admin xác nhận trả hàng</span>
+                        <span class="status-badge badge bg-info ms-2 mt-2 rounded-pill">Chờ admin xác nhận trả hàng</span>
                     @endif
                     @php
                         $cancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved'])->first();
                     @endphp
                     @if($cancelRequest)
                         @if($cancelRequest->status === 'pending')
-                            <span class="badge bg-warning text-dark ms-2">Chờ admin xác nhận hủy đơn hàng</span>
+                            <span class="status-badge badge bg-warning text-dark ms-2 mt-2 rounded-pill">Chờ admin xác nhận hủy đơn hàng</span>
                         @elseif($cancelRequest->status === 'approved')
-                            <span class="badge bg-success ms-2">Yêu cầu hủy đã được phê duyệt</span>
+                            <span class="status-badge badge bg-success ms-2 mt-2 rounded-pill">Yêu cầu hủy đã được phê duyệt</span>
                         @elseif($cancelRequest->status === 'rejected')
-                            <span class="badge bg-danger ms-2">Yêu cầu hủy đã bị từ chối</span>
+                            <span class="status-badge badge bg-danger ms-2 mt-2 rounded-pill">Yêu cầu hủy đã bị từ chối</span>
                         @endif
                     @endif
                     
@@ -158,11 +303,11 @@
                     @endphp
                     @if($returnRequest)
                         @if($returnRequest->status === 'pending')
-                            <span class="badge bg-warning text-dark ms-2">Chờ admin xác nhận trả hàng</span>
+                            <span class="status-badge badge bg-warning text-dark ms-2 mt-2 rounded-pill">Chờ admin xác nhận trả hàng</span>
                         @elseif($returnRequest->status === 'approved')
-                            <span class="badge bg-success ms-2">Yêu cầu trả hàng đã được phê duyệt</span>
+                            <span class="status-badge badge bg-success ms-2 mt-2 rounded-pill">Yêu cầu trả hàng đã được phê duyệt</span>
                         @elseif($returnRequest->status === 'rejected')
-                            <span class="badge bg-danger ms-2">Yêu cầu trả hàng đã bị từ chối</span>
+                            <span class="status-badge badge bg-danger ms-2 mt-2 rounded-pill">Yêu cầu trả hàng đã bị từ chối</span>
                         @endif
                     @endif
                 </div>
@@ -176,8 +321,14 @@
                     $orderReturn = $order->returns()->latest()->first();
                 @endphp
                 @if($orderReturn && in_array($order->status, ['cancelled', 'returned']) && $orderReturn->admin_note)
-                    <div class="alert alert-info mb-3">
-                        <strong>Ghi chú từ admin:</strong> {{ $orderReturn->admin_note }}
+                    <div class="alert alert-info-custom alert-custom mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 text-xl"></i>
+                            <div>
+                                <strong>Ghi chú từ admin:</strong><br>
+                                {{ $orderReturn->admin_note }}
+                            </div>
+                        </div>
                     </div>
                 @endif
                 
@@ -185,23 +336,27 @@
                     $cancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
                 @endphp
                 @if($cancelRequest)
-                    <div class="alert alert-warning mb-3">
-                        <strong>Yêu cầu hủy đơn hàng:</strong>
-                        <br>
-                        <strong>Trạng thái:</strong> 
-                        @if($cancelRequest->status === 'pending')
-                            <span class="badge bg-warning text-dark">Đang chờ admin xử lý</span>
-                        @elseif($cancelRequest->status === 'approved')
-                            <span class="badge bg-success">Đã được phê duyệt</span>
-                        @elseif($cancelRequest->status === 'rejected')
-                            <span class="badge bg-danger">Đã bị từ chối</span>
-                        @endif
-                        <br>
-                        <strong>Lý do:</strong> {{ $cancelRequest->client_note }}
-                        @if($cancelRequest->admin_note)
-                            <br>
-                            <strong>Phản hồi từ admin:</strong> {{ $cancelRequest->admin_note }}
-                        @endif
+                    <div class="alert alert-warning-custom alert-custom mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-xl"></i>
+                            <div>
+                                <strong>Yêu cầu hủy đơn hàng:</strong><br>
+                                <strong>Trạng thái:</strong> 
+                                @if($cancelRequest->status === 'pending')
+                                    <span class="status-badge badge bg-warning text-dark">Đang chờ admin xử lý</span>
+                                @elseif($cancelRequest->status === 'approved')
+                                    <span class="status-badge badge bg-success">Đã được phê duyệt</span>
+                                @elseif($cancelRequest->status === 'rejected')
+                                    <span class="status-badge badge bg-danger">Đã bị từ chối</span>
+                                @endif
+                                <br>
+                                <strong>Lý do:</strong> {{ $cancelRequest->client_note }}
+                                @if($cancelRequest->admin_note)
+                                    <br>
+                                    <strong>Phản hồi từ admin:</strong> {{ $cancelRequest->admin_note }}
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 @endif
                 
@@ -209,23 +364,27 @@
                     $returnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
                 @endphp
                 @if($returnRequest)
-                    <div class="alert alert-info mb-3">
-                        <strong>Yêu cầu trả hàng:</strong>
-                        <br>
-                        <strong>Trạng thái:</strong> 
-                        @if($returnRequest->status === 'pending')
-                            <span class="badge bg-warning text-dark">Đang chờ admin xử lý</span>
-                        @elseif($returnRequest->status === 'approved')
-                            <span class="badge bg-success">Đã được phê duyệt</span>
-                        @elseif($returnRequest->status === 'rejected')
-                            <span class="badge bg-danger">Đã bị từ chối</span>
-                        @endif
-                        <br>
-                        <strong>Lý do:</strong> {{ $returnRequest->client_note }}
-                        @if($returnRequest->admin_note)
-                            <br>
-                            <strong>Phản hồi từ admin:</strong> {{ $returnRequest->admin_note }}
-                        @endif
+                    <div class="alert alert-info-custom alert-custom mb-4">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-undo me-3 mt-1 text-xl"></i>
+                            <div>
+                                <strong>Yêu cầu trả hàng:</strong><br>
+                                <strong>Trạng thái:</strong> 
+                                @if($returnRequest->status === 'pending')
+                                    <span class="status-badge badge bg-warning text-dark">Đang chờ admin xử lý</span>
+                                @elseif($returnRequest->status === 'approved')
+                                    <span class="status-badge badge bg-success">Đã được phê duyệt</span>
+                                @elseif($returnRequest->status === 'rejected')
+                                    <span class="status-badge badge bg-danger">Đã bị từ chối</span>
+                                @endif
+                                <br>
+                                <strong>Lý do:</strong> {{ $returnRequest->client_note }}
+                                @if($returnRequest->admin_note)
+                                    <br>
+                                    <strong>Phản hồi từ admin:</strong> {{ $returnRequest->admin_note }}
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 @endif
                 
@@ -617,9 +776,13 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Vui lòng chọn lý do hủy đơn hàng: <span class="text-danger">*</span></label>
-                                <div class="alert alert-info mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể xác nhận hủy đơn hàng.
+                                <div class="alert alert-info-custom alert-custom mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-3 mt-1 text-lg"></i>
+                                        <div>
+                                            <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể xác nhận hủy đơn hàng.
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="cancel-reasons-list">
                                     <div class="form-check mb-2">
@@ -695,9 +858,13 @@
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Vui lòng chọn lý do trả hàng: <span class="text-danger">*</span></label>
-                                <div class="alert alert-info mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể gửi yêu cầu trả hàng.
+                                <div class="alert alert-info-custom alert-custom mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-3 mt-1 text-lg"></i>
+                                        <div>
+                                            <strong>Lưu ý:</strong> Bạn phải chọn lý do trước khi có thể gửi yêu cầu trả hàng.
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="return-reasons-list">
                                     <div class="form-check mb-2">

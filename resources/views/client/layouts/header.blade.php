@@ -36,9 +36,21 @@
                                 @foreach ($categories->take(6) as $category)
                                     <a href="{{ route('products.index', ['category' => $category->slug]) }}"
                                         class="category-item flex items-center p-3 hover:bg-orange-50 rounded-lg transition group">
-                                        <!-- Shared icon (ignore per-category images) -->
+                                        <!-- Category image or icon -->
                                         <div class="cat-icon mr-3 group-hover:scale-110 transition-transform">
-                                            <i class="fas fa-tags text-sm"></i>
+                                            @if ($category->hasImage())
+                                                <img src="{{ $category->display_image }}" 
+                                                     alt="{{ $category->name }}" 
+                                                     class="w-8 h-8 rounded-lg object-cover border border-gray-200"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center" style="display: none;">
+                                                    <i class="fas fa-tags text-orange-500 text-sm"></i>
+                                                </div>
+                                            @else
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+                                                    <i class="fas fa-tags text-orange-500 text-sm"></i>
+                                                </div>
+                                            @endif
                                         </div>
                                         <div>
                                             <span class="text-gray-700 font-medium">{{ $category->name }}</span>
@@ -47,7 +59,7 @@
                                         </div>
                                     </a>
                                 @endforeach
-                            @endcan
+                            @endif
                         </div>
                         <div class="mt-4 pt-3 border-t border-gray-200">
                             <a href="{{ route('categories.index') }}"

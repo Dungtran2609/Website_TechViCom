@@ -27,8 +27,37 @@ class Category extends Model
     }
 
     public function products()
-{
-    return $this->hasMany(Product::class);
-}
-   
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Get the category image URL
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return null;
+    }
+
+    /**
+     * Get the category image with fallback
+     */
+    public function getDisplayImageAttribute()
+    {
+        if ($this->image && file_exists(public_path('storage/' . $this->image))) {
+            return $this->image_url;
+        }
+        return null;
+    }
+
+    /**
+     * Check if category has image
+     */
+    public function hasImage()
+    {
+        return $this->image && file_exists(public_path('storage/' . $this->image));
+    }
 }

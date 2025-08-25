@@ -608,7 +608,7 @@
 @push('styles')
     <style>
         .bg-gradient-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6c2f 0%, #ffb347 100%);
         }
 
         .stat-card {

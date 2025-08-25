@@ -17,7 +17,8 @@ class OrderReturn extends Model
         'requested_at',
         'processed_at',
         'admin_note',
-        'client_note', // 👈 Bổ sung do có trong migration
+        'client_note',
+        'exchange_items',
     ];
 
     protected $casts = [

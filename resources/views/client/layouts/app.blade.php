@@ -599,6 +599,105 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Reset Password Form -->
+                <div id="resetPasswordForm" style="display: none;">
+                    <form method="POST" action="{{ route('password.store') }}" id="resetPasswordFormSubmit">
+                        @csrf
+                        <input type="hidden" name="token" id="reset_token" value="">
+                        <div class="mb-3">
+                            <label for="reset_email" class="form-label fw-semibold text-dark">Địa chỉ email</label>
+                            <input type="email" class="form-control form-control-lg border-2" id="reset_email" name="email" placeholder="Email của bạn" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" readonly>
+                            <div class="invalid-feedback" id="resetEmailError"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reset_password" class="form-label fw-semibold text-dark">Mật khẩu mới</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control form-control-lg border-2" id="reset_password" name="password" placeholder="Tạo mật khẩu mới" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" >
+                                <button type="button" class="btn position-absolute end-0 top-0 h-100 border-0 bg-transparent" id="toggleResetPassword" style="border-radius: 0 12px 12px 0;">
+                                    <i class="fas fa-eye text-muted"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="resetPasswordError"></div>
+                            
+                            <!-- Password Requirements -->
+                            <div class="mt-2">
+                                <p class="text-muted small mb-1 fw-semibold">Mật khẩu phải có:</p>
+                                <div class="password-requirements">
+                                    <p class="text-muted small mb-1">• Ít nhất 8 ký tự</p>
+                                    <p class="text-muted small mb-1">• Ít nhất 1 chữ hoa (A-Z)</p>
+                                    <p class="text-muted small mb-1">• Ít nhất 1 chữ thường (a-z)</p>
+                                    <p class="text-muted small mb-1">• Ít nhất 1 số (0-9)</p>
+                                    <p class="text-muted small mb-0">• Ít nhất 1 ký tự đặc biệt (@$!%*?&)</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reset_password_confirmation" class="form-label fw-semibold text-dark">Xác nhận mật khẩu</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control form-control-lg border-2" id="reset_password_confirmation" name="password_confirmation" placeholder="Nhập lại mật khẩu mới" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" >
+                                <button type="button" class="btn position-absolute end-0 top-0 h-100 border-0 bg-transparent" id="toggleResetConfirmPassword" style="border-radius: 0 12px 12px 0;">
+                                    <i class="fas fa-eye text-muted"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="resetPasswordConfirmError"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="resetPasswordSubmitBtn" style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
+                            <i class="fas fa-shield-alt me-2"></i>Đặt lại mật khẩu
+                        </button>
+                    </form>
+                    <div class="text-center">
+                        <span class="text-muted small">Nhớ mật khẩu rồi?</span>
+                        <button type="button" onclick="showLoginForm()" class="text-decoration-none text-orange-500 small ms-1 border-0 bg-transparent">
+                            <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập ngay
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password Form -->
+                <div id="confirmPasswordForm" style="display: none;">
+                    <form method="POST" action="{{ route('password.confirm') }}" id="confirmPasswordFormSubmit">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label fw-semibold text-dark">Xác nhận mật khẩu</label>
+                            <div class="position-relative">
+                                <input type="password" class="form-control form-control-lg border-2" id="confirm_password" name="password" placeholder="Nhập mật khẩu hiện tại" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" required>
+                                <button type="button" class="btn position-absolute end-0 top-0 h-100 border-0 bg-transparent" id="toggleConfirmPassword" style="border-radius: 0 12px 12px 0;">
+                                    <i class="fas fa-eye text-muted"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" id="confirmPasswordError"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="confirmPasswordSubmitBtn" style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
+                            <i class="fas fa-check me-2"></i>Xác nhận
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Verify Email Form -->
+                <div id="verifyEmailForm" style="display: none;">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-envelope text-white text-2xl"></i>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-2">Xác thực email</h4>
+                        <p class="text-muted">Vui lòng kiểm tra email và nhấp vào liên kết xác thực để hoàn tất đăng ký.</p>
+                    </div>
+                    <form method="POST" action="{{ route('verification.send') }}" id="verifyEmailFormSubmit">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="verifyEmailSubmitBtn" style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi lại email xác thực
+                        </button>
+                    </form>
+                    <div class="text-center">
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="text-decoration-none text-orange-500 small border-0 bg-transparent">
+                                <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -796,6 +895,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Auth Modal Handler -->
+    <script src="{{ asset('client_css/js/auth-modal-handler.js') }}"></script>
 
 <!-- Auth Modal Script -->
 <script>
@@ -806,6 +907,44 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('openAuthModal function:', typeof openAuthModal);
     console.log('showRegisterForm function:', typeof showRegisterForm);
     console.log('openAuthModalAndShowRegister function:', typeof openAuthModalAndShowRegister);
+    
+    // Check for session flash messages to open modal
+    @if(session('openAuthModal'))
+        const modalAction = '{{ session('openAuthModal') }}';
+        const token = '{{ session('token', '') }}';
+        
+        console.log('Session flash detected:', modalAction);
+        
+        // Open modal and show appropriate form
+        setTimeout(() => {
+            window.openAuthModal();
+            
+            switch(modalAction) {
+                case 'login':
+                    showLoginForm();
+                    break;
+                case 'register':
+                    showRegisterForm();
+                    break;
+                case 'forgot-password':
+                    showForgotPasswordForm();
+                    break;
+                case 'reset-password':
+                    if (token) {
+                        showResetPasswordForm(token, '');
+                    }
+                    break;
+                case 'confirm-password':
+                    showConfirmPasswordForm();
+                    break;
+                case 'verify-email':
+                    showVerifyEmailForm();
+                    break;
+                default:
+                    showLoginForm();
+            }
+        }, 500);
+    @endif
     
     // Simple modal functions
     window.openAuthModal = function() {
@@ -1012,9 +1151,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form switching functions
     window.showLoginForm = function() {
+        hideAllForms();
         document.getElementById('emailLoginForm').style.display = 'block';
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('forgotPasswordForm').style.display = 'none';
         
         // Update modal title and description
         document.getElementById('authModalLabel').textContent = 'Chào mừng trở lại!';
@@ -1022,9 +1160,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.showRegisterForm = function() {
-        document.getElementById('emailLoginForm').style.display = 'none';
+        hideAllForms();
         document.getElementById('registerForm').style.display = 'block';
-        document.getElementById('forgotPasswordForm').style.display = 'none';
         
         // Update modal title and description
         document.getElementById('authModalLabel').textContent = 'Tạo tài khoản mới';
@@ -1032,14 +1169,53 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     window.showForgotPasswordForm = function() {
-        document.getElementById('emailLoginForm').style.display = 'none';
-        document.getElementById('registerForm').style.display = 'none';
+        hideAllForms();
         document.getElementById('forgotPasswordForm').style.display = 'block';
         
         // Update modal title and description
         document.getElementById('authModalLabel').textContent = 'Quên mật khẩu?';
         document.querySelector('#authModal .text-muted').textContent = 'Nhập email để nhận link đặt lại mật khẩu';
     };
+
+    window.showResetPasswordForm = function(token, email) {
+        hideAllForms();
+        document.getElementById('resetPasswordForm').style.display = 'block';
+        
+        // Set token and email
+        document.getElementById('reset_token').value = token;
+        document.getElementById('reset_email').value = email;
+        
+        // Update modal title and description
+        document.getElementById('authModalLabel').textContent = 'Đặt lại mật khẩu';
+        document.querySelector('#authModal .text-muted').textContent = 'Tạo mật khẩu mới an toàn cho tài khoản của bạn';
+    };
+
+    window.showConfirmPasswordForm = function() {
+        hideAllForms();
+        document.getElementById('confirmPasswordForm').style.display = 'block';
+        
+        // Update modal title and description
+        document.getElementById('authModalLabel').textContent = 'Xác nhận mật khẩu';
+        document.querySelector('#authModal .text-muted').textContent = 'Vui lòng xác nhận mật khẩu để tiếp tục';
+    };
+
+    window.showVerifyEmailForm = function() {
+        hideAllForms();
+        document.getElementById('verifyEmailForm').style.display = 'block';
+        
+        // Update modal title and description
+        document.getElementById('authModalLabel').textContent = 'Xác thực email';
+        document.querySelector('#authModal .text-muted').textContent = 'Vui lòng kiểm tra email và xác thực tài khoản';
+    };
+
+    function hideAllForms() {
+        document.getElementById('emailLoginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('forgotPasswordForm').style.display = 'none';
+        document.getElementById('resetPasswordForm').style.display = 'none';
+        document.getElementById('confirmPasswordForm').style.display = 'none';
+        document.getElementById('verifyEmailForm').style.display = 'none';
+    }
     
     window.openAuthModalAndShowLogin = function() {
         console.log('Opening auth modal and showing login form...');
@@ -1145,6 +1321,64 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleRegConfirmPasswordBtn.addEventListener('click', function() {
             const type = regConfirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             regConfirmPasswordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+
+    // Password visibility toggles for reset password form
+    const toggleResetPasswordBtn = document.getElementById('toggleResetPassword');
+    const resetPasswordInput = document.getElementById('reset_password');
+    const toggleResetConfirmPasswordBtn = document.getElementById('toggleResetConfirmPassword');
+    const resetConfirmPasswordInput = document.getElementById('reset_password_confirmation');
+    
+    if (toggleResetPasswordBtn && resetPasswordInput) {
+        toggleResetPasswordBtn.addEventListener('click', function() {
+            const type = resetPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            resetPasswordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    
+    if (toggleResetConfirmPasswordBtn && resetConfirmPasswordInput) {
+        toggleResetConfirmPasswordBtn.addEventListener('click', function() {
+            const type = resetConfirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            resetConfirmPasswordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            if (type === 'text') {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+
+    // Password visibility toggle for confirm password form
+    const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    
+    if (toggleConfirmPasswordBtn && confirmPasswordInput) {
+        toggleConfirmPasswordBtn.addEventListener('click', function() {
+            const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            confirmPasswordInput.setAttribute('type', type);
             
             const icon = this.querySelector('i');
             if (type === 'text') {
@@ -1369,6 +1603,281 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Handle reset password form submission
+    const resetPasswordForm = document.getElementById('resetPasswordFormSubmit');
+    const resetPasswordSubmitBtn = document.getElementById('resetPasswordSubmitBtn');
+    
+    if (resetPasswordForm && resetPasswordSubmitBtn) {
+        resetPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Reset password form submitted');
+            
+            // Reset previous errors
+            const resetEmailInput = document.getElementById('reset_email');
+            const resetPasswordInput = document.getElementById('reset_password');
+            const resetConfirmPasswordInput = document.getElementById('reset_password_confirmation');
+            
+            resetEmailInput.classList.remove('is-invalid');
+            resetPasswordInput.classList.remove('is-invalid');
+            resetConfirmPasswordInput.classList.remove('is-invalid');
+            
+            document.getElementById('resetEmailError').textContent = '';
+            document.getElementById('resetPasswordError').textContent = '';
+            document.getElementById('resetPasswordConfirmError').textContent = '';
+            
+            // Show loading state
+            const originalText = resetPasswordSubmitBtn.innerHTML;
+            resetPasswordSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+            resetPasswordSubmitBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(resetPasswordForm);
+            
+            // Submit form via AJAX
+            fetch(resetPasswordForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        return response.json().then(data => {
+                            throw new Error(JSON.stringify(data.errors));
+                        });
+                    }
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Success
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Đặt lại mật khẩu thành công!',
+                        text: 'Mật khẩu của bạn đã được cập nhật. Vui lòng đăng nhập lại.',
+                        confirmButtonColor: '#ff6c2f'
+                    }).then(() => {
+                        window.closeAuthModal();
+                        window.location.reload();
+                    });
+                } else {
+                    // Show error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Đặt lại mật khẩu thất bại',
+                        text: data.message || 'Có lỗi xảy ra, vui lòng thử lại',
+                        confirmButtonColor: '#ff6c2f'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Handle validation errors
+                if (error.message.startsWith('{')) {
+                    try {
+                        const errors = JSON.parse(error.message);
+                        
+                        // Display validation errors
+                        if (errors.email) {
+                            resetEmailInput.classList.add('is-invalid');
+                            document.getElementById('resetEmailError').textContent = errors.email[0];
+                        }
+                        if (errors.password) {
+                            resetPasswordInput.classList.add('is-invalid');
+                            document.getElementById('resetPasswordError').textContent = errors.password[0];
+                        }
+                        if (errors.password_confirmation) {
+                            resetConfirmPasswordInput.classList.add('is-invalid');
+                            document.getElementById('resetPasswordConfirmError').textContent = errors.password_confirmation[0];
+                        }
+                    } catch (e) {
+                        console.error('Error parsing validation errors:', e);
+                    }
+                } else {
+                    // Show generic error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi',
+                        text: 'Có lỗi xảy ra, vui lòng thử lại',
+                        confirmButtonColor: '#ff6c2f'
+                    });
+                }
+            })
+            .finally(() => {
+                // Reset button state
+                resetPasswordSubmitBtn.innerHTML = originalText;
+                resetPasswordSubmitBtn.disabled = false;
+            });
+        });
+    }
+
+    // Handle confirm password form submission
+    const confirmPasswordForm = document.getElementById('confirmPasswordFormSubmit');
+    const confirmPasswordSubmitBtn = document.getElementById('confirmPasswordSubmitBtn');
+    
+    if (confirmPasswordForm && confirmPasswordSubmitBtn) {
+        confirmPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Confirm password form submitted');
+            
+            // Reset previous errors
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            confirmPasswordInput.classList.remove('is-invalid');
+            document.getElementById('confirmPasswordError').textContent = '';
+            
+            // Show loading state
+            const originalText = confirmPasswordSubmitBtn.innerHTML;
+            confirmPasswordSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xác nhận...';
+            confirmPasswordSubmitBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(confirmPasswordForm);
+            
+            // Submit form via AJAX
+            fetch(confirmPasswordForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        return response.json().then(data => {
+                            throw new Error(JSON.stringify(data.errors));
+                        });
+                    }
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Success
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Xác nhận thành công!',
+                        text: 'Mật khẩu đã được xác nhận.',
+                        confirmButtonColor: '#ff6c2f'
+                    }).then(() => {
+                        window.closeAuthModal();
+                        window.location.reload();
+                    });
+                } else {
+                    // Show error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xác nhận thất bại',
+                        text: data.message || 'Mật khẩu không đúng',
+                        confirmButtonColor: '#ff6c2f'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Handle validation errors
+                if (error.message.startsWith('{')) {
+                    try {
+                        const errors = JSON.parse(error.message);
+                        
+                        // Display validation errors
+                        if (errors.password) {
+                            confirmPasswordInput.classList.add('is-invalid');
+                            document.getElementById('confirmPasswordError').textContent = errors.password[0];
+                        }
+                    } catch (e) {
+                        console.error('Error parsing validation errors:', e);
+                    }
+                } else {
+                    // Show generic error
+                    confirmPasswordInput.classList.add('is-invalid');
+                    document.getElementById('confirmPasswordError').textContent = 'Mật khẩu không đúng';
+                }
+            })
+            .finally(() => {
+                // Reset button state
+                confirmPasswordSubmitBtn.innerHTML = originalText;
+                confirmPasswordSubmitBtn.disabled = false;
+            });
+        });
+    }
+
+    // Handle verify email form submission
+    const verifyEmailForm = document.getElementById('verifyEmailFormSubmit');
+    const verifyEmailSubmitBtn = document.getElementById('verifyEmailSubmitBtn');
+    
+    if (verifyEmailForm && verifyEmailSubmitBtn) {
+        verifyEmailForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Verify email form submitted');
+            
+            // Show loading state
+            const originalText = verifyEmailSubmitBtn.innerHTML;
+            verifyEmailSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+            verifyEmailSubmitBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(verifyEmailForm);
+            
+            // Submit form via AJAX
+            fetch(verifyEmailForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Success
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Email đã được gửi!',
+                        text: 'Vui lòng kiểm tra email của bạn để xác thực tài khoản.',
+                        confirmButtonColor: '#ff6c2f'
+                    });
+                } else {
+                    // Show error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gửi email thất bại',
+                        text: data.message || 'Có lỗi xảy ra, vui lòng thử lại',
+                        confirmButtonColor: '#ff6c2f'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Show generic error
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: 'Có lỗi xảy ra, vui lòng thử lại',
+                    confirmButtonColor: '#ff6c2f'
+                });
+            })
+            .finally(() => {
+                // Reset button state
+                verifyEmailSubmitBtn.innerHTML = originalText;
+                verifyEmailSubmitBtn.disabled = false;
+            });
+        });
+    }
     
 
     
@@ -1378,6 +1887,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('loginForm').reset();
         document.getElementById('registerFormSubmit').reset();
         document.getElementById('forgotPasswordFormSubmit').reset();
+        document.getElementById('resetPasswordFormSubmit').reset();
+        document.getElementById('confirmPasswordFormSubmit').reset();
+        document.getElementById('verifyEmailFormSubmit').reset();
         
         // Reset error states
         const inputs = document.querySelectorAll('#authModal .form-control');

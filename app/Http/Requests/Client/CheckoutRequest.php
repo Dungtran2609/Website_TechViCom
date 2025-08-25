@@ -156,10 +156,16 @@ class CheckoutRequest extends FormRequest
      */
     private function validateBusinessLogic($validator)
     {
-        // Kiểm tra nếu user chưa đăng nhập
-        if (!Auth::check()) {
-            $validator->errors()->add('auth', 'Bạn cần đăng nhập để thực hiện thanh toán.');
-            return;
+        // Cho phép khách vãng lai thanh toán
+        $isGuest = !Auth::check();
+        
+        // Nếu là khách vãng lai, kiểm tra session cart
+        if ($isGuest) {
+            $sessionCart = session()->get('cart', []);
+            if (empty($sessionCart)) {
+                $validator->errors()->add('cart', 'Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng.');
+                return;
+            }
         }
 
         // Kiểm tra có sản phẩm để thanh toán không
@@ -237,30 +243,42 @@ class CheckoutRequest extends FormRequest
                             }
                         }
                     } else {
-                        // Format: cart_id
-                        $cartItem = Cart::where('id', $selectedId)
-                            ->where('user_id', Auth::id())
-                            ->first();
-                        if ($cartItem && $cartItem->product) {
-                            // Kiểm tra stock từ product_variants nếu có variant_id
-                            if ($cartItem->variant_id) {
-                                $variant = ProductVariant::find($cartItem->variant_id);
-                                if (!$variant || (int)$variant->stock < (int)$cartItem->quantity) {
-                                    $validator->errors()->add('cart', "Sản phẩm {$cartItem->product->name} chỉ còn " . ($variant ? (int)$variant->stock : 0) . " sản phẩm trong kho.");
-                                    return;
-                                }
-                            } else {
-                                // Nếu không có variant, kiểm tra tổng stock của tất cả variants
-                                $totalStock = ProductVariant::where('product_id', $cartItem->product_id)
-                                    ->where('is_active', true)
-                                    ->sum('stock');
-                                $itemQuantity = (int)$cartItem->quantity;
-                                if ($totalStock < $itemQuantity) {
-                                    $validator->errors()->add('cart', "Sản phẩm {$cartItem->product->name} chỉ còn {$totalStock} sản phẩm trong kho.");
-                                    return;
+                        // Format: cart_id - chỉ kiểm tra nếu user đã đăng nhập
+                        if (!$isGuest) {
+                            $cartItem = Cart::where('id', $selectedId)
+                                ->where('user_id', Auth::id())
+                                ->first();
+                            if ($cartItem && $cartItem->product) {
+                                // Kiểm tra stock từ product_variants nếu có variant_id
+                                if ($cartItem->variant_id) {
+                                    $variant = ProductVariant::find($cartItem->variant_id);
+                                    if (!$variant || (int)$variant->stock < (int)$cartItem->quantity) {
+                                        $validator->errors()->add('cart', "Sản phẩm {$cartItem->product->name} chỉ còn " . ($variant ? (int)$variant->stock : 0) . " sản phẩm trong kho.");
+                                        return;
+                                    }
+                                } else {
+                                    // Nếu không có variant, kiểm tra tổng stock của tất cả variants
+                                    $totalStock = ProductVariant::where('product_id', $cartItem->product_id)
+                                        ->where('is_active', true)
+                                        ->sum('stock');
+                                    $itemQuantity = (int)$cartItem->quantity;
+                                    if ($totalStock < $itemQuantity) {
+                                        $validator->errors()->add('cart', "Sản phẩm {$cartItem->product->name} chỉ còn {$totalStock} sản phẩm trong kho.");
+                                        return;
+                                    }
                                 }
                             }
                         }
+                    }
+                }
+            } else {
+                // Nếu không có selected items, kiểm tra session cart cho khách vãng lai
+                if ($isGuest) {
+                    $sessionCart = session()->get('cart', []);
+                    if (!empty($sessionCart)) {
+                        $hasValidItems = true;
+                        // Không cần kiểm tra tồn kho chi tiết cho khách vãng lai
+                        // Sẽ được kiểm tra trong controller khi xử lý
                     }
                 }
             }
@@ -297,8 +315,8 @@ class CheckoutRequest extends FormRequest
                 return;
             }
 
-            // Chỉ kiểm tra số lần sử dụng coupon nếu không phải thanh toán lại
-            if (!$isRepayment && $coupon->max_usage_per_user > 0) {
+            // Chỉ kiểm tra số lần sử dụng coupon nếu không phải thanh toán lại và user đã đăng nhập
+            if (!$isRepayment && $coupon->max_usage_per_user > 0 && !$isGuest) {
                 $usedCount = Order::where('user_id', Auth::id())
                     ->where('coupon_code', $this->coupon_code)
                     ->whereNull('deleted_at')

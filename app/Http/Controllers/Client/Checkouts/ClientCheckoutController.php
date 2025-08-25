@@ -821,7 +821,9 @@ class ClientCheckoutController extends Controller
                 'payment_method'   => $request->payment_method,
                 'shipping_method'  => $request->shipping_method,
                 'user_id'          => Auth::id(),
-                'selected_address' => $request->selected_address ?? null
+                'selected_address' => $request->selected_address ?? null,
+                'is_guest'         => !Auth::check(),
+                'request_data'     => $request->all()
             ]);
 
             /* Chặn VNPay nếu user đã hủy >=3 lần */
@@ -1030,7 +1032,17 @@ class ClientCheckoutController extends Controller
             } elseif (!$isRepayment) {
                 if (!Auth::check()) {
                     $sessionCart = session()->get('cart', []);
-                    if (empty($sessionCart)) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    Log::info('Guest checkout - session cart processing', [
+                        'session_cart_count' => count($sessionCart),
+                        'session_cart_keys' => array_keys($sessionCart),
+                        'selected_ids' => $selectedIds,
+                        'selected_ids_array' => $selectedIdsArr
+                    ]);
+                    
+                    if (empty($sessionCart)) {
+                        Log::warning('Guest checkout - empty session cart');
+                        return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    }
 
                     // Debug log để kiểm tra selectedIds
                     Log::info('Checkout session cart processing', [
@@ -1123,7 +1135,17 @@ class ClientCheckoutController extends Controller
                                         : 'client_css/images/placeholder.svg')),
                         ]);
                     }
-                    if ($cartItems->isEmpty()) return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    if ($cartItems->isEmpty()) {
+                        Log::warning('Guest checkout - cart items is empty after processing', [
+                            'session_cart_count' => count($sessionCart),
+                            'cart_items_count' => $cartItems->count()
+                        ]);
+                        return redirect()->route('checkout.index')->with('error', 'Giỏ hàng trống');
+                    }
+                    Log::info('Guest checkout - cart items processed successfully', [
+                        'cart_items_count' => $cartItems->count(),
+                        'source' => $source
+                    ]);
                     $source = 'session';
                 } else {
                     if (!empty($selectedIdsArr) && !$isRetryAfterCancel) {

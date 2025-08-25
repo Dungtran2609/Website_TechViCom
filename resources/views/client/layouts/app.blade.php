@@ -441,8 +441,8 @@
                     <form method="POST" action="{{ route('login') }}" id="loginForm">
                         @csrf
                         <div class="mb-3">
-                            <label for="email" class="form-label fw-semibold text-dark">Địa chỉ email</label>
-                            <input type="email" class="form-control form-control-lg border-2" id="email" name="email" placeholder="Nhập email của bạn" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" >
+                            <label for="auth-email" class="form-label fw-semibold text-dark">Địa chỉ email</label>
+                            <input type="email" class="form-control form-control-lg border-2" id="auth-email" name="email" placeholder="Nhập email của bạn" style="border-radius: 12px; border-color: #e9ecef; background-color: #f8f9fa;" >
                             <div class="invalid-feedback" id="emailError"></div>
                         </div>
                         <div class="mb-3">
@@ -1016,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle password visibility
     const togglePasswordBtn = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
+            const passwordInput = document.getElementById('password');
     
     if (togglePasswordBtn && passwordInput) {
         togglePasswordBtn.addEventListener('click', function() {
@@ -1037,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle login form submission
     const loginForm = document.getElementById('loginForm');
     const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-    const emailInput = document.getElementById('email');
+            const emailInput = document.getElementById('auth-email');
     
     if (loginForm && loginSubmitBtn) {
         loginForm.addEventListener('submit', function(e) {

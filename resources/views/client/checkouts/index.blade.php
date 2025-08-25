@@ -4,7 +4,7 @@
 
 @push('styles')
     {{-- Nếu layout đã có CSS chung thì có thể bỏ dòng dưới --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('client_css/css/style.css') }}">
 
     <style>
         .checkout-step {
@@ -644,7 +644,7 @@
 
 @push('scripts')
     {{-- nếu bạn có script dùng chung, nạp ở layout; ở đây chỉ nạp cần thiết --}}
-    <script src="{{ asset('assets/js/component-loader.js') }}"></script>
+
 
     <script>
         window.shippingMethods = @json($shippingMethods->pluck('name', 'id'));
@@ -955,6 +955,161 @@
             }
         }
 
+        /* ===================== VALIDATION FUNCTIONS ===================== */
+        function validateStep1() {
+            console.log('=== DEBUG: validateStep1 started ===');
+            
+            var selected = document.querySelector('input[name="selected_address"]:checked');
+            console.log('Selected address:', selected);
+            
+            if (selected && selected.value !== 'new') {
+                console.log('Using saved address, validation passed');
+                return true;
+            }
+
+            const required = ['fullname', 'phone', 'address', 'province', 'district', 'ward'];
+            let ok = true,
+                msgs = [];
+            
+            console.log('Validating required fields:', required);
+            
+            required.forEach(id => {
+                const f = document.getElementById(id);
+                console.log(`Checking field ${id}:`, f ? f.value : 'element not found');
+                
+                if (f && !f.value.trim()) {
+                    f.classList.add('border-red-500');
+                    ok = false;
+                    if (id === 'fullname') msgs.push('Vui lòng nhập họ và tên');
+                    if (id === 'phone') msgs.push('Vui lòng nhập số điện thoại');
+                    if (id === 'address') msgs.push('Vui lòng nhập địa chỉ giao hàng');
+                    if (id === 'province') msgs.push('Vui lòng chọn tỉnh/thành phố');
+                    if (id === 'district') msgs.push('Vui lòng chọn quận/huyện');
+                    if (id === 'ward') msgs.push('Vui lòng chọn phường/xã');
+                } else if (f) {
+                    f.classList.remove('border-red-500');
+                }
+            });
+            
+            const phoneField = document.getElementById('phone');
+            if (phoneField && phoneField.value.trim()) {
+                const phoneRegex = /^0[3-9][0-9]{8}$/;
+                if (!phoneRegex.test(phoneField.value.trim())) {
+                    phoneField.classList.add('border-red-500');
+                    msgs.push('Số điện thoại không đúng định dạng (VD: 0362729054)');
+                    ok = false;
+                } else {
+                    phoneField.classList.remove('border-red-500');
+                }
+            }
+            
+            const emailField = document.getElementById('email');
+            console.log('Email field:', emailField);
+            console.log('Email value:', emailField ? emailField.value : 'N/A');
+            
+            if (emailField && !emailField.value.trim()) {
+                emailField.classList.add('border-red-500');
+                msgs.push('Vui lòng nhập email');
+                ok = false;
+            } else if (emailField && emailField.value.trim()) {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(emailField.value.trim())) {
+                    emailField.classList.add('border-red-500');
+                    msgs.push('Email không đúng định dạng (VD: example@gmail.com)');
+                    ok = false;
+                } else {
+                    emailField.classList.remove('border-red-500');
+                }
+            }
+            
+            console.log('Validation result:', { ok, msgs });
+            
+            if (!ok && msgs.length > 0) {
+                console.log('Validation failed:', msgs);
+                alert('Lỗi bước 1:\n' + msgs.join('\n'));
+            }
+            
+            return ok;
+        }
+
+        function validateStep2() {
+            console.log('=== DEBUG: validateStep2 started ===');
+            
+            const pm = document.querySelector('input[name="payment_method"]:checked');
+            console.log('Payment method:', pm);
+            
+            if (!pm) {
+                console.log('ERROR: No payment method selected');
+                alert('Vui lòng chọn phương thức thanh toán');
+                return false;
+            }
+            
+            console.log('Payment method validation passed');
+            return true;
+        }
+
+        function validateStep3() {
+            console.log('=== DEBUG: validateStep3 started ===');
+            
+            const agree = document.getElementById('agree-terms');
+            console.log('Agree terms checkbox:', agree);
+            console.log('Agree terms checked:', agree ? agree.checked : 'element not found');
+            
+            if (!agree.checked) {
+                console.log('ERROR: Terms not agreed');
+                alert('Vui lòng đồng ý với điều khoản và điều kiện');
+                return false;
+            }
+            
+            console.log('Terms agreement validation passed');
+            return true;
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.checkout-content').forEach(c => c.style.display = 'none');
+            if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
+            updateStepIndicators(step);
+            window.currentStep = step;
+            updateStep1NextBtnVisibility(step);
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function updateStepIndicators(active) {
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                stepEl.classList.remove('active', 'completed');
+                stepEl.classList.add('bg-gray-200', 'text-gray-600');
+                const num = stepEl.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-white', 'text-orange-600', 'bg-green-500');
+                    num.classList.add('bg-gray-400', 'text-white');
+                }
+            }
+            for (let i = 1; i < active; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                stepEl.classList.remove('bg-gray-200', 'text-gray-600');
+                stepEl.classList.add('completed', 'bg-green-500', 'text-white');
+                const num = stepEl.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-gray-400', 'text-white');
+                    num.classList.add('bg-white', 'text-green-500');
+                }
+            }
+            if (active <= 3) {
+                const act = document.getElementById(`step-${active}`);
+                act.classList.remove('bg-gray-200', 'text-gray-600');
+                act.classList.add('active', 'bg-[#ff6c2f]', 'text-white');
+                const num = act.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-gray-400', 'text-white');
+                    num.classList.add('bg-white', 'text-orange-600');
+                }
+            }
+        }
+
         /* ===================== PAGE INIT ===================== */
         document.addEventListener('DOMContentLoaded', function() {
                 let subtotal = {{ $subtotal ?? 0 }};
@@ -1014,135 +1169,36 @@
                 setupRealTimeValidation();
 
                 function setupStepNavigation() {
-                    document.getElementById('next-step-1').addEventListener('click', () => {
-                        if (validateCheckoutForm()) goToStep(2);
-                    });
-                    document.getElementById('prev-step-2').addEventListener('click', () => goToStep(1));
-                    document.getElementById('next-step-2').addEventListener('click', () => {
-                        if (validateStep2()) {
-                            populateStep3Summary();
-                            goToStep(3);
-                        }
-                    });
-                    document.getElementById('prev-step-3').addEventListener('click', () => goToStep(2));
-                    document.getElementById('confirm-order').addEventListener('click', () => {
-                        if (validateStep3()) submitOrder();
-                    });
-                }
-
-                function goToStep(step) {
-                    document.querySelectorAll('.checkout-content').forEach(c => c.style.display = 'none');
-                    if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
-                    updateStepIndicators(step);
-                    window.currentStep = step;
-                    updateStep1NextBtnVisibility(step);
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-
-                function updateStepIndicators(active) {
-                    for (let i = 1; i <= 3; i++) {
-                        const stepEl = document.getElementById(`step-${i}`);
-                        stepEl.classList.remove('active', 'completed');
-                        stepEl.classList.add('bg-gray-200', 'text-gray-600');
-                        const num = stepEl.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-white', 'text-orange-600', 'bg-green-500');
-                            num.classList.add('bg-gray-400', 'text-white');
-                        }
+                    const nextStep1 = document.getElementById('next-step-1');
+                    const prevStep2 = document.getElementById('prev-step-2');
+                    const nextStep2 = document.getElementById('next-step-2');
+                    const prevStep3 = document.getElementById('prev-step-3');
+                    const confirmOrder = document.getElementById('confirm-order');
+                    
+                    if (nextStep1) {
+                        nextStep1.addEventListener('click', () => {
+                            if (validateStep1()) goToStep(2);
+                        });
                     }
-                    for (let i = 1; i < active; i++) {
-                        const stepEl = document.getElementById(`step-${i}`);
-                        stepEl.classList.remove('bg-gray-200', 'text-gray-600');
-                        stepEl.classList.add('completed', 'bg-green-500', 'text-white');
-                        const num = stepEl.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-gray-400', 'text-white');
-                            num.classList.add('bg-white', 'text-green-500');
-                        }
+                    if (prevStep2) {
+                        prevStep2.addEventListener('click', () => goToStep(1));
                     }
-                    if (active <= 3) {
-                        const act = document.getElementById(`step-${active}`);
-                        act.classList.remove('bg-gray-200', 'text-gray-600');
-                        act.classList.add('active', 'bg-[#ff6c2f]', 'text-white');
-                        const num = act.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-gray-400', 'text-white');
-                            num.classList.add('bg-white', 'text-orange-600');
-                        }
+                    if (nextStep2) {
+                        nextStep2.addEventListener('click', () => {
+                            if (validateStep2()) {
+                                populateStep3Summary();
+                                goToStep(3);
+                            }
+                        });
                     }
-                }
-
-                function validateStep1() {
-                    var selected = document.querySelector('input[name="selected_address"]:checked');
-                    if (selected && selected.value !== 'new') return true;
-
-                    const required = ['fullname', 'phone', 'address', 'province', 'district', 'ward'];
-                    let ok = true,
-                        msgs = [];
-                    required.forEach(id => {
-                        const f = document.getElementById(id);
-                        if (f && !f.value.trim()) {
-                            f.classList.add('border-red-500');
-                            ok = false;
-                            if (id === 'fullname') msgs.push('Vui lòng nhập họ và tên');
-                            if (id === 'phone') msgs.push('Vui lòng nhập số điện thoại');
-                            if (id === 'address') msgs.push('Vui lòng nhập địa chỉ giao hàng');
-                            if (id === 'province') msgs.push('Vui lòng chọn tỉnh/thành phố');
-                            if (id === 'district') msgs.push('Vui lòng chọn quận/huyện');
-                            if (id === 'ward') msgs.push('Vui lòng chọn phường/xã');
-                        } else if (f) {
-                            f.classList.remove('border-red-500');
-                        }
-                    });
-                    const phoneField = document.getElementById('phone');
-                    if (phoneField && phoneField.value.trim()) {
-                        const phoneRegex = /^0[3-9][0-9]{8}$/;
-                        if (!phoneRegex.test(phoneField.value.trim())) {
-                            phoneField.classList.add('border-red-500');
-                            msgs.push('Số điện thoại không đúng định dạng (VD: 0362729054)');
-                            ok = false;
-                        } else {
-                            phoneField.classList.remove('border-red-500');
-                        }
+                    if (prevStep3) {
+                        prevStep3.addEventListener('click', () => goToStep(2));
                     }
-                    const emailField = document.getElementById('email');
-                    if (emailField && !emailField.value.trim()) {
-                        emailField.classList.add('border-red-500');
-                        msgs.push('Vui lòng nhập email');
-                        ok = false;
-                    } else if (emailField && emailField.value.trim()) {
-                        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                        if (!emailRegex.test(emailField.value.trim())) {
-                            emailField.classList.add('border-red-500');
-                            msgs.push('Email không đúng định dạng (VD: example@gmail.com)');
-                            ok = false;
-                        } else {
-                            emailField.classList.remove('border-red-500');
-                        }
+                    if (confirmOrder) {
+                        confirmOrder.addEventListener('click', () => {
+                            if (validateStep3()) submitOrder();
+                        });
                     }
-                    if (!ok && msgs.length > 0) alert('Lỗi bước 1:\n' + msgs.join('\n'));
-                    return ok;
-                }
-
-                function validateStep2() {
-                    const pm = document.querySelector('input[name="payment_method"]:checked');
-                    if (!pm) {
-                        alert('Vui lòng chọn phương thức thanh toán');
-                        return false;
-                    }
-                    return true;
-                }
-
-                function validateStep3() {
-                    const agree = document.getElementById('agree-terms');
-                    if (!agree.checked) {
-                        alert('Vui lòng đồng ý với điều khoản và điều kiện');
-                        return false;
-                    }
-                    return true;
                 }
 
                 function populateStep3Summary() {
@@ -1183,35 +1239,40 @@
 
                 function setupPaymentOptions() {
                     const opts = document.querySelectorAll('.payment-option');
-                    opts.forEach(op => {
-                        op.addEventListener('click', function(e) {
-                            // Nếu option bị disable (VNPay sau 3 lần hủy) => chặn
-                            if (this.dataset.disabled === 'true') {
-                                const reason = this.dataset.reason ||
-                                    'Phương thức này đã bị khóa. Vui lòng chọn COD.';
-                                alert(reason);
-                                e.preventDefault();
-                                e.stopPropagation();
-                                return;
-                            }
-                            opts.forEach(o => o.classList.remove('selected'));
-                            this.classList.add('selected');
-                            const radio = this.querySelector('input[type="radio"]');
-                            if (radio && !radio.disabled) {
-                                radio.checked = true;
-                                radio.dispatchEvent(new Event('change'));
-                            }
+                    if (opts.length > 0) {
+                        opts.forEach(op => {
+                            op.addEventListener('click', function(e) {
+                                // Nếu option bị disable (VNPay sau 3 lần hủy) => chặn
+                                if (this.dataset.disabled === 'true') {
+                                    const reason = this.dataset.reason ||
+                                        'Phương thức này đã bị khóa. Vui lòng chọn COD.';
+                                    alert(reason);
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    return;
+                                }
+                                opts.forEach(o => o.classList.remove('selected'));
+                                this.classList.add('selected');
+                                const radio = this.querySelector('input[type="radio"]');
+                                if (radio && !radio.disabled) {
+                                    radio.checked = true;
+                                    radio.dispatchEvent(new Event('change'));
+                                }
+                            });
                         });
-                    });
+                    }
                 }
 
                 function setupShippingMethodListeners() {
-                    document.querySelectorAll('input[name="shipping_method_id"]').forEach(r => {
-                        r.addEventListener('change', () => {
-                            window.checkoutShippingMethod = r.value || '1';
-                            updateCheckoutTotal();
+                    const shippingMethods = document.querySelectorAll('input[name="shipping_method_id"]');
+                    if (shippingMethods.length > 0) {
+                        shippingMethods.forEach(r => {
+                            r.addEventListener('change', () => {
+                                window.checkoutShippingMethod = r.value || '1';
+                                updateCheckoutTotal();
+                            });
                         });
-                    });
+                    }
                 }
 
                 function loadProvinces() {
@@ -1429,14 +1490,28 @@
         }
 
         function submitOrder() {
+            console.log('=== DEBUG: submitOrder started ===');
+            
             var selected = document.querySelector('input[name="selected_address"]:checked');
             const paymentEl = document.querySelector('input[name="payment_method"]:checked');
             const shippingEl = document.querySelector('input[name="shipping_method_id"]:checked');
-            if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
-            if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
+            
+            console.log('Selected address:', selected);
+            console.log('Payment method:', paymentEl);
+            console.log('Shipping method:', shippingEl);
+            
+            if (!paymentEl) {
+                console.log('ERROR: No payment method selected');
+                return alert('Vui lòng chọn phương thức thanh toán');
+            }
+            if (!shippingEl) {
+                console.log('ERROR: No shipping method selected');
+                return alert('Vui lòng chọn phương thức vận chuyển');
+            }
 
             // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 3 trở đi)
             if (window.vnpayLocked && paymentEl.value === 'bank_transfer') {
+                console.log('ERROR: VNPay is locked');
                 alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                 return;
             }
@@ -1449,12 +1524,14 @@
             formData.append('_token', document.querySelector('input[name="_token"]').value);
 
             if (selected && selected.value !== 'new') {
+                console.log('Using saved address:', selected.value);
                 formData.append('selected_address', selected.value);
                 formData.append('province_code', selected.dataset.city || '');
                 formData.append('district_code', selected.dataset.district || '');
                 formData.append('ward_code', selected.dataset.ward || '');
                 formData.append('recipient_address', selected.dataset.address || '');
             } else {
+                console.log('Using new address form');
                 const fullname = document.getElementById('fullname').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const emailVal = (document.getElementById('email').value || '').trim();
@@ -1462,6 +1539,11 @@
                 const provinceCode = document.getElementById('province').value;
                 const districtCode = document.getElementById('district').value;
                 const wardCode = document.getElementById('ward').value;
+                
+                console.log('Form data:', {
+                    fullname, phone, emailVal, address, provinceCode, districtCode, wardCode
+                });
+                
                 formData.append('recipient_name', fullname);
                 formData.append('recipient_phone', phone);
                 formData.append('recipient_email', emailVal);
@@ -1481,16 +1563,32 @@
             if (couponInput && couponInput.value.trim()) formData.append('coupon_code', couponInput.value.trim());
 
             let selectedVal = document.getElementById('selected-input')?.value || '';
+            console.log('Initial selectedVal:', selectedVal);
+            
             if (!selectedVal) {
                 const domItems = Array.from(document.querySelectorAll('.checkout-item'));
+                console.log('DOM items found:', domItems.length);
+                
                 if (domItems.length) {
                     const hasCartId = domItems.some(el => el.getAttribute('data-cart-id'));
-                    selectedVal = domItems.map(el => hasCartId ? (el.getAttribute('data-cart-id') || '') :
-                            (el.getAttribute('data-item-id') || ''))
-                        .filter(Boolean).join(',');
+                    console.log('Has cart ID:', hasCartId);
+                    
+                    selectedVal = domItems.map(el => {
+                        const cartId = el.getAttribute('data-cart-id');
+                        const itemId = el.getAttribute('data-item-id');
+                        console.log('Item data:', { cartId, itemId });
+                        return hasCartId ? (cartId || '') : (itemId || '');
+                    }).filter(Boolean).join(',');
+                    
+                    console.log('Generated selectedVal:', selectedVal);
                 }
             }
             formData.append('selected', selectedVal);
+
+            console.log('Final form data:');
+            for (const [k, v] of formData.entries()) {
+                console.log(`${k}: ${v}`);
+            }
 
             const form = document.createElement('form');
             form.method = 'POST';
@@ -1503,6 +1601,7 @@
                 form.appendChild(input);
             }
             document.body.appendChild(form);
+            console.log('=== DEBUG: Submitting form ===');
             form.submit();
         }
 
@@ -1882,36 +1981,40 @@
 
             // Validation thời gian thực
             const inputs = document.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateField(this);
-                });
+            if (inputs.length > 0) {
+                inputs.forEach(input => {
+                    if (input) {
+                        input.addEventListener('blur', function() {
+                            validateField(this);
+                        });
 
-                input.addEventListener('input', function() {
-                    // Xóa lỗi khi người dùng bắt đầu gõ
-                    if (this.classList.contains('border-red-500')) {
-                        this.classList.remove('border-red-500');
-                        const errorSpan = document.getElementById(`${this.name}-error`);
-                        if (errorSpan) {
-                            errorSpan.textContent = '';
+                        input.addEventListener('input', function() {
+                            // Xóa lỗi khi người dùng bắt đầu gõ
+                            if (this.classList.contains('border-red-500')) {
+                                this.classList.remove('border-red-500');
+                                const errorSpan = document.getElementById(`${this.name}-error`);
+                                if (errorSpan) {
+                                    errorSpan.textContent = '';
+                                }
+                            }
+                        });
+
+                        // Clear errors for radio buttons when selected
+                        if (input.type === 'radio') {
+                            input.addEventListener('change', function() {
+                                const container = this.closest('.payment-option, .form-group');
+                                if (container && container.classList.contains('border-red-500')) {
+                                    container.classList.remove('border-red-500');
+                                    const errorSpan = document.getElementById(`${this.name}-error`);
+                                    if (errorSpan) {
+                                        errorSpan.textContent = '';
+                                    }
+                                }
+                            });
                         }
                     }
                 });
-
-                // Clear errors for radio buttons when selected
-                if (input.type === 'radio') {
-                    input.addEventListener('change', function() {
-                        const container = this.closest('.payment-option, .form-group');
-                        if (container && container.classList.contains('border-red-500')) {
-                            container.classList.remove('border-red-500');
-                            const errorSpan = document.getElementById(`${this.name}-error`);
-                            if (errorSpan) {
-                                errorSpan.textContent = '';
-                            }
-                        }
-                    });
-                }
-            });
+            }
         });
 
         function validateField(input) {
@@ -1972,39 +2075,43 @@
             // Xử lý tất cả input có class phone-input
             const phoneInputs = document.querySelectorAll('.phone-input');
             
-            phoneInputs.forEach(function(input) {
-                // Chỉ cho phép nhập số
-                input.addEventListener('input', function(e) {
-                    // Loại bỏ tất cả ký tự không phải số
-                    this.value = this.value.replace(/[^0-9]/g, '');
-                });
-                
-                // Ngăn chặn paste text không phải số
-                input.addEventListener('paste', function(e) {
-                    e.preventDefault();
-                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                    const numbersOnly = pastedText.replace(/[^0-9]/g, '');
-                    this.value = numbersOnly;
-                });
-                
-                // Ngăn chặn keydown cho các phím không phải số
-                input.addEventListener('keydown', function(e) {
-                    // Cho phép: backspace, delete, tab, escape, enter, arrow keys
-                    if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
-                        // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                        (e.keyCode === 65 && e.ctrlKey === true) ||
-                        (e.keyCode === 67 && e.ctrlKey === true) ||
-                        (e.keyCode === 86 && e.ctrlKey === true) ||
-                        (e.keyCode === 88 && e.ctrlKey === true)) {
-                        return;
+            if (phoneInputs.length > 0) {
+                phoneInputs.forEach(function(input) {
+                    if (input) {
+                        // Chỉ cho phép nhập số
+                        input.addEventListener('input', function(e) {
+                            // Loại bỏ tất cả ký tự không phải số
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        
+                        // Ngăn chặn paste text không phải số
+                        input.addEventListener('paste', function(e) {
+                            e.preventDefault();
+                            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                            const numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                            this.value = numbersOnly;
+                        });
+                        
+                        // Ngăn chặn keydown cho các phím không phải số
+                        input.addEventListener('keydown', function(e) {
+                            // Cho phép: backspace, delete, tab, escape, enter, arrow keys
+                            if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                                // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                (e.keyCode === 65 && e.ctrlKey === true) ||
+                                (e.keyCode === 67 && e.ctrlKey === true) ||
+                                (e.keyCode === 86 && e.ctrlKey === true) ||
+                                (e.keyCode === 88 && e.ctrlKey === true)) {
+                                return;
+                            }
+                            // Cho phép số từ 0-9
+                            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                                return;
+                            }
+                            e.preventDefault();
+                        });
                     }
-                    // Cho phép số từ 0-9
-                    if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
-                        return;
-                    }
-                    e.preventDefault();
                 });
-            });
+            }
             
             // Hiển thị thông báo và discount amount khi trang load nếu có mã giảm giá được áp dụng tự động
             @if($appliedCoupon && $couponMessage)
@@ -2039,6 +2146,184 @@
                     }
                 }
             @endif
+        });
+
+        // Test function để kiểm tra vấn đề với khách vãng lai
+        function testGuestCheckout() {
+            console.log('=== TEST: Guest Checkout ===');
+            
+            // Kiểm tra session cart
+            const sessionCart = @json(session('cart', []));
+            console.log('Session cart:', sessionCart);
+            
+            // Kiểm tra các elements
+            const elements = {
+                fullname: document.getElementById('fullname'),
+                phone: document.getElementById('phone'),
+                email: document.getElementById('email'),
+                address: document.getElementById('address'),
+                province: document.getElementById('province'),
+                district: document.getElementById('district'),
+                ward: document.getElementById('ward'),
+                payment_method: document.querySelectorAll('input[name="payment_method"]'),
+                shipping_method: document.querySelectorAll('input[name="shipping_method_id"]'),
+                agree_terms: document.getElementById('agree-terms'),
+                checkout_items: document.querySelectorAll('.checkout-item'),
+                next_step_1: document.getElementById('next-step-1'),
+                next_step_2: document.getElementById('next-step-2'),
+                confirm_order: document.getElementById('confirm-order')
+            };
+            
+            console.log('Elements check:', elements);
+            
+            // Kiểm tra validation
+            console.log('Step 1 validation:', validateStep1());
+            console.log('Step 2 validation:', validateStep2());
+            console.log('Step 3 validation:', validateStep3());
+            
+            // Kiểm tra event listeners
+            if (elements.next_step_1) {
+                console.log('Next step 1 element found, checking click handler...');
+                const clickEvents = elements.next_step_1.onclick;
+                console.log('Click events:', clickEvents);
+            }
+            
+            return {
+                sessionCart,
+                elements,
+                validation: {
+                    step1: validateStep1(),
+                    step2: validateStep2(),
+                    step3: validateStep3()
+                }
+            };
+        }
+        
+        // Thêm vào global scope để test
+        window.testGuestCheckout = testGuestCheckout;
+        
+        // Debug function để kiểm tra tất cả elements
+        function debugElements() {
+            console.log('=== DEBUG: All Elements ===');
+            
+            const allElements = {
+                // Form elements
+                fullname: document.getElementById('fullname'),
+                phone: document.getElementById('phone'),
+                email: document.getElementById('email'),
+                address: document.getElementById('address'),
+                province: document.getElementById('province'),
+                district: document.getElementById('district'),
+                ward: document.getElementById('ward'),
+                
+                // Button elements
+                next_step_1: document.getElementById('next-step-1'),
+                next_step_2: document.getElementById('next-step-2'),
+                prev_step_2: document.getElementById('prev-step-2'),
+                prev_step_3: document.getElementById('prev-step-3'),
+                confirm_order: document.getElementById('confirm-order'),
+                
+                // Radio elements
+                payment_methods: document.querySelectorAll('input[name="payment_method"]'),
+                shipping_methods: document.querySelectorAll('input[name="shipping_method_id"]'),
+                selected_address: document.querySelectorAll('input[name="selected_address"]'),
+                
+                // Other elements
+                agree_terms: document.getElementById('agree-terms'),
+                checkout_items: document.querySelectorAll('.checkout-item'),
+                checkout_form: document.getElementById('checkout-form')
+            };
+            
+            console.log('All elements:', allElements);
+            
+            // Kiểm tra từng element
+            Object.keys(allElements).forEach(key => {
+                const element = allElements[key];
+                if (element) {
+                    if (Array.isArray(element) || element.length !== undefined) {
+                        console.log(`${key}: Found ${element.length} elements`);
+                    } else {
+                        console.log(`${key}: Found element`);
+                    }
+                } else {
+                    console.log(`${key}: NOT FOUND`);
+                }
+            });
+            
+            return allElements;
+        }
+        
+        window.debugElements = debugElements;
+        
+        // Fix function để sửa lỗi JavaScript
+        function fixJavaScriptErrors() {
+            console.log('=== FIXING JAVASCRIPT ERRORS ===');
+            
+            // Kiểm tra và sửa checkout form
+            const checkoutForm = document.getElementById('checkout-form');
+            if (!checkoutForm) {
+                console.log('WARNING: checkout-form not found');
+            } else {
+                console.log('checkout-form found');
+            }
+            
+            // Kiểm tra và sửa next step buttons
+            const nextStep1 = document.getElementById('next-step-1');
+            if (nextStep1) {
+                console.log('next-step-1 found');
+                // Thêm event listener nếu chưa có
+                if (!nextStep1.onclick) {
+                    nextStep1.addEventListener('click', function(e) {
+                        console.log('Next step 1 clicked');
+                        if (validateStep1()) {
+                            goToStep(2);
+                        }
+                    });
+                }
+            } else {
+                console.log('WARNING: next-step-1 not found');
+            }
+            
+            // Kiểm tra và sửa payment methods
+            const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+            console.log(`Found ${paymentMethods.length} payment methods`);
+            
+            // Kiểm tra và sửa shipping methods
+            const shippingMethods = document.querySelectorAll('input[name="shipping_method_id"]');
+            console.log(`Found ${shippingMethods.length} shipping methods`);
+            
+            // Kiểm tra và sửa form fields
+            const requiredFields = ['fullname', 'phone', 'email', 'address', 'province', 'district', 'ward'];
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    console.log(`${field} found`);
+                } else {
+                    console.log(`WARNING: ${field} not found`);
+                }
+            });
+            
+            console.log('=== JAVASCRIPT ERRORS FIXED ===');
+        }
+        
+        window.fixJavaScriptErrors = fixJavaScriptErrors;
+        
+        // Thêm các function validation vào global scope
+        window.validateStep1 = validateStep1;
+        window.validateStep2 = validateStep2;
+        window.validateStep3 = validateStep3;
+        window.validateCheckoutForm = validateCheckoutForm;
+        window.goToStep = goToStep;
+        window.submitOrder = submitOrder;
+        
+        // Auto fix khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(fixJavaScriptErrors, 1000);
+        });
+        
+        // Auto fix khi window load
+        window.addEventListener('load', function() {
+            setTimeout(fixJavaScriptErrors, 500);
         });
     </script>
 @endpush

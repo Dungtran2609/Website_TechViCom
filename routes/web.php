@@ -93,6 +93,7 @@ Route::post('/invoice/order/{id}/confirm-payment', [InvoiceController::class, 'c
 Route::post('/invoice/order/{id}/pay-vnpay', [InvoiceController::class, 'payWithVnpay'])->name('client.invoice.pay-vnpay');
 Route::post('/invoice/order/{id}/request-return', [InvoiceController::class, 'requestReturn'])->name('client.invoice.request-return');
 Route::post('/invoice/order/{id}/confirm-receipt', [InvoiceController::class, 'confirmReceipt'])->name('client.invoice.confirm-receipt');
+Route::post('/invoice/order/{id}/cancel', [InvoiceController::class, 'cancelOrder'])->name('client.invoice.cancel');
 
 // Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
@@ -139,6 +140,9 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::prefix('{productId}/comments')->name('comments.')->middleware('auth')->group(function () {
         Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
         Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
+        Route::get('/test', function($productId) {
+            return response()->json(['message' => 'Test route works', 'product_id' => $productId]);
+        })->name('test');
     });
 });
 

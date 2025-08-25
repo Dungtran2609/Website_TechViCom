@@ -4,9 +4,6 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Phân quyền cho vai trò</h1>
-        <a href="{{ route('admin.permissions.create') }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Thêm quyền mới
-        </a>
     </div>
 
 

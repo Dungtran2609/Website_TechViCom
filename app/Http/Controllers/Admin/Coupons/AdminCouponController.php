@@ -12,18 +12,50 @@ use App\Http\Requests\Admin\Coupons\DeleteCouponRequest;
 
 class AdminCouponController extends Controller
 {
-    public function index(Request $request)
-{
-    $query = Coupon::withTrashed()->latest();
-
-    if ($request->filled('keyword')) {
-        $query->where('code', 'like', '%' . $request->keyword . '%');
+    public function show($id)
+    {
+        $coupon = Coupon::withTrashed()->findOrFail($id);
+        return view('admin.coupons.show', compact('coupon'));
     }
 
-    $coupons = $query->get();
+    public function trash()
+    {
+        $coupons = \App\Models\Coupon::onlyTrashed()->orderByDesc('deleted_at')->get();
+        return view('admin.coupons.trash', compact('coupons'));
+    }
+    public function index(Request $request)
+    {
+        $query = Coupon::latest();
 
-    return view('admin.coupons.index', compact('coupons'));
-}
+        // Filter by keyword
+        if ($request->filled('keyword')) {
+            $query->where('code', 'like', '%' . $request->keyword . '%');
+        }
+
+        // Filter by discount type
+        if ($request->filled('discount_type')) {
+            $query->where('discount_type', $request->discount_type);
+        }
+
+        // Filter by apply type
+        if ($request->filled('apply_type')) {
+            $query->where('apply_type', $request->apply_type);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date from
+        if ($request->filled('date_from')) {
+            $query->where('start_date', '>=', $request->date_from);
+        }
+
+        $coupons = $query->get();
+
+        return view('admin.coupons.index', compact('coupons'));
+    }
 
 
     public function create()
@@ -40,13 +72,13 @@ class AdminCouponController extends Controller
 
     // Sync pivot tables
     if ($request->has('product_ids')) {
-        $coupon->products()->sync($request->product_ids);
+        $coupon->products()->sync($request->input('product_ids'));
     }
     if ($request->has('category_ids')) {
-        $coupon->categories()->sync($request->category_ids);
+        $coupon->categories()->sync($request->input('category_ids'));
     }
     if ($request->has('user_ids')) {
-        $coupon->users()->sync($request->user_ids);
+        $coupon->users()->sync($request->input('user_ids'));
     }
 
     return redirect()->route('admin.coupons.index')

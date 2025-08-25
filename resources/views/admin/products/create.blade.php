@@ -381,7 +381,6 @@
                 });
             }
 
-
             // --- Simple product attribute logic ---
             const attributeDropdown = document.getElementById('attributeDropdown');
             const btnAddAttribute = document.getElementById('btnAddAttribute');

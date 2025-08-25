@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -22,13 +23,50 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-public function store(LoginRequest $request): RedirectResponse
-{
-    $request->authenticate();
-    $request->session()->regenerate();
+    public function store(LoginRequest $request): RedirectResponse|JsonResponse
+    {
+        try {
+            $request->authenticate();
+            $request->session()->regenerate();
 
-    return redirect()->route('home');
-}
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đăng nhập thành công',
+                    'redirect' => route('home')
+                ]);
+            }
+
+            return redirect()->route('home');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Thông tin đăng nhập không đúng',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+
+            return back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            // Check if it's an AJAX request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email hoặc mật khẩu không đúng',
+                    'errors' => [
+                        'email' => ['Email hoặc mật khẩu không đúng.']
+                    ]
+                ], 422);
+            }
+
+            return back()->withErrors([
+                'email' => 'Email hoặc mật khẩu không đúng.',
+            ]);
+        }
+    }
 
 
     /**

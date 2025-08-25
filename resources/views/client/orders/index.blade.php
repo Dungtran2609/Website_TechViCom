@@ -25,6 +25,21 @@
         font-weight: 600;
     }
     
+    .payment-status-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    
+    .status-badges-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
     .avatar-placeholder {
         background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
         width: 80px;
@@ -105,7 +120,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen py-8">
-    <div class="container mx-auto px-4 account-container">
+            <div class="techvicom-container account-container">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-lg-3 mb-4">
@@ -147,30 +162,44 @@
             <div class="col-lg-9">
                 <div class="d-flex align-items-center justify-content-between mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-0">
-                        <i class="fas fa-shopping-bag me-2 text-orange-500"></i>
                         Đơn hàng của tôi
                     </h2>
                     
                     <!-- Filter buttons -->
-                    <div class="btn-group" role="group">
-                        <input type="radio" class="btn-check" name="orderFilter" id="all" value="all" checked>
-                        <label class="btn btn-outline-primary btn-sm" for="all">Tất cả</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <!-- Trạng thái đơn hàng -->
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="orderFilter" id="all" value="all" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="all">Tất cả</label>
+                            
+                            <input type="radio" class="btn-check" name="orderFilter" id="pending" value="pending">
+                            <label class="btn btn-outline-warning btn-sm" for="pending">Chờ xử lý</label>
+                            
+                            <input type="radio" class="btn-check" name="orderFilter" id="processing" value="processing">
+                            <label class="btn btn-outline-info btn-sm" for="processing">Đang xử lý</label>
+                            
+                            <input type="radio" class="btn-check" name="orderFilter" id="delivered" value="delivered">
+                            <label class="btn btn-outline-success btn-sm" for="delivered">Hoàn thành</label>
+                        </div>
                         
-                        <input type="radio" class="btn-check" name="orderFilter" id="pending" value="pending">
-                        <label class="btn btn-outline-warning btn-sm" for="pending">Chờ xử lý</label>
-                        
-                        <input type="radio" class="btn-check" name="orderFilter" id="processing" value="processing">
-                        <label class="btn btn-outline-info btn-sm" for="processing">Đang xử lý</label>
-                        
-                        <input type="radio" class="btn-check" name="orderFilter" id="delivered" value="delivered">
-                        <label class="btn btn-outline-success btn-sm" for="delivered">Hoàn thành</label>
+                        <!-- Trạng thái thanh toán -->
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="paymentFilter" id="payment-all" value="all" checked>
+                            <label class="btn btn-outline-secondary btn-sm" for="payment-all">Tất cả thanh toán</label>
+                            
+                            <input type="radio" class="btn-check" name="paymentFilter" id="payment-pending" value="pending">
+                            <label class="btn btn-outline-warning btn-sm" for="payment-pending">Chưa thanh toán</label>
+                            
+                            <input type="radio" class="btn-check" name="paymentFilter" id="payment-completed" value="completed">
+                            <label class="btn btn-outline-success btn-sm" for="payment-completed">Đã thanh toán</label>
+                        </div>
                     </div>
                 </div>
 
                 @if($orders->count() > 0)
                     <div class="space-y-4">
                         @foreach($orders as $order)
-                            <div class="order-card bg-white rounded-lg p-6 mb-4" data-status="{{ $order->status }}">
+                            <div class="order-card bg-white rounded-lg p-6 mb-4" data-status="{{ $order->status }}" data-payment-status="{{ $order->payment_status }}">
                                 <!-- Order Header -->
                                 <div class="d-flex justify-content-between align-items-start mb-4 pb-4 border-bottom">
                                     <div>
@@ -206,10 +235,30 @@
                                             $config = $statusConfig[$order->status] ?? ['class' => 'bg-secondary', 'text' => $order->status, 'icon' => 'question'];
                                         @endphp
                                         
-                                        <span class="order-status-badge {{ $config['class'] }} mb-2 d-inline-block">
-                                            <i class="fas fa-{{ $config['icon'] }} me-1"></i>
-                                            {{ $config['text'] }}
-                                        </span>
+                                        <div class="status-badges-container mb-2">
+                                            <span class="order-status-badge {{ $config['class'] }}">
+                                                <i class="fas fa-{{ $config['icon'] }} me-1"></i>
+                                                {{ $config['text'] }}
+                                            </span>
+                                            
+                                            <!-- Trạng thái thanh toán -->
+                                            @php
+                                                $paymentStatusConfig = [
+                                                    'pending' => ['class' => 'bg-warning', 'text' => 'Chưa thanh toán', 'icon' => 'clock'],
+                                                    'processing' => ['class' => 'bg-info', 'text' => 'Đang xử lý', 'icon' => 'spinner'],
+                                                    'completed' => ['class' => 'bg-success', 'text' => 'Đã thanh toán', 'icon' => 'check-circle'],
+                                                    'paid' => ['class' => 'bg-success', 'text' => 'Đã thanh toán', 'icon' => 'check-circle'],
+                                                    'failed' => ['class' => 'bg-danger', 'text' => 'Thanh toán thất bại', 'icon' => 'times-circle'],
+                                                    'cancelled' => ['class' => 'bg-secondary', 'text' => 'Đã hủy', 'icon' => 'ban']
+                                                ];
+                                                $paymentConfig = $paymentStatusConfig[$order->payment_status] ?? ['class' => 'bg-secondary', 'text' => $order->payment_status, 'icon' => 'question'];
+                                            @endphp
+                                            
+                                            <span class="payment-status-badge {{ $paymentConfig['class'] }}">
+                                                <i class="fas fa-{{ $paymentConfig['icon'] }} me-1"></i>
+                                                {{ $paymentConfig['text'] }}
+                                            </span>
+                                        </div>
                                         
                                         <div class="text-xl font-bold text-orange-600">
                                             {{ number_format($order->final_total) }}₫
@@ -271,8 +320,18 @@
                                 <!-- Order Actions -->
                                 <div class="d-flex justify-content-between align-items-center pt-4 border-top">
                                     <div class="text-sm text-gray-600">
-                                        <i class="fas fa-map-marker-alt me-2"></i>
-                                        Giao đến: {{ $order->recipient_name }} - {{ $order->recipient_phone }}
+                                        <div class="mb-1">
+                                            <i class="fas fa-map-marker-alt me-2"></i>
+                                            Giao đến: {{ $order->recipient_name }} - {{ $order->recipient_phone }}
+                                        </div>
+                                        <div>
+                                            <i class="fas fa-credit-card me-2"></i>
+                                            Thanh toán: 
+                                            <span class="badge {{ $paymentConfig['class'] }} text-white">
+                                                <i class="fas fa-{{ $paymentConfig['icon'] }} me-1"></i>
+                                                {{ $paymentConfig['text'] }}
+                                            </span>
+                                        </div>
                                     </div>
                                     
                                     <div class="space-x-2">
@@ -335,32 +394,45 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Filter orders by status
-    const filterButtons = document.querySelectorAll('input[name="orderFilter"]');
+    // Filter orders by status and payment status
+    const orderFilterButtons = document.querySelectorAll('input[name="orderFilter"]');
+    const paymentFilterButtons = document.querySelectorAll('input[name="paymentFilter"]');
     const orderCards = document.querySelectorAll('.order-card');
     
-    filterButtons.forEach(button => {
-        button.addEventListener('change', function() {
-            const filterValue = this.value;
+    function filterOrders() {
+        const selectedOrderStatus = document.querySelector('input[name="orderFilter"]:checked').value;
+        const selectedPaymentStatus = document.querySelector('input[name="paymentFilter"]:checked').value;
+        
+        orderCards.forEach(card => {
+            const orderStatus = card.getAttribute('data-status');
+            const paymentStatus = card.getAttribute('data-payment-status');
             
-            orderCards.forEach(card => {
-                const orderStatus = card.getAttribute('data-status');
+            const orderMatch = selectedOrderStatus === 'all' || orderStatus === selectedOrderStatus;
+            const paymentMatch = selectedPaymentStatus === 'all' || paymentStatus === selectedPaymentStatus;
+            
+            if (orderMatch && paymentMatch) {
+                card.style.display = 'block';
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
                 
-                if (filterValue === 'all' || orderStatus === filterValue) {
-                    card.style.display = 'block';
-                    card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
-                    
-                    setTimeout(() => {
-                        card.style.transition = 'all 0.3s ease';
-                        card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 100);
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            } else {
+                card.style.display = 'none';
+            }
         });
+    }
+    
+    // Add event listeners for both filters
+    orderFilterButtons.forEach(button => {
+        button.addEventListener('change', filterOrders);
+    });
+    
+    paymentFilterButtons.forEach(button => {
+        button.addEventListener('change', filterOrders);
     });
     
     // Smooth animations for cards

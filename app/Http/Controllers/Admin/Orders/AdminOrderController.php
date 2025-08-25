@@ -10,6 +10,7 @@ use App\Models\ShippingMethod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
 
@@ -319,24 +320,19 @@ $subtotal = $order->orderItems->sum(function ($item) {
             'recipient_name',
             'recipient_phone',
             'recipient_address',
-            'payment_method',
             'shipped_at',
             'order_items',
-            'shipping_method_id',
-            'coupon_id',
-            'coupon_code', // cho phép set code tay
+            // VÔ HIỆU HÓA: payment_method, shipping_method_id, coupon_id, coupon_code
         ]);
 
         $validator = Validator::make($data, [
             'status' => 'nullable|in:' . implode(',', $validStatuses),
             'payment_status' => 'nullable|in:' . implode(',', $validPaymentStatus),
-            'payment_method' => 'nullable|in:' . implode(',', $validPayments),
+            // VÔ HIỆU HÓA: payment_method, shipping_method_id, coupon_id
             'shipped_at' => 'nullable|date',
             'recipient_name' => 'nullable|string|max:255',
             'recipient_phone' => 'nullable|string|max:20',
             'recipient_address' => 'nullable|string|max:500',
-            'shipping_method_id' => 'nullable|exists:shipping_methods,id',
-            'coupon_id' => 'nullable|exists:coupons,id',
             'order_items' => 'nullable|array',
             'order_items.*.id' => 'required|integer|exists:order_items,id',
             'order_items.*.quantity' => 'nullable|integer|min:1',
@@ -366,17 +362,18 @@ $subtotal = $order->orderItems->sum(function ($item) {
         // TÍNH LẠI THEO ĐƠN HIỆN TẠI (sau khi item được cập nhật)
         $subtotal = $order->orderItems()->sum(DB::raw('COALESCE(total_price, price*quantity)'));
 
-        $methodId = $data['shipping_method_id'] ?? $order->shipping_method_id;
-        $order->shipping_method_id = $methodId;
+        // VÔ HIỆU HÓA: Không cho phép thay đổi shipping_method_id và coupon
+        // $methodId = $data['shipping_method_id'] ?? $order->shipping_method_id;
+        // $order->shipping_method_id = $methodId;
 
-        // Coupon: ưu tiên id, sau đó code
-        if (isset($data['coupon_id'])) {
-            $order->coupon_id = $data['coupon_id'];
-$order->coupon_code = Coupon::find($data['coupon_id'])?->code;
-        } elseif (!empty($data['coupon_code'])) {
-            $order->coupon_code = $data['coupon_code'];
-            $order->coupon_id = Coupon::where('code', $data['coupon_code'])->value('id');
-        }
+        // VÔ HIỆU HÓA: Không cho phép thay đổi coupon
+        // if (isset($data['coupon_id'])) {
+        //     $order->coupon_id = $data['coupon_id'];
+        //     $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
+        // } elseif (!empty($data['coupon_code'])) {
+        //     $order->coupon_code = $data['coupon_code'];
+        //     $order->coupon_id = Coupon::where('code', $data['coupon_code'])->value('id');
+        // }
 
         // TÍNH DISCOUNT GIỐNG CLIENT
         $discountAmount = 0;
@@ -402,7 +399,8 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
         // PHÍ SHIP GIỐNG CLIENT (Delivery mới tính, Pickup = 0)
         $afterDiscount = max(0, $subtotal - $discountAmount);
-        if ((int) $methodId === self::DELIVERY_ID) {
+        // VÔ HIỆU HÓA: Sử dụng shipping_method_id hiện tại của order
+        if ((int) $order->shipping_method_id === self::DELIVERY_ID) {
             $shippingFee = ($afterDiscount >= self::FREESHIP_THRESHOLD) ? 0 : self::SHIP_FEE;
         } else {
             $shippingFee = 0;
@@ -413,10 +411,10 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
         $order->recipient_phone = $data['recipient_phone'] ?? $order->recipient_phone;
         $order->recipient_address = $data['recipient_address'] ?? $order->recipient_address;
 
-        // Cho phép đổi phương thức thanh toán khi đơn còn pending
-        if ($oldStatus === 'pending' && !empty($data['payment_method'])) {
-            $order->payment_method = $data['payment_method'];
-        }
+        // VÔ HIỆU HÓA: Không cho phép thay đổi phương thức thanh toán
+        // if ($oldStatus === 'pending' && !empty($data['payment_method'])) {
+        //     $order->payment_method = $data['payment_method'];
+        // }
 
         // Cập nhật trạng thái thanh toán
         if (!empty($data['payment_status'])) {
@@ -437,6 +435,12 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
         // Nếu client gửi status rõ ràng thì ưu tiên theo client
         if (!empty($data['status'])) {
+            // Nếu chuyển từ trạng thái khác sang cancelled, hoàn lại stock
+            if ($data['status'] === 'cancelled' && $oldStatus !== 'cancelled') {
+                // Hoàn lại stock khi admin hủy đơn hàng
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
+            }
+            
             if ($data['status'] === 'received') {
                 $order->status = 'received';
                 $order->shipped_at = now();
@@ -497,7 +501,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
                 'coupon_discount' => (int) ($order->discount_amount ?? $order->coupon_discount ?? 0),
                 'final_total' => (int) ($order->final_total ?? ($subtotal + (int) ($order->shipping_fee ?? 0) - (int) ($order->discount_amount ?? 0))),
                 'status' => $order->status,
-'status_vietnamese' => [
+                'status_vietnamese' => [
                     'pending' => 'Đang chờ xử lý',
                     'processing' => 'Đang xử lý',
                     'shipped' => 'Đang giao hàng',
@@ -714,7 +718,7 @@ $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
 
 // Route test thêm sản phẩm vào giỏ hàng cho dev/test
 if (app()->environment('local')) {
-    \Route::get('/test-add-to-cart', function () {
+    Route::get('/test-add-to-cart', function () {
         $cart = session()->get('cart', []);
         $cart[] = [
             'product_id' => 1, // ID sản phẩm test, đổi nếu cần

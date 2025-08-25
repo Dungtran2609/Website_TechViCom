@@ -4,7 +4,7 @@
 
 @push('styles')
     {{-- Nếu layout đã có CSS chung thì có thể bỏ dòng dưới --}}
-    <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('client_css/css/style.css') }}">
 
     <style>
         .checkout-step {
@@ -12,7 +12,7 @@
         }
 
         .checkout-step.active {
-            background: #ea580c;
+            background: #ff6c2f;
             color: #fff
         }
 
@@ -31,15 +31,15 @@
         }
 
         .payment-option:hover {
-            border-color: #ea580c;
+            border-color: #ff6c2f;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, .1)
         }
 
         .payment-option.selected {
-            border-color: #ea580c;
+            border-color: #ff6c2f;
             background: #fff7ed;
-            box-shadow: 0 4px 12px rgba(234, 88, 12, .2)
+            box-shadow: 0 4px 12px rgba(255, 108, 47, .2)
         }
 
         #checkout-success {
@@ -63,6 +63,23 @@
     @php
         // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
         $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
+        
+        // Kiểm tra spam chặn cho khách vãng lai
+        $guestVnpayLocked = false;
+        if (!Auth::check()) {
+            $cancelData = session('guest_vnpay_cancel_count', []);
+            $totalCount = 0;
+            $currentTime = time();
+            
+            // Chỉ tính những lần hủy trong vòng 24 giờ qua
+            foreach ($cancelData as $timestamp => $count) {
+                if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+                    $totalCount += $count;
+                }
+            }
+            
+            $guestVnpayLocked = $totalCount >= 3;
+        }
     @endphp
 
     @if (session('notification'))
@@ -101,10 +118,35 @@
         </div>
     @endif
 
+    @if (session('repayment_order_id') && session('repayment_message'))
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thông báo!</strong>
+            <span class="block sm:inline">{{ session('repayment_message') }}</span>
+            <div class="mt-2 text-sm">
+                <i class="fas fa-info-circle mr-1"></i>
+                Bạn đang thanh toán lại đơn hàng #{{ session('repayment_order_id') }}. Giá sản phẩm sẽ được giữ nguyên như ban đầu.
+            </div>
+        </div>
+    @endif
+
     @if (session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
             <strong class="font-bold">Thành công!</strong>
             <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session('repayment_order_id'))
+        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thanh toán lại!</strong>
+            <span class="block sm:inline">Bạn đang thanh toán lại cho đơn hàng này. Vui lòng chọn phương thức thanh toán khác.</span>
+        </div>
+    @endif
+
+    @if (session('repayment_message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+            <strong class="font-bold">Thông báo!</strong>
+            <span class="block sm:inline">{{ session('repayment_message') }}</span>
         </div>
     @endif
 
@@ -124,7 +166,7 @@
 
     {{-- Steps --}}
     <div class="bg-white border-b no-print">
-        <div class="container mx-auto px-4 py-4">
+        <div class="techvicom-container py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
@@ -151,12 +193,31 @@
         </div>
     </div>
 
-    <main class="container mx-auto px-4 py-8">
+    <main class="techvicom-container py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM CHECKOUT (2/3) --}}
             <div class="lg:col-span-2 order-2 lg:order-1">
                 <form id="checkout-form" class="space-y-6">
                     @csrf
+                    
+                    {{-- Hiển thị lỗi validation --}}
+                    @if ($errors->any())
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start gap-3">
+                                <div class="text-red-600 mt-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-red-800 font-medium">Có lỗi xảy ra:</h4>
+                                    <ul class="text-red-700 text-sm mt-2 space-y-1">
+                                        @foreach ($errors->all() as $error)
+                                            <li>• {{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <input type="hidden" id="selected-input" name="selected" value="{{ request('selected') }}">
                     {{-- STEP 1 --}}
                     <div id="checkout-step-1" class="checkout-content">
@@ -165,28 +226,28 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" required
+                                    <input type="text" id="fullname" name="recipient_name" 
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                    <span id="fullname-error" class="text-xs text-red-500"></span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_name') border-red-500 @enderror">
+                                    <span id="fullname-error" class="text-xs text-red-500">@error('recipient_name') {{ $message }} @enderror</span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" required
+                                    <input type="tel" id="phone" name="recipient_phone" 
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                    <span id="phone-error" class="text-xs text-red-500"></span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 phone-input @error('recipient_phone') border-red-500 @enderror"
+                                        pattern="[0-9]*" inputmode="numeric" maxlength="11">
+                                    <span id="phone-error" class="text-xs text-red-500">@error('recipient_phone') {{ $message }} @enderror</span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" required
+                                <input type="email" id="email" name="recipient_email" 
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
-                                <span id="email-error" class="text-xs text-red-500"></span>
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_email') border-red-500 @enderror">
+                                <span id="email-error" class="text-xs text-red-500">@error('recipient_email') {{ $message }} @enderror</span>
                             </div>
                             <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -231,7 +292,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
                                                     *</label>
-                                                <select id="province" name="province_code" required
+                                                <select id="province" name="province_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-city="{{ $defaultAddress?->city ?? '' }}"
                                                     @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
@@ -242,7 +303,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
                                                     *</label>
-                                                <select id="district" name="district_code" required
+                                                <select id="district" name="district_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-district="{{ $defaultAddress?->district ?? '' }}"
                                                     @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
@@ -253,7 +314,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
                                                     *</label>
-                                                <select id="ward" name="ward_code" required
+                                                <select id="ward" name="ward_code" 
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
                                                     @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
@@ -262,7 +323,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address" required rows="3"
+                                        <textarea id="address" name="recipient_address"  rows="3"
                                             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
@@ -318,18 +379,27 @@
                                 </div>
 
                                 {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
+                                @php
+                                    $isVnpayLocked = $vnpayLocked || $guestVnpayLocked;
+                                    $lockReason = '';
+                                    if ($vnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 24 giờ.';
+                                    } elseif ($guestVnpayLocked) {
+                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng thử lại sau 24 giờ.';
+                                    }
+                                @endphp
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
-                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
-                                    data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
+                                            {{ $isVnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                    data-payment="bank_transfer" data-disabled="{{ $isVnpayLocked ? 'true' : 'false' }}"
                                     data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
                                     <input type="radio" id="banking" name="payment_method" value="bank_transfer"
-                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
+                                        class="mr-3 accent-orange-500" {{ $isVnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
-                                        @if ($vnpayLocked)
+                                        @if ($isVnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 2 phút.
+                                                {{ $lockReason }}
                                             </p>
                                         @endif
                                     </div>
@@ -342,7 +412,7 @@
                                 class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
                                     class="fas fa-arrow-left mr-2"></i>Quay lại</button>
                             <button type="button" id="next-step-2"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Bước
+                                class="px-6 py-3 bg-[#ff6c2f] text-white rounded-lg font-semibold hover:bg-[#e55a28] transition flex items-center">Bước
                                 tiếp theo<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
@@ -363,7 +433,7 @@
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
                             <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
+                                <input type="checkbox" id="agree-terms"  class="mr-3 accent-orange-500">
                                 <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
                                         class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
                                     website</label>
@@ -374,7 +444,7 @@
                                 class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
                                     class="fas fa-arrow-left mr-2"></i>Quay lại</button>
                             <button type="button" id="confirm-order"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Xác
+                                class="px-6 py-3 bg-[#ff6c2f] text-white rounded-lg font-semibold hover:bg-[#e55a28] transition flex items-center">Xác
                                 nhận<i class="fas fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
@@ -383,7 +453,26 @@
             {{-- TÓM TẮT ĐƠN (1/3) --}}
             <div class="lg:col-span-1 order-1 lg:order-2">
                 <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">Đơn hàng của bạn</h3>
+                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">
+                        @if (session('repayment_order_id'))
+                            Thanh toán lại đơn hàng
+                        @else
+                            Đơn hàng của bạn
+                        @endif
+                    </h3>
+                    
+                    @if (isset($existingOrder) && $existingOrder)
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                <div class="text-sm text-blue-700">
+                                    <strong>Đơn hàng #{{ $existingOrder->id }}</strong><br>
+                                    <span class="text-xs">Đang thanh toán lại với phương thức khác</span><br>
+                                    <span class="text-xs text-green-600 font-medium">✓ Giá sản phẩm được giữ nguyên như ban đầu</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     <div id="checkout-items" class="space-y-4 mb-6">
                         @if (count($cartItems) > 0)
                             @foreach ($cartItems as $item)
@@ -419,7 +508,8 @@
                                 @endphp
                                 <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item"
                                     data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}"
-                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
+                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}"
+                                    data-category-id="{{ $product?->category_id ?? '' }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @php
@@ -480,28 +570,47 @@
                         @endif
                     </div>
                     {{-- MÃ GIẢM GIÁ --}}
-                    <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
-                        <div class="flex items-center justify-between mb-2">
-                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
-                                giá</label>
-                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
-                                class="text-xs text-orange-600 underline">Danh sách</button>
+                    @auth
+                        <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
+                            <div class="flex items-center justify-between mb-2">
+                                <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
+                                    giá</label>
+                                <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
+                                    class="text-xs text-orange-600 underline">Danh sách</button>
+                            </div>
+                            <div class="flex space-x-2 mb-1">
+                                <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                    value="{{ $appliedCoupon ? $appliedCoupon->code : '' }}"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#ff6c2f] text-sm">
+                                <button type="button" onclick="applyCheckoutCoupon()"
+                                    class="px-4 py-2 bg-[#ff6c2f] text-white rounded hover:bg-[#e55a28] text-sm">Áp
+                                    dụng</button>
+                                <button type="button" onclick="clearCheckoutCoupon()"
+                                    class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
+                                    title="Hủy">×</button>
+                            </div>
+                            <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
+                            <div id="checkout-available-coupons"
+                                class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+                            </div>
                         </div>
-                        <div class="flex space-x-2 mb-1">
-                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
-                                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
-                            <button type="button" onclick="applyCheckoutCoupon()"
-                                class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
-                                dụng</button>
-                            <button type="button" onclick="clearCheckoutCoupon()"
-                                class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
-                                title="Hủy">×</button>
+                    @else
+                        <div class="border-t pt-4 mb-4">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-gift text-blue-500 mr-3 text-lg"></i>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-blue-800 mb-1">Khuyến mãi đặc biệt</h4>
+                                        <p class="text-xs text-blue-600 mb-2">Đăng nhập để nhận mã giảm giá và ưu đãi đặc biệt</p>
+                                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-sign-in-alt mr-1"></i>
+                                            Đăng nhập ngay
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
-                        <div id="checkout-available-coupons"
-                            class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
-                        </div>
-                    </div>
+                    @endauth
                     {{-- TỔNG TIỀN --}}
                     <div class="border-t pt-4 space-y-2">
                         <div class="flex justify-between"><span>Tạm tính:</span><span
@@ -514,8 +623,17 @@
                         </div>
                         <div class="flex justify-between text-lg font-semibold border-t pt-2"><span>Tổng cộng:</span><span
                                 id="total-amount"
-                                class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
+                                class="text-[#ff6c2f]">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
                         </div>
+                    </div>
+                    
+                    {{-- Nút tiếp tục mua sắm --}}
+                    <div class="border-t pt-4 mt-4">
+                        <a href="{{ route('products.index') }}" 
+                           class="block w-full text-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300">
+                            <i class="fas fa-shopping-bag mr-2"></i>
+                            Tiếp tục mua sắm
+                        </a>
                     </div>
                 </div>
             </div>
@@ -526,7 +644,7 @@
 
 @push('scripts')
     {{-- nếu bạn có script dùng chung, nạp ở layout; ở đây chỉ nạp cần thiết --}}
-    <script src="{{ asset('assets/js/component-loader.js') }}"></script>
+
 
     <script>
         window.shippingMethods = @json($shippingMethods->pluck('name', 'id'));
@@ -559,6 +677,13 @@
 
         /* ===================== COUPON ===================== */
         function applyCheckoutCoupon() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const input = document.getElementById('checkout-coupon-code');
             const msg = document.getElementById('checkout-coupon-message');
             if (!input) return;
@@ -597,19 +722,40 @@
                 .filter(id => id && id !== '')
                 .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
 
+            // Lấy thông tin khách vãng lai nếu có
+            let guestEmail = '';
+            let guestPhone = '';
+            
+            // Kiểm tra form khách vãng lai
+            const guestEmailInput = document.querySelector('input[name="guest_email"]');
+            const guestPhoneInput = document.querySelector('input[name="guest_phone"]');
+            
+            if (guestEmailInput) {
+                guestEmail = guestEmailInput.value.trim();
+            }
+            if (guestPhoneInput) {
+                guestPhone = guestPhoneInput.value.trim();
+            }
+            
+            const requestData = {
+                coupon_code: code,
+                subtotal,
+                cart_product_ids: cartProductIds,
+                cart_product_amounts: cartProductAmounts,
+                cart_category_ids: cartCategoryIds,
+                guest_email: guestEmail,
+                guest_phone: guestPhone
+            };
+            
+            console.log('Sending coupon request:', requestData);
+            
             fetch('/api/apply-coupon', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken()
                 },
-                body: JSON.stringify({
-                    coupon_code: code,
-                    subtotal,
-                    cart_product_ids: cartProductIds,
-                    cart_product_amounts: cartProductAmounts,
-                    cart_category_ids: cartCategoryIds
-                })
+                body: JSON.stringify(requestData)
             })
                 .then(r => r.json())
                 .then(data => {
@@ -617,8 +763,16 @@
                         localStorage.removeItem('appliedDiscount');
                         window.checkoutDiscount = 0;
                         input.classList.add('border-red-500');
-                        msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
-                        msg.className = 'mt-1 text-xs text-red-500';
+                        
+                        // Kiểm tra nếu cần đăng nhập
+                        if (data.require_login) {
+                            msg.innerHTML = data.message + ' <a href="#" onclick="openAuthModal(); return false;" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        } else {
+                            msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
+                            msg.className = 'mt-1 text-xs text-red-500';
+                        }
+                        
                         updateCheckoutTotal();
                         return;
                     }
@@ -653,6 +807,17 @@
                     msg.textContent = data.coupon?.message || 'Áp dụng thành công';
                     msg.className = 'mt-1 text-xs text-green-600';
                     updateCheckoutTotal();
+                    
+                    // Ẩn danh sách coupon khi áp dụng thành công
+                    const couponBox = document.getElementById('checkout-available-coupons');
+                    const toggleBtn = document.getElementById('toggle-coupon-list');
+                    if (couponBox) {
+                        couponBox.classList.add('hidden');
+                        couponBox.innerHTML = '';
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.textContent = 'Danh sách';
+                    }
                 })
                 .catch(() => {
                     input.classList.add('border-red-500');
@@ -675,6 +840,13 @@
         }
 
         function toggleCouponListCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             const btn = document.getElementById('toggle-coupon-list');
             if (!box || !btn) return;
@@ -689,6 +861,13 @@
         }
 
         function loadAvailableCouponsCheckout() {
+            // Kiểm tra trạng thái đăng nhập
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                openAuthModal();
+                return;
+            }
+            
             const box = document.getElementById('checkout-available-coupons');
             if (!box) return;
             const subtotal = Number(window.checkoutSubtotal || 0);
@@ -776,6 +955,161 @@
             }
         }
 
+        /* ===================== VALIDATION FUNCTIONS ===================== */
+        function validateStep1() {
+            console.log('=== DEBUG: validateStep1 started ===');
+            
+            var selected = document.querySelector('input[name="selected_address"]:checked');
+            console.log('Selected address:', selected);
+            
+            if (selected && selected.value !== 'new') {
+                console.log('Using saved address, validation passed');
+                return true;
+            }
+
+            const required = ['fullname', 'phone', 'address', 'province', 'district', 'ward'];
+            let ok = true,
+                msgs = [];
+            
+            console.log('Validating required fields:', required);
+            
+            required.forEach(id => {
+                const f = document.getElementById(id);
+                console.log(`Checking field ${id}:`, f ? f.value : 'element not found');
+                
+                if (f && !f.value.trim()) {
+                    f.classList.add('border-red-500');
+                    ok = false;
+                    if (id === 'fullname') msgs.push('Vui lòng nhập họ và tên');
+                    if (id === 'phone') msgs.push('Vui lòng nhập số điện thoại');
+                    if (id === 'address') msgs.push('Vui lòng nhập địa chỉ giao hàng');
+                    if (id === 'province') msgs.push('Vui lòng chọn tỉnh/thành phố');
+                    if (id === 'district') msgs.push('Vui lòng chọn quận/huyện');
+                    if (id === 'ward') msgs.push('Vui lòng chọn phường/xã');
+                } else if (f) {
+                    f.classList.remove('border-red-500');
+                }
+            });
+            
+            const phoneField = document.getElementById('phone');
+            if (phoneField && phoneField.value.trim()) {
+                const phoneRegex = /^0[3-9][0-9]{8}$/;
+                if (!phoneRegex.test(phoneField.value.trim())) {
+                    phoneField.classList.add('border-red-500');
+                    msgs.push('Số điện thoại không đúng định dạng (VD: 0362729054)');
+                    ok = false;
+                } else {
+                    phoneField.classList.remove('border-red-500');
+                }
+            }
+            
+            const emailField = document.getElementById('email');
+            console.log('Email field:', emailField);
+            console.log('Email value:', emailField ? emailField.value : 'N/A');
+            
+            if (emailField && !emailField.value.trim()) {
+                emailField.classList.add('border-red-500');
+                msgs.push('Vui lòng nhập email');
+                ok = false;
+            } else if (emailField && emailField.value.trim()) {
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(emailField.value.trim())) {
+                    emailField.classList.add('border-red-500');
+                    msgs.push('Email không đúng định dạng (VD: example@gmail.com)');
+                    ok = false;
+                } else {
+                    emailField.classList.remove('border-red-500');
+                }
+            }
+            
+            console.log('Validation result:', { ok, msgs });
+            
+            if (!ok && msgs.length > 0) {
+                console.log('Validation failed:', msgs);
+                alert('Lỗi bước 1:\n' + msgs.join('\n'));
+            }
+            
+            return ok;
+        }
+
+        function validateStep2() {
+            console.log('=== DEBUG: validateStep2 started ===');
+            
+            const pm = document.querySelector('input[name="payment_method"]:checked');
+            console.log('Payment method:', pm);
+            
+            if (!pm) {
+                console.log('ERROR: No payment method selected');
+                alert('Vui lòng chọn phương thức thanh toán');
+                return false;
+            }
+            
+            console.log('Payment method validation passed');
+            return true;
+        }
+
+        function validateStep3() {
+            console.log('=== DEBUG: validateStep3 started ===');
+            
+            const agree = document.getElementById('agree-terms');
+            console.log('Agree terms checkbox:', agree);
+            console.log('Agree terms checked:', agree ? agree.checked : 'element not found');
+            
+            if (!agree.checked) {
+                console.log('ERROR: Terms not agreed');
+                alert('Vui lòng đồng ý với điều khoản và điều kiện');
+                return false;
+            }
+            
+            console.log('Terms agreement validation passed');
+            return true;
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.checkout-content').forEach(c => c.style.display = 'none');
+            if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
+            updateStepIndicators(step);
+            window.currentStep = step;
+            updateStep1NextBtnVisibility(step);
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function updateStepIndicators(active) {
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                stepEl.classList.remove('active', 'completed');
+                stepEl.classList.add('bg-gray-200', 'text-gray-600');
+                const num = stepEl.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-white', 'text-orange-600', 'bg-green-500');
+                    num.classList.add('bg-gray-400', 'text-white');
+                }
+            }
+            for (let i = 1; i < active; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                stepEl.classList.remove('bg-gray-200', 'text-gray-600');
+                stepEl.classList.add('completed', 'bg-green-500', 'text-white');
+                const num = stepEl.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-gray-400', 'text-white');
+                    num.classList.add('bg-white', 'text-green-500');
+                }
+            }
+            if (active <= 3) {
+                const act = document.getElementById(`step-${active}`);
+                act.classList.remove('bg-gray-200', 'text-gray-600');
+                act.classList.add('active', 'bg-[#ff6c2f]', 'text-white');
+                const num = act.querySelector('span.w-6.h-6');
+                if (num) {
+                    num.classList.remove('bg-gray-400', 'text-white');
+                    num.classList.add('bg-white', 'text-orange-600');
+                }
+            }
+        }
+
         /* ===================== PAGE INIT ===================== */
         document.addEventListener('DOMContentLoaded', function() {
                 let subtotal = {{ $subtotal ?? 0 }};
@@ -835,135 +1169,36 @@
                 setupRealTimeValidation();
 
                 function setupStepNavigation() {
-                    document.getElementById('next-step-1').addEventListener('click', () => {
-                        if (validateStep1()) goToStep(2);
-                    });
-                    document.getElementById('prev-step-2').addEventListener('click', () => goToStep(1));
-                    document.getElementById('next-step-2').addEventListener('click', () => {
-                        if (validateStep2()) {
-                            populateStep3Summary();
-                            goToStep(3);
-                        }
-                    });
-                    document.getElementById('prev-step-3').addEventListener('click', () => goToStep(2));
-                    document.getElementById('confirm-order').addEventListener('click', () => {
-                        if (validateStep3()) submitOrder();
-                    });
-                }
-
-                function goToStep(step) {
-                    document.querySelectorAll('.checkout-content').forEach(c => c.style.display = 'none');
-                    if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
-                    updateStepIndicators(step);
-                    window.currentStep = step;
-                    updateStep1NextBtnVisibility(step);
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-
-                function updateStepIndicators(active) {
-                    for (let i = 1; i <= 3; i++) {
-                        const stepEl = document.getElementById(`step-${i}`);
-                        stepEl.classList.remove('active', 'completed');
-                        stepEl.classList.add('bg-gray-200', 'text-gray-600');
-                        const num = stepEl.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-white', 'text-orange-600', 'bg-green-500');
-                            num.classList.add('bg-gray-400', 'text-white');
-                        }
+                    const nextStep1 = document.getElementById('next-step-1');
+                    const prevStep2 = document.getElementById('prev-step-2');
+                    const nextStep2 = document.getElementById('next-step-2');
+                    const prevStep3 = document.getElementById('prev-step-3');
+                    const confirmOrder = document.getElementById('confirm-order');
+                    
+                    if (nextStep1) {
+                        nextStep1.addEventListener('click', () => {
+                            if (validateStep1()) goToStep(2);
+                        });
                     }
-                    for (let i = 1; i < active; i++) {
-                        const stepEl = document.getElementById(`step-${i}`);
-                        stepEl.classList.remove('bg-gray-200', 'text-gray-600');
-                        stepEl.classList.add('completed', 'bg-green-500', 'text-white');
-                        const num = stepEl.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-gray-400', 'text-white');
-                            num.classList.add('bg-white', 'text-green-500');
-                        }
+                    if (prevStep2) {
+                        prevStep2.addEventListener('click', () => goToStep(1));
                     }
-                    if (active <= 3) {
-                        const act = document.getElementById(`step-${active}`);
-                        act.classList.remove('bg-gray-200', 'text-gray-600');
-                        act.classList.add('active', 'bg-orange-500', 'text-white');
-                        const num = act.querySelector('span.w-6.h-6');
-                        if (num) {
-                            num.classList.remove('bg-gray-400', 'text-white');
-                            num.classList.add('bg-white', 'text-orange-600');
-                        }
+                    if (nextStep2) {
+                        nextStep2.addEventListener('click', () => {
+                            if (validateStep2()) {
+                                populateStep3Summary();
+                                goToStep(3);
+                            }
+                        });
                     }
-                }
-
-                function validateStep1() {
-                    var selected = document.querySelector('input[name="selected_address"]:checked');
-                    if (selected && selected.value !== 'new') return true;
-
-                    const required = ['fullname', 'phone', 'address', 'province', 'district', 'ward'];
-                    let ok = true,
-                        msgs = [];
-                    required.forEach(id => {
-                        const f = document.getElementById(id);
-                        if (f && !f.value.trim()) {
-                            f.classList.add('border-red-500');
-                            ok = false;
-                            if (id === 'fullname') msgs.push('Vui lòng nhập họ và tên');
-                            if (id === 'phone') msgs.push('Vui lòng nhập số điện thoại');
-                            if (id === 'address') msgs.push('Vui lòng nhập địa chỉ giao hàng');
-                            if (id === 'province') msgs.push('Vui lòng chọn tỉnh/thành phố');
-                            if (id === 'district') msgs.push('Vui lòng chọn quận/huyện');
-                            if (id === 'ward') msgs.push('Vui lòng chọn phường/xã');
-                        } else if (f) {
-                            f.classList.remove('border-red-500');
-                        }
-                    });
-                    const phoneField = document.getElementById('phone');
-                    if (phoneField && phoneField.value.trim()) {
-                        const phoneRegex = /^0[3-9][0-9]{8}$/;
-                        if (!phoneRegex.test(phoneField.value.trim())) {
-                            phoneField.classList.add('border-red-500');
-                            msgs.push('Số điện thoại không đúng định dạng (VD: 0362729054)');
-                            ok = false;
-                        } else {
-                            phoneField.classList.remove('border-red-500');
-                        }
+                    if (prevStep3) {
+                        prevStep3.addEventListener('click', () => goToStep(2));
                     }
-                    const emailField = document.getElementById('email');
-                    if (emailField && !emailField.value.trim()) {
-                        emailField.classList.add('border-red-500');
-                        msgs.push('Vui lòng nhập email');
-                        ok = false;
-                    } else if (emailField && emailField.value.trim()) {
-                        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                        if (!emailRegex.test(emailField.value.trim())) {
-                            emailField.classList.add('border-red-500');
-                            msgs.push('Email không đúng định dạng (VD: example@gmail.com)');
-                            ok = false;
-                        } else {
-                            emailField.classList.remove('border-red-500');
-                        }
+                    if (confirmOrder) {
+                        confirmOrder.addEventListener('click', () => {
+                            if (validateStep3()) submitOrder();
+                        });
                     }
-                    if (!ok && msgs.length > 0) alert('Lỗi bước 1:\n' + msgs.join('\n'));
-                    return ok;
-                }
-
-                function validateStep2() {
-                    const pm = document.querySelector('input[name="payment_method"]:checked');
-                    if (!pm) {
-                        alert('Vui lòng chọn phương thức thanh toán');
-                        return false;
-                    }
-                    return true;
-                }
-
-                function validateStep3() {
-                    const agree = document.getElementById('agree-terms');
-                    if (!agree.checked) {
-                        alert('Vui lòng đồng ý với điều khoản và điều kiện');
-                        return false;
-                    }
-                    return true;
                 }
 
                 function populateStep3Summary() {
@@ -1004,35 +1239,40 @@
 
                 function setupPaymentOptions() {
                     const opts = document.querySelectorAll('.payment-option');
-                    opts.forEach(op => {
-                        op.addEventListener('click', function(e) {
-                            // Nếu option bị disable (VNPay sau 3 lần hủy) => chặn
-                            if (this.dataset.disabled === 'true') {
-                                const reason = this.dataset.reason ||
-                                    'Phương thức này đã bị khóa. Vui lòng chọn COD.';
-                                alert(reason);
-                                e.preventDefault();
-                                e.stopPropagation();
-                                return;
-                            }
-                            opts.forEach(o => o.classList.remove('selected'));
-                            this.classList.add('selected');
-                            const radio = this.querySelector('input[type="radio"]');
-                            if (radio && !radio.disabled) {
-                                radio.checked = true;
-                                radio.dispatchEvent(new Event('change'));
-                            }
+                    if (opts.length > 0) {
+                        opts.forEach(op => {
+                            op.addEventListener('click', function(e) {
+                                // Nếu option bị disable (VNPay sau 3 lần hủy) => chặn
+                                if (this.dataset.disabled === 'true') {
+                                    const reason = this.dataset.reason ||
+                                        'Phương thức này đã bị khóa. Vui lòng chọn COD.';
+                                    alert(reason);
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    return;
+                                }
+                                opts.forEach(o => o.classList.remove('selected'));
+                                this.classList.add('selected');
+                                const radio = this.querySelector('input[type="radio"]');
+                                if (radio && !radio.disabled) {
+                                    radio.checked = true;
+                                    radio.dispatchEvent(new Event('change'));
+                                }
+                            });
                         });
-                    });
+                    }
                 }
 
                 function setupShippingMethodListeners() {
-                    document.querySelectorAll('input[name="shipping_method_id"]').forEach(r => {
-                        r.addEventListener('change', () => {
-                            window.checkoutShippingMethod = r.value || '1';
-                            updateCheckoutTotal();
+                    const shippingMethods = document.querySelectorAll('input[name="shipping_method_id"]');
+                    if (shippingMethods.length > 0) {
+                        shippingMethods.forEach(r => {
+                            r.addEventListener('change', () => {
+                                window.checkoutShippingMethod = r.value || '1';
+                                updateCheckoutTotal();
+                            });
                         });
-                    });
+                    }
                 }
 
                 function loadProvinces() {
@@ -1250,14 +1490,28 @@
         }
 
         function submitOrder() {
+            console.log('=== DEBUG: submitOrder started ===');
+            
             var selected = document.querySelector('input[name="selected_address"]:checked');
             const paymentEl = document.querySelector('input[name="payment_method"]:checked');
             const shippingEl = document.querySelector('input[name="shipping_method_id"]:checked');
-            if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
-            if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
+            
+            console.log('Selected address:', selected);
+            console.log('Payment method:', paymentEl);
+            console.log('Shipping method:', shippingEl);
+            
+            if (!paymentEl) {
+                console.log('ERROR: No payment method selected');
+                return alert('Vui lòng chọn phương thức thanh toán');
+            }
+            if (!shippingEl) {
+                console.log('ERROR: No shipping method selected');
+                return alert('Vui lòng chọn phương thức vận chuyển');
+            }
 
             // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 3 trở đi)
             if (window.vnpayLocked && paymentEl.value === 'bank_transfer') {
+                console.log('ERROR: VNPay is locked');
                 alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                 return;
             }
@@ -1270,12 +1524,14 @@
             formData.append('_token', document.querySelector('input[name="_token"]').value);
 
             if (selected && selected.value !== 'new') {
+                console.log('Using saved address:', selected.value);
                 formData.append('selected_address', selected.value);
                 formData.append('province_code', selected.dataset.city || '');
                 formData.append('district_code', selected.dataset.district || '');
                 formData.append('ward_code', selected.dataset.ward || '');
                 formData.append('recipient_address', selected.dataset.address || '');
             } else {
+                console.log('Using new address form');
                 const fullname = document.getElementById('fullname').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const emailVal = (document.getElementById('email').value || '').trim();
@@ -1283,6 +1539,11 @@
                 const provinceCode = document.getElementById('province').value;
                 const districtCode = document.getElementById('district').value;
                 const wardCode = document.getElementById('ward').value;
+                
+                console.log('Form data:', {
+                    fullname, phone, emailVal, address, provinceCode, districtCode, wardCode
+                });
+                
                 formData.append('recipient_name', fullname);
                 formData.append('recipient_phone', phone);
                 formData.append('recipient_email', emailVal);
@@ -1302,16 +1563,32 @@
             if (couponInput && couponInput.value.trim()) formData.append('coupon_code', couponInput.value.trim());
 
             let selectedVal = document.getElementById('selected-input')?.value || '';
+            console.log('Initial selectedVal:', selectedVal);
+            
             if (!selectedVal) {
                 const domItems = Array.from(document.querySelectorAll('.checkout-item'));
+                console.log('DOM items found:', domItems.length);
+                
                 if (domItems.length) {
                     const hasCartId = domItems.some(el => el.getAttribute('data-cart-id'));
-                    selectedVal = domItems.map(el => hasCartId ? (el.getAttribute('data-cart-id') || '') :
-                            (el.getAttribute('data-item-id') || ''))
-                        .filter(Boolean).join(',');
+                    console.log('Has cart ID:', hasCartId);
+                    
+                    selectedVal = domItems.map(el => {
+                        const cartId = el.getAttribute('data-cart-id');
+                        const itemId = el.getAttribute('data-item-id');
+                        console.log('Item data:', { cartId, itemId });
+                        return hasCartId ? (cartId || '') : (itemId || '');
+                    }).filter(Boolean).join(',');
+                    
+                    console.log('Generated selectedVal:', selectedVal);
                 }
             }
             formData.append('selected', selectedVal);
+
+            console.log('Final form data:');
+            for (const [k, v] of formData.entries()) {
+                console.log(`${k}: ${v}`);
+            }
 
             const form = document.createElement('form');
             form.method = 'POST';
@@ -1324,6 +1601,7 @@
                 form.appendChild(input);
             }
             document.body.appendChild(form);
+            console.log('=== DEBUG: Submitting form ===');
             form.submit();
         }
 
@@ -1513,5 +1791,539 @@
             }
         }
         updateStep1NextBtnVisibility(window.currentStep || 1);
+
+        // ===== CHECKOUT VALIDATION =====
+        function validateCheckoutForm() {
+            let isValid = true;
+
+            // Clear previous errors
+            clearValidationErrors();
+
+            // Validate required fields for step 1
+            const requiredFields = [
+                { name: 'recipient_name', label: 'Họ và tên' },
+                { name: 'recipient_phone', label: 'Số điện thoại' },
+                { name: 'recipient_email', label: 'Email' }
+            ];
+
+            requiredFields.forEach(field => {
+                const input = document.querySelector(`[name="${field.name}"]`);
+                if (!input || !input.value.trim()) {
+                    showFieldError(field.name, `${field.label} là bắt buộc`);
+                    isValid = false;
+                }
+            });
+
+            // Validate phone number format
+            const phoneInput = document.querySelector('[name="recipient_phone"]');
+            if (phoneInput && phoneInput.value.trim()) {
+                const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+                if (!phoneRegex.test(phoneInput.value.trim())) {
+                    showFieldError('recipient_phone', 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.');
+                    isValid = false;
+                }
+            }
+
+            // Validate email format
+            const emailInput = document.querySelector('[name="recipient_email"]');
+            if (emailInput && emailInput.value.trim()) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailInput.value.trim())) {
+                    showFieldError('recipient_email', 'Email không hợp lệ');
+                    isValid = false;
+                }
+            }
+
+            // Validate address selection
+            const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
+            if (!selectedAddress) {
+                showFieldError('selected_address', 'Vui lòng chọn địa chỉ giao hàng');
+                isValid = false;
+            } else if (selectedAddress.value === 'new') {
+                // Validate new address fields
+                const addressFields = [
+                    { name: 'recipient_address', label: 'Địa chỉ' },
+                    { name: 'province_code', label: 'Tỉnh/thành phố' },
+                    { name: 'district_code', label: 'Quận/huyện' },
+                    { name: 'ward_code', label: 'Phường/xã' }
+                ];
+
+                addressFields.forEach(field => {
+                    const input = document.querySelector(`[name="${field.name}"]`);
+                    if (!input || !input.value.trim()) {
+                        showFieldError(field.name, `${field.label} là bắt buộc`);
+                        isValid = false;
+                    }
+                });
+
+                // Validate address length
+                const addressInput = document.querySelector('[name="recipient_address"]');
+                if (addressInput && addressInput.value.trim()) {
+                    if (addressInput.value.trim().length < 10) {
+                        showFieldError('recipient_address', 'Địa chỉ phải có ít nhất 10 ký tự');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Nếu kiểm tra thất bại, cuộn đến lỗi đầu tiên
+            if (!isValid) {
+                const firstError = document.querySelector('.border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            return isValid;
+        }
+
+        function validateStep2() {
+            let isValid = true;
+
+            // Xóa lỗi trước đó
+            clearValidationErrors();
+
+            // Kiểm tra phương thức vận chuyển
+            const shippingMethod = document.querySelector('input[name="shipping_method_id"]:checked');
+            if (!shippingMethod) {
+                showFieldError('shipping_method_id', 'Vui lòng chọn phương thức vận chuyển');
+                isValid = false;
+            }
+
+            // Kiểm tra phương thức thanh toán
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (!paymentMethod) {
+                showFieldError('payment_method', 'Vui lòng chọn phương thức thanh toán');
+                isValid = false;
+            }
+
+            // Nếu kiểm tra thất bại, cuộn đến lỗi đầu tiên
+            if (!isValid) {
+                const firstError = document.querySelector('.border-red-500');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            return isValid;
+        }
+
+        function showFieldError(fieldName, message) {
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            if (input) {
+                // Xử lý radio buttons khác biệt
+                if (input.type === 'radio') {
+                    // Tìm container cha và thêm style lỗi
+                    const container = input.closest('.payment-option, .form-group');
+                    if (container) {
+                        container.classList.add('border-red-500');
+                        
+                        // Tìm hoặc tạo span lỗi
+                        let errorSpan = document.getElementById(`${fieldName}-error`);
+                        if (!errorSpan) {
+                            errorSpan = document.createElement('span');
+                            errorSpan.id = `${fieldName}-error`;
+                            errorSpan.className = 'text-xs text-red-500 mt-1 block';
+                            container.appendChild(errorSpan);
+                        }
+                        errorSpan.textContent = message;
+                    }
+                } else {
+                    // Xử lý input thường
+                    input.classList.add('border-red-500');
+                    
+                    // Tìm hoặc tạo span lỗi
+                    let errorSpan = document.getElementById(`${fieldName}-error`);
+                    if (!errorSpan) {
+                        errorSpan = document.createElement('span');
+                        errorSpan.id = `${fieldName}-error`;
+                        errorSpan.className = 'text-xs text-red-500 mt-1 block';
+                        input.parentNode.appendChild(errorSpan);
+                    }
+                    errorSpan.textContent = message;
+                }
+            }
+        }
+
+        function clearValidationErrors() {
+            // Xóa style lỗi từ tất cả input
+            document.querySelectorAll('input, select, textarea').forEach(input => {
+                input.classList.remove('border-red-500');
+            });
+
+            // Xóa style lỗi từ containers (cho radio buttons)
+            document.querySelectorAll('.payment-option, .form-group').forEach(container => {
+                container.classList.remove('border-red-500');
+            });
+
+            // Xóa thông báo lỗi
+            document.querySelectorAll('[id$="-error"]').forEach(errorSpan => {
+                errorSpan.textContent = '';
+            });
+        }
+
+        // Thêm validation cho form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    if (!validateCheckoutForm()) {
+                        e.preventDefault();
+                        // Cuộn đến lỗi đầu tiên
+                        const firstError = document.querySelector('.border-red-500');
+                        if (firstError) {
+                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            // Validation thời gian thực
+            const inputs = document.querySelectorAll('input, select, textarea');
+            if (inputs.length > 0) {
+                inputs.forEach(input => {
+                    if (input) {
+                        input.addEventListener('blur', function() {
+                            validateField(this);
+                        });
+
+                        input.addEventListener('input', function() {
+                            // Xóa lỗi khi người dùng bắt đầu gõ
+                            if (this.classList.contains('border-red-500')) {
+                                this.classList.remove('border-red-500');
+                                const errorSpan = document.getElementById(`${this.name}-error`);
+                                if (errorSpan) {
+                                    errorSpan.textContent = '';
+                                }
+                            }
+                        });
+
+                        // Clear errors for radio buttons when selected
+                        if (input.type === 'radio') {
+                            input.addEventListener('change', function() {
+                                const container = this.closest('.payment-option, .form-group');
+                                if (container && container.classList.contains('border-red-500')) {
+                                    container.classList.remove('border-red-500');
+                                    const errorSpan = document.getElementById(`${this.name}-error`);
+                                    if (errorSpan) {
+                                        errorSpan.textContent = '';
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
+        function validateField(input) {
+            const fieldName = input.name;
+            const value = input.value.trim();
+
+            // Clear previous error
+            input.classList.remove('border-red-500');
+            const errorSpan = document.getElementById(`${fieldName}-error`);
+            if (errorSpan) {
+                errorSpan.textContent = '';
+            }
+
+            // Validate based on field type
+            switch (fieldName) {
+                case 'recipient_name':
+                    if (!value) {
+                        showFieldError(fieldName, 'Họ và tên là bắt buộc');
+                    } else if (value.length < 2) {
+                        showFieldError(fieldName, 'Họ và tên phải có ít nhất 2 ký tự');
+                    }
+                    break;
+
+                case 'recipient_phone':
+                    if (!value) {
+                        showFieldError(fieldName, 'Số điện thoại là bắt buộc');
+                    } else {
+                        const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
+                        if (!phoneRegex.test(value)) {
+                            showFieldError(fieldName, 'Số điện thoại không hợp lệ');
+                        }
+                    }
+                    break;
+
+                case 'recipient_email':
+                    if (!value) {
+                        showFieldError(fieldName, 'Email là bắt buộc');
+                    } else {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            showFieldError(fieldName, 'Email không hợp lệ');
+                        }
+                    }
+                    break;
+
+                case 'recipient_address':
+                    if (!value) {
+                        showFieldError(fieldName, 'Địa chỉ là bắt buộc');
+                    } else if (value.length < 10) {
+                        showFieldError(fieldName, 'Địa chỉ phải có ít nhất 10 ký tự');
+                    }
+                    break;
+            }
+        }
+
+        // Validation cho input số điện thoại - chỉ cho phép nhập số
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý tất cả input có class phone-input
+            const phoneInputs = document.querySelectorAll('.phone-input');
+            
+            if (phoneInputs.length > 0) {
+                phoneInputs.forEach(function(input) {
+                    if (input) {
+                        // Chỉ cho phép nhập số
+                        input.addEventListener('input', function(e) {
+                            // Loại bỏ tất cả ký tự không phải số
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        
+                        // Ngăn chặn paste text không phải số
+                        input.addEventListener('paste', function(e) {
+                            e.preventDefault();
+                            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                            const numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                            this.value = numbersOnly;
+                        });
+                        
+                        // Ngăn chặn keydown cho các phím không phải số
+                        input.addEventListener('keydown', function(e) {
+                            // Cho phép: backspace, delete, tab, escape, enter, arrow keys
+                            if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                                // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                                (e.keyCode === 65 && e.ctrlKey === true) ||
+                                (e.keyCode === 67 && e.ctrlKey === true) ||
+                                (e.keyCode === 86 && e.ctrlKey === true) ||
+                                (e.keyCode === 88 && e.ctrlKey === true)) {
+                                return;
+                            }
+                            // Cho phép số từ 0-9
+                            if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                                return;
+                            }
+                            e.preventDefault();
+                        });
+                    }
+                });
+            }
+            
+            // Hiển thị thông báo và discount amount khi trang load nếu có mã giảm giá được áp dụng tự động
+            @if($appliedCoupon && $couponMessage)
+                const msg = document.getElementById('checkout-coupon-message');
+                const discountRow = document.getElementById('discount-row');
+                const discountAmount = document.getElementById('discount-amount');
+                const totalAmount = document.getElementById('total-amount');
+                
+                if (msg) {
+                    msg.textContent = '{{ $couponMessage }}';
+                    msg.className = 'mt-1 text-xs text-green-500';
+                }
+                
+                if (discountRow && discountAmount && totalAmount) {
+                    const discount = {{ $discountAmount ?? 0 }};
+                    if (discount > 0) {
+                        discountRow.style.display = 'flex';
+                        discountAmount.textContent = '-{{ number_format($discountAmount ?? 0) }}₫';
+                        
+                        // Cập nhật tổng tiền
+                        const subtotal = {{ $subtotal ?? 0 }};
+                        const shippingFee = {{ ($subtotal ?? 0) >= 3000000 ? 0 : 50000 }};
+                        const finalTotal = subtotal + shippingFee - discount;
+                        totalAmount.textContent = '{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000) - ($discountAmount ?? 0)) }}₫';
+                        
+                        // Lưu vào localStorage để sử dụng trong form submission
+                        window.checkoutDiscount = discount;
+                        localStorage.setItem('appliedDiscount', JSON.stringify({
+                            code: '{{ $appliedCoupon->code ?? "" }}',
+                            amount: discount
+                        }));
+                    }
+                }
+            @endif
+        });
+
+        // Test function để kiểm tra vấn đề với khách vãng lai
+        function testGuestCheckout() {
+            console.log('=== TEST: Guest Checkout ===');
+            
+            // Kiểm tra session cart
+            const sessionCart = @json(session('cart', []));
+            console.log('Session cart:', sessionCart);
+            
+            // Kiểm tra các elements
+            const elements = {
+                fullname: document.getElementById('fullname'),
+                phone: document.getElementById('phone'),
+                email: document.getElementById('email'),
+                address: document.getElementById('address'),
+                province: document.getElementById('province'),
+                district: document.getElementById('district'),
+                ward: document.getElementById('ward'),
+                payment_method: document.querySelectorAll('input[name="payment_method"]'),
+                shipping_method: document.querySelectorAll('input[name="shipping_method_id"]'),
+                agree_terms: document.getElementById('agree-terms'),
+                checkout_items: document.querySelectorAll('.checkout-item'),
+                next_step_1: document.getElementById('next-step-1'),
+                next_step_2: document.getElementById('next-step-2'),
+                confirm_order: document.getElementById('confirm-order')
+            };
+            
+            console.log('Elements check:', elements);
+            
+            // Kiểm tra validation
+            console.log('Step 1 validation:', validateStep1());
+            console.log('Step 2 validation:', validateStep2());
+            console.log('Step 3 validation:', validateStep3());
+            
+            // Kiểm tra event listeners
+            if (elements.next_step_1) {
+                console.log('Next step 1 element found, checking click handler...');
+                const clickEvents = elements.next_step_1.onclick;
+                console.log('Click events:', clickEvents);
+            }
+            
+            return {
+                sessionCart,
+                elements,
+                validation: {
+                    step1: validateStep1(),
+                    step2: validateStep2(),
+                    step3: validateStep3()
+                }
+            };
+        }
+        
+        // Thêm vào global scope để test
+        window.testGuestCheckout = testGuestCheckout;
+        
+        // Debug function để kiểm tra tất cả elements
+        function debugElements() {
+            console.log('=== DEBUG: All Elements ===');
+            
+            const allElements = {
+                // Form elements
+                fullname: document.getElementById('fullname'),
+                phone: document.getElementById('phone'),
+                email: document.getElementById('email'),
+                address: document.getElementById('address'),
+                province: document.getElementById('province'),
+                district: document.getElementById('district'),
+                ward: document.getElementById('ward'),
+                
+                // Button elements
+                next_step_1: document.getElementById('next-step-1'),
+                next_step_2: document.getElementById('next-step-2'),
+                prev_step_2: document.getElementById('prev-step-2'),
+                prev_step_3: document.getElementById('prev-step-3'),
+                confirm_order: document.getElementById('confirm-order'),
+                
+                // Radio elements
+                payment_methods: document.querySelectorAll('input[name="payment_method"]'),
+                shipping_methods: document.querySelectorAll('input[name="shipping_method_id"]'),
+                selected_address: document.querySelectorAll('input[name="selected_address"]'),
+                
+                // Other elements
+                agree_terms: document.getElementById('agree-terms'),
+                checkout_items: document.querySelectorAll('.checkout-item'),
+                checkout_form: document.getElementById('checkout-form')
+            };
+            
+            console.log('All elements:', allElements);
+            
+            // Kiểm tra từng element
+            Object.keys(allElements).forEach(key => {
+                const element = allElements[key];
+                if (element) {
+                    if (Array.isArray(element) || element.length !== undefined) {
+                        console.log(`${key}: Found ${element.length} elements`);
+                    } else {
+                        console.log(`${key}: Found element`);
+                    }
+                } else {
+                    console.log(`${key}: NOT FOUND`);
+                }
+            });
+            
+            return allElements;
+        }
+        
+        window.debugElements = debugElements;
+        
+        // Fix function để sửa lỗi JavaScript
+        function fixJavaScriptErrors() {
+            console.log('=== FIXING JAVASCRIPT ERRORS ===');
+            
+            // Kiểm tra và sửa checkout form
+            const checkoutForm = document.getElementById('checkout-form');
+            if (!checkoutForm) {
+                console.log('WARNING: checkout-form not found');
+            } else {
+                console.log('checkout-form found');
+            }
+            
+            // Kiểm tra và sửa next step buttons
+            const nextStep1 = document.getElementById('next-step-1');
+            if (nextStep1) {
+                console.log('next-step-1 found');
+                // Thêm event listener nếu chưa có
+                if (!nextStep1.onclick) {
+                    nextStep1.addEventListener('click', function(e) {
+                        console.log('Next step 1 clicked');
+                        if (validateStep1()) {
+                            goToStep(2);
+                        }
+                    });
+                }
+            } else {
+                console.log('WARNING: next-step-1 not found');
+            }
+            
+            // Kiểm tra và sửa payment methods
+            const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+            console.log(`Found ${paymentMethods.length} payment methods`);
+            
+            // Kiểm tra và sửa shipping methods
+            const shippingMethods = document.querySelectorAll('input[name="shipping_method_id"]');
+            console.log(`Found ${shippingMethods.length} shipping methods`);
+            
+            // Kiểm tra và sửa form fields
+            const requiredFields = ['fullname', 'phone', 'email', 'address', 'province', 'district', 'ward'];
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    console.log(`${field} found`);
+                } else {
+                    console.log(`WARNING: ${field} not found`);
+                }
+            });
+            
+            console.log('=== JAVASCRIPT ERRORS FIXED ===');
+        }
+        
+        window.fixJavaScriptErrors = fixJavaScriptErrors;
+        
+        // Thêm các function validation vào global scope
+        window.validateStep1 = validateStep1;
+        window.validateStep2 = validateStep2;
+        window.validateStep3 = validateStep3;
+        window.validateCheckoutForm = validateCheckoutForm;
+        window.goToStep = goToStep;
+        window.submitOrder = submitOrder;
+        
+        // Auto fix khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(fixJavaScriptErrors, 1000);
+        });
+        
+        // Auto fix khi window load
+        window.addEventListener('load', function() {
+            setTimeout(fixJavaScriptErrors, 500);
+        });
     </script>
 @endpush

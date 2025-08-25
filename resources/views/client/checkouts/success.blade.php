@@ -12,7 +12,7 @@
             {{ session('notification.message') }}
         </div>
     @endif
-    <div class="container mx-auto px-4 py-8">
+    <div class="techvicom-container py-8">
         <div class="max-w-2xl mx-auto">
             <!-- Success Message -->
             <div class="bg-white rounded-lg shadow-md p-8 text-center">
@@ -68,13 +68,33 @@
                             Bạn đã hủy thanh toán VNPay quá 3 lần. Vui lòng chọn phương thức thanh toán khác để tiếp tục đặt
                             hàng. Nếu cần hỗ trợ, vui lòng liên hệ hotline.
                         @elseif($order->payment_method === 'cod')
-                            Cảm ơn bạn đã mua hàng tại Techvicom. Chúng tôi sẽ liên hệ sớm nhất để xác nhận và giao hàng!
+                            @if(session('success') && strpos(session('success'), 'Cập nhật') !== false)
+                                Cập nhật phương thức thanh toán thành công! Chúng tôi sẽ liên hệ sớm nhất để xác nhận và giao hàng!
+                            @else
+                                Cảm ơn bạn đã mua hàng tại Techvicom. Chúng tôi sẽ liên hệ sớm nhất để xác nhận và giao hàng!
+                            @endif
                         @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'paid')
-                            Cảm ơn bạn đã thanh toán thành công. Đơn hàng đang được xử lý!
+                            @if(session('success') && strpos(session('success'), 'Cập nhật') !== false)
+                                Cập nhật phương thức thanh toán thành công! Đơn hàng đang được xử lý!
+                            @else
+                                Cảm ơn bạn đã thanh toán thành công. Đơn hàng đang được xử lý!
+                            @endif
                         @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'cancelled')
                             Bạn đã hủy thanh toán. Đơn hàng vẫn được giữ lại và có thể thanh toán lại sau.
                         @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'failed')
                             Thanh toán không thành công. Vui lòng thử lại hoặc liên hệ hỗ trợ.
+                        @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'processing')
+                            @if(session('success') && strpos(session('success'), 'Cập nhật') !== false)
+                                Cập nhật phương thức thanh toán thành công! Đang chuyển đến trang thanh toán VNPay...
+                            @else
+                                Đang chuyển đến trang thanh toán VNPay...
+                            @endif
+                        @elseif($order->payment_method === 'bank_transfer' && $order->payment_status === 'pending')
+                            @if(session('success') && strpos(session('success'), 'Cập nhật') !== false)
+                                Cập nhật phương thức thanh toán thành công! Vui lòng chờ xử lý.
+                            @else
+                                Cảm ơn bạn đã mua hàng tại Techvicom
+                            @endif
                         @else
                             Cảm ơn bạn đã mua hàng tại Techvicom
                         @endif
@@ -111,8 +131,11 @@
                             </div>
                         @endif
 
-                        {{-- Giảm giá VNPay: nếu có --}}
-                        @if (($order->vnpay_discount ?? 0) > 0)
+                        {{-- Giảm giá VNPay: chỉ hiển thị khi thực sự có áp dụng voucher --}}
+                        @if (($order->vnpay_discount ?? 0) > 0 && 
+                             $order->payment_method === 'bank_transfer' && 
+                             $order->payment_status === 'paid' && 
+                             $order->vnpay_transaction_id)
                             <div class="flex justify-between py-1 text-green-600">
                                 <span>Giảm giá VNPay:</span>
                                 <span class="font-medium">-{{ number_format($order->vnpay_discount / 100) }}₫</span>
@@ -196,16 +219,52 @@
 
                 <!-- Order Items -->
                 <div class="text-left mb-6">
+                    @php
+                        // Đảm bảo không có sản phẩm trùng lặp
+                        $uniqueItems = $order->orderItems->unique(function ($item) {
+                            return $item->product_id . '_' . ($item->variant_id ?? 0);
+                        });
+                    @endphp
                     <h3 class="font-semibold text-gray-900 mb-4">
-                        Sản phẩm đã đặt ({{ $order->orderItems->count() }} sản phẩm)
+                        Sản phẩm đã đặt ({{ $uniqueItems->count() }} sản phẩm)
                     </h3>
                     <div class="space-y-3">
                         @if ($order->orderItems->count() > 0)
-                            @foreach ($order->orderItems as $item)
+                            @php
+                                // Đảm bảo không có sản phẩm trùng lặp
+                                $uniqueItems = $order->orderItems->unique(function ($item) {
+                                    return $item->product_id . '_' . ($item->variant_id ?? 0);
+                                });
+                            @endphp
+                            @foreach ($uniqueItems as $item)
                                 <div class="flex items-center justify-between py-2 border-b border-gray-100">
                                     <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                            @php
+                                                $imageUrl = '';
+                                                if ($item->productVariant && $item->productVariant->image) {
+                                                    $imageUrl = asset('storage/' . $item->productVariant->image);
+                                                } elseif ($item->product && $item->product->thumbnail) {
+                                                    $imageUrl = asset('storage/' . $item->product->thumbnail);
+                                                } elseif ($item->product && $item->product->productAllImages && $item->product->productAllImages->count() > 0) {
+                                                    $imageUrl = asset('uploads/products/' . $item->product->productAllImages->first()->image_path);
+                                                } else {
+                                                    $imageUrl = asset('client_css/images/placeholder.svg');
+                                                }
+                                            @endphp
+                                            <img src="{{ $imageUrl }}" alt="{{ $item->name_product }}"
+                                                class="w-full h-full object-cover"
+                                                onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
+                                        </div>
                                         <div class="text-sm">
                                             <div class="font-medium">{{ $item->name_product }}</div>
+                                            @if ($item->productVariant && $item->productVariant->attributeValues)
+                                                <div class="text-gray-500 text-xs">
+                                                    @foreach ($item->productVariant->attributeValues as $value)
+                                                        {{ $value->attribute->name }}: {{ $value->value }}@if (!$loop->last), @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                             <div class="text-gray-500">Số lượng: {{ $item->quantity }}</div>
                                         </div>
                                     </div>
@@ -235,6 +294,11 @@
                         <a href="{{ route('home') }}"
                             class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition">
                             <i class="fas fa-home mr-2"></i>Về trang chủ
+                        </a>
+
+                        <a href="{{ route('products.index') }}"
+                            class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                            <i class="fas fa-shopping-bag mr-2"></i>Tiếp tục mua sắm
                         </a>
 
                         @if ($order->payment_method === 'bank_transfer' && $order->payment_status === 'cancelled')

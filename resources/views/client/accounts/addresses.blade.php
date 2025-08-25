@@ -46,7 +46,7 @@
 
 @section('content')
     <div class="bg-gray-50 min-h-screen py-8">
-        <div class="container mx-auto px-4">
+        <div class="techvicom-container">
             <!-- Header -->
             <div class="bg-white rounded-lg p-6 mb-6 shadow-sm">
                 <div class="d-flex align-items-center justify-content-between">
@@ -67,25 +67,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Dropdown chọn địa chỉ -->
-            @if ($addresses->count())
-                <div class="mb-4">
-                    <label class="form-label font-semibold">Chọn địa chỉ giao hàng</label>
-                    <select class="form-control" id="address-select">
-                        @foreach ($addresses as $address)
-                            <option value="{{ $address->id }}" data-detail="{{ $address->address_line }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}" {{ $address->is_default ? 'selected' : '' }}>
-                                {{ $address->address_line }}, {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
-                                @if ($address->is_default)
-                                    (Mặc định)
-                                @endif
-                            </option>
-                        @endforeach
-                        <option value="new">+ Thêm địa chỉ mới</option>
-                    </select>
-                    <div id="address-detail" class="mt-2 text-secondary small"></div>
-                </div>
-            @endif
 
             <!-- Address List -->
             <div class="row">
@@ -124,12 +105,20 @@
                                         <li>
                                             <hr class="dropdown-divider">
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="#"
-                                                onclick="deleteAddress({{ $address->id }})">
-                                                <i class="fas fa-trash me-2"></i>Xóa
-                                            </a>
-                                        </li>
+                                        @if (!$address->is_default)
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#"
+                                                    onclick="deleteAddress({{ $address->id }})">
+                                                    <i class="fas fa-trash me-2"></i>Xóa
+                                                </a>
+                                            </li>
+                                        @else
+                                            <li>
+                                                <a class="dropdown-item text-muted" href="#" disabled>
+                                                    <i class="fas fa-trash me-2"></i>Xóa (Không thể xóa địa chỉ mặc định)
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </div>
@@ -182,22 +171,29 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label font-semibold">Tên người nhận <span class="text-danger">*</span></label>
-                                <input type="text" name="recipient_name" class="form-control" placeholder="Nhập tên người nhận" value="{{ old('recipient_name') }}">
+                                <label class="form-label font-semibold">Tên người nhận <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="recipient_name" class="form-control"
+                                    placeholder="Nhập tên người nhận" value="{{ old('recipient_name') }}">
                                 @error('recipient_name')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label font-semibold">Số điện thoại <span class="text-danger">*</span></label>
-                                <input type="tel" name="phone" class="form-control" placeholder="Nhập số điện thoại" value="{{ old('phone') }}">
+                                <label class="form-label font-semibold">Số điện thoại <span
+                                        class="text-danger">*</span></label>
+                                <input type="tel" name="phone" class="form-control phone-input" placeholder="Nhập số điện thoại"
+                                    value="{{ old('phone') }}" pattern="[0-9]*" inputmode="numeric" maxlength="11">
                                 @error('phone')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label font-semibold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                <input type="text" name="address_line" class="form-control mb-2" placeholder="VD: 134 Nguyễn Xá, Minh Khai, Bắc Từ Liêm" value="{{ old('address_line') }}">
+                                <label class="form-label font-semibold">Địa chỉ chi tiết <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="address_line" class="form-control mb-2"
+                                    placeholder="VD: 134 Nguyễn Xá, Minh Khai, Bắc Từ Liêm"
+                                    value="{{ old('address_line') }}">
                                 @error('address_line')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
@@ -233,7 +229,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_default" value="1" id="isDefault" {{ old('is_default') ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="is_default" value="1"
+                                        id="isDefault" {{ old('is_default') ? 'checked' : '' }}>
                                     <label class="form-check-label font-semibold" for="isDefault">
                                         Đặt làm địa chỉ mặc định
                                     </label>
@@ -265,43 +262,57 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
-                        <div id="edit_address_detail" class="mb-3"><h3 class="text-primary fw-bold mb-3" id="edit_address_detail_h3"></h3></div>
+                        <div id="edit_address_detail" class="mb-3">
+                            <h3 class="text-primary fw-bold mb-3" id="edit_address_detail_h3"></h3>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label font-semibold">Tên người nhận <span class="text-danger">*</span></label>
-                                <input type="text" name="recipient_name" class="form-control" id="edit_recipient_name">
+                                <label class="form-label font-semibold">Tên người nhận <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="recipient_name" class="form-control"
+                                    id="edit_recipient_name">
+                                <span id="edit_recipient_name_error" class="text-danger small" style="display: none;"></span>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label font-semibold">Số điện thoại <span class="text-danger">*</span></label>
-                                <input type="tel" name="phone" class="form-control" id="edit_phone">
+                                <label class="form-label font-semibold">Số điện thoại <span
+                                        class="text-danger">*</span></label>
+                                <input type="tel" name="phone" class="form-control phone-input" id="edit_phone" pattern="[0-9]*" inputmode="numeric" maxlength="11">
+                                <span id="edit_phone_error" class="text-danger small" style="display: none;"></span>
                             </div>
                             <div class="col-12 mb-3">
-                                <label class="form-label font-semibold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                <input type="text" name="address_line" class="form-control mb-2" id="edit_address_line">
+                                <label class="form-label font-semibold">Địa chỉ chi tiết <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="address_line" class="form-control mb-2"
+                                    id="edit_address_line">
+                                <span id="edit_address_line_error" class="text-danger small" style="display: none;"></span>
                                 <div class="row">
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_province" name="city_code" class="form-control">
                                             <option value="">Chọn tỉnh/thành phố</option>
                                         </select>
                                         <input type="hidden" name="city" id="edit_city_name">
+                                        <span id="edit_city_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_district" name="district_code" class="form-control">
                                             <option value="">Chọn quận/huyện</option>
                                         </select>
                                         <input type="hidden" name="district" id="edit_district_name">
+                                        <span id="edit_district_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                     <div class="col-md-4 mb-2">
                                         <select id="edit_ward" name="ward_code" class="form-control">
                                             <option value="">Chọn phường/xã</option>
                                         </select>
                                         <input type="hidden" name="ward" id="edit_ward_name">
+                                        <span id="edit_ward_error" class="text-danger small" style="display: none;"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_default" value="1" id="edit_is_default">
+                                    <input class="form-check-input" type="checkbox" name="is_default" value="1"
+                                        id="edit_is_default">
                                     <label class="form-check-label font-semibold" for="edit_is_default">
                                         Đặt làm địa chỉ mặc định
                                     </label>
@@ -412,7 +423,18 @@
             let editCityNameInput = document.getElementById('edit_city_name');
             let editDistrictNameInput = document.getElementById('edit_district_name');
             let editWardNameInput = document.getElementById('edit_ward_name');
+            // Function để xóa tất cả lỗi
+            function clearAllErrors() {
+                const errorSpans = document.querySelectorAll('[id$="_error"]');
+                errorSpans.forEach(span => {
+                    span.textContent = '';
+                    span.style.display = 'none';
+                });
+            }
+
             window.editAddress = function(addressId) {
+                // Xóa tất cả lỗi trước khi mở modal
+                clearAllErrors();
                 fetch(`/accounts/addresses/${addressId}/edit`)
                     .then(response => response.json())
                     .then(data => {
@@ -422,14 +444,17 @@
                             document.getElementById('edit_phone').value = address.phone;
                             document.getElementById('edit_address_line').value = address.address_line;
                             document.getElementById('edit_is_default').checked = address.is_default;
-                            document.getElementById('editAddressForm').action = `/accounts/addresses/${addressId}`;
+                            document.getElementById('editAddressForm').action =
+                                `/accounts/addresses/${addressId}`;
                             // Load province list
                             fetch('/api/provinces')
                                 .then(res => res.json())
                                 .then(provinces => {
-                                    editProvinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành phố</option>';
+                                    editProvinceSelect.innerHTML =
+                                        '<option value="">Chọn tỉnh/thành phố</option>';
                                     provinces.forEach(item => {
-                                        editProvinceSelect.innerHTML += `<option value="${item.code}">${item.name}</option>`;
+                                        editProvinceSelect.innerHTML +=
+                                            `<option value="${item.code}">${item.name}</option>`;
                                     });
                                     editProvinceSelect.value = address.city_code || '';
                                     editCityNameInput.value = address.city;
@@ -438,23 +463,31 @@
                                         fetch(`/api/districts/${address.city_code}`)
                                             .then(res => res.json())
                                             .then(districts => {
-                                                editDistrictSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+                                                editDistrictSelect.innerHTML =
+                                                    '<option value="">Chọn quận/huyện</option>';
                                                 districts.forEach(item => {
-                                                    editDistrictSelect.innerHTML += `<option value="${item.code}">${item.name}</option>`;
+                                                    editDistrictSelect.innerHTML +=
+                                                        `<option value="${item.code}">${item.name}</option>`;
                                                 });
-                                                editDistrictSelect.value = address.district_code || '';
+                                                editDistrictSelect.value = address.district_code ||
+                                                    '';
                                                 editDistrictNameInput.value = address.district;
                                                 // Load wards
                                                 if (address.district_code) {
                                                     fetch(`/api/wards/${address.district_code}`)
                                                         .then(res => res.json())
                                                         .then(wards => {
-                                                            editWardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+                                                            editWardSelect.innerHTML =
+                                                                '<option value="">Chọn phường/xã</option>';
                                                             wards.forEach(item => {
-                                                                editWardSelect.innerHTML += `<option value="${item.code}">${item.name}</option>`;
+                                                                editWardSelect
+                                                                    .innerHTML +=
+                                                                    `<option value="${item.code}">${item.name}</option>`;
                                                             });
-                                                            editWardSelect.value = address.ward_code || '';
-                                                            editWardNameInput.value = address.ward;
+                                                            editWardSelect.value = address
+                                                                .ward_code || '';
+                                                            editWardNameInput.value = address
+                                                                .ward;
                                                         });
                                                 }
                                             });
@@ -467,15 +500,18 @@
                                 editDistrictSelect.innerHTML = '<option value="">Đang tải...</option>';
                                 editWardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
                                 if (!code) {
-                                    editDistrictSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+                                    editDistrictSelect.innerHTML =
+                                        '<option value="">Chọn quận/huyện</option>';
                                     return;
                                 }
                                 fetch(`/api/districts/${code}`)
                                     .then(res => res.json())
                                     .then(data => {
-                                        editDistrictSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+                                        editDistrictSelect.innerHTML =
+                                            '<option value="">Chọn quận/huyện</option>';
                                         data.forEach(item => {
-                                            editDistrictSelect.innerHTML += `<option value="${item.code}">${item.name}</option>`;
+                                            editDistrictSelect.innerHTML +=
+                                                `<option value="${item.code}">${item.name}</option>`;
                                         });
                                     });
                             };
@@ -484,15 +520,18 @@
                                 editDistrictNameInput.value = this.options[this.selectedIndex].text;
                                 editWardSelect.innerHTML = '<option value="">Đang tải...</option>';
                                 if (!code) {
-                                    editWardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+                                    editWardSelect.innerHTML =
+                                        '<option value="">Chọn phường/xã</option>';
                                     return;
                                 }
                                 fetch(`/api/wards/${code}`)
                                     .then(res => res.json())
                                     .then(data => {
-                                        editWardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+                                        editWardSelect.innerHTML =
+                                            '<option value="">Chọn phường/xã</option>';
                                         data.forEach(item => {
-                                            editWardSelect.innerHTML += `<option value="${item.code}">${item.name}</option>`;
+                                            editWardSelect.innerHTML +=
+                                                `<option value="${item.code}">${item.name}</option>`;
                                         });
                                     });
                             };
@@ -500,7 +539,8 @@
                                 editWardNameInput.value = this.options[this.selectedIndex].text;
                             };
                             // Hiển thị chi tiết địa chỉ nổi bật
-                            const detail = `${address.address_line}, ${address.ward}, ${address.district}, ${address.city}`;
+                            const detail =
+                                `${address.address_line}, ${address.ward}, ${address.district}, ${address.city}`;
                             document.getElementById('edit_address_detail_h3').textContent = detail;
                             // Set giá trị cho input ẩn (fix lỗi validate)
                             document.getElementById('edit_city_name').value = address.city;
@@ -508,12 +548,16 @@
                             document.getElementById('edit_ward_name').value = address.ward;
                             new bootstrap.Modal(document.getElementById('editAddressModal')).show();
                         } else {
-                            Swal.fire('Lỗi!', 'Không thể tải thông tin địa chỉ', 'error');
+                            Swal.fire('Lỗi!', 'Không thể tải thông tin địa chỉ', 'error', {
+                                timer: 3000
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi tải dữ liệu', 'error');
+                        Swal.fire('Lỗi!', 'Có lỗi xảy ra khi tải dữ liệu', 'error', {
+                            timer: 3000
+                        });
                     });
             };
 
@@ -528,22 +572,28 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`/accounts/addresses/${addressId}/set-default`, {
-                            method: 'PATCH',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Thành công', data.message, 'success').then(() => location.reload());
-                            } else {
-                                Swal.fire('Lỗi', data.message || 'Không thể đặt mặc định', 'error');
-                            }
-                        })
-                        .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
+                                method: 'PATCH',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector(
+                                        'meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Thành công', data.message, 'success', {
+                                        timer: 3000
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire('Lỗi', data.message || 'Không thể đặt mặc định',
+                                        'error', {
+                                            timer: 3000
+                                        });
+                                }
+                            })
+                            .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
                     }
                 });
             };
@@ -560,22 +610,28 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         fetch(`/accounts/addresses/${addressId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire('Đã xóa', data.message, 'success').then(() => location.reload());
-                            } else {
-                                Swal.fire('Lỗi', data.message || 'Không thể xóa địa chỉ', 'error');
-                            }
-                        })
-                        .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector(
+                                        'meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire('Đã xóa', data.message, 'success', {
+                                        timer: 3000
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire('Lỗi', data.message || 'Không thể xóa địa chỉ',
+                                        'error', {
+                                            timer: 3000
+                                        });
+                                }
+                            })
+                            .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
                     }
                 });
             };
@@ -595,22 +651,37 @@
                     formData.set('ward', ward);
                     const url = editForm.action;
                     fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json',
-                        },
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Thành công', 'Cập nhật địa chỉ thành công', 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ', 'error');
-                        }
-                    })
-                    .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .getAttribute('content'),
+                                'Accept': 'application/json',
+                            },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Thành công', 'Cập nhật địa chỉ thành công', 'success', {
+                                    timer: 3000
+                                }).then(() => location.reload());
+                            } else {
+                                // Hiển thị lỗi dưới từng ô input thay vì popup
+                                clearAllErrors();
+                                if (data.errors) {
+                                    Object.keys(data.errors).forEach(field => {
+                                        const errorSpan = document.getElementById(`edit_${field}_error`);
+                                        if (errorSpan) {
+                                            errorSpan.textContent = data.errors[field][0];
+                                            errorSpan.style.display = 'block';
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire('Lỗi', data.message || 'Không thể cập nhật địa chỉ', 'error');
+                                }
+                            }
+                        })
+                        .catch(() => Swal.fire('Lỗi', 'Có lỗi xảy ra', 'error'));
                 });
             }
 
@@ -626,8 +697,93 @@
                 showDetail(); // Hiển thị ngay khi load trang
             }
         });
-    
+
+        // Validation cho input số điện thoại - chỉ cho phép nhập số và tự động thêm số 0
         document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý tất cả input có class phone-input
+            const phoneInputs = document.querySelectorAll('.phone-input');
+            
+            phoneInputs.forEach(function(input) {
+                // Chỉ cho phép nhập số
+                input.addEventListener('input', function(e) {
+                    // Loại bỏ tất cả ký tự không phải số
+                    let value = this.value.replace(/[^0-9]/g, '');
+                    
+                    // Nếu bắt đầu nhập và không bắt đầu bằng 0, tự động thêm 0
+                    if (value.length > 0 && !value.startsWith('0')) {
+                        value = '0' + value;
+                    }
+                    
+                    // Giới hạn tối đa 10 số (bao gồm số 0 đầu)
+                    if (value.length > 10) {
+                        value = value.substring(0, 10);
+                    }
+                    
+                    this.value = value;
+                });
+                
+                // Ngăn chặn paste text không phải số
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    let numbersOnly = pastedText.replace(/[^0-9]/g, '');
+                    
+                    // Nếu không bắt đầu bằng 0, tự động thêm 0
+                    if (numbersOnly.length > 0 && !numbersOnly.startsWith('0')) {
+                        numbersOnly = '0' + numbersOnly;
+                    }
+                    
+                    // Giới hạn tối đa 10 số
+                    if (numbersOnly.length > 10) {
+                        numbersOnly = numbersOnly.substring(0, 10);
+                    }
+                    
+                    this.value = numbersOnly;
+                });
+                
+                // Ngăn chặn keydown cho các phím không phải số
+                input.addEventListener('keydown', function(e) {
+                    // Cho phép: backspace, delete, tab, escape, enter, arrow keys
+                    if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                        // Cho phép Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true)) {
+                        return;
+                    }
+                    // Cho phép số từ 0-9
+                    if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+                        return;
+                    }
+                    e.preventDefault();
+                });
+                
+                // Kiểm tra khi blur (rời khỏi ô input)
+                input.addEventListener('blur', function() {
+                    let value = this.value.trim();
+                    
+                    // Nếu có giá trị và không bắt đầu bằng 0, tự động thêm 0
+                    if (value.length > 0 && !value.startsWith('0')) {
+                        this.value = '0' + value;
+                    }
+                    
+                    // Hiển thị thông báo lỗi nếu không đúng format
+                    const errorSpan = this.parentNode.querySelector('[id$="_error"]');
+                    if (errorSpan) {
+                        if (value.length > 0 && value.length < 10) {
+                            errorSpan.textContent = 'Số điện thoại phải có 10 số.';
+                            errorSpan.style.display = 'block';
+                        } else if (value.length > 0 && !value.startsWith('0')) {
+                            errorSpan.textContent = 'Số điện thoại phải bắt đầu bằng số 0.';
+                            errorSpan.style.display = 'block';
+                        } else {
+                            errorSpan.style.display = 'none';
+                        }
+                    }
+                });
+            });
+            
             @if ($errors->any())
                 var addModal = new bootstrap.Modal(document.getElementById('addAddressModal'));
                 addModal.show();

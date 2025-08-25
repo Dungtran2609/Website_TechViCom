@@ -24,7 +24,7 @@
 
 <form method="GET" action="{{ route('admin.orders.returns') }}" class="mb-4">
     <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <input type="text" name="keyword" value="{{ request('keyword') }}" class="form-control" placeholder="Tìm theo mã đơn, khách hàng, lý do...">
         </div>
         <div class="col-md-2">
@@ -40,17 +40,6 @@
                 <option value="">Tất cả loại</option>
                 <option value="cancel" {{ request('type') == 'cancel' ? 'selected' : '' }}>Hủy</option>
                 <option value="return" {{ request('type') == 'return' ? 'selected' : '' }}>Đổi/Trả</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <select name="order_status" class="form-select">
-                <option value="">Tất cả trạng thái đơn</option>
-                <option value="pending" {{ request('order_status') == 'pending' ? 'selected' : '' }}>Đang chờ xử lý</option>
-                <option value="processing" {{ request('order_status') == 'processing' ? 'selected' : '' }}>Đang xử lý</option>
-                <option value="shipped" {{ request('order_status') == 'shipped' ? 'selected' : '' }}>Đang giao hàng</option>
-                <option value="delivered" {{ request('order_status') == 'delivered' ? 'selected' : '' }}>Đã giao</option>
-                <option value="cancelled" {{ request('order_status') == 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
-                <option value="returned" {{ request('order_status') == 'returned' ? 'selected' : '' }}>Đã trả hàng</option>
             </select>
         </div>
         <div class="col-md-2">

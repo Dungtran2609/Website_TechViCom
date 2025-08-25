@@ -12,6 +12,12 @@
 
     <div class="card">
         <div class="card-body">
+            <!-- Hiển thị thông báo lỗi validate chung -->
+            @if ($errors->has('error'))
+                <div class="alert alert-danger">
+                    {{ $errors->first('error') }}
+                </div>
+            @endif
             <!-- Form chỉnh sửa -->
             <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
@@ -40,12 +46,18 @@
                 </div>
 
 
+                @php
+                    $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
+                @endphp
                 <!-- Tên người dùng -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Tên người dùng <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="name"
                            class="form-control @error('name') is-invalid @enderror"
-                           value="{{ old('name', $user->name) }}">
+                           value="{{ old('name', $user->name) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="name" value="{{ $user->name }}">
+                    @endif
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -57,7 +69,10 @@
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="email"
                            class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email', $user->email) }}">
+                           value="{{ old('email', $user->email) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="email" value="{{ $user->email }}">
+                    @endif
                     @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -69,7 +84,7 @@
                     <label for="password" class="form-label">Mật khẩu mới</label>
                     <input type="password" name="password" id="password"
                            class="form-control @error('password') is-invalid @enderror"
-                           placeholder="Để trống nếu không muốn thay đổi">
+                           placeholder="Để trống nếu không muốn thay đổi" @if($onlyUserRole) readonly @endif>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -81,7 +96,7 @@
                     <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới</label>
                     <input type="password" name="password_confirmation" id="password_confirmation"
                            class="form-control @error('password_confirmation') is-invalid @enderror"
-                           placeholder="Xác nhận mật khẩu mới">
+                           placeholder="Xác nhận mật khẩu mới" @if($onlyUserRole) readonly @endif>
                     @error('password_confirmation')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -93,7 +108,10 @@
                     <label for="phone_number" class="form-label">Số điện thoại</label>
                     <input type="text" name="phone_number" id="phone_number"
                            class="form-control @error('phone_number') is-invalid @enderror"
-                           value="{{ old('phone_number', $user->phone_number) }}">
+                           value="{{ old('phone_number', $user->phone_number) }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="phone_number" value="{{ $user->phone_number }}">
+                    @endif
                     @error('phone_number')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -105,7 +123,10 @@
                     <label for="birthday" class="form-label">Ngày sinh</label>
                     <input type="date" name="birthday" id="birthday"
                            class="form-control @error('birthday') is-invalid @enderror"
-                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}">
+                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}" @if($onlyUserRole) readonly @endif>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="birthday" value="{{ $user->birthday }}">
+                    @endif
                     @error('birthday')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -115,12 +136,15 @@
                 <!-- Giới tính -->
                 <div class="mb-3">
                     <label for="gender" class="form-label">Giới tính</label>
-                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror">
+                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror" @if($onlyUserRole) disabled @endif>
                         <option value="">Chọn giới tính</option>
                         <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>Nam</option>
                         <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>Nữ</option>
                         <option value="other" {{ old('gender', $user->gender) === 'other' ? 'selected' : '' }}>Khác</option>
                     </select>
+                    @if($onlyUserRole)
+                        <input type="hidden" name="gender" value="{{ $user->gender }}">
+                    @endif
                     @error('gender')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -143,7 +167,10 @@
                 <!-- Vai trò -->
                 <div class="mb-3">
                     <label for="roles" class="form-label">Vai trò <span class="text-danger">*</span></label>
-                    <select name="roles[]" id="roles" class="form-select @error('roles') is-invalid @enderror" multiple>
+                    @php
+                        $isSelf = auth()->id() === $user->id;
+                    @endphp
+                    <select name="roles[]" id="roles" class="form-select @error('roles') is-invalid @enderror" multiple @if($isSelf) disabled @endif>
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}"
                                 {{ (in_array($role->id, old('roles', $user->roles->pluck('id')->toArray()))) ? 'selected' : '' }}>
@@ -151,6 +178,10 @@
                             </option>
                         @endforeach
                     </select>
+                    @if($isSelf)
+                        <input type="hidden" name="roles[]" value="{{ implode('" value="', $user->roles->pluck('id')->toArray()) }}">
+                        <div class="text-danger mt-1">Bạn không thể thay đổi vai trò của chính mình.</div>
+                    @endif
                     <small class="text-muted">Giữ phím Ctrl hoặc Cmd để chọn nhiều vai trò.</small>
                     @error('roles')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -166,58 +197,46 @@
                 @endphp
 
 
-                <div class="row">
-                    <!-- Địa chỉ chi tiết -->
-                    <div class="col-md-12 mb-3">
-                        <label for="address_line" class="form-label">Địa chỉ chi tiết</label>
-                        <input type="text" name="address_line" id="address_line"
-                               class="form-control @error('address_line') is-invalid @enderror"
-                               value="{{ old('address_line', $defaultAddress->address_line ?? '') }}"
-                               placeholder="Nhập địa chỉ chi tiết">
-                        @error('address_line')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-
-                    <!-- Phường/Xã -->
-                    <div class="col-md-4 mb-3">
-                        <label for="ward" class="form-label">Phường/Xã</label>
-                        <input type="text" name="ward" id="ward"
-                               class="form-control @error('ward') is-invalid @enderror"
-                               value="{{ old('ward', $defaultAddress->ward ?? '') }}"
-                               placeholder="Nhập phường/xã">
-                        @error('ward')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-
-                    <!-- Quận/Huyện -->
-                    <div class="col-md-4 mb-3">
-                        <label for="district" class="form-label">Quận/Huyện</label>
-                        <input type="text" name="district" id="district"
-                               class="form-control @error('district') is-invalid @enderror"
-                               value="{{ old('district', $defaultAddress->district ?? '') }}"
-                               placeholder="Nhập quận/huyện">
-                        @error('district')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-
-                    <!-- Tỉnh/Thành phố -->
-                    <div class="col-md-4 mb-3">
-                        <label for="city" class="form-label">Tỉnh/Thành phố</label>
-                        <input type="text" name="city" id="city"
-                               class="form-control @error('city') is-invalid @enderror"
-                               value="{{ old('city', $defaultAddress->city ?? '') }}"
-                               placeholder="Nhập tỉnh/thành phố">
-                        @error('city')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                @if(!$onlyUserRole)
+                <div class="col-12 mb-3">
+                    <label class="form-label font-semibold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+                    <input type="text" name="address_line" class="form-control mb-2 @error('address_line') is-invalid @enderror" id="edit_address_line" value="{{ old('address_line', $defaultAddress->address_line ?? '') }}" placeholder="Nhập số nhà, tên đường...">
+                    @error('address_line')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <select id="edit_province" name="city_code" class="form-control @error('city_code') is-invalid @enderror">
+                                <option value="">Chọn tỉnh/thành phố</option>
+                            </select>
+                            <input type="hidden" name="city" id="edit_city_name" value="{{ old('city', $defaultAddress->city ?? '') }}" required>
+                            @error('city_code')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <select id="edit_district" name="district_code" class="form-control @error('district_code') is-invalid @enderror">
+                                <option value="">Chọn quận/huyện</option>
+                            </select>
+                            <input type="hidden" name="district" id="edit_district_name" value="{{ old('district', $defaultAddress->district ?? '') }}" required>
+                            <input type="hidden" name="district_code_hidden" id="edit_district_code_hidden" value="{{ old('district_code', '') }}">
+                            @error('district_code')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <select id="edit_ward" name="ward_code" class="form-control @error('ward_code') is-invalid @enderror">
+                                <option value="">Chọn phường/xã</option>
+                            </select>
+                            <input type="hidden" name="ward" id="edit_ward_name" value="{{ old('ward', $defaultAddress->ward ?? '') }}" required>
+                            <input type="hidden" name="ward_code_hidden" id="edit_ward_code_hidden" value="{{ old('ward_code', '') }}">
+                            @error('ward_code')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                 </div>
+                @endif
 
 
                 <!-- Địa chỉ mặc định -->
@@ -246,3 +265,186 @@
     </div>
 @endsection
 
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            const apiBaseUrl = '{{ url('/api') }}';
+
+
+            function loadProvinces() {
+                fetch(`${apiBaseUrl}/provinces`)
+                    .then(response => response.json())
+                    .then(data => {
+                        $('select[name="city_code"]').each(function() {
+                            const provinceSelect = $(this);
+                            provinceSelect.empty().append('<option value="">Chọn tỉnh/thành phố</option>');
+                            data.forEach(province => {
+                                provinceSelect.append(`<option value="${province.code}">${province.name}</option>`);
+                            });
+                            // Set selected if value exists
+                            const selectedCity = $('#edit_city_name').val();
+                            if (selectedCity) {
+                                provinceSelect.find('option').filter(function() {
+                                    return $(this).text() === selectedCity;
+                                }).prop('selected', true);
+                            }
+                        });
+                    });
+            }
+
+
+            function loadDistricts(provinceCode, districtSelectElement) {
+                const wardSelectElement = $(districtSelectElement).closest('.row').find('select[name="ward_code"]');
+                $(districtSelectElement).empty().append('<option value="">Chọn quận/huyện</option>');
+                $(wardSelectElement).empty().append('<option value="">Chọn phường/xã</option>');
+                if (!provinceCode) return;
+                fetch(`${apiBaseUrl}/districts/${provinceCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(district => {
+                            $(districtSelectElement).append(`<option value="${district.code}">${district.name}</option>`);
+                        });
+                        // Set selected if value exists
+                        const selectedDistrict = $('#edit_district_name').val();
+                        if (selectedDistrict) {
+                            $(districtSelectElement).find('option').filter(function() {
+                                return $(this).text() === selectedDistrict;
+                            }).prop('selected', true);
+                        }
+                    });
+            }
+
+
+            function loadWards(districtCode, wardSelectElement) {
+                $(wardSelectElement).empty().append('<option value="">Chọn phường/xã</option>');
+                if (!districtCode) return;
+                fetch(`${apiBaseUrl}/wards/${districtCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(ward => {
+                            $(wardSelectElement).append(`<option value="${ward.code}">${ward.name}</option>`);
+                        });
+                        // Set selected if value exists
+                        const selectedWard = $('#edit_ward_name').val();
+                        if (selectedWard) {
+                            $(wardSelectElement).find('option').filter(function() {
+                                return $(this).text() === selectedWard;
+                            }).prop('selected', true);
+                        }
+                    });
+            }
+
+
+            // Sự kiện chọn tỉnh/thành
+            $(document).on('change', 'select[name="city_code"]', function() {
+                const provinceCode = $(this).val();
+                const districtSelect = $(this).closest('.row').find('select[name="district_code"]');
+                $(this).closest('.row').find('input[name="city"]').val($(this).find('option:selected').text());
+                loadDistricts(provinceCode, districtSelect);
+            });
+
+
+            // Sự kiện chọn quận/huyện
+            $(document).on('change', 'select[name="district_code"]', function() {
+                const districtCode = $(this).val();
+                const wardSelect = $(this).closest('.row').find('select[name="ward_code"]');
+                $(this).closest('.row').find('input[name="district"]').val($(this).find('option:selected').text());
+                // Lưu lại district_code vào input ẩn
+                $('#edit_district_code_hidden').val(districtCode);
+                loadWards(districtCode, wardSelect);
+            });
+
+
+            // Sự kiện chọn phường/xã
+            $(document).on('change', 'select[name="ward_code"]', function() {
+                const wardCode = $(this).val();
+                $(this).closest('.row').find('input[name="ward"]').val($(this).find('option:selected').text());
+                // Lưu lại ward_code vào input ẩn
+                $('#edit_ward_code_hidden').val(wardCode);
+            });
+
+
+            // Tải dữ liệu dropdown khi trang tải
+            // Ưu tiên lấy code từ input ẩn nếu có, nếu không thì lấy từ old() hoặc defaultAddress
+            const selectedCityName = $('#edit_city_name').val();
+            const selectedDistrictName = $('#edit_district_name').val();
+            const selectedWardName = $('#edit_ward_name').val();
+            const selectedDistrictCode = $('#edit_district_code_hidden').val();
+            const selectedWardCode = $('#edit_ward_code_hidden').val();
+
+
+            // Hàm lấy code từ tên (nếu không có code lưu sẵn)
+            function getCodeByName(list, name) {
+                const found = list.find(item => item.name === name);
+                return found ? found.code : '';
+            }
+
+
+            // Load provinces và sau đó load districts/wards nếu có dữ liệu cũ
+            fetch(`${apiBaseUrl}/provinces`).then(res => res.json()).then(provinces => {
+                const provinceSelect = $('select[name="city_code"]');
+                provinceSelect.empty().append('<option value="">Chọn tỉnh/thành phố</option>');
+                provinces.forEach(province => {
+                    provinceSelect.append(`<option value="${province.code}">${province.name}</option>`);
+                });
+                // Set selected city
+                if (selectedCityName) {
+                    provinceSelect.find('option').filter(function() {
+                        return $(this).text() === selectedCityName;
+                    }).prop('selected', true);
+                }
+                // Lấy code tỉnh/thành phố
+                let cityCode = provinceSelect.val();
+                if (!cityCode && selectedCityName) {
+                    cityCode = getCodeByName(provinces, selectedCityName);
+                    provinceSelect.val(cityCode);
+                }
+                if (cityCode) {
+                    // Load districts
+                    fetch(`${apiBaseUrl}/districts/${cityCode}`).then(res => res.json()).then(districts => {
+                        const districtSelect = $('select[name="district_code"]');
+                        districtSelect.empty().append('<option value="">Chọn quận/huyện</option>');
+                        districts.forEach(district => {
+                            districtSelect.append(`<option value="${district.code}">${district.name}</option>`);
+                        });
+                        // Set selected district
+                        let districtCode = selectedDistrictCode;
+                        if (!districtCode && selectedDistrictName) {
+                            districtCode = getCodeByName(districts, selectedDistrictName);
+                        }
+                        if (districtCode) {
+                            districtSelect.val(districtCode);
+                        } else if (selectedDistrictName) {
+                            districtSelect.find('option').filter(function() {
+                                return $(this).text() === selectedDistrictName;
+                            }).prop('selected', true);
+                        }
+                        // Load wards nếu có districtCode
+                        if (districtCode) {
+                            fetch(`${apiBaseUrl}/wards/${districtCode}`).then(res => res.json()).then(wards => {
+                                const wardSelect = $('select[name="ward_code"]');
+                                wardSelect.empty().append('<option value="">Chọn phường/xã</option>');
+                                wards.forEach(ward => {
+                                    wardSelect.append(`<option value="${ward.code}">${ward.name}</option>`);
+                                });
+                                // Set selected ward
+                                let wardCode = selectedWardCode;
+                                if (!wardCode && selectedWardName) {
+                                    wardCode = getCodeByName(wards, selectedWardName);
+                                }
+                                if (wardCode) {
+                                    wardSelect.val(wardCode);
+                                } else if (selectedWardName) {
+                                    wardSelect.find('option').filter(function() {
+                                        return $(this).text() === selectedWardName;
+                                    }).prop('selected', true);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+@endsection

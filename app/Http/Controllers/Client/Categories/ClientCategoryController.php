@@ -15,7 +15,7 @@ class ClientCategoryController extends Controller
             ->where('status', true)
             ->whereNull('parent_id')
             ->withCount(['products', 'children'])
-            ->with(['children' => function($q) {
+            ->with(['children' => function ($q) {
                 $q->where('status', true)->withCount('products');
             }]);
 
@@ -37,7 +37,7 @@ class ClientCategoryController extends Controller
 
         // Lấy tất cả sản phẩm trong danh mục này và các danh mục con (nếu có)
         $categoryIds = [$category->id];
-        
+
         // Nếu là danh mục cha, lấy thêm ID của các danh mục con
         if ($category->children()->count() > 0) {
             $childrenIds = $category->children()->where('status', true)->pluck('id')->toArray();
@@ -46,24 +46,27 @@ class ClientCategoryController extends Controller
 
         $products = Product::whereIn('category_id', $categoryIds)
             ->where('status', 1)
+            ->whereHas('brand', function ($q) {
+                $q->where('status', 1);
+            })
             ->with(['brand', 'category', 'productAllImages', 'variants'])
             ->paginate(12);
 
         // Lấy danh mục con để hiển thị sidebar
         $subcategories = $category->children()->where('status', true)->get();
-        
+
         // Lấy tất cả danh mục cha để hiển thị breadcrumb và sidebar
         $parentCategories = Category::where('status', true)
             ->whereNull('parent_id')
-            ->with(['children' => function($query) {
+            ->with(['children' => function ($query) {
                 $query->where('status', true);
             }])
             ->get();
 
         return view('client.categories.show', compact(
-            'category', 
-            'products', 
-            'subcategories', 
+            'category',
+            'products',
+            'subcategories',
             'parentCategories'
         ));
     }

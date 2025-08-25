@@ -108,7 +108,7 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
+    <div class="techvicom-container py-8">
         <!-- Breadcrumb -->
         <nav class="mb-6">
             <ol class="flex items-center space-x-2 text-sm">
@@ -218,7 +218,7 @@
                     @if(isset($notLoggedIn) && $notLoggedIn)
                         <h3 class="text-lg font-semibold text-gray-600 mb-2">Vui lòng đăng nhập</h3>
                         <p class="text-gray-500">Bạn cần đăng nhập để xem sản phẩm yêu thích</p>
-                        <a href="{{ route('login') }}" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition mt-4">
+                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition mt-4">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Đăng nhập
                         </a>
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ product_id: productId })
         })
-        .then(res => res.ok ? res.json() : Promise.reject())
+        .then(response => response.json())
         .then(data => {
             if (data && data.success) {
                 if (!data.is_favorite) {
@@ -377,6 +377,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const counter = document.getElementById('product-count');
                     if (counter) counter.textContent = cnt + ' sản phẩm yêu thích';
                 }
+            } else if (data.redirect) {
+                // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                alert(data.message || 'Vui lòng đăng nhập để thêm vào yêu thích');
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1500);
             } else {
                 if (icon) icon.className = orig;
             }

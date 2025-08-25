@@ -144,4 +144,232 @@ class AdminController extends Controller
             'stats', 'paymentStats'
         ));
     }
+
+    // Thống kê doanh thu chi tiết
+    public function revenueStatistics(Request $request)
+    {
+        $period = $request->get('period', 'month'); // day, week, month, year
+        $year = $request->get('year', Carbon::now()->year);
+        $month = $request->get('month', Carbon::now()->month);
+
+        $data = [];
+        $labels = [];
+        $totalRevenue = 0;
+        $totalOrders = 0;
+
+        switch ($period) {
+            case 'day':
+                // Doanh thu theo ngày trong tháng
+                $daysInMonth = Carbon::create($year, $month)->daysInMonth;
+                for ($day = 1; $day <= $daysInMonth; $day++) {
+                    $date = Carbon::create($year, $month, $day);
+                    $revenue = $this->getRevenueForDate($date);
+                    $orders = $this->getOrdersForDate($date);
+                    
+                    $data[] = $revenue;
+                    $labels[] = $day;
+                    $totalRevenue += $revenue;
+                    $totalOrders += $orders;
+                }
+                $periodLabel = "Tháng " . $month . "/" . $year;
+                break;
+
+            case 'week':
+                // Doanh thu theo tuần trong năm
+                $weeks = Carbon::create($year)->weeksInYear;
+                for ($week = 1; $week <= $weeks; $week++) {
+                    $startOfWeek = Carbon::create($year)->startOfYear()->addWeeks($week - 1);
+                    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+                    
+                    $revenue = $this->getRevenueForDateRange($startOfWeek, $endOfWeek);
+                    $orders = $this->getOrdersForDateRange($startOfWeek, $endOfWeek);
+                    
+                    $data[] = $revenue;
+                    $labels[] = "Tuần " . $week;
+                    $totalRevenue += $revenue;
+                    $totalOrders += $orders;
+                }
+                $periodLabel = "Năm " . $year;
+                break;
+
+            case 'month':
+                // Doanh thu theo tháng trong năm
+                for ($monthNum = 1; $monthNum <= 12; $monthNum++) {
+                    $startOfMonth = Carbon::create($year, $monthNum)->startOfMonth();
+                    $endOfMonth = $startOfMonth->copy()->endOfMonth();
+                    
+                    $revenue = $this->getRevenueForDateRange($startOfMonth, $endOfMonth);
+                    $orders = $this->getOrdersForDateRange($startOfMonth, $endOfMonth);
+                    
+                    $data[] = $revenue;
+                    $labels[] = "Tháng " . $monthNum;
+                    $totalRevenue += $revenue;
+                    $totalOrders += $orders;
+                }
+                $periodLabel = "Năm " . $year;
+                break;
+
+            case 'year':
+                // Doanh thu theo năm (5 năm gần đây)
+                for ($yearNum = $year - 4; $yearNum <= $year; $yearNum++) {
+                    $startOfYear = Carbon::create($yearNum)->startOfYear();
+                    $endOfYear = $startOfYear->copy()->endOfYear();
+                    
+                    $revenue = $this->getRevenueForDateRange($startOfYear, $endOfYear);
+                    $orders = $this->getOrdersForDateRange($startOfYear, $endOfYear);
+                    
+                    $data[] = $revenue;
+                    $labels[] = $yearNum;
+                    $totalRevenue += $revenue;
+                    $totalOrders += $orders;
+                }
+                $periodLabel = "5 năm gần đây";
+                break;
+        }
+
+        // Thống kê bổ sung
+        $additionalStats = [
+            'avgOrderValue' => $totalOrders > 0 ? $totalRevenue / $totalOrders : 0,
+            'totalOrders' => $totalOrders,
+            'maxRevenue' => max($data),
+            'minRevenue' => min($data),
+            'avgRevenue' => count($data) > 0 ? array_sum($data) / count($data) : 0,
+        ];
+
+        return view('admin.revenue-statistics', compact(
+            'data', 'labels', 'totalRevenue', 'period', 'year', 'month', 
+            'periodLabel', 'additionalStats'
+        ));
+    }
+
+    // Lấy doanh thu cho một ngày cụ thể
+    private function getRevenueForDate($date)
+    {
+        return Order::whereDate('created_at', $date)
+                   ->where('status', 'received')
+                   ->where(function($query) {
+                       $query->where('payment_status', 'paid')
+                             ->orWhere('payment_method', 'cod');
+                   })
+                   ->sum('final_total');
+    }
+
+    // Lấy số đơn hàng cho một ngày cụ thể
+    private function getOrdersForDate($date)
+    {
+        return Order::whereDate('created_at', $date)->count();
+    }
+
+    // Lấy doanh thu cho khoảng thời gian
+    private function getRevenueForDateRange($startDate, $endDate)
+    {
+        return Order::whereBetween('created_at', [$startDate, $endDate])
+                   ->where('status', 'received')
+                   ->where(function($query) {
+                       $query->where('payment_status', 'paid')
+                             ->orWhere('payment_method', 'cod');
+                   })
+                   ->sum('final_total');
+    }
+
+    // Lấy số đơn hàng cho khoảng thời gian
+    private function getOrdersForDateRange($startDate, $endDate)
+    {
+        return Order::whereBetween('created_at', [$startDate, $endDate])->count();
+    }
+
+    // API endpoint để lấy dữ liệu doanh thu (cho AJAX)
+    public function getRevenueData(Request $request)
+    {
+        $period = $request->get('period', '7days');
+        $year = $request->get('year', Carbon::now()->year);
+        $month = $request->get('month', Carbon::now()->month);
+        $quarter = $request->get('quarter', 1);
+
+        $data = [];
+        $labels = [];
+        $totalOrders = 0;
+
+        switch ($period) {
+            case '7days':
+                // 7 ngày gần đây
+                for ($i = 6; $i >= 0; $i--) {
+                    $date = Carbon::now()->subDays($i);
+                    $revenue = $this->getRevenueForDate($date);
+                    $orders = $this->getOrdersForDate($date);
+                    
+                    $data[] = $revenue;
+                    $labels[] = $date->format('d/m');
+                    $totalOrders += $orders;
+                }
+                break;
+
+            case '30days':
+                // 30 ngày gần đây
+                for ($i = 29; $i >= 0; $i--) {
+                    $date = Carbon::now()->subDays($i);
+                    $revenue = $this->getRevenueForDate($date);
+                    $orders = $this->getOrdersForDate($date);
+                    
+                    $data[] = $revenue;
+                    $labels[] = $date->format('d/m');
+                    $totalOrders += $orders;
+                }
+                break;
+
+            case 'month':
+                // Theo tháng trong năm
+                for ($monthNum = 1; $monthNum <= 12; $monthNum++) {
+                    $startOfMonth = Carbon::create($year, $monthNum)->startOfMonth();
+                    $endOfMonth = $startOfMonth->copy()->endOfMonth();
+                    $revenue = $this->getRevenueForDateRange($startOfMonth, $endOfMonth);
+                    $orders = $this->getOrdersForDateRange($startOfMonth, $endOfMonth);
+                    
+                    $data[] = $revenue;
+                    $labels[] = "Tháng " . $monthNum;
+                    $totalOrders += $orders;
+                }
+                break;
+
+            case 'quarter':
+                // Theo quý
+                $quarterStartMonth = ($quarter - 1) * 3 + 1;
+                $quarterEndMonth = $quarter * 3;
+                
+                for ($monthNum = $quarterStartMonth; $monthNum <= $quarterEndMonth; $monthNum++) {
+                    $startOfMonth = Carbon::create($year, $monthNum)->startOfMonth();
+                    $endOfMonth = $startOfMonth->copy()->endOfMonth();
+                    $revenue = $this->getRevenueForDateRange($startOfMonth, $endOfMonth);
+                    $orders = $this->getOrdersForDateRange($startOfMonth, $endOfMonth);
+                    
+                    $data[] = $revenue;
+                    $labels[] = "Tháng " . $monthNum;
+                    $totalOrders += $orders;
+                }
+                break;
+
+            case 'year':
+                // Theo năm (5 năm gần đây)
+                for ($yearNum = $year - 4; $yearNum <= $year; $yearNum++) {
+                    $startOfYear = Carbon::create($yearNum)->startOfYear();
+                    $endOfYear = $startOfYear->copy()->endOfYear();
+                    $revenue = $this->getRevenueForDateRange($startOfYear, $endOfYear);
+                    $orders = $this->getOrdersForDateRange($startOfYear, $endOfYear);
+                    
+                    $data[] = $revenue;
+                    $labels[] = $yearNum;
+                    $totalOrders += $orders;
+                }
+                break;
+        }
+
+        return response()->json([
+            'data' => $data,
+            'labels' => $labels,
+            'totalRevenue' => array_sum($data),
+            'maxRevenue' => max($data),
+            'avgRevenue' => count($data) > 0 ? array_sum($data) / count($data) : 0,
+            'totalOrders' => $totalOrders
+        ]);
+    }
 }

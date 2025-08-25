@@ -3,7 +3,13 @@
 @section('content')
 <div class="card">
     <div class="card-body">
-        <h4 class="mb-4">Chỉnh sửa mã: {{ $coupon->code }}</h4>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Chỉnh sửa mã: {{ $coupon->code }}</h4>
+            <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <iconify-icon icon="solar:arrow-left-broken" class="align-middle"></iconify-icon> Quay lại danh sách
+            </a>
+        </div>
 
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -71,9 +77,13 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Mã</label>
+                    <label class="form-label">Mã <span class="text-danger">*</span></label>
                     <input type="text" name="code" class="form-control @error('code') is-invalid @enderror"
-                        value="{{ old('code', $coupon->code) }}">
+                        value="{{ old('code', $coupon->code) }}" 
+                        placeholder="VD: SALE2024, GIAM50, TET2025" 
+                        pattern="[A-Za-z0-9]+" 
+                        title="Chỉ cho phép chữ cái và số, không ký tự đặc biệt">
+                    <small class="form-text text-muted">Chỉ cho phép chữ cái và số, tối đa 20 ký tự</small>
                     @error('code')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -89,9 +99,12 @@
                     @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Giá trị</label>
+                    <label class="form-label">Giá trị <span class="text-danger">*</span></label>
                     <input type="number" name="value" class="form-control @error('value') is-invalid @enderror"
-                        value="{{ old('value', $coupon->value) }}">
+                        value="{{ old('value', $coupon->value) }}" 
+                        placeholder="VD: 10 (10%) hoặc 50000 (50,000₫)" 
+                        min="1" max="100" step="0.01">
+                    <small class="form-text text-muted">Nhập số phần trăm (1-100) hoặc số tiền cố định</small>
                     @error('value')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -99,7 +112,9 @@
                 <div class="col-md-6">
                     <label class="form-label">Giảm tối đa</label>
                     <input type="number" name="max_discount_amount" class="form-control @error('max_discount_amount') is-invalid @enderror"
-                        value="{{ old('max_discount_amount', $coupon->max_discount_amount) }}">
+                        value="{{ old('max_discount_amount', $coupon->max_discount_amount) }}" 
+                        placeholder="VD: 100000 (100,000₫)" min="0" step="1000">
+                    <small class="form-text text-muted">Giới hạn số tiền giảm tối đa (để trống = không giới hạn)</small>
                     @error('max_discount_amount')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -107,7 +122,9 @@
                 <div class="col-md-6">
                     <label class="form-label">Giá trị đơn tối thiểu</label>
                     <input type="number" name="min_order_value" class="form-control @error('min_order_value') is-invalid @enderror"
-                        value="{{ old('min_order_value', $coupon->min_order_value) }}">
+                        value="{{ old('min_order_value', $coupon->min_order_value) }}" 
+                        placeholder="VD: 500000 (500,000₫)" min="0" step="1000">
+                    <small class="form-text text-muted">Đơn hàng phải có giá trị tối thiểu để áp dụng (để trống = không giới hạn)</small>
                     @error('min_order_value')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -115,7 +132,9 @@
                 <div class="col-md-6">
                     <label class="form-label">Giá trị đơn tối đa</label>
                     <input type="number" name="max_order_value" class="form-control @error('max_order_value') is-invalid @enderror"
-                        value="{{ old('max_order_value', $coupon->max_order_value) }}">
+                        value="{{ old('max_order_value', $coupon->max_order_value) }}" 
+                        placeholder="VD: 5000000 (5,000,000₫)" min="0" step="1000">
+                    <small class="form-text text-muted">Đơn hàng không được vượt quá giá trị này (để trống = không giới hạn)</small>
                     @error('max_order_value')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -123,7 +142,9 @@
                 <div class="col-md-6">
                     <label class="form-label">Số lần dùng mỗi người</label>
                     <input type="number" name="max_usage_per_user" class="form-control @error('max_usage_per_user') is-invalid @enderror"
-                        value="{{ old('max_usage_per_user', $coupon->max_usage_per_user) }}">
+                        value="{{ old('max_usage_per_user', $coupon->max_usage_per_user) }}" 
+                        placeholder="VD: 1, 3, 5" min="1" step="1">
+                    <small class="form-text text-muted">Giới hạn số lần mỗi người dùng có thể sử dụng mã này (để trống = không giới hạn)</small>
                     @error('max_usage_per_user')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -139,17 +160,23 @@
                     @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Ngày bắt đầu</label>
+                    <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
                     <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror"
-                        value="{{ old('start_date', \Carbon\Carbon::parse($coupon->start_date)->format('Y-m-d')) }}">
+                        value="{{ old('start_date', \Carbon\Carbon::parse($coupon->start_date)->format('Y-m-d')) }}" 
+                        min="{{ date('Y-m-d') }}" 
+                        placeholder="Chọn ngày bắt đầu">
+                    <small class="form-text text-muted">Ngày bắt đầu hiệu lực của mã giảm giá</small>
                     @error('start_date')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Ngày kết thúc</label>
+                    <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
                     <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror"
-                        value="{{ old('end_date', \Carbon\Carbon::parse($coupon->end_date)->format('Y-m-d')) }}">
+                        value="{{ old('end_date', \Carbon\Carbon::parse($coupon->end_date)->format('Y-m-d')) }}" 
+                        min="{{ date('Y-m-d') }}" 
+                        placeholder="Chọn ngày kết thúc">
+                    <small class="form-text text-muted">Ngày kết thúc hiệu lực của mã giảm giá</small>
                     @error('end_date')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -176,6 +203,25 @@ $(document).ready(function() {
     $('#apply_type').on('change', toggleApplyTypeFields);
     toggleApplyTypeFields();
     // Không cần select2 cho checkbox
+    
+    // Cập nhật validation cho giá trị dựa trên loại giảm giá
+    function updateValueValidation() {
+        const discountType = $('select[name="discount_type"]').val();
+        const valueInput = $('input[name="value"]');
+        
+        if (discountType === 'percent') {
+            valueInput.attr('max', '100');
+            valueInput.attr('placeholder', 'VD: 10 (10%), 25 (25%)');
+            $('input[name="value"]').next('.form-text').text('Nhập số phần trăm từ 1-100%');
+        } else {
+            valueInput.attr('max', '10000000');
+            valueInput.attr('placeholder', 'VD: 50000 (50,000₫), 100000 (100,000₫)');
+            $('input[name="value"]').next('.form-text').text('Nhập số tiền cố định (tối đa 10,000,000₫)');
+        }
+    }
+    
+    $('select[name="discount_type"]').on('change', updateValueValidation);
+    updateValueValidation(); // Chạy lần đầu
 });
 </script>
 @endpush

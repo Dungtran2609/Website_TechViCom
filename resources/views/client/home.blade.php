@@ -161,7 +161,7 @@
             }
         }
 
-        /* ============== Horizontal slider (categories & brands) ============== */
+        /* ============== Horizontal slider (categories & brands & flash sale) ============== */
         .hslider {
             position: relative
         }
@@ -286,7 +286,7 @@
             }
         }
 
-        /* ============== Chips & Heart (fixed corners) ============== */
+        /* ============== Chips & Heart ============== */
         .chip {
             position: absolute;
             top: 10px;
@@ -346,7 +346,7 @@
                 width: calc((100% - 96px)/5) !important;
             }
 
-            /* 5 items + 4 gaps(24px)=96px */
+            /* 5 items + 4 gaps = 96px */
         }
     </style>
 @endpush
@@ -444,7 +444,7 @@
         @endif
     </section>
 
-    <!-- ================= Featured Categories: CAROUSEL ================= -->
+    <!-- ================= Featured Categories ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-6">
@@ -494,14 +494,15 @@
         </div>
     </section>
 
-    <!-- ================= Flash Sale ================= -->
+    <!-- ================= Flash Sale: SLIDER 1 HÀNG + AUTO CHẠY ================= -->
     <section class="py-12 bg-yellow-50">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold text-[#ff6c2f]">⚡ FLASH SALE</h2>
                 <div class="flex items-center space-x-4">
                     <a href="{{ route('products.index') }}" class="text-[#ff6c2f] font-semibold flex items-center">Xem
-                        tất cả <i class="fas fa-arrow-right ml-2"></i></a>
+                        tất cả
+                        <i class="fas fa-arrow-right ml-2"></i></a>
                     <div class="flex items-center space-x-2 text-lg font-semibold">
                         <span>Kết thúc trong:</span>
                         <div class="bg-[#ff6c2f] text-white px-3 py-1 rounded min-w-[3rem] text-center" id="hours">00
@@ -515,56 +516,68 @@
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="flash-sale-products">
-                @if (!empty($flashSaleProducts) && count($flashSaleProducts) > 0)
-                    @foreach ($flashSaleProducts as $product)
-                        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
-                            onclick="window.location.href='{{ route('products.show', $product->id) }}'">
-                            <div class="relative img-wrap">
-                                <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent ?? 0 }}%
-                                </div>
-                                <button class="wish-btn" data-id="{{ $product->id }}" title="Yêu thích"
-                                    onclick="event.stopPropagation();">
-                                    <i class="far fa-heart"></i>
-                                </button>
-                                <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
-                                    alt="{{ $product->name }}" loading="lazy" decoding="async"
-                                    onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}</h3>
-                                <div class="flex items-center justify-between mb-2">
-                                    @php
-                                        $variant = $product->variants->first();
-                                    @endphp
-                                    @if ($variant)
-                                        <span
-                                            class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price ?? $variant->price) }}₫</span>
-                                        @if ($product->flash_sale_price && $variant->price > $product->flash_sale_price)
-                                            <span
-                                                class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
-                                        @endif
-                                    @else
-                                        <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
-                                    @endif
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="flex text-yellow-400 text-sm">
-                                        @for ($i = 1; $i <= 5; $i++)
-                                            <i class="fas fa-star"></i>
-                                        @endfor
+
+            @if (!empty($flashSaleProducts) && count($flashSaleProducts) > 0)
+                <div class="hslider" data-slider id="flash-sale-slider">
+                    <button class="hnav prev" type="button" aria-label="Trước"><i
+                            class="fas fa-chevron-left"></i></button>
+                    <button class="hnav next" type="button" aria-label="Sau"><i
+                            class="fas fa-chevron-right"></i></button>
+
+                    <div class="htrack">
+                        @foreach ($flashSaleProducts as $product)
+                            <div class="hitem">
+                                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
+                                    onclick="window.location.href='{{ route('products.show', $product->id) }}'">
+                                    <div class="relative img-wrap">
+                                        <div class="chip"><i class="fas fa-bolt"></i>
+                                            -{{ $product->discount_percent ?? 0 }}%</div>
+                                        <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}"
+                                            title="Yêu thích" onclick="event.stopPropagation();">
+                                            <i
+                                                class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
+                                        </button>
+                                        <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
+                                            alt="{{ $product->name }}" loading="lazy" decoding="async"
+                                            onerror="this.onerror=null;this.src='{{ asset('client_css/images/placeholder.svg') }}'">
                                     </div>
-                                    <span
-                                        class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                                    <div class="p-4">
+                                        <h3 class="font-semibold text-gray-800 mb-2 line-clamp-2">{{ $product->name }}
+                                        </h3>
+                                        <div class="flex items-center justify-between mb-2">
+                                            @php $variant = $product->variants->first(); @endphp
+                                            @if ($variant)
+                                                @if (!empty($product->flash_sale_price) && $variant->price > $product->flash_sale_price)
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($product->flash_sale_price) }}₫</span>
+                                                    <span
+                                                        class="text-sm text-gray-500 line-through ml-2">{{ number_format($variant->price) }}₫</span>
+                                                @else
+                                                    <span
+                                                        class="text-lg font-bold text-[#ff6c2f]">{{ number_format($variant->price) }}₫</span>
+                                                @endif
+                                            @else
+                                                <span class="text-lg font-bold text-[#ff6c2f]">Liên hệ</span>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="flex text-yellow-400 text-sm">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    <i class="fas fa-star"></i>
+                                                @endfor
+                                            </div>
+                                            <span
+                                                class="text-gray-500 text-sm ml-2">({{ $product->productComments->count() }})</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="col-span-5 text-center text-muted py-5">Hiện không có chương trình Flash Sale nào đang diễn
-                        ra.</div>
-                @endif
-            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="text-center text-muted py-5">Hiện không có chương trình Flash Sale nào đang diễn ra.</div>
+            @endif
         </div>
     </section>
 
@@ -584,9 +597,10 @@
                             @if ($product->flash_sale_price && $product->discount_percent > 0)
                                 <div class="chip"><i class="fas fa-bolt"></i> -{{ $product->discount_percent }}%</div>
                             @endif
-                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
-                                onclick="event.stopPropagation();">
-                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}"
+                                title="Yêu thích" onclick="event.stopPropagation();">
+                                <i
+                                    class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
@@ -626,7 +640,6 @@
     </section>
 
     <!-- ================= Sản phẩm hot ================= -->
-    <!-- ================= Sản phẩm hot ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between mb-8">
@@ -639,9 +652,10 @@
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer group prod-card"
                         onclick="window.location.href='{{ route('products.show', $product->id) }}'">
                         <div class="relative img-wrap">
-                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}" title="Yêu thích"
-                                onclick="event.stopPropagation();">
-                                <i class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
+                            <button class="wish-btn favorite-once" data-product-id="{{ $product->id }}"
+                                title="Yêu thích" onclick="event.stopPropagation();">
+                                <i
+                                    class="{{ in_array($product->id, $favoriteProductIds ?? []) ? 'fas' : 'far' }} fa-heart"></i>
                             </button>
                             <img src="{{ $product->thumbnail ? asset('storage/' . $product->thumbnail) : asset('client_css/images/placeholder.svg') }}"
                                 alt="{{ $product->name }}" loading="lazy" decoding="async"
@@ -692,9 +706,7 @@
         </div>
     </section>
 
-
-
-    <!-- ================= Brand Section: CAROUSEL ================= -->
+    <!-- ================= Brand Section ================= -->
     <section class="py-12">
         <div class="container mx-auto px-4">
             <h2 class="text-3xl font-bold text-center mb-8">Thương hiệu</h2>
@@ -718,7 +730,6 @@
                                         onerror="this.onerror=null; this.src='{{ asset('client_css/images/placeholder.svg') }}';">
                                 @endif
                                 <h3 class="font-semibold text-sm mb-1 line-clamp-1">{{ $brand->name }}</h3>
-
                                 <a href="{{ route('brands.show', $brand->slug) }}"
                                     class="block text-[#ff6c2f] text-sm font-semibold hover:underline">
                                     Xem thương hiệu
@@ -731,8 +742,6 @@
         </div>
     </section>
 
-
-
     <!-- ================= Bài viết mới ================= -->
     <section class="py-12 bg-white">
         <div class="container mx-auto px-4">
@@ -741,8 +750,7 @@
                     <h2 class="text-2xl font-bold text-gray-800">Bài viết mới</h2>
                     <a href="{{ route('client.news.index') }}"
                         class="inline-flex items-center text-[#ff6c2f] font-semibold hover:text-orange-600 transition-colors duration-200">
-                        <span>Xem tất cả</span>
-                        <i class="fas fa-arrow-right ml-2"></i>
+                        <span>Xem tất cả</span><i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
 
@@ -751,14 +759,11 @@
                         <article
                             class="group bg-gray-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
                             <a href="{{ route('client.news.show', $item->id) }}" class="block">
-                                <!-- Image Container -->
                                 <div class="relative h-48 overflow-hidden bg-gray-100">
                                     <img src="{{ asset($item->image ?? 'client_css/images/placeholder.svg') }}"
                                         alt="{{ $item->title }}"
                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                 </div>
-
-                                <!-- Content -->
                                 <div class="px-4 py-3">
                                     <h3
                                         class="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#ff6c2f] transition-colors duration-200 line-clamp-3">
@@ -773,12 +778,10 @@
         </div>
     </section>
 
-
     <!-- ================= Dịch vụ ================= -->
     <section class="py-12 bg-white">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Card 1: Thương hiệu đảm bảo -->
                 <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
                         <i class="fas fa-shield-alt text-[#ff6c2f] text-2xl"></i>
@@ -786,8 +789,6 @@
                     <h3 class="font-bold text-gray-800 text-lg mb-2">Thương hiệu đảm bảo</h3>
                     <p class="text-gray-600 text-sm">Nhập khẩu, bảo hành chính hãng</p>
                 </div>
-
-                <!-- Card 2: Đổi trả dễ dàng -->
                 <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
                         <i class="fas fa-exchange-alt text-[#ff6c2f] text-2xl"></i>
@@ -795,8 +796,6 @@
                     <h3 class="font-bold text-gray-800 text-lg mb-2">Đổi trả dễ dàng</h3>
                     <p class="text-gray-600 text-sm">Theo chính sách đổi trả tại TechViCom</p>
                 </div>
-
-                <!-- Card 3: Giao hàng tận nơi -->
                 <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
                         <i class="fas fa-truck text-[#ff6c2f] text-2xl"></i>
@@ -804,8 +803,6 @@
                     <h3 class="font-bold text-gray-800 text-lg mb-2">Giao hàng tận nơi</h3>
                     <p class="text-gray-600 text-sm">Trên toàn hà nội</p>
                 </div>
-
-                <!-- Card 4: Sản phẩm chất lượng -->
                 <div class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300">
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
                         <i class="fas fa-award text-[#ff6c2f] text-2xl"></i>
@@ -817,6 +814,7 @@
         </div>
     </section>
 @endsection
+
 @push('scripts')
     <script>
         // === Slideshow ===
@@ -899,61 +897,79 @@
             setInterval(updateCountdown, 1000);
         })();
 
-        // === Wishlist: toggle using API ===
+        // === Wishlist toggle (favorite-once) ===
         (function() {
             document.querySelectorAll('.wish-btn.favorite-once').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const productId = this.getAttribute('data-product-id');
                     const icon = this.querySelector('i');
                     const originalIcon = icon.className;
-                    
-                    // Show loading
+
                     icon.className = 'fas fa-spinner fa-spin';
                     this.disabled = true;
-                    
-                    fetch('{{ route("accounts.favorites.toggle") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            product_id: productId
+
+                    fetch('{{ route('accounts.favorites.toggle') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                product_id: productId
+                            })
                         })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Update icon based on favorite status
-                            if (data.is_favorite) {
-                                icon.className = 'fas fa-heart';
-                                this.classList.add('active');
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            console.log('Response headers:', response.headers);
+
+                            // Kiểm tra content-type
+                            const contentType = response.headers.get('content-type');
+                            console.log('Content-Type:', contentType);
+
+                            if (contentType && contentType.includes('application/json')) {
+                                return response.json();
                             } else {
-                                icon.className = 'far fa-heart';
-                                this.classList.remove('active');
+                                // Nếu không phải JSON, có thể là HTML redirect
+                                console.log('Non-JSON response detected, likely HTML redirect');
+                                throw new Error('Non-JSON response');
                             }
-                            
-                            // Show toast message
-                            showToast(data.message);
-                        } else {
-                            // Restore original state on error
+                        })
+                        .then(data => {
+                            console.log('Response data:', data);
+                            if (data.success) {
+                                // Xử lý thành công
+                                icon.className = data.is_favorite ? 'fas fa-heart' : 'far fa-heart';
+                                this.classList.toggle('active', !!data.is_favorite);
+                                showToast(data.message);
+                            } else if (data.redirect) {
+                                // Nếu server yêu cầu redirect (user chưa đăng nhập)
+                                console.log('Redirecting to:', data.redirect);
+                                showToast(data.message ||
+                                    'Vui lòng đăng nhập để thêm vào yêu thích');
+                                setTimeout(() => {
+                                    window.location.href = data.redirect;
+                                }, 1500);
+                            } else {
+                                // Lỗi khác
+                                icon.className = originalIcon;
+                                showToast(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            // Nếu có lỗi, có thể là do chưa đăng nhập
                             icon.className = originalIcon;
-                            showToast('Có lỗi xảy ra, vui lòng thử lại');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Restore original state on error
-                        icon.className = originalIcon;
-                        showToast('Có lỗi xảy ra, vui lòng thử lại');
-                    })
-                    .finally(() => {
-                        this.disabled = false;
-                    });
+                            showToast('Vui lòng đăng nhập để thêm vào yêu thích');
+                            setTimeout(() => {
+                                openAuthModal();
+                            }, 1500);
+                        })
+                        .finally(() => {
+                            this.disabled = false;
+                        });
                 });
             });
-            
-            // Toast function
+
             function showToast(message) {
                 const toast = document.createElement('div');
                 toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white';
@@ -964,7 +980,7 @@
             }
         })();
 
-        // === Horizontal sliders controller (cho mọi .hslider) ===
+        // === Horizontal sliders controller (áp dụng cho mọi .hslider) ===
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-slider]').forEach((root) => {
                 const track = root.querySelector('.htrack');
@@ -1007,5 +1023,65 @@
                 update();
             });
         });
+
+        // === FLASH SALE: Auto scroll 1 hàng + loop ===
+        (function() {
+            const root = document.getElementById('flash-sale-slider');
+            if (!root) return;
+            const track = root.querySelector('.htrack');
+            if (!track) return;
+
+            const getStep = () => {
+                const first = track.querySelector('.hitem');
+                if (!first) return 300;
+                const cs = getComputedStyle(track);
+                const gap = parseFloat(cs.columnGap || cs.gap || 0);
+                return first.getBoundingClientRect().width + gap;
+            };
+
+            let intervalId = null;
+            const PERIOD = 3000; // 3 giây auto chạy
+            const tick = () => {
+                const step = getStep();
+                const nearEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+                if (nearEnd) {
+                    track.scrollTo({
+                        left: 0,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    track.scrollBy({
+                        left: step,
+                        behavior: 'smooth'
+                    });
+                }
+            };
+
+            const start = () => {
+                stop();
+                intervalId = setInterval(tick, PERIOD);
+            };
+            const stop = () => {
+                if (intervalId) clearInterval(intervalId);
+            };
+
+            // Bắt đầu auto
+            start();
+
+            // Dừng khi hover slider, chạy lại khi rời chuột
+            root.addEventListener('mouseenter', stop);
+            root.addEventListener('mouseleave', start);
+
+            // Khi bấm nút prev/next, dừng 1 nhịp rồi chạy lại cho mượt
+            root.querySelectorAll('.hnav').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stop();
+                    setTimeout(start, PERIOD);
+                });
+            });
+
+            // Nếu cửa sổ thay đổi kích thước, step tính lại tự động qua getStep()
+            window.addEventListener('resize', () => {});
+        })();
     </script>
 @endpush

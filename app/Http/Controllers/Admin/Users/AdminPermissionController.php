@@ -21,9 +21,12 @@ class AdminPermissionController extends Controller
      */
     public function index(Request $request)
     {
+        // Tự động đồng bộ quyền khi truy cập trang index (chỉ GET request)
+        if ($request->isMethod('get')) {
+            $this->sync($request);
+        }
+
         $query = Permission::query();
-
-
         // Tìm kiếm theo tên hoặc mô tả quyền
         if ($request->filled('permission_name')) {
             $search = $request->permission_name;
@@ -45,17 +48,11 @@ class AdminPermissionController extends Controller
                 $q->whereIn('roles.id', $roleIds);
             });
         }
-
-
         // Luôn lấy cả quyền tổng quát manage_{module}
         $query->orWhere(function ($q) {
             $q->where('name', 'like', 'manage\_%');
         });
-
-
         $permissions = $query->with('roles')->orderByDesc('id')->get();
-
-
         return view('admin.permissions.index', compact('permissions', 'roles', 'modules'));
     }
 
@@ -65,9 +62,12 @@ class AdminPermissionController extends Controller
      */
     public function list(Request $request)
     {
+        // Tự động đồng bộ quyền khi truy cập trang list (chỉ GET request)
+        if ($request->isMethod('get')) {
+            $this->sync($request);
+        }
+
         $query = Permission::query();
-
-
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
@@ -75,23 +75,15 @@ class AdminPermissionController extends Controller
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
-
-
         $modules = Permission::select('module')->distinct()->pluck('module')->filter()->values();
         if ($request->filled('module')) {
             $query->where('module', $request->input('module'));
         }
-
-
         // Luôn lấy cả quyền tổng quát manage_{module}
         $query->orWhere(function ($q) {
             $q->where('name', 'like', 'manage\_%');
         });
-
-
         $permissions = $query->orderByDesc('id')->paginate(10);
-
-
         return view('admin.permissions.list', compact('permissions', 'modules'));
     }
 
@@ -233,6 +225,7 @@ class AdminPermissionController extends Controller
     public function sync(Request $request)
     {
         $adminRole = Role::where('name', 'admin')->firstOrFail();
+
         $allRoutes = Route::getRoutes();
         $newPermissionsCount = 0;
         $restoredPermissionsCount = 0;
@@ -285,8 +278,25 @@ class AdminPermissionController extends Controller
             }
         }
 
+        // Luôn tạo các quyền tổng quát cho các module chính nếu chưa có
+        $importantModules = ['categories', 'brands', 'attributes'];
+        foreach ($importantModules as $module) {
+            $manageName = 'manage_' . $module;
+            if (!in_array($manageName, $existingPermissionNames)) {
+                $newPermission = Permission::create([
+                    'name' => $manageName,
+                    'description' => "Quyền quản lý toàn bộ module {$module}",
+                    'module' => $module,
+                ]);
+                $adminRole->permissions()->attach($newPermission->id);
+                $newPermissionsCount++;
+            } elseif ($allDbPermissions->has($manageName) && $allDbPermissions[$manageName]->trashed()) {
+                $allDbPermissions[$manageName]->restore();
+                $restoredPermissionsCount++;
+            }
+        }
 
-        // Tạo quyền tổng quát manage_{module} cho từng module admin
+        // Tạo quyền tổng quát manage_{module} cho từng module admin (tự động từ route)
         foreach (array_keys($modulePermissions) as $module) {
             $manageName = 'manage_' . $module;
             if (!in_array($manageName, $existingPermissionNames)) {

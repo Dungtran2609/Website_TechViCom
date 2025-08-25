@@ -4,15 +4,16 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <div class="min-h-screen bg-gray-50 py-8">
-  <div class="container mx-auto px-4">
-    <nav class="text-sm text-gray-500 mb-6">
-      <ol class="list-none p-0 inline-flex">
-        <li class="flex items-center">
-          <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
-          <i class="fas fa-chevron-right mx-2"></i>
-        </li>
-        <li class="text-gray-700">Giỏ hàng</li>
-      </ol>
+  <div class="techvicom-container">
+    <!-- Breadcrumb -->
+    <nav class="bg-white border-b border-gray-200 py-3 mb-6">
+        <div class="techvicom-container">
+            <div class="flex items-center space-x-2 text-sm">
+                <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                <span class="text-gray-900 font-medium">Giỏ hàng</span>
+            </div>
+        </div>
     </nav>
 
     <div class="max-w-6xl mx-auto">
@@ -198,6 +199,7 @@
                 </div>
               </div>
 
+              @auth
               <div class="mb-6">
                   <label class="block text-sm font-semibold text-gray-700 mb-2">Mã giảm giá</label>
                   <div class="flex items-center gap-2 flex-wrap">
@@ -213,6 +215,15 @@
                       <!-- Danh sách mã sẽ render ở đây -->
                   </div>
               </div>
+              @else
+              <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <label class="block text-sm font-semibold text-gray-700 mb-2">Mã giảm giá</label>
+                  <div class="flex items-center gap-2 mb-2">
+                      <i class="fas fa-lock text-gray-500"></i>
+                      <span class="text-sm text-gray-600">Vui lòng <a href="#" onclick="openAuthModal(); return false;" class="text-[#ff6c2f] hover:underline font-medium">đăng nhập</a> để sử dụng mã giảm giá</span>
+                  </div>
+              </div>
+              @endauth
 
               <button type="button" class="w-full bg-[#ff6c2f] text-white py-3 rounded-lg font-semibold hover:bg-[#ff6c2f] transition mb-4 disabled:opacity-50 disabled:cursor-not-allowed" id="checkout-all-btn">
                 Thanh toán tất cả
@@ -318,7 +329,23 @@ function applyDiscountCode(){
     body:JSON.stringify({coupon_code:code, subtotal, item_ids:ids})
   })
     .then(r=>r.json()).then(data=>{
-      if(!data.success){ showNotification(data.message||'Mã không hợp lệ','error'); return; }
+      if(!data.success){ 
+        if(data.require_login) {
+          showNotification('Vui lòng đăng nhập để sử dụng mã giảm giá', 'error');
+          // Thêm thông báo với link đăng nhập
+          setTimeout(() => {
+            const loginMsg = document.createElement('div');
+            loginMsg.className = 'fixed top-20 right-4 z-50 px-6 py-3 rounded-lg bg-blue-500 text-white font-medium transition-all duration-300 transform translate-x-full';
+            loginMsg.innerHTML = 'Vui lòng <a href="#" onclick="openAuthModal(); return false;" class="underline font-bold">đăng nhập</a> để sử dụng mã giảm giá';
+            document.body.appendChild(loginMsg);
+            setTimeout(() => {loginMsg.style.transform='translateX(0)';}, 50);
+            setTimeout(() => {loginMsg.style.transform='translateX(100%)';setTimeout(() => loginMsg.remove(), 300);}, 5000);
+          }, 1000);
+        } else {
+          showNotification(data.message||'Mã không hợp lệ','error'); 
+        }
+        return; 
+      }
       const discountAmount = Number(data.discount_amount)||0;
       localStorage.setItem('appliedDiscount', JSON.stringify({code, amount:discountAmount, details:data.coupon}));
       renderSummary(); showNotification(`Giảm ${discountAmount.toLocaleString('vi-VN')}₫`,'success');
@@ -501,7 +528,7 @@ function showToast(msg, type = 'error') {
   toast.textContent = msg;
   document.body.appendChild(toast);
   setTimeout(() => { toast.style.opacity = 0; }, 1800);
-  setTimeout(() => { toast.remove(); }, 2200);
+  setTimeout(() => { toast.remove(); }, 3000);
 }
 function handleIncreaseQuantity(id, current, stock) {
   if (current < stock) {
@@ -530,7 +557,11 @@ function loadAvailableCouponsCart() {
     const subtotal = calcSubtotal();
     fetch(`/api/coupons?subtotal=${subtotal}`).then(r => r.json()).then(data => {
         if (!data.success) {
-            box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+            if (data.require_login) {
+                box.innerHTML = '<div class="text-center p-3"><p class="text-gray-500 mb-2">Vui lòng đăng nhập để xem mã giảm giá</p><a href="#" onclick="openAuthModal(); return false;" class="text-[#ff6c2f] hover:underline text-sm">Đăng nhập ngay</a></div>';
+            } else {
+                box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+            }
             return;
         }
         if (!Array.isArray(data.coupons) || data.coupons.length === 0) {

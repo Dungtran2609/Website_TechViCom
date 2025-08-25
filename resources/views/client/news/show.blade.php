@@ -3,20 +3,22 @@
 @section('title', $news->title . ' - TechViCom')
 
 @section('content')
-    <div class="container mx-auto px-4 py-10">
+    <div class="techvicom-container py-10">
         <!-- Breadcrumb -->
-        <nav class="mb-2 text-sm flex items-center gap-2">
-            <a href="{{ route('client.home') }}" class="text-[#0052cc] hover:underline">Trang chủ</a>
-            <span class="text-gray-400">/</span>
-            <a href="{{ route('client.news.index') }}" class="text-[#0052cc] hover:underline">Tin tức</a>
-            <span class="text-gray-400">/</span>
-            @if (!empty($news->category))
-                <a href="{{ route('client.news.index', ['category' => $news->category->id]) }}" class="text-gray-700 hover:text-[#ff6c2f] font-semibold">{{ $news->category->name }}</a>
-            @else
-                <span class="text-gray-700">Bài viết</span>
-            @endif
-            <span class="text-gray-400">/</span>
-            <span class="text-gray-900 font-semibold">{{ $news->title }}</span>
+        <nav class="bg-white border-b border-gray-200 py-3 mb-6">
+            <div class="techvicom-container">
+                <div class="flex items-center space-x-2 text-sm">
+                    <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    <a href="{{ route('client.news.index') }}" class="text-gray-500 hover:text-[#ff6c2f]">Tin tức</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    @if (!empty($news->category))
+                        <a href="{{ route('client.news.index', ['category' => $news->category->id]) }}" class="text-gray-500 hover:text-[#ff6c2f]">{{ $news->category->name }}</a>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    @endif
+                    <span class="text-gray-900 font-medium">{{ Str::limit($news->title, 50) }}</span>
+                </div>
+            </div>
         </nav>
         <!-- Horizontal category menu -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -145,7 +147,7 @@
                                 </form>
                             @else
                                 <div class="bg-gray-100 rounded-lg p-4 text-center">
-                                    <p class="text-gray-600 mb-2">Vui lòng <a href="{{ route('login') }}" class="text-[#0052cc] hover:underline">đăng nhập</a> để bình luận</p>
+                                    <p class="text-gray-600 mb-2">Vui lòng <a href="#" onclick="openAuthModal(); return false;" class="text-[#0052cc] hover:underline">đăng nhập</a> để bình luận</p>
                                 </div>
                             @endauth
                         </div>
@@ -185,7 +187,7 @@
                                                         </button>
                                                     </form>
                                                 @else
-                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc]">
+                                                    <a href="#" onclick="openAuthModal(); return false;" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc]">
                                                         <i class="far fa-thumbs-up"></i> {{ $comment->likes_count ?? 0 }}
                                                     </a>
                                                 @endauth
@@ -259,7 +261,7 @@
                                                                         </button>
                                                                     </form>
                                                                 @else
-                                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc] ml-2">
+                                                                    <a href="#" onclick="openAuthModal(); return false;" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc] ml-2">
                                                                         <i class="far fa-thumbs-up"></i>
                                                                         {{ $reply->likes_count ?? 0 }}
                                                                     </a>

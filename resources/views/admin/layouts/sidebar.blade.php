@@ -29,7 +29,6 @@
                     <span class="nav-text"> Tổng quan </span>
                 </a>
             </li>
-
             <!-- Sản phẩm -->
             @php
                 $isProductActive = Request::is('admin/products*') || Request::is('admin/products/categories*') || Request::is('admin/products/brands*') || Request::is('admin/products/attributes*');

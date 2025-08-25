@@ -68,7 +68,7 @@
                                     <div class="editor-container">
                                         <textarea name="long_description" id="editor">{{ old('long_description', $product->long_description) }}</textarea>
                                     </div>
-                                    
+
                                     @error('long_description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -76,15 +76,21 @@
                             </div>
 
                             <div class="tab-pane" id="tab-data" role="tabpanel">
-                                <div class="d-flex justify-content-end mb-3">
-                                    <select class="form-select w-auto @error('type') is-invalid @enderror" name="type"
-                                        id="productType">
-                                        <option value="simple" @selected(old('type', $product->type) == 'simple')>Sản phẩm đơn</option>
-                                        <option value="variable" @selected(old('type', $product->type) == 'variable')>Sản phẩm biến thể</option>
-                                    </select>
-                                    @error('type')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
+                                <div class="d-flex justify-content-end mb-3 position-relative">
+                                    <div class="w-100 position-relative">
+                                        <select class="form-select w-auto @error('type') is-invalid @enderror"
+                                            name="type" id="productType">
+                                            <option value="simple" @selected(old('type', $product->type) == 'simple')>Sản phẩm đơn</option>
+                                            <option value="variable" @selected(old('type', $product->type) == 'variable')>Sản phẩm biến thể</option>
+                                        </select>
+                                        @error('type')
+                                            <div class="text-danger fw-semibold mt-2 d-flex align-items-center"
+                                                style="font-size: 1rem;">
+                                                <span class="me-1" style="font-size:1.2em;">&#9888;&#65039;</span>
+                                                {{ $message }}
+                                            </div>
+                                        @enderror
+                                    </div>
                                 </div>
 
                                 @php $simpleVariant = $product->type == 'simple' ? $product->variants->first() : null; @endphp
@@ -130,209 +136,391 @@
                                         </div>
                                     </div>
                                     <h6 class="mb-3">Thuộc tính sản phẩm</h6>
-                                    @foreach ($attributes as $attribute)
-                                        <div class="mb-3">
-                                            <label class="form-label">{{ $attribute->name }}</label>
-                                            <select
-                                                class="form-select @error('attributes.' . $attribute->id) is-invalid @enderror"
-                                                name="attributes[{{ $attribute->id }}]">
-                                                <option value="">-- Chọn --</option>
-                                                @foreach ($attribute->values as $value)
-                                                    <option value="{{ $value->id }}" @selected(old('attributes.' . $attribute->id) ? old('attributes.' . $attribute->id) == $value->id : $simpleVariant && $simpleVariant->attributeValues->contains($value->id))>
-                                                        {{ $value->value }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error('attributes.' . $attribute->id)
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                    <div id="attribute-select-wrapper">
+                                        <div class="row align-items-end mb-2">
+                                            <div class="col-md-8">
+                                                <label class="form-label">Chọn thuộc tính</label>
+                                                <select class="form-select" id="attributeDropdown">
+                                                    <option value="">-- Chọn thuộc tính --</option>
+                                                    @foreach ($attributes as $attribute)
+                                                        <option value="{{ $attribute->id }}"
+                                                            data-values='@json($attribute->values)'>
+                                                            {{ $attribute->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    id="btnAddAttribute">Thêm thuộc tính</button>
+                                            </div>
                                         </div>
-                                    @endforeach
+                                        <div id="selectedAttributes" class="mt-2"></div>
+                                    </div>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const attributeDropdown = document.getElementById('attributeDropdown');
+                                            const btnAddAttribute = document.getElementById('btnAddAttribute');
+                                            const selectedAttributesDiv = document.getElementById('selectedAttributes');
+                                            let selectedAttributes = [];
+
+                                            @if ($product->type == 'simple' && $simpleVariant)
+                                                @foreach ($simpleVariant->attributeValues as $attValue)
+                                                    @php
+                                                        $attribute = $attributes->firstWhere('id', $attValue->attribute_id);
+                                                    @endphp
+                                                    @if ($attribute)
+                                                        selectedAttributes.push({
+                                                            attrId: '{{ $attribute->id }}',
+                                                            attrName: '{{ $attribute->name }}',
+                                                            valId: '{{ $attValue->id }}',
+                                                            valName: '{{ $attValue->value }}',
+                                                            values: @json($attribute->values),
+                                                        });
+                                                    @endif
+                                                @endforeach
+                                            @endif
+
+                                            btnAddAttribute?.addEventListener('click', function() {
+                                                const attrId = attributeDropdown.value;
+                                                const attrName = attributeDropdown.options[attributeDropdown.selectedIndex]?.text;
+                                                if (!attrId) return alert('Vui lòng chọn thuộc tính!');
+                                                if (selectedAttributes.find(a => a.attrId === attrId)) return alert(
+                                                    'Thuộc tính này đã được chọn!');
+                                                const selectedOption = attributeDropdown.options[attributeDropdown.selectedIndex];
+                                                const values = selectedOption && selectedOption.dataset.values ? JSON.parse(selectedOption
+                                                    .dataset.values) : [];
+                                                selectedAttributes.push({
+                                                    attrId,
+                                                    attrName,
+                                                    valId: '',
+                                                    valName: '',
+                                                    values
+                                                });
+                                                renderSelectedAttributes();
+                                                attributeDropdown.value = '';
+                                            });
+
+                                            function renderSelectedAttributes() {
+                                                selectedAttributesDiv.innerHTML = selectedAttributes.map((a, idx) => `
+                                                    <div class="d-flex align-items-center mb-1">
+                                                        <span class="me-2">${a.attrName}:</span>
+                                                        <select class="form-select form-select-sm me-2 attr-value-select" data-idx="${idx}" name="attributes[${a.attrId}]">
+                                                            <option value="">-- Chọn giá trị --</option>
+                                                            ${a.values.map(v => `<option value="${v.id}" ${a.valId == v.id ? 'selected' : ''}>${v.value}</option>`).join('')}
+                                                        </select>
+                                                        <button type="button" class="btn btn-sm btn-danger btnRemoveAttr" data-id="${a.attrId}">Xóa</button>
+                                                    </div>`).join('');
+                                            }
+
+                                            selectedAttributesDiv?.addEventListener('change', function(e) {
+                                                if (e.target.classList.contains('attr-value-select')) {
+                                                    const idx = e.target.dataset.idx;
+                                                    const valId = e.target.value;
+                                                    selectedAttributes[idx].valId = valId;
+                                                }
+                                            });
+
+                                            selectedAttributesDiv?.addEventListener('click', function(e) {
+                                                if (e.target.classList.contains('btnRemoveAttr')) {
+                                                    const id = e.target.dataset.id;
+                                                    selectedAttributes = selectedAttributes.filter(a => a.attrId !== id);
+                                                    renderSelectedAttributes();
+                                                }
+                                            });
+                                            renderSelectedAttributes();
+                                        });
+                                    </script>
                                 </div>
 
                                 <div id="variableProductFields" style="display: none;">
                                     <div class="border p-3 rounded">
-                                        <h6 class="mb-3">Thêm biến thể mới</h6>
-                                        @foreach ($attributes as $attribute)
-                                            <div class="mb-3">
-                                                <label class="form-label">{{ $attribute->name }}</label>
-                                                <select class="form-control attribute-select" multiple>
-                                                    @foreach ($attribute->values as $value)
-                                                        <option value="{{ $value->id }}">{{ $value->value }}</option>
-                                                    @endforeach
-                                                </select>
+                                        <h6 class="mb-3">Thuộc tính sản phẩm</h6>
+                                        <div id="variant-attribute-select-wrapper">
+                                            <div class="row align-items-end mb-2">
+                                                <div class="col-md-8">
+                                                    <label class="form-label">Chọn thuộc tính</label>
+                                                    <select class="form-select" id="variantAttributeDropdown">
+                                                        <option value="">-- Chọn thuộc tính --</option>
+                                                        @foreach ($attributes as $attribute)
+                                                            <option value="{{ $attribute->id }}"
+                                                                data-values='@json($attribute->values)'>
+                                                                {{ $attribute->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button type="button" class="btn btn-outline-primary"
+                                                        id="btnAddVariantAttribute">Thêm thuộc tính</button>
+                                                </div>
                                             </div>
-                                        @endforeach
-                                        <button type="button" class="btn btn-outline-primary"
-                                            id="generateVariantsBtn">Tạo thêm biến thể</button>
+                                            <div id="selectedVariantAttributes" class="mt-2"></div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary mt-2"
+                                            id="generateVariantsBtn">Tạo biến thể</button>
                                     </div>
                                     <div id="variantsWrapper" class="mt-3">
                                         <div class="accordion">
-                                            @if ($product->type == 'variable')
-                                                @foreach ($product->variants as $index => $variant)
-                                                    <div class="accordion-item">
-                                                        <h2 class="accordion-header">
-                                                            <button class="accordion-button" type="button"
-                                                                data-bs-toggle="collapse"
-                                                                data-bs-target="#collapse{{ $index }}">{{ $variant->attributeValues->pluck('value')->join(' / ') ?: 'Biến thể mặc định' }}</button>
-                                                        </h2>
-                                                        <div id="collapse{{ $index }}"
-                                                            class="accordion-collapse collapse show">
-                                                            <div class="accordion-body">
+                                            @php
+                                                $oldVariants = old('variants');
+                                                $variantsToShow = [];
+                                                if (is_array($oldVariants)) {
+                                                    $variantsToShow = $oldVariants;
+                                                } elseif ($product->type == 'variable') {
+                                                    $variantsToShow = $product->variants
+                                                        ->map(function ($v) {
+                                                            // Chuyển về array cho đồng nhất
+                                                            return [
+                                                                'id' => $v->id,
+                                                                'attributes' => $v->attributeValues
+                                                                    ->pluck('id')
+                                                                    ->toArray(),
+                                                                'price' => $v->price,
+                                                                'sale_price' => $v->sale_price,
+                                                                'stock' => $v->stock,
+                                                                'low_stock_amount' => $v->low_stock_amount,
+                                                                'weight' => $v->weight,
+                                                                'length' => $v->length,
+                                                                'width' => $v->width,
+                                                                'height' => $v->height,
+                                                                'is_active' => $v->is_active,
+                                                                'image' => $v->image,
+                                                            ];
+                                                        })
+                                                        ->toArray();
+                                                }
+                                            @endphp
+                                            @foreach ($variantsToShow as $index => $variant)
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button" type="button"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#collapse{{ $index }}">
+                                                            @php
+                                                                // Hiển thị tên biến thể theo thuộc tính
+                                                                $attValues = [];
+                                                                if (
+                                                                    !empty($variant['attributes']) &&
+                                                                    is_array($variant['attributes'])
+                                                                ) {
+                                                                    $attValues = \App\Models\AttributeValue::whereIn(
+                                                                        'id',
+                                                                        $variant['attributes'],
+                                                                    )
+                                                                        ->pluck('value')
+                                                                        ->toArray();
+                                                                }
+                                                            @endphp
+                                                            {{ $attValues ? implode(' / ', $attValues) : 'Biến thể mặc định' }}
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapse{{ $index }}"
+                                                        class="accordion-collapse collapse show">
+                                                        <div class="accordion-body">
+                                                            @if (!empty($variant['id']))
                                                                 <input type="hidden"
                                                                     name="variants[{{ $index }}][id]"
-                                                                    value="{{ $variant->id }}">
-                                                                @foreach ($variant->attributeValues as $attValue)
+                                                                    value="{{ $variant['id'] }}">
+                                                            @endif
+                                                            @if (!empty($variant['attributes']) && is_array($variant['attributes']))
+                                                                @foreach ($variant['attributes'] as $attId)
                                                                     <input type="hidden"
                                                                         name="variants[{{ $index }}][attributes][]"
-                                                                        value="{{ $attValue->id }}">
+                                                                        value="{{ $attId }}">
                                                                 @endforeach
-                                                                <div class="row mb-3">
-                                                                    <div class="col-md-9">
-                                                                        <label class="form-label">Ảnh riêng cho biến
-                                                                            thể</label>
-                                                                        <input type="file"
-                                                                            class="form-control form-control-sm @error('variants.' . $index . '.image') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][image]"
-                                                                            accept="image/*">
-                                                                        @error('variants.' . $index . '.image')
-                                                                            <div class="invalid-feedback d-block">
-                                                                                {{ $message }}</div>
-                                                                        @enderror
-                                                                        @if ($variant->image && Storage::disk('public')->exists($variant->image))
-                                                                            <img src="{{ asset('storage/' . $variant->image) }}"
-                                                                                class="img-fluid rounded mt-2"
-                                                                                width="80">
-                                                                        @endif
+                                                            @endif
+                                                            <div class="row mb-3">
+                                                                <div class="col-md-9">
+                                                                    <label class="form-label">Ảnh riêng cho biến
+                                                                        thể</label>
+                                                                    <input type="file"
+                                                                        class="form-control form-control-sm @error('variants.' . $index . '.image') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][image]"
+                                                                        accept="image/*">
+                                                                    @error('variants.' . $index . '.image')
+                                                                        <div class="invalid-feedback d-block">
+                                                                            {{ $message }}</div>
+                                                                    @enderror
+                                                                    @if (!empty($variant['image']) && Storage::disk('public')->exists($variant['image']))
+                                                                        <img src="{{ asset('storage/' . $variant['image']) }}"
+                                                                            class="img-fluid rounded mt-2" width="80">
+                                                                    @endif
+                                                                </div>
+                                                                <div class="col-md-3 d-flex align-items-end">
+                                                                    <div class="form-check form-switch">
+                                                                        <input class="form-check-input" type="checkbox"
+                                                                            name="variants[{{ $index }}][is_active]"
+                                                                            value="1" @checked(old('variants.' . $index . '.is_active', !empty($variant['is_active'])))>
+                                                                        <label class="form-check-label">Hoạt động</label>
                                                                     </div>
-                                                                    <div class="col-md-3 d-flex align-items-end">
-                                                                        <div class="form-check form-switch">
-                                                                            <input class="form-check-input"
-                                                                                type="checkbox"
-                                                                                name="variants[{{ $index }}][is_active]"
-                                                                                value="1"
-                                                                                @checked(old('variants.' . $index . '.is_active', $variant->is_active))>
-                                                                            <label class="form-check-label">Hoạt
-                                                                                động</label>
+                                                                </div>
+                                                            </div>
+                                                            <h6 class="mb-3">Thông tin chính</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Giá bán <span
+                                                                            class="text-danger">*</span></label>
+                                                                    <input type="number"
+                                                                        class="form-control @error('variants.' . $index . '.price') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][price]"
+                                                                        value="{{ old('variants.' . $index . '.price', $variant['price'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.price')
+                                                                        <div class="invalid-feedback">{{ $message }}
                                                                         </div>
-                                                                    </div>
+                                                                    @enderror
                                                                 </div>
-                                                                <h6 class="mb-3">Thông tin chính</h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label class="form-label">Giá bán <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <input type="number"
-                                                                            class="form-control @error('variants.' . $index . '.price') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][price]"
-                                                                            value="{{ old('variants.' . $index . '.price', $variant->price) }}">
-                                                                        @error('variants.' . $index . '.price')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label class="form-label">Giá khuyến mãi</label>
-                                                                        <input type="number"
-                                                                            class="form-control @error('variants.' . $index . '.sale_price') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][sale_price]"
-                                                                            value="{{ old('variants.' . $index . '.sale_price', $variant->sale_price) }}">
-                                                                        @error('variants.' . $index . '.sale_price')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label class="form-label">SKU</label>
-                                                                        <input type="text"
-                                                                            class="form-control @error('variants.' . $index . '.sku') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][sku]"
-                                                                            value="{{ old('variants.' . $index . '.sku', $variant->sku) }}">
-                                                                        @error('variants.' . $index . '.sku')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-6 mb-3">
-                                                                        <label class="form-label">Tồn kho <span
-                                                                                class="text-danger">*</span></label>
-                                                                        <input type="number"
-                                                                            class="form-control @error('variants.' . $index . '.stock') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][stock]"
-                                                                            value="{{ old('variants.' . $index . '.stock', $variant->stock) }}">
-                                                                        @error('variants.' . $index . '.stock')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-12 mb-3">
-                                                                        <label class="form-label">Ngưỡng tồn kho
-                                                                            thấp</label>
-                                                                        <input type="number"
-                                                                            class="form-control @error('variants.' . $index . '.low_stock_amount') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][low_stock_amount]"
-                                                                            value="{{ old('variants.' . $index . '.low_stock_amount', $variant->low_stock_amount) }}">
-                                                                        @error('variants.' . $index . '.low_stock_amount')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Giá khuyến mãi</label>
+                                                                    <input type="number"
+                                                                        class="form-control @error('variants.' . $index . '.sale_price') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][sale_price]"
+                                                                        value="{{ old('variants.' . $index . '.sale_price', $variant['sale_price'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.sale_price')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
                                                                 </div>
-                                                                <hr>
-                                                                <h6 class="mb-3">Thông tin vận chuyển</h6>
-                                                                <div class="row">
-                                                                    <div class="col-md-3 mb-3">
-                                                                        <label class="form-label">Cân nặng (kg)</label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control @error('variants.' . $index . '.weight') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][weight]"
-                                                                            value="{{ old('variants.' . $index . '.weight', $variant->weight) }}">
-                                                                        @error('variants.' . $index . '.weight')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-3 mb-3">
-                                                                        <label class="form-label">Dài (cm)</label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control @error('variants.' . $index . '.length') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][length]"
-                                                                            value="{{ old('variants.' . $index . '.length', $variant->length) }}">
-                                                                        @error('variants.' . $index . '.length')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-3 mb-3">
-                                                                        <label class="form-label">Rộng (cm)</label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control @error('variants.' . $index . '.width') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][width]"
-                                                                            value="{{ old('variants.' . $index . '.width', $variant->width) }}">
-                                                                        @error('variants.' . $index . '.width')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
-                                                                    <div class="col-md-3 mb-3">
-                                                                        <label class="form-label">Cao (cm)</label>
-                                                                        <input type="number" step="0.01"
-                                                                            class="form-control @error('variants.' . $index . '.height') is-invalid @enderror"
-                                                                            name="variants[{{ $index }}][height]"
-                                                                            value="{{ old('variants.' . $index . '.height', $variant->height) }}">
-                                                                        @error('variants.' . $index . '.height')
-                                                                            <div class="invalid-feedback">{{ $message }}
-                                                                            </div>
-                                                                        @enderror
-                                                                    </div>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Tồn kho <span
+                                                                            class="text-danger">*</span></label>
+                                                                    <input type="number"
+                                                                        class="form-control @error('variants.' . $index . '.stock') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][stock]"
+                                                                        value="{{ old('variants.' . $index . '.stock', $variant['stock'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.stock')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
+                                                                </div>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label">Ngưỡng tồn kho thấp</label>
+                                                                    <input type="number"
+                                                                        class="form-control @error('variants.' . $index . '.low_stock_amount') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][low_stock_amount]"
+                                                                        value="{{ old('variants.' . $index . '.low_stock_amount', $variant['low_stock_amount'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.low_stock_amount')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
+                                                                </div>
+                                                            </div>
+                                                            <hr>
+                                                            <h6 class="mb-3">Thông tin vận chuyển</h6>
+                                                            <div class="row">
+                                                                <div class="col-md-3 mb-3">
+                                                                    <label class="form-label">Cân nặng (kg)</label>
+                                                                    <input type="number" step="0.01"
+                                                                        class="form-control @error('variants.' . $index . '.weight') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][weight]"
+                                                                        value="{{ old('variants.' . $index . '.weight', $variant['weight'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.weight')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
+                                                                </div>
+                                                                <div class="col-md-3 mb-3">
+                                                                    <label class="form-label">Dài (cm)</label>
+                                                                    <input type="number" step="0.01"
+                                                                        class="form-control @error('variants.' . $index . '.length') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][length]"
+                                                                        value="{{ old('variants.' . $index . '.length', $variant['length'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.length')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
+                                                                </div>
+                                                                <div class="col-md-3 mb-3">
+                                                                    <label class="form-label">Rộng (cm)</label>
+                                                                    <input type="number" step="0.01"
+                                                                        class="form-control @error('variants.' . $index . '.width') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][width]"
+                                                                        value="{{ old('variants.' . $index . '.width', $variant['width'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.width')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
+                                                                </div>
+                                                                <div class="col-md-3 mb-3">
+                                                                    <label class="form-label">Cao (cm)</label>
+                                                                    <input type="number" step="0.01"
+                                                                        class="form-control @error('variants.' . $index . '.height') is-invalid @enderror"
+                                                                        name="variants[{{ $index }}][height]"
+                                                                        value="{{ old('variants.' . $index . '.height', $variant['height'] ?? '') }}">
+                                                                    @error('variants.' . $index . '.height')
+                                                                        <div class="invalid-feedback">{{ $message }}
+                                                                        </div>
+                                                                    @enderror
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                @endforeach
-                                            @endif
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const variantAttributeDropdown = document.getElementById('variantAttributeDropdown');
+                                        const btnAddVariantAttribute = document.getElementById('btnAddVariantAttribute');
+                                        const selectedVariantAttributesDiv = document.getElementById('selectedVariantAttributes');
+                                        let selectedVariantAttributes = [];
+
+                                        btnAddVariantAttribute?.addEventListener('click', function() {
+                                            const attrId = variantAttributeDropdown.value;
+                                            const attrName = variantAttributeDropdown.options[variantAttributeDropdown.selectedIndex]
+                                                ?.text;
+                                            if (!attrId) return alert('Vui lòng chọn thuộc tính!');
+                                            if (selectedVariantAttributes.find(a => a.attrId === attrId)) return alert(
+                                                'Thuộc tính này đã được chọn!');
+                                            const selectedOption = variantAttributeDropdown.options[variantAttributeDropdown
+                                                .selectedIndex];
+                                            const values = selectedOption && selectedOption.dataset.values ? JSON.parse(selectedOption
+                                                .dataset.values) : [];
+                                            selectedVariantAttributes.push({
+                                                attrId,
+                                                attrName,
+                                                valIds: [],
+                                                values
+                                            });
+                                            renderSelectedVariantAttributes();
+                                            variantAttributeDropdown.value = '';
+                                        });
+
+                                        function renderSelectedVariantAttributes() {
+                                            selectedVariantAttributesDiv.innerHTML = selectedVariantAttributes.map((a, idx) => `
+                                            <div class="mb-2">
+                                                <div class="fw-bold mb-1">${a.attrName}:</div>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    ${a.values.map(v => `
+                                                                                                                                                                                                                                                    <label class="form-check form-check-inline mb-0">
+                                                                                                                                                                                                                                                        <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
+                                                                                                                                                                                                                                                        <span class="form-check-label">${v.value}</span>
+                                                                                                                                                                                                                                                    </label>`).join('')}
+                                                    <button type="button" class="btn btn-sm btn-danger ms-2 btnRemoveVariantAttr" data-id="${a.attrId}">Xóa</button>
+                                                </div>
+                                                ${(Array.isArray(a.valIds) ? a.valIds : []).map(valId => `<input type="hidden" name="variant_attributes[${a.attrId}][]" value="${valId}">`).join('')}
+                                            </div>`).join('');
+                                        }
+
+                                        selectedVariantAttributesDiv?.addEventListener('input', function(e) {
+                                            if (e.target.classList.contains('variant-attr-value-checkbox')) {
+                                                const idx = e.target.dataset.idx;
+                                                const checkboxes = selectedVariantAttributesDiv.querySelectorAll(
+                                                    `.variant-attr-value-checkbox[data-idx='${idx}']`);
+                                                const checkedVals = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+                                                selectedVariantAttributes[idx].valIds = checkedVals;
+                                            }
+                                        });
+
+                                        selectedVariantAttributesDiv?.addEventListener('click', function(e) {
+                                            if (e.target.classList.contains('btnRemoveVariantAttr')) {
+                                                const id = e.target.dataset.id;
+                                                selectedVariantAttributes = selectedVariantAttributes.filter(a => a.attrId !== id);
+                                                renderSelectedVariantAttributes();
+                                            }
+                                        });
+                                    });
+                                </script>
                             </div>
 
                             <div class="tab-pane" id="tab-shipping" role="tabpanel">
@@ -404,6 +592,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
                                 value="1" @checked(old('is_featured', $product->is_featured))>
@@ -478,38 +667,111 @@
                 if (shippingTab) shippingTab.closest('.nav-item').style.display = isSimple ? 'block' : 'none';
             }
 
+            const createVariantHtml = (combo, index, data = {}) => {
+                const comboName = combo.map(c => c.text).join(' / ') || 'Biến thể mặc định';
+                const attributeInputs = combo.map(c =>
+                    `<input type="hidden" name="variants[${index}][attributes][]" value="${c.id}">`).join(
+                    '');
+                return `
+                <div class="accordion-item">
+                    <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${comboName}</button></h2>
+                    <div id="collapse${index}" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <input type="hidden" name="variants[${index}][id]" value="">
+                            <div class="row mb-3">
+                                <div class="col-md-9"><label class="form-label">Ảnh riêng cho biến thể</label><input type="file" class="form-control form-control-sm" name="variants[${index}][image]" accept="image/*"></div>
+                                <div class="col-md-3 d-flex align-items-end"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="variants[${index}][is_active]" value="1" checked><label class="form-check-label">Hoạt động</label></div></div>
+                            </div>
+                            <h6 class="mb-3">Thông tin chính</h6>
+                            <div class="row">
+                                ${attributeInputs}
+                                <div class="col-md-6 mb-3"><label class="form-label">Giá bán <span class="text-danger">*</span></label><input type="number" class="form-control" name="variants[${index}][price]" value="${data.price || ''}"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Giá khuyến mãi</label><input type="number" class="form-control" name="variants[${index}][sale_price]" value="${data.sale_price || ''}"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Tồn kho <span class="text-danger">*</span></label><input type="number" class="form-control" name="variants[${index}][stock]" value="${data.stock || ''}"></div>
+                                <div class="col-md-6 mb-3"><label class="form-label">Ngưỡng tồn kho thấp</label><input type="number" class="form-control" name="variants[${index}][low_stock_amount]" value="${data.low_stock_amount || ''}"></div>
+                            </div>
+                            <hr>
+                            <h6 class="mb-3">Thông tin vận chuyển</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3"><label class="form-label">Cân nặng (kg)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][weight]" value="${data.weight || ''}"></div>
+                                <div class="col-md-3 mb-3"><label class="form-label">Dài (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][length]" value="${data.length || ''}"></div>
+                                <div class="col-md-3 mb-3"><label class="form-label">Rộng (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][width]" value="${data.width || ''}"></div>
+                                <div class="col-md-3 mb-3"><label class="form-label">Cao (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][height]" value="${data.height || ''}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            };
+
             productTypeSelect.addEventListener('change', function() {
                 toggleFields();
                 if (this.value === 'variable' && accordionContainer.children.length === 0) {
+                    // ...giữ nguyên logic tạo biến thể đầu tiên từ dữ liệu đơn...
                     const simpleData = {
-                        price: document.querySelector('input[name="price"]').value,
-                        sale_price: document.querySelector('input[name="sale_price"]').value,
-                        stock: document.querySelector('input[name="stock"]').value,
-                        low_stock_amount: document.querySelector('input[name="low_stock_amount"]')
-                            .value,
-                        weight: document.querySelector('input[name="weight"]').value,
-                        length: document.querySelector('input[name="length"]').value,
-                        width: document.querySelector('input[name="width"]').value,
-                        height: document.querySelector('input[name="height"]').value,
+                        price: document.querySelector('#simpleProductFields input[name="price"]').value,
+                        sale_price: document.querySelector(
+                            '#simpleProductFields input[name="sale_price"]').value,
+                        stock: document.querySelector('#simpleProductFields input[name="stock"]').value,
+                        low_stock_amount: document.querySelector(
+                            '#simpleProductFields input[name="low_stock_amount"]').value,
+                        weight: document.querySelector('#tab-shipping input[name="weight"]').value,
+                        length: document.querySelector('#tab-shipping input[name="length"]').value,
+                        width: document.querySelector('#tab-shipping input[name="width"]').value,
+                        height: document.querySelector('#tab-shipping input[name="height"]').value,
                     };
-
-                    const simpleAttributes = [];
-                    document.querySelectorAll('#simpleProductFields select[name^="attributes"]').forEach(
+                    const simpleAttributeValues = [];
+                    document.querySelectorAll('#selectedAttributes select.attr-value-select').forEach(
                         select => {
                             if (select.value) {
                                 const selectedOption = select.options[select.selectedIndex];
-                                simpleAttributes.push({
+                                simpleAttributeValues.push({
                                     id: selectedOption.value,
                                     text: selectedOption.text
                                 });
                             }
                         });
-
-                    if (simpleAttributes.length > 0) {
-                        const newVariantHtml = createVariantHtml(simpleAttributes, variantIndex,
-                        simpleData);
+                    if (simpleAttributeValues.length > 0) {
+                        const newVariantHtml = createVariantHtml(simpleAttributeValues, variantIndex,
+                            simpleData);
                         accordionContainer.insertAdjacentHTML('beforeend', newVariantHtml);
                         variantIndex++;
+                    }
+                }
+                // Nếu chuyển từ variable sang simple thì lấy dữ liệu biến thể đầu tiên đổ vào input đơn
+                if (this.value === 'simple') {
+                    const firstVariant = accordionContainer.querySelector('.accordion-item');
+                    if (firstVariant) {
+                        const getVal = (selector) => {
+                            const input = firstVariant.querySelector(selector);
+                            return input ? input.value : '';
+                        };
+                        document.querySelector('#simpleProductFields input[name="price"]').value = getVal(
+                            'input[name*="[price]"]');
+                        document.querySelector('#simpleProductFields input[name="sale_price"]').value =
+                            getVal('input[name*="[sale_price]"]');
+                        document.querySelector('#simpleProductFields input[name="stock"]').value = getVal(
+                            'input[name*="[stock]"]');
+                        document.querySelector('#simpleProductFields input[name="low_stock_amount"]')
+                            .value = getVal('input[name*="[low_stock_amount]"]');
+                        document.querySelector('#tab-shipping input[name="weight"]').value = getVal(
+                            'input[name*="[weight]"]');
+                        document.querySelector('#tab-shipping input[name="length"]').value = getVal(
+                            'input[name*="[length]"]');
+                        document.querySelector('#tab-shipping input[name="width"]').value = getVal(
+                            'input[name*="[width]"]');
+                        document.querySelector('#tab-shipping input[name="height"]').value = getVal(
+                            'input[name*="[height]"]');
+                        // Thuộc tính đơn: clear và set lại
+                        const simpleAttrs = document.querySelectorAll(
+                            '#selectedAttributes select.attr-value-select');
+                        simpleAttrs.forEach(sel => sel.value = '');
+                        const variantAttrs = firstVariant.querySelectorAll('input[name*="[attributes][]"]');
+                        variantAttrs.forEach(input => {
+                            const attrId = input.value;
+                            const select = document.querySelector(
+                                `#selectedAttributes select option[value='${attrId}']`);
+                            if (select) select.selected = true;
+                        });
                     }
                 }
             });
@@ -530,56 +792,28 @@
                 }, []);
             };
 
-            const createVariantHtml = (combo, index, data = {}) => {
-                const comboName = combo.map(c => c.text).join(' / ') || 'Biến thể mặc định';
-                const attributeInputs = combo.map(c =>
-                    `<input type="hidden" name="variants[${index}][attributes][]" value="${c.id}">`).join(
-                    '');
-                return `
-        <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${comboName}</button></h2>
-            <div id="collapse${index}" class="accordion-collapse collapse show">
-                <div class="accordion-body">
-                    <input type="hidden" name="variants[${index}][id]" value="">
-                    <div class="row mb-3">
-                        <div class="col-md-9"><label class="form-label">Ảnh riêng cho biến thể</label><input type="file" class="form-control form-control-sm" name="variants[${index}][image]" accept="image/*"></div>
-                        <div class="col-md-3 d-flex align-items-end"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="variants[${index}][is_active]" value="1" checked><label class="form-check-label">Hoạt động</label></div></div>
-                    </div>
-                    <h6 class="mb-3">Thông tin chính</h6>
-                    <div class="row">
-                        ${attributeInputs}
-                        <div class="col-md-6 mb-3"><label class="form-label">Giá bán <span class="text-danger">*</span></label><input type="number" class="form-control" name="variants[${index}][price]" value="${data.price || ''}"></div>
-                        <div class="col-md-6 mb-3"><label class="form-label">Giá khuyến mãi</label><input type="number" class="form-control" name="variants[${index}][sale_price]" value="${data.sale_price || ''}"></div>
-                        <div class="col-md-6 mb-3"><label class="form-label">Tồn kho <span class="text-danger">*</span></label><input type="number" class="form-control" name="variants[${index}][stock]" value="${data.stock || ''}"></div>
-                        <div class="col-md-6 mb-3"><label class="form-label">Ngưỡng tồn kho thấp</label><input type="number" class="form-control" name="variants[${index}][low_stock_amount]" value="${data.low_stock_amount || ''}"></div>
-                    </div>
-                    <hr>
-                    <h6 class="mb-3">Thông tin vận chuyển</h6>
-                    <div class="row">
-                        <div class="col-md-3 mb-3"><label class="form-label">Cân nặng (kg)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][weight]" value="${data.weight || ''}"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label">Dài (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][length]" value="${data.length || ''}"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label">Rộng (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][width]" value="${data.width || ''}"></div>
-                        <div class="col-md-3 mb-3"><label class="form-label">Cao (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][height]" value="${data.height || ''}"></div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-            };
-
             if (generateBtn) {
                 generateBtn.addEventListener('click', () => {
-                    const selectedAttributes = Array.from(document.querySelectorAll('.attribute-select'))
-                        .map(select => Array.from(select.selectedOptions).map(option => ({
-                            id: option.value,
-                            text: option.textContent
-                        })))
-                        .filter(group => group.length > 0 && group.every(opt => opt.id));
-                    if (selectedAttributes.length === 0) {
+                    const selectedAttributes = Array.from(document.querySelectorAll(
+                            '#selectedVariantAttributes .variant-attr-value-checkbox:checked'))
+                        .reduce((acc, checkbox) => {
+                            const attrId = checkbox.closest('.mb-2').querySelector(
+                                '.btnRemoveVariantAttr').dataset.id;
+                            if (!acc[attrId]) acc[attrId] = [];
+                            acc[attrId].push({
+                                id: checkbox.value,
+                                text: checkbox.nextElementSibling.textContent
+                            });
+                            return acc;
+                        }, {});
+
+                    const attributeGroups = Object.values(selectedAttributes);
+                    if (attributeGroups.length === 0) {
                         alert('Vui lòng chọn ít nhất một giá trị thuộc tính.');
                         return;
                     }
 
-                    const combinations = getCombinations(selectedAttributes);
+                    const combinations = getCombinations(attributeGroups);
                     const existingCombos = Array.from(accordionContainer.querySelectorAll(
                         '.accordion-item')).map(
                         item => Array.from(item.querySelectorAll('input[name*="[attributes][]"]')).map(
@@ -598,20 +832,20 @@
                 });
             }
 
-            document.getElementById('btnAddImage').addEventListener('click', function(e) {
+            document.getElementById('btnAddImage')?.addEventListener('click', function(e) {
                 e.preventDefault();
                 const wrapper = document.getElementById('galleryWrapper');
                 const div = document.createElement('div');
                 div.classList.add('d-flex', 'align-items-center', 'mb-2', 'gallery-item');
                 div.innerHTML = `
-            <input type="file" name="gallery[]" class="form-control me-2" accept="image/*">
-            <button type="button" class="btn btn-danger btn-sm btnRemoveImage">Xóa</button>
-        `;
+                <input type="file" name="gallery[]" class="form-control me-2" accept="image/*">
+                <button type="button" class="btn btn-danger btn-sm btnRemoveImage">Xóa</button>
+                `;
                 wrapper.appendChild(div);
             });
 
             document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('btnRemoveImage')) {
+                if (e.target && e.target.classList.contains('btnRemoveImage')) {
                     e.preventDefault();
                     e.target.closest('.gallery-item').remove();
                 }
@@ -626,13 +860,11 @@
                 constructor(loader) {
                     this.loader = loader;
                 }
-
                 upload() {
                     return this.loader.file.then(file => new Promise((resolve, reject) => {
                         const data = new FormData();
                         data.append('upload', file);
                         data.append('_token', '{{ csrf_token() }}');
-
                         fetch('{{ route('admin.news.upload-image') }}', {
                                 method: 'POST',
                                 body: data
@@ -650,24 +882,19 @@
                             .catch(() => reject('Lỗi mạng khi upload ảnh.'));
                     }));
                 }
-
                 abort() {}
             }
 
             function MyCustomUploadAdapterPlugin(editor) {
-                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
-                    return new MyUploadAdapter(loader);
-                };
+                editor.plugins.get('FileRepository').createUploadAdapter = (loader) => new MyUploadAdapter(loader);
             }
-
             ClassicEditor
                 .create(document.querySelector('#editor'), {
-                    toolbar: [
-                        'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList',
-                        '|', 'blockQuote', 'insertTable', 'undo', 'redo', 'imageUpload'
+                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'blockQuote',
+                        'insertTable', 'undo', 'redo', 'imageUpload'
                     ],
                     mediaEmbed: {
-                        previewsInData: true // 🔥 Cho phép lưu nội dung đã render (iframe/oembed)
+                        previewsInData: true
                     },
                     htmlSupport: {
                         allow: [{
@@ -677,10 +904,9 @@
                             styles: true
                         }]
                     },
-                    extraPlugins: [MyCustomUploadAdapterPlugin] // Thêm dòng này để đăng ký upload adapter
+                    extraPlugins: [MyCustomUploadAdapterPlugin]
                 })
                 .then(editor => {
-                    // Optional: Lấy nội dung để lưu
                     editor.model.document.on('change:data', () => {
                         document.querySelector('#editor').value = editor.getData();
                     });
@@ -688,4 +914,4 @@
                 .catch(error => console.error(error));
         </script>
     @endsection
-@endpush```
+@endpush

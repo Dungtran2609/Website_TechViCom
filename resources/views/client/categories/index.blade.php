@@ -148,23 +148,16 @@
 
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="techvicom-container py-8">
         <!-- Breadcrumb -->
-        <nav class="flex mb-8" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="{{ route('home') }}"
-                        class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-orange-600">
-                        <i class="fas fa-home mr-2"></i>Trang chủ
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                        <span class="text-sm font-medium text-gray-500">Tất cả danh mục</span>
-                    </div>
-                </li>
-            </ol>
+        <nav class="bg-white border-b border-gray-200 py-3 mb-8">
+            <div class="techvicom-container">
+                <div class="flex items-center space-x-2 text-sm">
+                    <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                    <span class="text-gray-900 font-medium">Tất cả danh mục</span>
+                </div>
+            </div>
         </nav>
 
 
@@ -234,7 +227,7 @@
                 <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl p-8 text-white">
                     <h2 class="text-2xl font-bold mb-4">Không tìm thấy danh mục mong muốn?</h2>
                     <p class="mb-6">Liên hệ với chúng tôi để được tư vấn sản phẩm phù hợp nhất</p>
-                    <a href="{{ route('client.contacts.create') }}"
+                    <a href="{{ route('client.contacts.index') }}"
                         class="inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                         <i class="fas fa-phone mr-2"></i>Liên hệ tư vấn
                     </a>

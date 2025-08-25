@@ -1,0 +1,431 @@
+/* Performance Optimized CSS */
+
+/* Critical CSS - Load First */
+body {
+    padding-top: 80px;
+    font-display: swap;
+}
+
+/* Optimized animations */
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+.header-visible {
+    transform: translateY(0);
+}
+
+/* Optimized images */
+img {
+    image-rendering: auto;
+    will-change: auto;
+}
+
+/* Optimized transitions */
+.transition-transform {
+    will-change: transform;
+}
+
+/* Optimized shadows */
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Optimized hover effects */
+.hover\:scale-105:hover {
+    transform: scale(1.05);
+}
+
+/* Optimized loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Optimized scroll performance */
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+/* Optimized focus states */
+.focus\:outline-none:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+/* Optimized responsive images */
+.object-cover {
+    object-fit: cover;
+}
+
+.object-contain {
+    object-fit: contain;
+}
+
+/* Optimized text rendering */
+.text-render-optimized {
+    text-rendering: optimizeSpeed;
+    font-feature-settings: "kern" 1;
+}
+
+/* Optimized layout shifts */
+.aspect-ratio {
+    aspect-ratio: attr(width / attr(height));
+}
+
+/* Optimized grid layouts */
+.grid {
+    display: grid;
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* Optimized flexbox */
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+/* Optimized spacing */
+.space-x-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+.space-x-3 > * + * {
+    margin-left: 0.75rem;
+}
+
+.space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+/* Optimized colors */
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.text-gray-900 {
+    color: #111827;
+}
+
+.text-orange-500 {
+    color: #f97316;
+}
+
+.text-red-500 {
+    color: #ef4444;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+/* Optimized borders */
+.border {
+    border-width: 1px;
+}
+
+.border-gray-200 {
+    border-color: #e5e7eb;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+/* Optimized typography */
+.text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+/* Optimized utilities */
+.hidden {
+    display: none;
+}
+
+.block {
+    display: block;
+}
+
+.inline-block {
+    display: inline-block;
+}
+
+.relative {
+    position: relative;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.fixed {
+    position: fixed;
+}
+
+.top-0 {
+    top: 0;
+}
+
+.left-0 {
+    left: 0;
+}
+
+.right-0 {
+    right: 0;
+}
+
+.z-40 {
+    z-index: 40;
+}
+
+.z-50 {
+    z-index: 50;
+}
+
+/* Optimized responsive */
+@media (max-width: 640px) {
+    .container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+    
+    .grid-cols-2 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    input[type="text"] {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .lg\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    
+    .lg\:col-span-1 {
+        grid-column: span 1 / span 1;
+    }
+    
+    .lg\:col-span-2 {
+        grid-column: span 2 / span 2;
+    }
+    
+    .lg\:col-span-3 {
+        grid-column: span 3 / span 3;
+    }
+}
+
+/* Optimized animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* Optimized loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Optimized print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        padding-top: 0;
+    }
+}
+
+/* ===== FPT SHOP STYLE CONTAINER ===== */
+/* Container styles - FPT Shop style */
+.techvicom-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    width: 100%;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1280px) {
+    .techvicom-container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .techvicom-container {
+        padding: 0 0.75rem;
+    }
+}
+
+/* Override default container classes for client pages */
+.client-page .container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+}
+
+.client-page .container.mx-auto {
+    max-width: 1200px !important;
+}
+
+/* Ensure all client content is constrained */
+.client-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Override all container classes in client pages */
+.client-page .container,
+.client-page .container-fluid,
+.client-page .max-w-6xl,
+.client-page .max-w-7xl {
+    max-width: 1200px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Additional overrides for specific cases */
+.client-page .max-w-6xl {
+    max-width: 1200px !important;
+}
+
+.client-page .max-w-7xl {
+    max-width: 1200px !important;
+}
+
+/* Ensure all main content areas are constrained */
+.client-page main {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Override any other max-width classes */
+.client-page [class*="max-w-"] {
+    max-width: 1200px !important;
+}
+
+/* Ensure proper spacing on large screens */
+@media (min-width: 1280px) {
+    .client-page .container,
+    .client-page .container-fluid,
+    .client-page .max-w-6xl,
+    .client-page .max-w-7xl {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}

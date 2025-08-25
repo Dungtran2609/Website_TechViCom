@@ -22,7 +22,7 @@
 
 
     <div class="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-8">
-        <div class="container mx-auto px-4">
+        <div class="techvicom-container">
             <!-- Header Section -->
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full mb-4">
@@ -64,7 +64,7 @@
 
             <!-- Search and Filter Section -->
             <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
                     <div class="lg:col-span-2">
                         <div class="relative">
                             <input id="searchInput" value="{{ $search }}" type="text"
@@ -93,6 +93,19 @@
                                     </option>
                                 @endif
                             @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <select id="paymentStatusFilter"
+                            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                            <option value="">Tất cả thanh toán</option>
+                            <option value="pending" {{ request('payment_status') === 'pending' ? 'selected' : '' }}>Chưa thanh toán</option>
+                            <option value="processing" {{ request('payment_status') === 'processing' ? 'selected' : '' }}>Đang xử lý</option>
+                            <option value="completed" {{ request('payment_status') === 'completed' ? 'selected' : '' }}>Đã thanh toán</option>
+                            <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Đã thanh toán</option>
+                            <option value="failed" {{ request('payment_status') === 'failed' ? 'selected' : '' }}>Thanh toán thất bại</option>
+                            <option value="cancelled" {{ request('payment_status') === 'cancelled' ? 'selected' : '' }}>Đã hủy</option>
                         </select>
                     </div>
 
@@ -140,6 +153,7 @@
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Mã đơn</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Ngày đặt</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Thanh toán</th>
                                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Tổng tiền</th>
                                     <th class="px-6 py-4 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Thao tác</th>
                                 </tr>
@@ -228,6 +242,22 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
+                                            @php
+                                                $paymentStatusConfig = [
+                                                    'pending' => ['class' => 'bg-yellow-100 text-yellow-800', 'text' => 'Chưa thanh toán', 'icon' => 'clock'],
+                                                    'processing' => ['class' => 'bg-blue-100 text-blue-800', 'text' => 'Đang xử lý', 'icon' => 'spinner'],
+                                                    'completed' => ['class' => 'bg-green-100 text-green-800', 'text' => 'Đã thanh toán', 'icon' => 'check-circle'],
+                                                    'paid' => ['class' => 'bg-green-100 text-green-800', 'text' => 'Đã thanh toán', 'icon' => 'check-circle'],
+                                                    'failed' => ['class' => 'bg-red-100 text-red-800', 'text' => 'Thanh toán thất bại', 'icon' => 'times-circle'],
+                                                    'cancelled' => ['class' => 'bg-gray-100 text-gray-800', 'text' => 'Đã hủy', 'icon' => 'ban']
+                                                ];
+                                                $paymentConfig = $paymentStatusConfig[$order->payment_status] ?? ['class' => 'bg-gray-100 text-gray-800', 'text' => $order->payment_status, 'icon' => 'question'];
+                                            @endphp
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $paymentConfig['class'] }}">
+                                                <i class="fas fa-{{ $paymentConfig['icon'] }} mr-1"></i>{{ $paymentConfig['text'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
                                             <div class="text-sm font-semibold text-red-600">
                                                 {{ number_format($order->final_total, 0, ',', '.') }} VND
                                             </div>
@@ -292,6 +322,7 @@
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
             const statusFilter = document.getElementById('statusFilter');
+            const paymentStatusFilter = document.getElementById('paymentStatusFilter');
             const filterBtn = document.getElementById('filterBtn');
             const clearFilterBtn = document.getElementById('clearFilterBtn');
 
@@ -300,10 +331,13 @@
                 const currentUrl = new URL(window.location);
                 const searchTerm = searchInput ? searchInput.value.trim() : '';
                 const statusValue = statusFilter ? statusFilter.value : '';
+                const paymentStatusValue = paymentStatusFilter ? paymentStatusFilter.value : '';
                 if (searchTerm) currentUrl.searchParams.set('q', searchTerm);
                 else currentUrl.searchParams.delete('q');
                 if (statusValue) currentUrl.searchParams.set('status', statusValue);
                 else currentUrl.searchParams.delete('status');
+                if (paymentStatusValue) currentUrl.searchParams.set('payment_status', paymentStatusValue);
+                else currentUrl.searchParams.delete('payment_status');
                 // Reset page when filter/search
                 currentUrl.searchParams.delete('page');
                 window.location.href = currentUrl.toString();
@@ -338,6 +372,9 @@
                     });
                     updateUrlAndRedirect();
                 });
+            }
+            if (paymentStatusFilter) {
+                paymentStatusFilter.addEventListener('change', updateUrlAndRedirect);
             }
             if (clearFilterBtn) {
                 clearFilterBtn.addEventListener('click', function(e) {

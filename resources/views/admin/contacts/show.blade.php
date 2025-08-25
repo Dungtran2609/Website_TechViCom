@@ -69,7 +69,7 @@
                             @csrf
                             @method('PATCH')
                             <div class="input-group w-auto">
-                                <select name="status" class="form-select" required>
+                                <select name="status" class="form-select" >
                                     @php
                                         $allStatuses = ['pending', 'in_progress', 'responded', 'rejected'];
                                         $labels = [

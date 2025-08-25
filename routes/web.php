@@ -379,6 +379,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
             Route::delete('{brand}/force-delete', [AdminBrandController::class, 'forceDelete'])->name('force-delete');
             Route::resource('/', AdminBrandController::class)->parameters(['' => 'brand']);
         });
+
         // Quản lý thuộc tính sản phẩm
         Route::prefix('products/attributes')->name('products.attributes.')->middleware(CheckPermission::class . ':manage_attributes')->group(function () {
             Route::get('trashed', [AdminAttributeController::class, 'trashed'])->name('trashed');

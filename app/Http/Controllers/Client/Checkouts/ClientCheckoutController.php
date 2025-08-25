@@ -11,6 +11,7 @@ use App\Models\UserAddress;
 use App\Models\ShippingMethod;
 use App\Models\Coupon;
 use App\Services\VNPayService;
+use App\Http\Requests\Client\CheckoutRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -741,7 +742,7 @@ class ClientCheckoutController extends Controller
     }
 
     /* ============================== PROCESS CHECKOUT ============================== */
-    public function process(Request $request)
+    public function process(CheckoutRequest $request)
     {
         try {
             Log::info('Checkout process started', [
@@ -1211,13 +1212,40 @@ class ClientCheckoutController extends Controller
             }
             // Chỉ xử lý coupon mới nếu không phải thanh toán lại
             if (!$isRepayment && !empty($request->coupon_code)) {
+                // Khách vãng lai không thể áp dụng coupon
+                if (!Auth::check()) {
+                    return redirect()->route('checkout.index')->with('error', 'Vui lòng đăng nhập để nhận khuyến mãi');
+                }
+                
                 $couponCode = $request->coupon_code;
                 $coupon = Coupon::where('code', $couponCode)->where('status', true)->whereNull('deleted_at')->first();
-                if ($coupon && $coupon->max_usage_per_user > 0 && Auth::check()) {
-                    $usedCount = Order::where('user_id', Auth::id())
-                        ->where('coupon_code', $coupon->code)
-                        ->whereNull('deleted_at')
-                        ->count();
+                if ($coupon && $coupon->max_usage_per_user > 0) {
+                    $usedCount = 0;
+                    
+                    if (Auth::check()) {
+                        // User đã đăng nhập - kiểm tra theo user_id
+                        $usedCount = Order::where('user_id', Auth::id())
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    } else {
+                        // Khách vãng lai - kiểm tra theo email hoặc phone từ request
+                        $guestEmail = $request->input('guest_email');
+                        $guestPhone = $request->input('guest_phone');
+                        
+                        if ($guestEmail) {
+                            $usedCount = Order::where('guest_email', $guestEmail)
+                                ->where('coupon_code', $coupon->code)
+                                ->whereNull('deleted_at')
+                                ->count();
+                        } elseif ($guestPhone) {
+                            $usedCount = Order::where('guest_phone', $guestPhone)
+                                ->where('coupon_code', $coupon->code)
+                                ->whereNull('deleted_at')
+                                ->count();
+                        }
+                    }
+                    
                     if ($usedCount >= $coupon->max_usage_per_user) {
                         return redirect()->route('checkout.index')->with('error', 'Bạn đã sử dụng hết số lần cho phép cho mã giảm giá này.');
                     }
@@ -1313,6 +1341,18 @@ class ClientCheckoutController extends Controller
                 $originalFinalTotal = $originalSubtotal + $originalShippingFee - $originalDiscountAmount;
 
                 $order->update([
+                    // Cập nhật thông tin người nhận mới
+                    'recipient_name'     => $addressData['recipient_name'],
+                    'recipient_phone'    => $addressData['recipient_phone'],
+                    'recipient_email'    => $addressData['recipient_email'],
+                    'recipient_address'  => $addressData['recipient_address'],
+                    'province_code'      => $provinceCode,
+                    'district_code'      => $districtCode,
+                    'ward_code'          => $wardCode,
+                    'city'               => $provinceName,
+                    'district'           => $districtName,
+                    'ward'               => $wardName,
+                    
                     'payment_method'     => $request->payment_method,
                     'shipping_method_id' => $shippingMethodId,
                     'total_amount'       => $originalSubtotal, // Sử dụng giá cũ
@@ -1320,6 +1360,7 @@ class ClientCheckoutController extends Controller
                     'discount_amount'    => $originalDiscountAmount, // Sử dụng giá cũ
                     'coupon_code'        => $order->coupon_code, // Giữ nguyên coupon cũ
                     'final_total'        => $originalFinalTotal, // Sử dụng giá cũ
+                    'order_notes'        => $request->order_notes, // Cập nhật ghi chú mới
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                     'updated_at'         => now(),
                     // Reset các trường VNPay khi thanh toán lại
@@ -1404,6 +1445,7 @@ class ClientCheckoutController extends Controller
                     'discount_amount'    => $discountAmount,
                     'coupon_code'        => $couponCode,
                     'final_total'        => $finalTotal,
+                    'order_notes'        => $request->order_notes,
                     'status'             => 'pending',
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                 ];

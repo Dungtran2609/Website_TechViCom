@@ -218,7 +218,7 @@
                     @if(isset($notLoggedIn) && $notLoggedIn)
                         <h3 class="text-lg font-semibold text-gray-600 mb-2">Vui lòng đăng nhập</h3>
                         <p class="text-gray-500">Bạn cần đăng nhập để xem sản phẩm yêu thích</p>
-                        <a href="{{ route('login') }}" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition mt-4">
+                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition mt-4">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Đăng nhập
                         </a>

@@ -50,7 +50,17 @@ class ProductComment extends Model
      */
     public static function canUserReview($userId, $productId, $orderId = null)
     {
-        // Nếu có order_id, kiểm tra đơn hàng
+        // Kiểm tra đã đánh giá sản phẩm này chưa (bất kỳ đơn hàng nào)
+        $existingReview = self::where('user_id', $userId)
+            ->where('product_id', $productId)
+            ->whereNull('parent_id')
+            ->first();
+
+        if ($existingReview) {
+            return false; // Đã đánh giá rồi
+        }
+
+        // Nếu có order_id, kiểm tra đơn hàng cụ thể
         if ($orderId) {
             $order = Order::where('id', $orderId)
                 ->where('user_id', $userId)
@@ -66,14 +76,29 @@ class ProductComment extends Model
                 return false;
             }
 
-            // Kiểm tra đã đánh giá chưa
-            $existingReview = self::where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->where('order_id', $orderId)
-                ->whereNull('parent_id')
-                ->first();
+            return true; // Có thể đánh giá
+        }
 
-            return !$existingReview;
+        // Nếu không có order_id, kiểm tra có đơn hàng nào hợp lệ không
+        $orderItems = \App\Models\OrderItem::whereHas('order', function($query) use ($userId) {
+            $query->where('user_id', $userId)
+                  ->where('status', 'received');
+        })->where('product_id', $productId)->get();
+
+        foreach ($orderItems as $orderItem) {
+            $order = $orderItem->order;
+            
+            if (!$order->received_at) {
+                continue;
+            }
+
+            $daysSinceReceived = now()->diffInDays($order->received_at);
+            if ($daysSinceReceived < 0) {
+                $daysSinceReceived = 0;
+            }
+            if ($daysSinceReceived <= 15) {
+                return true; // Có đơn hàng hợp lệ
+            }
         }
 
         return false;

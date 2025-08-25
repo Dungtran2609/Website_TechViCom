@@ -17,6 +17,15 @@ class ClientCouponController extends Controller
         $now = \Carbon\Carbon::now();
         $user = \Illuminate\Support\Facades\Auth::user();
         
+        // Khách vãng lai không thể xem danh sách coupon
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập để xem danh sách khuyến mãi',
+                'require_login' => true
+            ]);
+        }
+        
         // Lấy tất cả coupon có sẵn (không chỉ những đã dùng)
         $coupons = \App\Models\Coupon::where('status', true)
             ->whereNull('deleted_at')
@@ -43,11 +52,33 @@ class ClientCouponController extends Controller
             }
             
             // Kiểm tra số lần sử dụng per user
-            if ($eligible && $user && $coupon->max_usage_per_user > 0) {
-                $usedCount = \App\Models\Order::where('user_id', $user->id)
-                    ->where('coupon_code', $coupon->code)
-                    ->whereNull('deleted_at')
-                    ->count();
+            if ($eligible && $coupon->max_usage_per_user > 0) {
+                $usedCount = 0;
+                
+                if ($user) {
+                    // User đã đăng nhập - kiểm tra theo user_id
+                    $usedCount = \App\Models\Order::where('user_id', $user->id)
+                        ->where('coupon_code', $coupon->code)
+                        ->whereNull('deleted_at')
+                        ->count();
+                } else {
+                    // Khách vãng lai - kiểm tra theo email hoặc phone từ request
+                    $guestEmail = request()->input('guest_email');
+                    $guestPhone = request()->input('guest_phone');
+                    
+                    if ($guestEmail) {
+                        $usedCount = \App\Models\Order::where('guest_email', $guestEmail)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    } elseif ($guestPhone) {
+                        $usedCount = \App\Models\Order::where('guest_phone', $guestPhone)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    }
+                }
+                
                 if ($usedCount >= $coupon->max_usage_per_user) {
                     $eligible = false;
                     $reason = 'Bạn đã sử dụng hết số lần cho phép';
@@ -88,6 +119,15 @@ class ClientCouponController extends Controller
             $subtotal = $request->input('subtotal', 0);
             $user = Auth::user();
             
+            // Khách vãng lai không thể áp dụng coupon
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng đăng nhập để nhận khuyến mãi',
+                    'require_login' => true
+                ]);
+            }
+            
             // Debug logging
             Log::info('Coupon validation request', [
                 'coupon_code' => $couponCode,
@@ -113,11 +153,33 @@ class ClientCouponController extends Controller
             }
             
             // Check max usage per user
-            if ($user && $coupon->max_usage_per_user > 0) {
-                $usedCount = \App\Models\Order::where('user_id', $user->id)
-                    ->where('coupon_code', $coupon->code)
-                    ->whereNull('deleted_at')
-                    ->count();
+            if ($coupon->max_usage_per_user > 0) {
+                $usedCount = 0;
+                
+                if ($user) {
+                    // User đã đăng nhập - kiểm tra theo user_id
+                    $usedCount = \App\Models\Order::where('user_id', $user->id)
+                        ->where('coupon_code', $coupon->code)
+                        ->whereNull('deleted_at')
+                        ->count();
+                } else {
+                    // Khách vãng lai - kiểm tra theo email hoặc phone từ request
+                    $guestEmail = $request->input('guest_email');
+                    $guestPhone = $request->input('guest_phone');
+                    
+                    if ($guestEmail) {
+                        $usedCount = \App\Models\Order::where('guest_email', $guestEmail)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    } elseif ($guestPhone) {
+                        $usedCount = \App\Models\Order::where('guest_phone', $guestPhone)
+                            ->where('coupon_code', $coupon->code)
+                            ->whereNull('deleted_at')
+                            ->count();
+                    }
+                }
+                
                 if ($usedCount >= $coupon->max_usage_per_user) {
                     return response()->json([
                         'success' => false,

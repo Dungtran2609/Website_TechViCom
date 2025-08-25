@@ -29,6 +29,8 @@ class CommentHelper
             return false;
         }
 
+        $hasValidOrder = false;
+
         // Kiểm tra từng đơn hàng
         foreach ($orderItems as $orderItem) {
             $order = $orderItem->order;
@@ -49,7 +51,9 @@ class CommentHelper
                 continue; // Bỏ qua đơn hàng này, kiểm tra đơn hàng khác
             }
 
-            // Kiểm tra đã comment cho đơn hàng này chưa
+            $hasValidOrder = true; // Có ít nhất 1 đơn hàng hợp lệ về thời gian
+
+            // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
             $existingComment = ProductComment::where('user_id', $user->id)
                                            ->where('product_id', $productId)
                                            ->where('order_id', $order->id)
@@ -57,11 +61,12 @@ class CommentHelper
                                            ->first();
 
             if (!$existingComment) {
-                return true; // Có thể đánh giá cho đơn hàng này
+                return true; // Có thể đánh giá cho sản phẩm này trong đơn hàng này
             }
         }
 
-        return false; // Đã đánh giá hết tất cả đơn hàng
+        // Nếu không có đơn hàng hợp lệ về thời gian hoặc đã đánh giá hết
+        return false;
     }
 
     /**
@@ -116,15 +121,14 @@ class CommentHelper
             if ($daysSinceReceived <= 15) {
                 $timeExpired = false; // Có ít nhất 1 đơn hàng còn thời gian
                 
-                // Kiểm tra đã comment cho đơn hàng này chưa
+                // Kiểm tra đã comment cho sản phẩm này chưa (bất kỳ đơn hàng nào)
                 $existingComment = ProductComment::where('user_id', $user->id)
                                                ->where('product_id', $productId)
-                                               ->where('order_id', $order->id)
                                                ->whereNull('parent_id')
                                                ->first();
 
                 if (!$existingComment) {
-                    $canReviewAny = true; // Có thể đánh giá cho đơn hàng này
+                    $canReviewAny = true; // Có thể đánh giá cho sản phẩm này
                     $allReviewed = false;
                     break;
                 }
@@ -136,7 +140,7 @@ class CommentHelper
         }
 
         if ($allReviewed) {
-            return 'Bạn đã đánh giá tất cả đơn hàng của sản phẩm này.';
+            return 'Bạn đã đánh giá sản phẩm này cho tất cả đơn hàng rồi.';
         }
 
         return null; // Có thể comment
@@ -179,7 +183,7 @@ class CommentHelper
                 $daysSinceReceived = 0;
             }
 
-            // Kiểm tra đã comment cho đơn hàng này chưa
+            // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
             $existingComment = ProductComment::where('user_id', $user->id)
                                            ->where('product_id', $productId)
                                            ->where('order_id', $order->id)
@@ -238,7 +242,7 @@ class CommentHelper
                 continue; // Bỏ qua đơn hàng hết thời gian
             }
 
-            // Kiểm tra đã comment cho đơn hàng này chưa
+            // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
             $existingComment = ProductComment::where('user_id', $user->id)
                                            ->where('product_id', $productId)
                                            ->where('order_id', $order->id)
@@ -306,7 +310,7 @@ class CommentHelper
             if ($daysSinceReceived <= 15) {
                 $timeExpired = false; // Có ít nhất 1 đơn hàng còn thời gian
                 
-                // Kiểm tra đã comment cho đơn hàng này chưa
+                // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
                 $existingComment = ProductComment::where('user_id', $user->id)
                                                ->where('product_id', $productId)
                                                ->where('order_id', $order->id)
@@ -314,7 +318,7 @@ class CommentHelper
                                                ->first();
 
                 if (!$existingComment) {
-                    $canReviewAny = true; // Có thể đánh giá cho đơn hàng này
+                    $canReviewAny = true; // Có thể đánh giá cho sản phẩm này trong đơn hàng này
                     $allReviewed = false;
                     break;
                 }
@@ -332,7 +336,7 @@ class CommentHelper
         if ($allReviewed) {
             return [
                 'can_review' => false,
-                'message' => 'Bạn đã đánh giá tất cả đơn hàng của sản phẩm này.',
+                'message' => 'Bạn đã đánh giá sản phẩm này cho tất cả đơn hàng rồi.',
                 'remaining_days' => 0
             ];
         }

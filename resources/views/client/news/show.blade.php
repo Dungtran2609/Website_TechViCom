@@ -147,7 +147,7 @@
                                 </form>
                             @else
                                 <div class="bg-gray-100 rounded-lg p-4 text-center">
-                                    <p class="text-gray-600 mb-2">Vui lòng <a href="{{ route('login') }}" class="text-[#0052cc] hover:underline">đăng nhập</a> để bình luận</p>
+                                    <p class="text-gray-600 mb-2">Vui lòng <a href="#" onclick="openAuthModal(); return false;" class="text-[#0052cc] hover:underline">đăng nhập</a> để bình luận</p>
                                 </div>
                             @endauth
                         </div>
@@ -187,7 +187,7 @@
                                                         </button>
                                                     </form>
                                                 @else
-                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc]">
+                                                    <a href="#" onclick="openAuthModal(); return false;" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc]">
                                                         <i class="far fa-thumbs-up"></i> {{ $comment->likes_count ?? 0 }}
                                                     </a>
                                                 @endauth
@@ -261,7 +261,7 @@
                                                                         </button>
                                                                     </form>
                                                                 @else
-                                                                    <a href="{{ route('login') }}" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc] ml-2">
+                                                                    <a href="#" onclick="openAuthModal(); return false;" class="flex items-center gap-1 text-gray-400 hover:text-[#0052cc] ml-2">
                                                                         <i class="far fa-thumbs-up"></i>
                                                                         {{ $reply->likes_count ?? 0 }}
                                                                     </a>

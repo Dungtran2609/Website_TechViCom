@@ -749,7 +749,7 @@
                         this.querySelector('i').className = originalIcon;
                         toast('Vui lòng đăng nhập để thêm vào yêu thích');
                         setTimeout(() => {
-                            window.location.href = '{{ route("login") }}';
+                            openAuthModal();
                         }, 1500);
                     })
                     .finally(() => {

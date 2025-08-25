@@ -168,7 +168,7 @@
                         // Redirect đến trang login
                         showNotification('Vui lòng đăng nhập để sử dụng chức năng yêu thích', 'error');
                         setTimeout(() => {
-                            window.location.href = data.redirect;
+                            openAuthModal();
                         }, 2000);
                     } else {
                         showNotification(data.message, 'error');

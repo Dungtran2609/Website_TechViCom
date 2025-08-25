@@ -22,6 +22,7 @@ class StoreProductCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'order_id' => 'required|integer|exists:orders,id',
             'content' => 'required|string|min:10|max:500',
             'rating' => 'required|integer|min:1|max:5',
         ];
@@ -35,6 +36,8 @@ class StoreProductCommentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'order_id.required' => 'Vui lòng chọn đơn hàng để đánh giá!',
+            'order_id.exists' => 'Đơn hàng không tồn tại!',
             'content.required' => 'Nội dung bình luận không được để trống!',
             'content.min' => 'Nội dung bình luận phải có ít nhất 10 ký tự!',
             'content.max' => 'Nội dung bình luận không được quá 500 ký tự!',

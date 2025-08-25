@@ -182,7 +182,7 @@
                             <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                                 <i class="fas fa-exclamation-triangle text-yellow-600 text-xs"></i>
                             </div>
-                            <p class="text-gray-700">Có thể tra cứu trong vòng 10 năm</p>
+                            <p class="text-gray-700">Có thể tra cứu trong 3 tháng</p>
                         </div>
                         <div class="flex items-start">
                             <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3 mt-0.5">

@@ -380,7 +380,7 @@
 
             <div class="text-center auth-links" style="margin-top:10px;">
                 <span class="text-gray-600">Chưa có tài khoản?</span>
-                <a href="{{ route('register') }}" style="margin-left:4px;"><i class="fas fa-user-plus icon-left"></i>Đăng ký
+                                        <a href="#" onclick="openAuthModalAndShowRegister(); return false;" style="margin-left:4px;"><i class="fas fa-user-plus icon-left"></i>Đăng ký
                     ngay</a>
             </div>
         </div>

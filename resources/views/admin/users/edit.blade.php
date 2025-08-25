@@ -1,6 +1,5 @@
 @extends('admin.layouts.app')
 
-
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Chỉnh sửa người dùng</h1>
@@ -8,7 +7,6 @@
             <i class="fas fa-arrow-left"></i> Quay lại danh sách
         </a>
     </div>
-
 
     <div class="card">
         <div class="card-body">
@@ -23,7 +21,6 @@
                 @csrf
                 @method('PUT')
 
-
                 {{-- Ảnh đại diện hiện tại --}}
                 @if ($user->image_profile)
                     <div class="mb-3 text-center">
@@ -32,7 +29,6 @@
                              class="rounded-circle img-thumbnail" style="max-height: 150px;">
                     </div>
                 @endif
-
 
                 {{-- Thay đổi ảnh đại diện --}}
                 <div class="mb-3">
@@ -44,7 +40,6 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
 
                 @php
                     $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
@@ -63,7 +58,6 @@
                     @enderror
                 </div>
 
-
                 <!-- Email -->
                 <div class="mb-3">
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
@@ -78,7 +72,6 @@
                     @enderror
                 </div>
 
-
                 <!-- Mật khẩu mới -->
                 <div class="mb-3">
                     <label for="password" class="form-label">Mật khẩu mới</label>
@@ -90,7 +83,6 @@
                     @enderror
                 </div>
 
-
                 <!-- Xác nhận mật khẩu -->
                 <div class="mb-3">
                     <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới</label>
@@ -101,7 +93,6 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
 
                 <!-- Số điện thoại -->
                 <div class="mb-3">
@@ -117,7 +108,6 @@
                     @enderror
                 </div>
 
-
                 <!-- Ngày sinh -->
                 <div class="mb-3">
                     <label for="birthday" class="form-label">Ngày sinh</label>
@@ -131,7 +121,6 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
 
                 <!-- Giới tính -->
                 <div class="mb-3">
@@ -150,7 +139,6 @@
                     @enderror
                 </div>
 
-
                 <!-- Trạng thái -->
                 <div class="mb-3">
                     <label for="is_active" class="form-label">Trạng thái <span class="text-danger">*</span></label>
@@ -163,11 +151,13 @@
                     @enderror
                 </div>
 
-
                 <!-- Vai trò -->
                 <div class="mb-3">
                     <label for="roles" class="form-label">Vai trò <span class="text-danger">*</span></label>
-                    <select name="roles[]" id="roles" class="form-select @error('roles') is-invalid @enderror" multiple>
+                    @php
+                        $isSelf = auth()->id() === $user->id;
+                    @endphp
+                    <select name="roles[]" id="roles" class="form-select @error('roles') is-invalid @enderror" multiple @if($isSelf) disabled @endif>
                         @foreach ($roles as $role)
                             <option value="{{ $role->id }}"
                                 {{ (in_array($role->id, old('roles', $user->roles->pluck('id')->toArray()))) ? 'selected' : '' }}>
@@ -175,6 +165,10 @@
                             </option>
                         @endforeach
                     </select>
+                    @if($isSelf)
+                        <input type="hidden" name="roles[]" value="{{ implode('" value="', $user->roles->pluck('id')->toArray()) }}">
+                        <div class="text-danger mt-1">Bạn không thể thay đổi vai trò của chính mình.</div>
+                    @endif
                     <small class="text-muted">Giữ phím Ctrl hoặc Cmd để chọn nhiều vai trò.</small>
                     @error('roles')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -184,11 +178,9 @@
                     @enderror
                 </div>
 
-
                 @php
                     $defaultAddress = $user->addresses->where('is_default', true)->first() ?? $user->addresses->first();
                 @endphp
-
 
                 @if(!$onlyUserRole)
                 <div class="col-12 mb-3">
@@ -231,7 +223,6 @@
                 </div>
                 @endif
 
-
                 <!-- Địa chỉ mặc định -->
                 <div class="mb-3 form-check">
                     <input type="checkbox" name="is_default" id="is_default"
@@ -242,7 +233,6 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
 
                 {{-- Nút điều hướng --}}
                 <div class="d-flex justify-content-between">
@@ -323,7 +313,6 @@
                         }
                     });
             }
-
 
             // Sự kiện chọn tỉnh/thành
             $(document).on('change', 'select[name="city_code"]', function() {
@@ -432,4 +421,3 @@
         });
     </script>
 @endsection
-

@@ -139,6 +139,20 @@ class ClientCartController extends Controller
 
     public function add(Request $request)
     {
+        // Chặn admin và staff không được thêm vào giỏ hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+
         try {
             $data = $request->validate([
                 'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -167,8 +181,8 @@ class ClientCartController extends Controller
                 : (int) ($product->stock ?? 0);
 
             // Tìm item hiện có (⚠️ dùng variant_id, không phải product_variant_id)
-            if (\Illuminate\Support\Facades\Auth::check()) {
-                $existing = \App\Models\Cart::where('user_id', auth()->id())
+            if (Auth::check()) {
+                $existing = \App\Models\Cart::where('user_id', Auth::id())
                     ->where('product_id', $productId)
                     ->when(
                         $variantId,
@@ -191,7 +205,7 @@ class ClientCartController extends Controller
                     $existing->save();
                 } else {
                     \App\Models\Cart::create([
-                        'user_id' => auth()->id(),
+                        'user_id' => Auth::id(),
                         'product_id' => $productId,
                         'variant_id' => $variantId,   // ✅ tên cột mới
                         'quantity' => $quantity,

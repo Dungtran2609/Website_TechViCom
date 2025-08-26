@@ -189,16 +189,30 @@ class AdminUserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
-    public function destroy(User $user)
+public function destroy(User $user)
     {
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.index')->with('error', 'Bạn không thể xóa chính mình.');
         }
 
+<<<<<<< HEAD
+        // Chỉ cho phép xóa nếu tài khoản đang ở trạng thái không hoạt động
+        if ($user->is_active) {
+            return redirect()->route('admin.users.index')->withErrors([
+                'delete' => 'Chỉ có thể xóa tài khoản ở trạng thái không hoạt động!'
+            ]);
+=======
+        // Kiểm tra vai trò của user - Chỉ bảo vệ tài khoản admin
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $protectedRoles = ['admin'];
+        
+        if (array_intersect($userRoleNames, $protectedRoles)) {
+            return redirect()->route('admin.users.index')->with('error', 'Không thể xóa tài khoản Admin!');
+>>>>>>> e38b7b726e194298b0c6e63bd831392758ecec33
+        }
+
         // Chỉ cho phép xóa nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
-        // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
         if ($user->orders()->whereNotIn('status', ['delivered', 'received'])->exists()) {
-            // Giải thích: Nếu user còn đơn hàng chưa giao thành công, không cho phép xóa để đảm bảo dữ liệu đơn hàng không bị mất liên kết
             return redirect()->route('admin.users.index')->withErrors([
                 'delete' => 'Không thể xóa tài khoản này vì đang có đơn hàng chưa giao thành công hoặc đang đặt hàng!'
             ]);
@@ -231,6 +245,14 @@ class AdminUserController extends Controller
         $user = User::withTrashed()->findOrFail($id);
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.trashed')->with('error', 'Bạn không thể xóa chính mình vĩnh viễn.');
+        }
+
+        // Kiểm tra vai trò của user - Chỉ bảo vệ tài khoản admin
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $protectedRoles = ['admin'];
+        
+        if (array_intersect($userRoleNames, $protectedRoles)) {
+            return redirect()->route('admin.users.trashed')->with('error', 'Không thể xóa tài khoản Admin!');
         }
 
         // Chỉ cho phép xóa vĩnh viễn nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)

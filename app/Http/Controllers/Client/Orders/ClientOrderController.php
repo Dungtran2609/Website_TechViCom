@@ -251,22 +251,36 @@ class ClientOrderController extends Controller
             ->where('status', 'pending')
             ->findOrFail($id);
 
+        // Chặn hủy đơn hàng VNPay
+        if ($order->payment_method === 'bank_transfer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn hàng thanh toán VNPay không thể hủy. Vui lòng liên hệ bộ phận hỗ trợ để được hỗ trợ!'
+            ], 403);
+        }
+
         $request = request();
         $cancelReason = $request->input('cancel_reason', 'Khách hủy');
         $clientNote = $request->input('client_note', '');
 
+        // Hủy đơn hàng ngay lập tức
+        $order->status = 'cancelled';
+        $order->save();
+
+        // Tạo record lưu lý do hủy
         OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'cancel',
             'reason'       => $cancelReason,
             'client_note'  => $clientNote,
-            'status'       => 'pending',
+            'status'       => 'approved', // Tự động approved
             'requested_at' => now(),
+            'approved_at'  => now(),
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Yêu cầu hủy đơn hàng đã được gửi. Admin sẽ duyệt yêu cầu này.'
+            'message' => 'Đơn hàng đã được hủy thành công!'
         ]);
     }
 
@@ -294,19 +308,82 @@ class ClientOrderController extends Controller
             ->findOrFail($id);
 
         $request = request();
-        $returnReason = $request->input('return_reason', 'Khách hàng yêu cầu trả');
+        $returnReason = $request->input('cancel_reason', 'Khách hàng yêu cầu trả');
         $clientNote = $request->input('client_note', '');
+        $selectedProducts = $request->input('selected_products', []);
 
-        OrderReturn::create([
+        // Đảm bảo selectedProducts là array
+        if (!is_array($selectedProducts)) {
+            $selectedProducts = [$selectedProducts];
+        }
+
+        // Kiểm tra chọn sản phẩm
+        if (empty($selectedProducts)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Vui lòng chọn ít nhất một sản phẩm để đổi/trả!'
+            ], 400);
+        }
+
+        // Kiểm tra upload video
+        if (!$request->hasFile('return_video')) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Vui lòng upload video chứng minh!'
+            ], 400);
+        }
+
+        // Xử lý upload ảnh cho từng sản phẩm
+        $productImages = [];
+        foreach ($selectedProducts as $productId) {
+            $productImages[$productId] = [];
+            
+            if ($request->hasFile("product_images.{$productId}")) {
+                foreach ($request->file("product_images.{$productId}") as $image) {
+                    if ($image->isValid()) {
+                        $imageName = 'return_product_' . $productId . '_' . time() . '_' . $image->getClientOriginalName();
+                        $imagePath = $image->storeAs('returns/images', $imageName, 'public');
+                        $productImages[$productId][] = $imagePath;
+                    }
+                }
+            }
+            
+            // Kiểm tra có ảnh cho sản phẩm này không
+            if (empty($productImages[$productId])) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Vui lòng upload ảnh chứng minh cho tất cả sản phẩm được chọn!'
+                ], 400);
+            }
+        }
+
+        // Xử lý upload video
+        $videoPath = null;
+        if ($request->hasFile('return_video')) {
+            $video = $request->file('return_video');
+            if ($video->isValid()) {
+                $videoName = 'return_' . time() . '_' . $video->getClientOriginalName();
+                $videoPath = $video->storeAs('returns/videos', $videoName, 'public');
+            }
+        }
+
+        // Tạo record trả hàng
+        $orderReturn = OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'return',
             'reason'       => $returnReason,
             'client_note'  => $clientNote,
             'status'       => 'pending',
             'requested_at' => now(),
+            'images'       => $productImages,
+            'video'        => $videoPath,
+            'selected_products' => $selectedProducts,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Yêu cầu trả hàng đã được gửi.']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Yêu cầu đổi/trả hàng đã được gửi với đầy đủ chứng minh!'
+        ]);
     }
 
     /** Xác nhận đã nhận hàng (khi đã giao hoặc đang giao) */

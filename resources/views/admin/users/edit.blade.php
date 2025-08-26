@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 
+
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Chỉnh sửa người dùng</h1>
@@ -7,6 +8,7 @@
             <i class="fas fa-arrow-left"></i> Quay lại danh sách
         </a>
     </div>
+
 
     <div class="card">
         <div class="card-body">
@@ -21,6 +23,7 @@
                 @csrf
                 @method('PUT')
 
+
                 {{-- Ảnh đại diện hiện tại --}}
                 @if ($user->image_profile)
                     <div class="mb-3 text-center">
@@ -29,6 +32,7 @@
                              class="rounded-circle img-thumbnail" style="max-height: 150px;">
                     </div>
                 @endif
+
 
                 {{-- Thay đổi ảnh đại diện --}}
                 <div class="mb-3">
@@ -40,6 +44,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
 
                 @php
                     $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
@@ -58,6 +63,7 @@
                     @enderror
                 </div>
 
+
                 <!-- Email -->
                 <div class="mb-3">
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
@@ -72,6 +78,7 @@
                     @enderror
                 </div>
 
+
                 <!-- Mật khẩu mới -->
                 <div class="mb-3">
                     <label for="password" class="form-label">Mật khẩu mới</label>
@@ -83,6 +90,7 @@
                     @enderror
                 </div>
 
+
                 <!-- Xác nhận mật khẩu -->
                 <div class="mb-3">
                     <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới</label>
@@ -93,6 +101,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
 
                 <!-- Số điện thoại -->
                 <div class="mb-3">
@@ -108,6 +117,7 @@
                     @enderror
                 </div>
 
+
                 <!-- Ngày sinh -->
                 <div class="mb-3">
                     <label for="birthday" class="form-label">Ngày sinh</label>
@@ -121,6 +131,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
 
                 <!-- Giới tính -->
                 <div class="mb-3">
@@ -139,6 +150,7 @@
                     @enderror
                 </div>
 
+
                 <!-- Trạng thái -->
                 <div class="mb-3">
                     <label for="is_active" class="form-label">Trạng thái <span class="text-danger">*</span></label>
@@ -150,6 +162,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
 
                 <!-- Vai trò -->
                 <div class="mb-3">
@@ -178,9 +191,11 @@
                     @enderror
                 </div>
 
+
                 @php
                     $defaultAddress = $user->addresses->where('is_default', true)->first() ?? $user->addresses->first();
                 @endphp
+
 
                 @if(!$onlyUserRole)
                 <div class="col-12 mb-3">
@@ -223,6 +238,7 @@
                 </div>
                 @endif
 
+
                 <!-- Địa chỉ mặc định -->
                 <div class="mb-3 form-check">
                     <input type="checkbox" name="is_default" id="is_default"
@@ -233,6 +249,7 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
 
                 {{-- Nút điều hướng --}}
                 <div class="d-flex justify-content-between">
@@ -248,10 +265,12 @@
     </div>
 @endsection
 
+
 @section('scripts')
     <script>
         $(document).ready(function() {
             const apiBaseUrl = '{{ url('/api') }}';
+
 
             function loadProvinces() {
                 fetch(`${apiBaseUrl}/provinces`)
@@ -274,6 +293,7 @@
                     });
             }
 
+
             function loadDistricts(provinceCode, districtSelectElement) {
                 const wardSelectElement = $(districtSelectElement).closest('.row').find('select[name="ward_code"]');
                 $(districtSelectElement).empty().append('<option value="">Chọn quận/huyện</option>');
@@ -295,6 +315,7 @@
                     });
             }
 
+
             function loadWards(districtCode, wardSelectElement) {
                 $(wardSelectElement).empty().append('<option value="">Chọn phường/xã</option>');
                 if (!districtCode) return;
@@ -314,6 +335,7 @@
                     });
             }
 
+
             // Sự kiện chọn tỉnh/thành
             $(document).on('change', 'select[name="city_code"]', function() {
                 const provinceCode = $(this).val();
@@ -321,6 +343,7 @@
                 $(this).closest('.row').find('input[name="city"]').val($(this).find('option:selected').text());
                 loadDistricts(provinceCode, districtSelect);
             });
+
 
             // Sự kiện chọn quận/huyện
             $(document).on('change', 'select[name="district_code"]', function() {
@@ -332,6 +355,7 @@
                 loadWards(districtCode, wardSelect);
             });
 
+
             // Sự kiện chọn phường/xã
             $(document).on('change', 'select[name="ward_code"]', function() {
                 const wardCode = $(this).val();
@@ -339,6 +363,7 @@
                 // Lưu lại ward_code vào input ẩn
                 $('#edit_ward_code_hidden').val(wardCode);
             });
+
 
             // Tải dữ liệu dropdown khi trang tải
             // Ưu tiên lấy code từ input ẩn nếu có, nếu không thì lấy từ old() hoặc defaultAddress
@@ -348,11 +373,13 @@
             const selectedDistrictCode = $('#edit_district_code_hidden').val();
             const selectedWardCode = $('#edit_ward_code_hidden').val();
 
+
             // Hàm lấy code từ tên (nếu không có code lưu sẵn)
             function getCodeByName(list, name) {
                 const found = list.find(item => item.name === name);
                 return found ? found.code : '';
             }
+
 
             // Load provinces và sau đó load districts/wards nếu có dữ liệu cũ
             fetch(`${apiBaseUrl}/provinces`).then(res => res.json()).then(provinces => {

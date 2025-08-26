@@ -221,8 +221,8 @@ class HomeController extends Controller
             }
         }
 
-        // Lấy bài viết mới nhất
-        $latestNews = News::orderByDesc('created_at')->limit(4)->get();
+    // Lấy bài viết theo giờ mới nhất lên đầu (không quan tâm ngày)
+    $latestNews = News::orderByRaw('TIME(created_at) DESC')->limit(4)->get();
 
         // Lấy danh sách sản phẩm yêu thích của user (nếu đã đăng nhập)
         $favoriteProductIds = [];

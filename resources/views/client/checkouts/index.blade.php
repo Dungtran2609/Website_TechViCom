@@ -61,25 +61,8 @@
 
 @section('content')
     @php
-        // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3 hoặc user đã spam
-        $vnpayLocked = $vnpayLocked ?? (session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3);
-        
-        // Kiểm tra spam chặn cho khách vãng lai
-        $guestVnpayLocked = false;
-        if (!Auth::check()) {
-            $cancelData = session('guest_vnpay_cancel_count', []);
-            $totalCount = 0;
-            $currentTime = time();
-            
-            // Chỉ tính những lần hủy trong vòng 24 giờ qua
-            foreach ($cancelData as $timestamp => $count) {
-                if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
-                    $totalCount += $count;
-                }
-            }
-            
-            $guestVnpayLocked = $totalCount >= 3;
-        }
+        // Khóa VNPay nếu có force_cod_for_order_id và số lần hủy >= 3
+        $vnpayLocked = session('force_cod_for_order_id') && ($orderVnpayCancelCount ?? 0) >= 3;
     @endphp
 
     @if (session('notification'))
@@ -118,35 +101,10 @@
         </div>
     @endif
 
-    @if (session('repayment_order_id') && session('repayment_message'))
-        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
-            <strong class="font-bold">Thông báo!</strong>
-            <span class="block sm:inline">{{ session('repayment_message') }}</span>
-            <div class="mt-2 text-sm">
-                <i class="fas fa-info-circle mr-1"></i>
-                Bạn đang thanh toán lại đơn hàng #{{ session('repayment_order_id') }}. Giá sản phẩm sẽ được giữ nguyên như ban đầu.
-            </div>
-        </div>
-    @endif
-
     @if (session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
             <strong class="font-bold">Thành công!</strong>
             <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
-    @endif
-
-    @if (session('repayment_order_id'))
-        <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
-            <strong class="font-bold">Thanh toán lại!</strong>
-            <span class="block sm:inline">Bạn đang thanh toán lại cho đơn hàng này. Vui lòng chọn phương thức thanh toán khác.</span>
-        </div>
-    @endif
-
-    @if (session('repayment_message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
-            <strong class="font-bold">Thông báo!</strong>
-            <span class="block sm:inline">{{ session('repayment_message') }}</span>
         </div>
     @endif
 
@@ -166,7 +124,7 @@
 
     {{-- Steps --}}
     <div class="bg-white border-b no-print">
-        <div class="techvicom-container py-4">
+        <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-4">
                     <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
@@ -193,31 +151,12 @@
         </div>
     </div>
 
-    <main class="techvicom-container py-8">
+    <main class="container mx-auto px-4 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {{-- FORM CHECKOUT (2/3) --}}
             <div class="lg:col-span-2 order-2 lg:order-1">
                 <form id="checkout-form" class="space-y-6">
                     @csrf
-                    
-                    {{-- Hiển thị lỗi validation --}}
-                    @if ($errors->any())
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                            <div class="flex items-start gap-3">
-                                <div class="text-red-600 mt-1">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div>
-                                    <h4 class="text-red-800 font-medium">Có lỗi xảy ra:</h4>
-                                    <ul class="text-red-700 text-sm mt-2 space-y-1">
-                                        @foreach ($errors->all() as $error)
-                                            <li>• {{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                     <input type="hidden" id="selected-input" name="selected" value="{{ request('selected') }}">
                     {{-- STEP 1 --}}
                     <div id="checkout-step-1" class="checkout-content">
@@ -226,27 +165,28 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên *</label>
-                                    <input type="text" id="fullname" name="recipient_name" 
+                                    <input type="text" id="fullname" name="recipient_name" required
                                         value="{{ old('recipient_name', $currentUser->name ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_name') border-red-500 @enderror">
-                                    <span id="fullname-error" class="text-xs text-red-500">@error('recipient_name') {{ $message }} @enderror</span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                    <span id="fullname-error" class="text-xs text-red-500"></span>
                                 </div>
                                 <div class="form-group">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại *</label>
-                                    <input type="tel" id="phone" name="recipient_phone" 
+                                    <input type="tel" id="phone" name="recipient_phone" required
                                         value="{{ old('recipient_phone', $currentUser->phone_number ?? '') }}"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_phone') border-red-500 @enderror">
-                                    <span id="phone-error" class="text-xs text-red-500">@error('recipient_phone') {{ $message }} @enderror</span>
+                                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                    <span id="phone-error" class="text-xs text-red-500"></span>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                <input type="email" id="email" name="recipient_email" 
+                                <input type="email" id="email" name="recipient_email" required
                                     value="{{ old('recipient_email', $currentUser->email ?? '') }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 @error('recipient_email') border-red-500 @enderror">
-                                <span id="email-error" class="text-xs text-red-500">@error('recipient_email') {{ $message }} @enderror</span>
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                                <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -291,7 +231,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tỉnh/Thành phố
                                                     *</label>
-                                                <select id="province" name="province_code" 
+                                                <select id="province" name="province_code" required
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-city="{{ $defaultAddress?->city ?? '' }}"
                                                     @if ($defaultAddress?->city) data-default-city-name="{{ $defaultAddress->city }}" @endif
@@ -302,7 +242,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện
                                                     *</label>
-                                                <select id="district" name="district_code" 
+                                                <select id="district" name="district_code" required
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-district="{{ $defaultAddress?->district ?? '' }}"
                                                     @if ($defaultAddress?->district) data-default-district-name="{{ $defaultAddress->district }}" @endif
@@ -313,7 +253,7 @@
                                             <div class="form-group">
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phường/Xã
                                                     *</label>
-                                                <select id="ward" name="ward_code" 
+                                                <select id="ward" name="ward_code" required
                                                     class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                                     data-default-ward="{{ $defaultAddress?->ward ?? '' }}"
                                                     @if ($defaultAddress?->ward) data-default-ward-name="{{ $defaultAddress->ward }}" @endif
@@ -322,7 +262,7 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <textarea id="address" name="recipient_address"  rows="3"
+                                        <textarea id="address" name="recipient_address" required rows="3"
                                             class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500"
                                             placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố">{{ old('recipient_address', $defaultAddress?->address_line ?? '') }}</textarea>
                                     </div>
@@ -378,27 +318,19 @@
                                 </div>
 
                                 {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
-                                @php
-                                    $isVnpayLocked = $vnpayLocked || $guestVnpayLocked;
-                                    $lockReason = '';
-                                    if ($vnpayLocked) {
-                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần cho đơn hàng này. Vui lòng thử lại sau 24 giờ.';
-                                    } elseif ($guestVnpayLocked) {
-                                        $lockReason = 'Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng thử lại sau 24 giờ.';
-                                    }
-                                @endphp
                                 <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
-                                            {{ $isVnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
-                                    data-payment="bank_transfer" data-disabled="{{ $isVnpayLocked ? 'true' : 'false' }}"
+                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                    data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
                                     data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
                                     <input type="radio" id="banking" name="payment_method" value="bank_transfer"
-                                        class="mr-3 accent-orange-500" {{ $isVnpayLocked ? 'disabled' : '' }}>
+                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
                                         <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
                                         <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
-                                        @if ($isVnpayLocked)
+                                        @if ($vnpayLocked)
                                             <p class="text-xs text-red-600 mt-1">
-                                                {{ $lockReason }}
+                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn
+                                                COD.
                                             </p>
                                         @endif
                                     </div>
@@ -432,7 +364,7 @@
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
                             <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms"  class="mr-3 accent-orange-500">
+                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
                                 <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
                                         class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
                                     website</label>
@@ -452,26 +384,7 @@
             {{-- TÓM TẮT ĐƠN (1/3) --}}
             <div class="lg:col-span-1 order-1 lg:order-2">
                 <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">
-                        @if (session('repayment_order_id'))
-                            Thanh toán lại đơn hàng
-                        @else
-                            Đơn hàng của bạn
-                        @endif
-                    </h3>
-                    
-                    @if (isset($existingOrder) && $existingOrder)
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                                <div class="text-sm text-blue-700">
-                                    <strong>Đơn hàng #{{ $existingOrder->id }}</strong><br>
-                                    <span class="text-xs">Đang thanh toán lại với phương thức khác</span><br>
-                                    <span class="text-xs text-green-600 font-medium">✓ Giá sản phẩm được giữ nguyên như ban đầu</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                    <h3 id="order-summary-title" class="text-xl font-semibold mb-4">Đơn hàng của bạn</h3>
                     <div id="checkout-items" class="space-y-4 mb-6">
                         @if (count($cartItems) > 0)
                             @foreach ($cartItems as $item)
@@ -507,8 +420,7 @@
                                 @endphp
                                 <div class="flex items-center justify-between py-3 border-b border-gray-100 checkout-item"
                                     data-cart-id="{{ $item->id ?? '' }}" data-item-id="{{ $safeId }}"
-                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}"
-                                    data-category-id="{{ $product?->category_id ?? '' }}">
+                                    data-unit-price="{{ $displayPrice }}" data-quantity="{{ $qty }}">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                             @php
@@ -530,15 +442,7 @@
                                             @endif
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-medium text-gray-900 text-sm">
-                                                @if($product && $product->id)
-                                                    <a href="{{ route('products.show', $product->id) }}" class="hover:text-[#ff6c2f] transition-colors">
-                                                        {{ $productName }}
-                                                    </a>
-                                                @else
-                                                    {{ $productName }}
-                                                @endif
-                                            </h4>
+                                            <h4 class="font-medium text-gray-900 text-sm">{{ $productName }}</h4>
                                             @if (!empty($variant) && method_exists($variant, 'attributeValues'))
                                                 <p class="text-xs text-gray-500">
                                                     @foreach ($variant->attributeValues as $value)
@@ -569,46 +473,28 @@
                         @endif
                     </div>
                     {{-- MÃ GIẢM GIÁ --}}
-                    @auth
-                        <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
-                            <div class="flex items-center justify-between mb-2">
-                                <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
-                                    giá</label>
-                                <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
-                                    class="text-xs text-orange-600 underline">Danh sách</button>
-                            </div>
-                            <div class="flex space-x-2 mb-1">
-                                <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
-                                <button type="button" onclick="applyCheckoutCoupon()"
-                                    class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
-                                    dụng</button>
-                                <button type="button" onclick="clearCheckoutCoupon()"
-                                    class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
-                                    title="Hủy">×</button>
-                            </div>
-                            <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
-                            <div id="checkout-available-coupons"
-                                class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
-                            </div>
+                    <div class="border-t pt-4 mb-4" id="checkout-coupon-box">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="checkout-coupon-code" class="text-sm font-medium text-gray-700">Mã giảm
+                                giá</label>
+                            <button type="button" id="toggle-coupon-list" onclick="toggleCouponListCheckout()"
+                                class="text-xs text-orange-600 underline">Danh sách</button>
                         </div>
-                    @else
-                        <div class="border-t pt-4 mb-4">
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex items-center">
-                                    <i class="fas fa-gift text-blue-500 mr-3 text-lg"></i>
-                                    <div class="flex-1">
-                                        <h4 class="text-sm font-medium text-blue-800 mb-1">Khuyến mãi đặc biệt</h4>
-                                        <p class="text-xs text-blue-600 mb-2">Đăng nhập để nhận mã giảm giá và ưu đãi đặc biệt</p>
-                                        <a href="#" onclick="openAuthModal(); return false;" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
-                                            <i class="fas fa-sign-in-alt mr-1"></i>
-                                            Đăng nhập ngay
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex space-x-2 mb-1">
+                            <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
+                            <button type="button" onclick="applyCheckoutCoupon()"
+                                class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
+                                dụng</button>
+                            <button type="button" onclick="clearCheckoutCoupon()"
+                                class="px-3 py-2 bg-gray-200 text-gray-600 rounded hover:bg-gray-300 text-sm"
+                                title="Hủy">×</button>
                         </div>
-                    @endauth
+                        <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
+                        <div id="checkout-available-coupons"
+                            class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
+                        </div>
+                    </div>
                     {{-- TỔNG TIỀN --}}
                     <div class="border-t pt-4 space-y-2">
                         <div class="flex justify-between"><span>Tạm tính:</span><span
@@ -623,15 +509,6 @@
                                 id="total-amount"
                                 class="text-orange-600">{{ number_format($subtotal + (($subtotal ?? 0) >= 3000000 ? 0 : 50000)) }}₫</span>
                         </div>
-                    </div>
-                    
-                    {{-- Nút tiếp tục mua sắm --}}
-                    <div class="border-t pt-4 mt-4">
-                        <a href="{{ route('products.index') }}" 
-                           class="block w-full text-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 border border-gray-300">
-                            <i class="fas fa-shopping-bag mr-2"></i>
-                            Tiếp tục mua sắm
-                        </a>
                     </div>
                 </div>
             </div>
@@ -675,13 +552,6 @@
 
         /* ===================== COUPON ===================== */
         function applyCheckoutCoupon() {
-            // Kiểm tra trạng thái đăng nhập
-            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-            if (!isLoggedIn) {
-                openAuthModal();
-                return;
-            }
-            
             const input = document.getElementById('checkout-coupon-code');
             const msg = document.getElementById('checkout-coupon-message');
             if (!input) return;
@@ -698,63 +568,17 @@
             msg.textContent = 'Đang kiểm tra...';
             msg.className = 'mt-1 text-xs text-gray-500';
 
-            // Collect product and category info from cart items
-            const cartItems = document.querySelectorAll('.checkout-item');
-            const cartProductIds = Array.from(cartItems)
-                .map(item => {
-                    const itemId = item.getAttribute('data-item-id');
-                    return itemId ? itemId.split(':')[0] : null;
-                })
-                .filter(id => id && id !== '')
-                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
-            const cartProductAmounts = Array.from(cartItems)
-                .map(item => {
-                    const itemId = item.getAttribute('data-item-id');
-                    const productId = itemId ? itemId.split(':')[0] : null;
-                    const amount = parseFloat(item.getAttribute('data-unit-price')) * parseInt(item.getAttribute('data-quantity'));
-                    return productId ? { id: productId, amount } : null;
-                })
-                .filter(x => x);
-            const cartCategoryIds = Array.from(cartItems)
-                .map(item => item.getAttribute('data-category-id'))
-                .filter(id => id && id !== '')
-                .filter((id, idx, arr) => arr.indexOf(id) === idx); // unique
-
-            // Lấy thông tin khách vãng lai nếu có
-            let guestEmail = '';
-            let guestPhone = '';
-            
-            // Kiểm tra form khách vãng lai
-            const guestEmailInput = document.querySelector('input[name="guest_email"]');
-            const guestPhoneInput = document.querySelector('input[name="guest_phone"]');
-            
-            if (guestEmailInput) {
-                guestEmail = guestEmailInput.value.trim();
-            }
-            if (guestPhoneInput) {
-                guestPhone = guestPhoneInput.value.trim();
-            }
-            
-            const requestData = {
-                coupon_code: code,
-                subtotal,
-                cart_product_ids: cartProductIds,
-                cart_product_amounts: cartProductAmounts,
-                cart_category_ids: cartCategoryIds,
-                guest_email: guestEmail,
-                guest_phone: guestPhone
-            };
-            
-            console.log('Sending coupon request:', requestData);
-            
             fetch('/api/apply-coupon', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken()
-                },
-                body: JSON.stringify(requestData)
-            })
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken()
+                    },
+                    body: JSON.stringify({
+                        coupon_code: code,
+                        subtotal
+                    })
+                })
                 .then(r => r.json())
                 .then(data => {
                     if (!data.success) {
@@ -762,15 +586,16 @@
                         window.checkoutDiscount = 0;
                         input.classList.add('border-red-500');
                         
-                        // Kiểm tra nếu cần đăng nhập
+                        // Xử lý trường hợp yêu cầu đăng nhập
                         if (data.require_login) {
-                            msg.innerHTML = data.message + ' <a href="#" onclick="openAuthModal(); return false;" class="text-blue-600 hover:underline">Đăng nhập ngay</a>';
+                            msg.textContent = data.message;
                             msg.className = 'mt-1 text-xs text-red-500';
+                            // Hiển thị modal đăng nhập hoặc chuyển hướng
+                            showLoginRequiredModal(data.message);
                         } else {
                             msg.textContent = data.message || 'Mã giảm giá không hợp lệ';
                             msg.className = 'mt-1 text-xs text-red-500';
                         }
-                        
                         updateCheckoutTotal();
                         return;
                     }
@@ -805,17 +630,6 @@
                     msg.textContent = data.coupon?.message || 'Áp dụng thành công';
                     msg.className = 'mt-1 text-xs text-green-600';
                     updateCheckoutTotal();
-                    
-                    // Ẩn danh sách coupon khi áp dụng thành công
-                    const couponBox = document.getElementById('checkout-available-coupons');
-                    const toggleBtn = document.getElementById('toggle-coupon-list');
-                    if (couponBox) {
-                        couponBox.classList.add('hidden');
-                        couponBox.innerHTML = '';
-                    }
-                    if (toggleBtn) {
-                        toggleBtn.textContent = 'Danh sách';
-                    }
                 })
                 .catch(() => {
                     input.classList.add('border-red-500');
@@ -838,13 +652,6 @@
         }
 
         function toggleCouponListCheckout() {
-            // Kiểm tra trạng thái đăng nhập
-            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-            if (!isLoggedIn) {
-                openAuthModal();
-                return;
-            }
-            
             const box = document.getElementById('checkout-available-coupons');
             const btn = document.getElementById('toggle-coupon-list');
             if (!box || !btn) return;
@@ -859,19 +666,17 @@
         }
 
         function loadAvailableCouponsCheckout() {
-            // Kiểm tra trạng thái đăng nhập
-            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-            if (!isLoggedIn) {
-                openAuthModal();
-                return;
-            }
-            
             const box = document.getElementById('checkout-available-coupons');
             if (!box) return;
             const subtotal = Number(window.checkoutSubtotal || 0);
             fetch(`/api/coupons?subtotal=${subtotal}`).then(r => r.json()).then(data => {
                 if (!data.success) {
-                    box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+                    if (data.require_login) {
+                        box.innerHTML = '<p class="text-red-500">Vui lòng đăng nhập để xem mã giảm giá</p>';
+                        showLoginRequiredModal('Vui lòng đăng nhập để xem mã giảm giá');
+                    } else {
+                        box.innerHTML = '<p class="text-red-500">Lỗi tải</p>';
+                    }
                     return;
                 }
                 if (!Array.isArray(data.coupons) || data.coupons.length === 0) {
@@ -1013,7 +818,7 @@
 
                 function setupStepNavigation() {
                     document.getElementById('next-step-1').addEventListener('click', () => {
-                        if (validateCheckoutForm()) goToStep(2);
+                        if (validateStep1()) goToStep(2);
                     });
                     document.getElementById('prev-step-2').addEventListener('click', () => goToStep(1));
                     document.getElementById('next-step-2').addEventListener('click', () => {
@@ -1433,9 +1238,9 @@
             if (!paymentEl) return alert('Vui lòng chọn phương thức thanh toán');
             if (!shippingEl) return alert('Vui lòng chọn phương thức vận chuyển');
 
-            // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 3 trở đi)
+            // Chặn cứng VNPay nếu đã khóa (lần hủy thứ 4 trở đi)
             if (window.vnpayLocked && paymentEl.value === 'bank_transfer') {
-                alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
+                alert('Bạn đã hủy VNPay quá 3 lần. Vui lòng đổi sang COD để tiếp tục.');
                 return;
             }
 
@@ -1691,277 +1496,45 @@
         }
         updateStep1NextBtnVisibility(window.currentStep || 1);
 
-        // ===== CHECKOUT VALIDATION =====
-        function validateCheckoutForm() {
-            let isValid = true;
-
-            // Clear previous errors
-            clearValidationErrors();
-
-            // Validate required fields for step 1
-            const requiredFields = [
-                { name: 'recipient_name', label: 'Họ và tên' },
-                { name: 'recipient_phone', label: 'Số điện thoại' },
-                { name: 'recipient_email', label: 'Email' }
-            ];
-
-            requiredFields.forEach(field => {
-                const input = document.querySelector(`[name="${field.name}"]`);
-                if (!input || !input.value.trim()) {
-                    showFieldError(field.name, `${field.label} là bắt buộc`);
-                    isValid = false;
-                }
-            });
-
-            // Validate phone number format
-            const phoneInput = document.querySelector('[name="recipient_phone"]');
-            if (phoneInput && phoneInput.value.trim()) {
-                const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
-                if (!phoneRegex.test(phoneInput.value.trim())) {
-                    showFieldError('recipient_phone', 'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam.');
-                    isValid = false;
-                }
+        // Hiển thị modal yêu cầu đăng nhập
+        function showLoginRequiredModal(message) {
+            // Kiểm tra xem có modal đăng nhập sẵn có không
+            const existingModal = document.getElementById('loginModal');
+            if (existingModal) {
+                // Nếu có modal đăng nhập sẵn, hiển thị nó
+                existingModal.style.display = 'block';
+                return;
             }
 
-            // Validate email format
-            const emailInput = document.querySelector('[name="recipient_email"]');
-            if (emailInput && emailInput.value.trim()) {
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(emailInput.value.trim())) {
-                    showFieldError('recipient_email', 'Email không hợp lệ');
-                    isValid = false;
-                }
-            }
-
-            // Validate address selection
-            const selectedAddress = document.querySelector('input[name="selected_address"]:checked');
-            if (!selectedAddress) {
-                showFieldError('selected_address', 'Vui lòng chọn địa chỉ giao hàng');
-                isValid = false;
-            } else if (selectedAddress.value === 'new') {
-                // Validate new address fields
-                const addressFields = [
-                    { name: 'recipient_address', label: 'Địa chỉ' },
-                    { name: 'province_code', label: 'Tỉnh/thành phố' },
-                    { name: 'district_code', label: 'Quận/huyện' },
-                    { name: 'ward_code', label: 'Phường/xã' }
-                ];
-
-                addressFields.forEach(field => {
-                    const input = document.querySelector(`[name="${field.name}"]`);
-                    if (!input || !input.value.trim()) {
-                        showFieldError(field.name, `${field.label} là bắt buộc`);
-                        isValid = false;
-                    }
-                });
-
-                // Validate address length
-                const addressInput = document.querySelector('[name="recipient_address"]');
-                if (addressInput && addressInput.value.trim()) {
-                    if (addressInput.value.trim().length < 10) {
-                        showFieldError('recipient_address', 'Địa chỉ phải có ít nhất 10 ký tự');
-                        isValid = false;
-                    }
-                }
-            }
-
-            // If validation fails, scroll to first error
-            if (!isValid) {
-                const firstError = document.querySelector('.border-red-500');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-
-            return isValid;
+            // Tạo modal thông báo yêu cầu đăng nhập
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                    <div class="text-center">
+                        <i class="fas fa-user-lock text-4xl text-orange-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Yêu cầu đăng nhập</h3>
+                        <p class="text-gray-600 mb-6">${message}</p>
+                        <div class="flex space-x-3">
+                            <button onclick="closeLoginModal()" class="flex-1 px-4 py-2 text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors">
+                                Hủy
+                            </button>
+                            <a href="/login" class="flex-1 px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors text-center">
+                                Đăng nhập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.id = 'loginRequiredModal';
+            document.body.appendChild(modal);
         }
 
-        function validateStep2() {
-            let isValid = true;
-
-            // Clear previous errors
-            clearValidationErrors();
-
-            // Validate shipping method
-            const shippingMethod = document.querySelector('input[name="shipping_method_id"]:checked');
-            if (!shippingMethod) {
-                showFieldError('shipping_method_id', 'Vui lòng chọn phương thức vận chuyển');
-                isValid = false;
-            }
-
-            // Validate payment method
-            const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-            if (!paymentMethod) {
-                showFieldError('payment_method', 'Vui lòng chọn phương thức thanh toán');
-                isValid = false;
-            }
-
-            // If validation fails, scroll to first error
-            if (!isValid) {
-                const firstError = document.querySelector('.border-red-500');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }
-
-            return isValid;
-        }
-
-        function showFieldError(fieldName, message) {
-            const input = document.querySelector(`[name="${fieldName}"]`);
-            if (input) {
-                // Handle radio buttons differently
-                if (input.type === 'radio') {
-                    // Find the parent container and add error styling
-                    const container = input.closest('.payment-option, .form-group');
-                    if (container) {
-                        container.classList.add('border-red-500');
-                        
-                        // Find or create error span
-                        let errorSpan = document.getElementById(`${fieldName}-error`);
-                        if (!errorSpan) {
-                            errorSpan = document.createElement('span');
-                            errorSpan.id = `${fieldName}-error`;
-                            errorSpan.className = 'text-xs text-red-500 mt-1 block';
-                            container.appendChild(errorSpan);
-                        }
-                        errorSpan.textContent = message;
-                    }
-                } else {
-                    // Handle regular inputs
-                    input.classList.add('border-red-500');
-                    
-                    // Find or create error span
-                    let errorSpan = document.getElementById(`${fieldName}-error`);
-                    if (!errorSpan) {
-                        errorSpan = document.createElement('span');
-                        errorSpan.id = `${fieldName}-error`;
-                        errorSpan.className = 'text-xs text-red-500 mt-1 block';
-                        input.parentNode.appendChild(errorSpan);
-                    }
-                    errorSpan.textContent = message;
-                }
-            }
-        }
-
-        function clearValidationErrors() {
-            // Remove error styling from all inputs
-            document.querySelectorAll('input, select, textarea').forEach(input => {
-                input.classList.remove('border-red-500');
-            });
-
-            // Remove error styling from containers (for radio buttons)
-            document.querySelectorAll('.payment-option, .form-group').forEach(container => {
-                container.classList.remove('border-red-500');
-            });
-
-            // Clear error messages
-            document.querySelectorAll('[id$="-error"]').forEach(errorSpan => {
-                errorSpan.textContent = '';
-            });
-        }
-
-        // Add validation to form submission
-        document.addEventListener('DOMContentLoaded', function() {
-            const checkoutForm = document.getElementById('checkout-form');
-            if (checkoutForm) {
-                checkoutForm.addEventListener('submit', function(e) {
-                    if (!validateCheckoutForm()) {
-                        e.preventDefault();
-                        // Scroll to first error
-                        const firstError = document.querySelector('.border-red-500');
-                        if (firstError) {
-                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                        return false;
-                    }
-                });
-            }
-
-            // Real-time validation
-            const inputs = document.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    validateField(this);
-                });
-
-                input.addEventListener('input', function() {
-                    // Clear error when user starts typing
-                    if (this.classList.contains('border-red-500')) {
-                        this.classList.remove('border-red-500');
-                        const errorSpan = document.getElementById(`${this.name}-error`);
-                        if (errorSpan) {
-                            errorSpan.textContent = '';
-                        }
-                    }
-                });
-
-                // Clear errors for radio buttons when selected
-                if (input.type === 'radio') {
-                    input.addEventListener('change', function() {
-                        const container = this.closest('.payment-option, .form-group');
-                        if (container && container.classList.contains('border-red-500')) {
-                            container.classList.remove('border-red-500');
-                            const errorSpan = document.getElementById(`${this.name}-error`);
-                            if (errorSpan) {
-                                errorSpan.textContent = '';
-                            }
-                        }
-                    });
-                }
-            });
-        });
-
-        function validateField(input) {
-            const fieldName = input.name;
-            const value = input.value.trim();
-
-            // Clear previous error
-            input.classList.remove('border-red-500');
-            const errorSpan = document.getElementById(`${fieldName}-error`);
-            if (errorSpan) {
-                errorSpan.textContent = '';
-            }
-
-            // Validate based on field type
-            switch (fieldName) {
-                case 'recipient_name':
-                    if (!value) {
-                        showFieldError(fieldName, 'Họ và tên là bắt buộc');
-                    } else if (value.length < 2) {
-                        showFieldError(fieldName, 'Họ và tên phải có ít nhất 2 ký tự');
-                    }
-                    break;
-
-                case 'recipient_phone':
-                    if (!value) {
-                        showFieldError(fieldName, 'Số điện thoại là bắt buộc');
-                    } else {
-                        const phoneRegex = /^(0|\+84)(3[2-9]|5[689]|7[06-9]|8[1-689]|9[0-46-9])[0-9]{7}$/;
-                        if (!phoneRegex.test(value)) {
-                            showFieldError(fieldName, 'Số điện thoại không hợp lệ');
-                        }
-                    }
-                    break;
-
-                case 'recipient_email':
-                    if (!value) {
-                        showFieldError(fieldName, 'Email là bắt buộc');
-                    } else {
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        if (!emailRegex.test(value)) {
-                            showFieldError(fieldName, 'Email không hợp lệ');
-                        }
-                    }
-                    break;
-
-                case 'recipient_address':
-                    if (!value) {
-                        showFieldError(fieldName, 'Địa chỉ là bắt buộc');
-                    } else if (value.length < 10) {
-                        showFieldError(fieldName, 'Địa chỉ phải có ít nhất 10 ký tự');
-                    }
-                    break;
+        // Đóng modal yêu cầu đăng nhập
+        function closeLoginModal() {
+            const modal = document.getElementById('loginRequiredModal');
+            if (modal) {
+                modal.remove();
             }
         }
     </script>

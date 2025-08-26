@@ -12,25 +12,55 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClientProductCommentController extends Controller
 {
     public function store(StoreProductCommentRequest $request, $productId)
     {
+        Log::info('Bắt đầu xử lý đánh giá sản phẩm', [
+            'product_id' => $productId,
+            'request_data' => $request->all(),
+            'user_id' => Auth::id()
+        ]);
+        
         $user = Auth::user();
         $product = Product::findOrFail($productId);
-
-        // Kiểm tra quyền comment
-        if (!CommentHelper::canComment($productId)) {
-            $message = CommentHelper::getCommentRestrictionMessage($productId);
-            return back()->with('error', $message);
-        }
 
         // Lấy order_id từ request
         $orderId = $request->input('order_id');
         
         if (!$orderId) {
+            Log::info('Không có order_id');
             return back()->with('error', 'Vui lòng chọn đơn hàng để đánh giá.');
+        }
+
+        Log::info('Order ID: ' . $orderId);
+
+        // Kiểm tra order có tồn tại và thuộc về user không
+        $order = Order::where('id', $orderId)
+                     ->where('user_id', $user->id)
+                     ->where('status', 'received')
+                     ->first();
+
+        if (!$order) {
+            Log::info('Order không tồn tại hoặc không hợp lệ', ['order_id' => $orderId]);
+            return back()->with('error', 'Đơn hàng không tồn tại hoặc không hợp lệ.');
+        }
+
+        Log::info('Order hợp lệ', ['order_id' => $orderId, 'received_at' => $order->received_at]);
+
+        // Kiểm tra thời gian nhận hàng (15 ngày)
+        if ($order->received_at) {
+            $daysSinceReceived = now()->diffInDays($order->received_at);
+            if ($daysSinceReceived < 0) {
+                $daysSinceReceived = 0;
+            }
+            if ($daysSinceReceived > 15) {
+                Log::info('Quá thời gian đánh giá', ['days' => $daysSinceReceived]);
+                return back()->with('error', 'Đã quá thời gian đánh giá (15 ngày kể từ khi nhận hàng).');
+            }
+            Log::info('Thời gian hợp lệ', ['days' => $daysSinceReceived]);
         }
 
         // Kiểm tra xem user đã đánh giá sản phẩm này cho đơn hàng này chưa
@@ -41,60 +71,31 @@ class ClientProductCommentController extends Controller
                                        ->first();
 
         if ($existingComment) {
+            Log::info('Đã đánh giá rồi');
             return back()->with('error', 'Bạn đã đánh giá sản phẩm này cho đơn hàng này rồi!');
         }
 
-        // Lấy order_id từ order đã nhận hàng và chưa đánh giá
-        $orderItems = OrderItem::whereHas('order', function($query) use ($user) {
-            $query->where('user_id', $user->id)
-                  ->where('status', 'received');
-        })->where('product_id', $productId)->get();
+        Log::info('Chưa đánh giá, tiến hành tạo comment');
 
-        $selectedOrder = null;
+        try {
+            // Tạo comment
+            $comment = ProductComment::create([
+                'product_id' => $productId,
+                'user_id' => $user->id,
+                'order_id' => $orderId,
+                'content' => $request->content,
+                'rating' => $request->rating,
+                'status' => 'approved', // Hiển thị ngay lập tức
+            ]);
 
-        // Tìm đơn hàng chưa đánh giá và còn thời gian
-        foreach ($orderItems as $orderItem) {
-            $order = $orderItem->order;
-            
-            // Kiểm tra thời gian nhận hàng (15 ngày)
-            if ($order->received_at) {
-                $daysSinceReceived = now()->diffInDays($order->received_at);
-                if ($daysSinceReceived < 0) {
-                    $daysSinceReceived = 0;
-                }
-                if ($daysSinceReceived > 15) {
-                    continue; // Bỏ qua đơn hàng hết thời gian
-                }
-            }
-
-            // Kiểm tra đã comment cho đơn hàng này chưa
-            $existingCommentForOrder = ProductComment::where('user_id', $user->id)
-                                                   ->where('product_id', $productId)
-                                                   ->where('order_id', $order->id)
-                                                   ->whereNull('parent_id')
-                                                   ->first();
-
-            if (!$existingCommentForOrder) {
-                $selectedOrder = $order;
-                break; // Tìm thấy đơn hàng phù hợp
-            }
+            Log::info('Tạo comment thành công', ['comment_id' => $comment->id]);
+            return back()->with('success', 'Đánh giá của bạn đã được gửi thành công!');
+        } catch (\Exception $e) {
+            Log::error('Lỗi tạo comment: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại.');
         }
-
-        if (!$selectedOrder) {
-            return back()->with('error', 'Không tìm thấy đơn hàng phù hợp để đánh giá.');
-        }
-
-        // Tạo comment
-        ProductComment::create([
-            'product_id' => $productId,
-            'user_id' => $user->id,
-            'order_id' => $selectedOrder->id,
-            'content' => $request->content,
-            'rating' => $request->rating,
-            'status' => 'approved', // Hiển thị ngay lập tức
-        ]);
-
-        return back()->with('success', 'Đánh giá của bạn đã được gửi thành công!');
     }
 
     public function reply(ReplyProductCommentRequest $request, $commentId)

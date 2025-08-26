@@ -11,7 +11,7 @@ class CouponController extends Controller
 {
     public function list(Request $request)
     {
-        // Kiểm tra đăng nhập
+        // Kiểm tra đăng nhập - chỉ người dùng đã đăng nhập mới được xem mã giảm giá
         if (!\Illuminate\Support\Facades\Auth::check()) {
             return response()->json([
                 'success' => false,
@@ -54,11 +54,11 @@ class CouponController extends Controller
             $subtotal = $request->input('subtotal', 0);
             $user = \Illuminate\Support\Facades\Auth::user();
             
-            // Khách vãng lai không thể áp dụng coupon
+            // Chỉ người dùng đã đăng nhập mới được sử dụng coupon
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Vui lòng đăng nhập để nhận khuyến mãi',
+                    'message' => 'Vui lòng đăng nhập để sử dụng mã giảm giá',
                     'require_login' => true
                 ]);
             }

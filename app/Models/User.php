@@ -69,24 +69,12 @@ class User extends Authenticatable
         'birthday' => 'date', // Ép kiểu birthday về date
     ];
 
-
-
-
-
-
-
-
     protected $dates = ['deleted_at'];
-
-
 
     public function favoriteProducts()
     {
         return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
     }
-
-
-
 
     /**
      * Quan hệ nhiều-nhiều với Role.
@@ -96,13 +84,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
     }
 
-
-
-
-
-
-
-
     /**
      * Quan hệ một-nhiều với UserAddress.
      */
@@ -110,13 +91,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAddress::class, 'user_id', 'id');
     }
-
-
-
-
-
-
-
 
     /**
      * Kiểm tra xem người dùng có BẤT KỲ vai trò nào trong danh sách cho trước không.
@@ -130,13 +104,6 @@ class User extends Authenticatable
         // Giả sử cột tên vai trò trong bảng `roles` của bạn là 'name'. Nếu là 'slug', hãy đổi 'name' thành 'slug'.
         return $this->roles()->whereIn('name', $roles)->exists();
     }
-
-
-
-
-
-
-
 
     /**
      * Kiểm tra xem người dùng có phải admin không.
@@ -158,17 +125,12 @@ class User extends Authenticatable
             }
         }
 
-
-
-
         return false;
     }
-
 
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id', 'id');
     }
 
-    
 }

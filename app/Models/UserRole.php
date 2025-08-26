@@ -23,7 +23,6 @@ class UserRole extends Model
         'role_id',
     ];
 
-
     /**
      * Liên kết với model User.
      */

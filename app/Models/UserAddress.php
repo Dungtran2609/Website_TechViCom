@@ -30,7 +30,6 @@ class UserAddress extends Model
         'is_default',
     ];
 
-
     /**
      * Quan hệ ngược về bảng users.
      */

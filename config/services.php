@@ -34,7 +34,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-      'google' => [
+    'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect'      => env('GOOGLE_REDIRECT'),
@@ -46,4 +46,7 @@ return [
         'redirect'      => env('FACEBOOK_REDIRECT'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY', ''),
+    ],
 ];

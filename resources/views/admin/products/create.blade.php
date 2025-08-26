@@ -610,7 +610,7 @@
                     `<input type="hidden" name="variants[${index}][attributes][]" value="${c.id}">`).join(
                     '');
                 return `
-            <div class="accordion-item">
+            <div class="accordion-item" data-variant-index="${index}">
                 <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">${comboName}</button></h2>
                 <div id="collapse${index}" class="accordion-collapse collapse show">
                     <div class="accordion-body">
@@ -647,11 +647,15 @@
                             <div class="col-md-3 mb-3"><label class="form-label">Rộng (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][width]"></div>
                             <div class="col-md-3 mb-3"><label class="form-label">Cao (cm)</label><input type="number" step="0.01" class="form-control" name="variants[${index}][height]"></div>
                         </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-outline-danger btn-sm btn-remove-variant">
+                                <i class="fa fa-trash"></i> Xóa biến thể này
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>`;
             };
-
 
             if (generateBtn) {
                 generateBtn.addEventListener('click', () => {
@@ -671,6 +675,20 @@
                     const variantsHtml = combinations.map((combo, index) => createVariantHtml(combo, index))
                         .join('');
                     variantsWrapper.innerHTML = `<div class="accordion">${variantsHtml}</div>`;
+
+                    // Gắn sự kiện xóa cho từng nút xóa biến thể
+                    setTimeout(() => {
+                        document.querySelectorAll('.btn-remove-variant').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                if (window.confirm(
+                                        'Bạn có chắc chắn muốn xóa biến thể này?'
+                                        )) {
+                                    const item = btn.closest('.accordion-item');
+                                    if (item) item.remove();
+                                }
+                            });
+                        });
+                    }, 100);
                 });
             }
 
@@ -773,11 +791,11 @@
             <div class="fw-bold mb-1">${a.attrName}:</div>
             <div class="d-flex flex-wrap gap-2">
                 ${a.values.map(v => `
-                                        <label class="form-check form-check-inline mb-0">
-                                            <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
-                                            <span class="form-check-label">${v.value}</span>
-                                        </label>
-                                    `).join('')}
+                                                    <label class="form-check form-check-inline mb-0">
+                                                        <input type="checkbox" class="form-check-input variant-attr-value-checkbox" data-idx="${idx}" value="${v.id}" ${Array.isArray(a.valIds) && a.valIds.includes(v.id) ? 'checked' : ''}>
+                                                        <span class="form-check-label">${v.value}</span>
+                                                    </label>
+                                                `).join('')}
                 <button type="button" class="btn btn-sm btn-danger ms-2 btnRemoveVariantAttr" data-id="${a.attrId}">Xóa</button>
             </div>
             ${(Array.isArray(a.valIds) ? a.valIds : []).map(valId => `<input type="hidden" name="variant_attributes[${a.attrId}][]" value="${valId}">`).join('')}

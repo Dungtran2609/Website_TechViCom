@@ -36,6 +36,16 @@ class OrderObserver
 
         // Kiểm tra nếu trạng thái đơn hàng thay đổi thành 'delivered'
         if ($order->wasChanged('status') && $order->status === 'delivered') {
+            // Tự động cập nhật thanh toán cho đơn hàng COD
+            if ($order->payment_method === 'cod' && $order->payment_status === 'pending') {
+                $order->payment_status = 'paid';
+                $order->paid_at = now();
+                $order->save();
+                
+                // Gửi email thanh toán thành công
+                $this->sendPaymentSuccessEmail($order);
+            }
+            
             $this->sendOrderDeliveredEmail($order);
         }
     }

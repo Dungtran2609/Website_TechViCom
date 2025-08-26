@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -200,7 +201,8 @@ class InvoiceController extends Controller
             'orderItems.productVariant.product.images',
             'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod',
-            'coupon'
+            'coupon',
+            'returns'
         ])
         ->where(function($query) use ($verifiedEmail) {
             $query->where('guest_email', $verifiedEmail)
@@ -230,8 +232,10 @@ class InvoiceController extends Controller
 
         $order = Order::with([
             'orderItems.productVariant.product.images',
+            'orderItems.productVariant.attributeValues.attribute',
             'shippingMethod',
-            'coupon'
+            'coupon',
+            'user'
         ])
         ->where(function($query) use ($verifiedEmail) {
             $query->where('guest_email', $verifiedEmail)
@@ -241,13 +245,14 @@ class InvoiceController extends Controller
         })
         ->findOrFail($id);
 
-        // TODO: Tạo PDF hóa đơn
-        // Có thể sử dụng package như DomPDF hoặc Snappy
+        // Tạo PDF hóa đơn
+        $pdf = Pdf::loadView('pdf.invoice', compact('order'));
         
-        return response()->json([
-            'success' => true,
-            'message' => 'Tính năng tải hóa đơn PDF đang được phát triển'
-        ]);
+        // Tên file PDF
+        $filename = 'Hoa_don_' . str_pad($order->id, 6, '0', STR_PAD_LEFT) . '.pdf';
+        
+        // Tải xuống PDF
+        return $pdf->download($filename);
     }
 
     /**
@@ -270,27 +275,65 @@ class InvoiceController extends Controller
                       $q->where('email', $verifiedEmail);
                   });
         })
-        ->where('status', 'pending')
         ->findOrFail($id);
+
+        // Kiểm tra trạng thái đơn hàng
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ có thể hủy đơn hàng khi đang ở trạng thái "Chờ xử lý" hoặc "Đang xử lý"'
+            ], 403);
+        }
+
+        // Chặn hủy đơn hàng VNPay
+        if ($order->payment_method === 'bank_transfer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đơn hàng thanh toán VNPay không thể hủy. Vui lòng liên hệ bộ phận hỗ trợ để được hỗ trợ!'
+            ], 403);
+        }
 
         $request = request();
         $cancelReason = $request->input('cancel_reason', 'Khách hủy');
         $clientNote = $request->input('client_note', '');
 
-        // Tạo yêu cầu hủy đơn
-        \App\Models\OrderReturn::create([
-            'order_id'     => $order->id,
-            'type'         => 'cancel',
-            'reason'       => $cancelReason,
-            'client_note'  => $clientNote,
-            'status'       => 'pending',
-            'requested_at' => now(),
-        ]);
+        // Xử lý hủy đơn hàng theo phương thức thanh toán
+        if ($order->payment_method === 'cod') {
+            // COD: Hủy ngay lập tức không cần phê duyệt
+            $order->status = 'cancelled';
+            $order->save();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Yêu cầu hủy đơn hàng đã được gửi. Admin sẽ duyệt yêu cầu này.'
-        ]);
+            // Tạo record lưu lý do hủy với trạng thái approved
+            \App\Models\OrderReturn::create([
+                'order_id'     => $order->id,
+                'type'         => 'cancel',
+                'reason'       => $cancelReason,
+                'client_note'  => $clientNote,
+                'status'       => 'approved', // Tự động approved cho COD
+                'requested_at' => now(),
+                'approved_at'  => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đơn hàng COD đã được hủy thành công!'
+            ]);
+        } else {
+            // Các phương thức khác: Tạo yêu cầu hủy cần phê duyệt
+            \App\Models\OrderReturn::create([
+                'order_id'     => $order->id,
+                'type'         => 'cancel',
+                'reason'       => $cancelReason,
+                'client_note'  => $clientNote,
+                'status'       => 'pending', // Cần phê duyệt
+                'requested_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Yêu cầu hủy đơn hàng đã được gửi thành công. Admin sẽ duyệt yêu cầu này.'
+            ]);
+        }
     }
 
     /**
@@ -350,21 +393,74 @@ class InvoiceController extends Controller
         ->findOrFail($id);
 
         $request = request();
-        $returnReason = $request->input('return_reason', 'Khách hàng yêu cầu trả');
-        $clientNote = $request->input('client_note', '');
+        
+        // Validate required fields
+        if (!$request->has('selected_products') || !$request->has('return_reason')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng chọn sản phẩm và lý do trả hàng'
+            ], 400);
+        }
 
-        \App\Models\OrderReturn::create([
+        $selectedProducts = json_decode($request->input('selected_products'), true);
+        $returnReason = $request->input('return_reason');
+        $clientNote = $request->input('client_note', '');
+        $clientNoteOther = $request->input('client_note_other', '');
+        
+        // Combine notes
+        $finalNote = $clientNote;
+        if ($clientNoteOther) {
+            $finalNote = $finalNote ? $finalNote . "\n" . $clientNoteOther : $clientNoteOther;
+        }
+
+        // Create OrderReturn record
+        $orderReturn = \App\Models\OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'return',
             'reason'       => $returnReason,
-            'client_note'  => $clientNote,
+            'client_note'  => $finalNote,
             'status'       => 'pending',
             'requested_at' => now(),
         ]);
 
+        // Handle file uploads if present
+        $videoPath = null;
+        if ($request->hasFile('return_video')) {
+            $video = $request->file('return_video');
+            $videoPath = $video->store('returns/videos', 'public');
+        }
+
+        // Handle product images if present
+        $productImages = [];
+        if ($request->hasFile('product_images')) {
+            $uploadedImages = $request->file('product_images');
+            if (is_array($uploadedImages)) {
+                foreach ($uploadedImages as $productId => $images) {
+                    if (!is_array($images)) {
+                        $images = [$images];
+                    }
+                    
+                    $productImages[$productId] = [];
+                    foreach ($images as $image) {
+                        if ($image && $image->isValid()) {
+                            $imagePath = $image->store('returns/images', 'public');
+                            $productImages[$productId][] = $imagePath;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update OrderReturn record with file paths
+        $orderReturn->update([
+            'video' => $videoPath,
+            'images' => $productImages,
+            'selected_products' => $selectedProducts
+        ]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Yêu cầu trả hàng đã được gửi.'
+            'message' => 'Yêu cầu trả hàng đã được gửi thành công. Chúng tôi sẽ xem xét và phản hồi trong thời gian sớm nhất.'
         ]);
     }
 

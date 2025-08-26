@@ -478,9 +478,10 @@ function cancelOrder(orderId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                alert(data.message);
                 location.reload();
             } else {
-                alert('Có lỗi xảy ra khi hủy đơn hàng');
+                alert(data.message || 'Có lỗi xảy ra khi hủy đơn hàng');
             }
         })
         .catch(error => {

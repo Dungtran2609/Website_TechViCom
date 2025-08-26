@@ -55,16 +55,14 @@
                                                     <i class="fas fa-undo"></i>
                                                 </button>
                                             </form>
-                                            <!-- Xóa vĩnh viễn -->
-                                            <form action="{{ route('admin.users.force-delete', $user->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger"
-                                                        data-bs-toggle="tooltip" title="Xóa vĩnh viễn tài khoản này"
-                                                        onclick="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản này?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <!-- Xóa vĩnh viễn - Chỉ cho phép với tài khoản thường -->
+                                            @php
+                                                $protectedRoles = ['admin'];
+                                                $isProtected = $user->roles->contains(function($role) use ($protectedRoles) { 
+                                                    return in_array($role->name, $protectedRoles); 
+                                                });
+                                            @endphp
+                                           
                                         </td>
                                     </tr>
                                 @empty

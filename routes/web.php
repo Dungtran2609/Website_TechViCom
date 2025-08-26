@@ -93,7 +93,7 @@ Route::post('/invoice/order/{id}/confirm-payment', [InvoiceController::class, 'c
 Route::post('/invoice/order/{id}/pay-vnpay', [InvoiceController::class, 'payWithVnpay'])->name('client.invoice.pay-vnpay');
 Route::post('/invoice/order/{id}/request-return', [InvoiceController::class, 'requestReturn'])->name('client.invoice.request-return');
 Route::post('/invoice/order/{id}/confirm-receipt', [InvoiceController::class, 'confirmReceipt'])->name('client.invoice.confirm-receipt');
-Route::post('/invoice/order/{id}/cancel', [InvoiceController::class, 'cancelOrder'])->name('client.invoice.cancel');
+Route::post('/invoice/order/{id}/cancel', [InvoiceController::class, 'cancelOrder'])->name('client.invoice.cancel-order');
 
 // Đơn hàng (Orders) - phía client
 Route::prefix('client')->name('client.')->middleware('auth')->group(function () {
@@ -173,6 +173,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/process', [ClientCheckoutController::class, 'process'])->name('process');
     Route::get('/success/{orderId}', [ClientCheckoutController::class, 'success'])->name('success');
     Route::get('/fail', [ClientCheckoutController::class, 'fail'])->name('fail');
+    Route::post('/clear-session', [ClientCheckoutController::class, 'clearSessionCart'])->name('clear-session');
 });
 
 Route::prefix('vnpay')->name('vnpay.')->group(function () {

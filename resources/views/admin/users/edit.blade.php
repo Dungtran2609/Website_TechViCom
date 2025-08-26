@@ -23,6 +23,9 @@
                 @csrf
                 @method('PUT')
 
+                @php
+                    $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
+                @endphp
 
                 {{-- Ảnh đại diện hiện tại --}}
                 @if ($user->image_profile)
@@ -39,16 +42,14 @@
                     <label for="image_profile" class="form-label">Thay ảnh đại diện mới</label>
                     <input type="file" name="image_profile" id="image_profile"
                            class="form-control @error('image_profile') is-invalid @enderror"
-                           accept="image/*">
+                           accept="image/*" @if($onlyUserRole) disabled @endif>
+                    @if($onlyUserRole)
+                        <div class="text-muted small mt-1">Không thể thay đổi ảnh đại diện cho tài khoản khách hàng.</div>
+                    @endif
                     @error('image_profile')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-
-
-                @php
-                    $onlyUserRole = $user->roles->count() === 1 && in_array($user->roles->first()->name, ['user', 'customer']);
-                @endphp
                 <!-- Tên người dùng -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Tên người dùng <span class="text-danger">*</span></label>

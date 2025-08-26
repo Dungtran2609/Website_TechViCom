@@ -17,12 +17,19 @@ class OrderReturn extends Model
         'requested_at',
         'processed_at',
         'admin_note',
-        'client_note', // 👈 Bổ sung do có trong migration
+        'client_note',
+        'images',
+        'video',
+        'admin_proof_images',
+        'selected_products',
     ];
 
     protected $casts = [
         'requested_at' => 'datetime',
         'processed_at' => 'datetime',
+        'images' => 'array',
+        'admin_proof_images' => 'array',
+        'selected_products' => 'array',
     ];
 
     /**

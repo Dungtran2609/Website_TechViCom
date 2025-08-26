@@ -746,15 +746,16 @@
 
                     <div id="comments-container" class="space-y-5">
                         @forelse($approvedComments as $cmt)
+                            @if($cmt->user)
                             <div class="bg-white rounded-lg border border-gray-200 p-5">
                                 <div class="flex items-start gap-3">
                                     <div
                                         class="w-10 h-10 rounded-full bg-[#ff6c2f] text-white flex items-center justify-center font-semibold">
-                                        {{ strtoupper(substr($cmt->user->name, 0, 1)) }}
+                                        {{ strtoupper(substr($cmt->user->name ?? 'K', 0, 1)) }}
                                     </div>
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <b class="text-gray-900">{{ $cmt->user->name }}</b>
+                                            <b class="text-gray-900">{{ $cmt->user->name ?? 'Khách vãng lai' }}</b>
                                             <span
                                                 class="text-gray-500 text-sm">{{ $cmt->created_at->format('d/m/Y H:i') }}</span>
                                         </div>
@@ -827,10 +828,10 @@
                                         @if ($cmt->replies->count() > 0)
                                             <div class="mt-3 space-y-3">
                                                 @foreach ($cmt->replies as $rep)
-                                                    @if ($rep->status === 'approved' && !$rep->is_hidden)
+                                                    @if ($rep->status === 'approved' && !$rep->is_hidden && $rep->user)
                                                         <div class="bg-gray-50 rounded-md p-3 ml-4">
                                                             <div class="flex items-center gap-2">
-                                                                <b class="text-sm">{{ $rep->user->name }}</b>
+                                                                <b class="text-sm">{{ $rep->user->name ?? 'Khách vãng lai' }}</b>
                                                                 <span
                                                                     class="text-xs text-gray-500">{{ $rep->created_at->format('d/m/Y H:i') }}</span>
                                                             </div>
@@ -843,6 +844,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         @empty
                             <div class="bg-white rounded-lg border border-gray-200 p-6 text-center text-gray-500">Chưa có
                                 bình luận nào.</div>

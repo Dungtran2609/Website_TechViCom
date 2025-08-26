@@ -118,9 +118,12 @@
                                                 class="align-middle fs-18"></iconify-icon>
                                         </a>
                                         @php
-                                            $isAdmin = $user->roles->contains(function($role) { return $role->name === 'admin'; });
+                                            $protectedRoles = ['admin'];
+                                            $isProtected = $user->roles->contains(function($role) use ($protectedRoles) { 
+                                                return in_array($role->name, $protectedRoles); 
+                                            });
                                         @endphp
-                                        @if (!$isAdmin)
+                                        @if (!$isProtected)
                                             <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
                                                 class="d-inline">
                                                 @csrf

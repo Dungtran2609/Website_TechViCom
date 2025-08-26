@@ -195,6 +195,14 @@ class AdminUserController extends Controller
             return redirect()->route('admin.users.index')->with('error', 'Bạn không thể xóa chính mình.');
         }
 
+        // Kiểm tra vai trò của user - Chỉ bảo vệ tài khoản admin
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $protectedRoles = ['admin'];
+        
+        if (array_intersect($userRoleNames, $protectedRoles)) {
+            return redirect()->route('admin.users.index')->with('error', 'Không thể xóa tài khoản Admin!');
+        }
+
         // Chỉ cho phép xóa nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)
         // Nếu còn bất kỳ đơn hàng nào chưa giao thành công, không cho phép xóa
         if ($user->orders()->whereNotIn('status', ['delivered', 'received'])->exists()) {
@@ -231,6 +239,14 @@ class AdminUserController extends Controller
         $user = User::withTrashed()->findOrFail($id);
         if (Auth::id() === $user->id) {
             return redirect()->route('admin.users.trashed')->with('error', 'Bạn không thể xóa chính mình vĩnh viễn.');
+        }
+
+        // Kiểm tra vai trò của user - Chỉ bảo vệ tài khoản admin
+        $userRoleNames = $user->roles->pluck('name')->toArray();
+        $protectedRoles = ['admin'];
+        
+        if (array_intersect($userRoleNames, $protectedRoles)) {
+            return redirect()->route('admin.users.trashed')->with('error', 'Không thể xóa tài khoản Admin!');
         }
 
         // Chỉ cho phép xóa vĩnh viễn nếu tất cả đơn hàng của user đã giao thành công (delivered hoặc received)

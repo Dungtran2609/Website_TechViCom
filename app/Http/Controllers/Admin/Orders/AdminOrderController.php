@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class AdminOrderController extends Controller
 {
@@ -443,9 +444,16 @@ $subtotal = $order->orderItems->sum(function ($item) {
             
             if ($data['status'] === 'received') {
                 $order->status = 'received';
-                $order->shipped_at = now();
+                $order->received_at = now();
             } else {
                 $order->status = $data['status'];
+                
+                // Tự động cập nhật thanh toán cho đơn hàng COD khi chuyển sang trạng thái "Đã giao"
+                if ($data['status'] === 'delivered' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
+                    $order->payment_status = 'paid';
+                    $order->paid_at = now();
+                }
+                
                 if (!empty($data['shipped_at'])) {
                     $order->shipped_at = $data['shipped_at'];
                 }
@@ -619,7 +627,7 @@ $subtotal = $order->orderItems->sum(function ($item) {
             return [
                 'id' => $ret->id,
                 'order_id' => $order->id,
-                'user_name' => $order->user->name ?? 'Khách vãng lai',
+                'user_name' => $order->guest_name ?: ($order->user->name ?? 'Khách vãng lai'),
                 'reason' => $ret->reason ?: ($ret->type === 'cancel' ? 'Khách hủy' : 'Khách trả/đổi'),
                 'type' => $ret->type,
                 'status' => $ret->status,
@@ -650,6 +658,11 @@ $subtotal = $order->orderItems->sum(function ($item) {
                     'bank_transfer' => 'Chuyển khoản ngân hàng',
                     'cod' => 'Thanh toán khi nhận hàng'
                 ][$order->payment_method] ?? $order->payment_method,
+                'images' => is_string($ret->images) ? json_decode($ret->images, true) : ($ret->images ?? []),
+                'video' => $ret->video ?? null,
+                'client_note' => $ret->client_note ?? null,
+                'admin_proof_images' => is_string($ret->admin_proof_images) ? json_decode($ret->admin_proof_images, true) : ($ret->admin_proof_images ?? []),
+                'selected_products' => is_string($ret->selected_products) ? json_decode($ret->selected_products, true) : ($ret->selected_products ?? []),
             ];
         })->filter()->values();
 
@@ -661,6 +674,14 @@ $subtotal = $order->orderItems->sum(function ($item) {
 
     public function processReturn(Request $request, $id)
     {
+        Log::info('processReturn called', [
+            'id' => $id,
+            'action' => $request->input('action'),
+            'admin_note' => $request->input('admin_note'),
+            'has_files' => $request->hasFile('admin_proof_images'),
+            'all_input' => $request->all()
+        ]);
+        
         $ret = OrderReturn::findOrFail($id);
         $action = $request->input('action'); // approve|reject
         $note = trim($request->input('admin_note'));
@@ -670,6 +691,18 @@ $subtotal = $order->orderItems->sum(function ($item) {
             return back()->withErrors(['admin_note' => 'Vui lòng nhập ghi chú khi xử lý yêu cầu.'])->withInput();
         }
 
+        // Kiểm tra admin đã xác nhận xem minh chứng của client
+        if (!$request->has('confirm_proof_viewed') || $request->input('confirm_proof_viewed') !== 'on') {
+            return back()->withErrors(['confirm_proof_viewed' => 'Vui lòng xác nhận đã xem xét minh chứng của khách hàng trước khi xử lý yêu cầu.'])->withInput();
+        }
+
+        // Kiểm tra upload ảnh chứng minh khi chấp nhận trả hàng
+        if ($action === 'approve' && $ret->type === 'return') {
+            if (!$request->hasFile('admin_proof_images')) {
+                return back()->withErrors(['admin_proof_images' => 'Vui lòng upload ảnh chứng minh đã hoàn tiền!'])->withInput();
+            }
+        }
+
         if (!in_array($action, ['approve', 'reject'])) {
             return back()->with('error', 'Hành động không hợp lệ.');
         }
@@ -677,6 +710,19 @@ $subtotal = $order->orderItems->sum(function ($item) {
         $ret->status = $action === 'approve' ? 'approved' : 'rejected';
         $ret->processed_at = now();
         $ret->admin_note = $note;
+
+        // Xử lý upload ảnh chứng minh của admin
+        if ($action === 'approve' && $ret->type === 'return' && $request->hasFile('admin_proof_images')) {
+            $adminImagePaths = [];
+            foreach ($request->file('admin_proof_images') as $image) {
+                if ($image->isValid()) {
+                    $imageName = 'admin_proof_' . time() . '_' . $image->getClientOriginalName();
+                    $imagePath = $image->storeAs('returns/admin_proof', $imageName, 'public');
+                    $adminImagePaths[] = $imagePath;
+                }
+            }
+            $ret->admin_proof_images = $adminImagePaths;
+        }
 
         if ($action === 'approve') {
             $ord = $ret->order;

@@ -314,6 +314,19 @@
             </div>
         </div>
 
+        <!-- Thông báo cho đơn hàng VNPay -->
+        @if($order->status === 'pending' && $order->payment_method === 'bank_transfer')
+            <div class="alert alert-warning-custom alert-custom mb-4">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle me-3 mt-1 text-xl"></i>
+                    <div>
+                        <strong>Lưu ý quan trọng:</strong><br>
+                        Đơn hàng thanh toán VNPay không thể hủy. Nếu bạn cần hỗ trợ, vui lòng liên hệ bộ phận hỗ trợ để được hỗ trợ!
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="row">
             <!-- Order Timeline -->
             <div class="col-lg-4 mb-6">
@@ -367,7 +380,7 @@
                     <div class="alert alert-info-custom alert-custom mb-4">
                         <div class="d-flex align-items-start">
                             <i class="fas fa-undo me-3 mt-1 text-xl"></i>
-                            <div>
+                            <div class="w-100">
                                 <strong>Yêu cầu trả hàng:</strong><br>
                                 <strong>Trạng thái:</strong> 
                                 @if($returnRequest->status === 'pending')
@@ -382,6 +395,59 @@
                                 @if($returnRequest->admin_note)
                                     <br>
                                     <strong>Phản hồi từ admin:</strong> {{ $returnRequest->admin_note }}
+                                @endif
+                                
+                                <!-- Hiển thị ảnh chứng minh từ admin -->
+                                @if($returnRequest->admin_proof_images && is_array($returnRequest->admin_proof_images) && count($returnRequest->admin_proof_images) > 0)
+                                    <div class="mt-3">
+                                        <strong>Ảnh chứng minh từ admin:</strong>
+                                        <div class="row mt-2">
+                                            @foreach($returnRequest->admin_proof_images as $image)
+                                                <div class="col-4 mb-2">
+                                                    <img src="{{ asset('storage/' . $image) }}" 
+                                                         alt="Chứng minh admin" 
+                                                         class="img-fluid rounded border" 
+                                                         style="max-height: 100px; object-fit: cover; cursor: pointer;"
+                                                         onclick="openImageModal('{{ asset('storage/' . $image) }}')">
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- Hiển thị ảnh chứng minh từ client -->
+                                @if($returnRequest->images && is_array($returnRequest->images) && count($returnRequest->images) > 0)
+                                    <div class="mt-3">
+                                        <strong>Ảnh chứng minh của bạn:</strong>
+                                        <div class="row mt-2">
+                                            @foreach($returnRequest->images as $productId => $productImages)
+                                                @if(is_array($productImages))
+                                                    @foreach($productImages as $image)
+                                                        <div class="col-4 mb-2">
+                                                            <img src="{{ asset('storage/' . $image) }}" 
+                                                                 alt="Chứng minh client" 
+                                                                 class="img-fluid rounded border" 
+                                                                 style="max-height: 100px; object-fit: cover; cursor: pointer;"
+                                                                 onclick="openImageModal('{{ asset('storage/' . $image) }}')">
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- Hiển thị video chứng minh từ client -->
+                                @if($returnRequest->video)
+                                    <div class="mt-3">
+                                        <strong>Video chứng minh của bạn:</strong>
+                                        <div class="mt-2">
+                                            <video controls class="w-100 rounded border" style="max-height: 200px;">
+                                                <source src="{{ asset('storage/' . $returnRequest->video) }}" type="video/mp4">
+                                                Trình duyệt của bạn không hỗ trợ video.
+                                            </video>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -699,10 +765,17 @@
                                 $hasCancelRequest = $order->returns()->where('type', 'cancel')->exists();
                             @endphp
                             @if(!$hasCancelRequest)
-                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                                    <i class="fas fa-times me-2"></i>
-                                    Hủy đơn hàng
-                                </button>
+                                @if($order->payment_method === 'bank_transfer')
+                                    <button class="btn btn-outline-secondary" disabled title="Đơn hàng VNPay không thể hủy">
+                                        <i class="fas fa-times me-2"></i>
+                                        Không thể hủy (VNPay)
+                                    </button>
+                                @else
+                                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                        <i class="fas fa-times me-2"></i>
+                                        Hủy đơn hàng
+                                    </button>
+                                @endif
                             @else
                                 @php
                                     $cancelRequest = $order->returns()->where('type', 'cancel')->first();
@@ -764,7 +837,10 @@
     </div>
 </div>
         <!-- Modal nhập lý do hủy đơn hàng -->
-        @if($order->status === 'pending' && !$hasCancelRequest)
+        @php
+            $hasCancelRequestForModal = $order->returns()->where('type', 'cancel')->exists();
+        @endphp
+        @if($order->status === 'pending' && !$hasCancelRequestForModal && $order->payment_method !== 'bank_transfer')
         <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <form id="cancelOrderForm">
@@ -848,14 +924,79 @@
         <!-- Modal nhập lý do trả hàng -->
         @if($order->status === 'delivered' && !$hasReturnRequest)
         <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <form id="returnOrderForm">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="returnOrderModalLabel">Lý do trả hàng</h5>
+                            <h5 class="modal-title" id="returnOrderModalLabel">Yêu cầu đổi/trả hàng</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
+                            <!-- Chọn sản phẩm cần đổi/trả -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Chọn sản phẩm cần đổi/trả: <span class="text-danger">*</span></label>
+                                <div class="alert alert-info-custom alert-custom mb-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-3 mt-1 text-lg"></i>
+                                        <div>
+                                            <strong>Lưu ý:</strong> Vui lòng chọn sản phẩm cụ thể mà bạn muốn đổi/trả.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    @foreach($order->orderItems as $item)
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-2" id="productCard{{ $item->id }}">
+                                            <div class="card-body p-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input product-checkbox" type="checkbox" 
+                                                           name="selected_products[]" 
+                                                           value="{{ $item->id }}" 
+                                                           id="product{{ $item->id }}">
+                                                    <label class="form-check-label w-100" for="product{{ $item->id }}">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0 me-3">
+                                                                @if($item->productVariant && $item->productVariant->image)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" 
+                                                                         alt="{{ $item->name_product }}" 
+                                                                         class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                @elseif($item->image_product)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" 
+                                                                         alt="{{ $item->name_product }}" 
+                                                                         class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                @elseif($item->productVariant && $item->productVariant->product && $item->productVariant->product->thumbnail)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->productVariant->product->thumbnail, '/')) }}" 
+                                                                         alt="{{ $item->name_product }}" 
+                                                                         class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                                                @else
+                                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                                                         style="width: 60px; height: 60px;">
+                                                                        <i class="fas fa-image text-muted"></i>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="mb-1 fw-medium">{{ $item->name_product }}</h6>
+                                                                <p class="mb-1 text-muted small">
+                                                                    Số lượng: {{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}₫
+                                                                </p>
+                                                                @if($item->productVariant && $item->productVariant->attributeValues->count() > 0)
+                                                                <p class="mb-0 text-muted small">
+                                                                    @foreach($item->productVariant->attributeValues as $attrValue)
+                                                                        {{ $attrValue->attribute->name }}: {{ $attrValue->value }}@if (!$loop->last), @endif
+                                                                    @endforeach
+                                                                </p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Vui lòng chọn lý do trả hàng: <span class="text-danger">*</span></label>
                                 <div class="alert alert-info-custom alert-custom mb-3">
@@ -921,6 +1062,57 @@
                                     <label for="returnReasonOther" class="form-label">Vui lòng mô tả lý do khác: <span class="text-danger">*</span></label>
                                     <textarea class="form-control" id="returnReasonOther" name="client_note_other" rows="2" placeholder="Nhập lý do cụ thể..." ></textarea>
                                 </div>
+                                
+                                <!-- Upload ảnh và video cho từng sản phẩm -->
+                                <div class="mt-4" id="productImagesSection" style="display: none;">
+                                    <label class="form-label fw-bold">Hình ảnh chứng minh cho từng sản phẩm: <span class="text-danger">*</span></label>
+                                    <div class="alert alert-warning-custom alert-custom mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-exclamation-triangle me-3 mt-1 text-lg"></i>
+                                            <div>
+                                                <strong>Bắt buộc:</strong> Vui lòng chụp ảnh cho từng sản phẩm để chứng minh lý do đổi/trả.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    @foreach($order->orderItems as $item)
+                                    <div class="product-images-container mb-3" id="productImages{{ $item->id }}" style="display: none;">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0">{{ $item->name_product }}</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <input type="file" class="form-control product-images-input" 
+                                                       name="product_images[{{ $item->id }}][]" 
+                                                       accept="image/*" multiple 
+                                                       data-product-id="{{ $item->id }}">
+                                                <div class="form-text">Có thể chọn nhiều ảnh cho sản phẩm này</div>
+                                                <div class="product-image-preview mt-2 d-flex flex-wrap gap-2" id="productImagePreview{{ $item->id }}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <label class="form-label fw-bold">Video chứng minh chung: <span class="text-danger">*</span></label>
+                                    <div class="alert alert-warning-custom alert-custom mb-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-video me-3 mt-1 text-lg"></i>
+                                            <div>
+                                                <strong>Bắt buộc:</strong> Vui lòng quay video ngắn để chứng minh lý do đổi/trả.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="file" class="form-control" id="returnVideo" name="return_video" accept="video/*" required>
+                                    <div class="form-text">Video ngắn (MP4, AVI, MOV) - Tối đa 50MB</div>
+                                    <div id="videoPreview" class="mt-2"></div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <label for="returnNote" class="form-label">Ghi chú thêm:</label>
+                                    <textarea class="form-control" id="returnNote" name="client_note" rows="3" placeholder="Mô tả chi tiết về vấn đề gặp phải..."></textarea>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -932,6 +1124,78 @@
             </div>
         </div>
         @endif
+
+        <!-- Modal hiển thị minh chứng trước khi xác nhận đổi trả -->
+        <div class="modal fade" id="proofConfirmationModal" tabindex="-1" aria-labelledby="proofConfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title" id="proofConfirmationModalLabel">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Xác nhận minh chứng đổi/trả hàng
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Vui lòng kiểm tra lại tất cả minh chứng trước khi gửi yêu cầu đổi/trả hàng!</strong>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="fas fa-list me-2"></i>
+                                    Thông tin yêu cầu
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Lý do đổi/trả:</label>
+                                    <div id="proofReason" class="form-control-plaintext border rounded p-2 bg-light"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Ghi chú:</label>
+                                    <div id="proofNote" class="form-control-plaintext border rounded p-2 bg-light"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Sản phẩm được chọn:</label>
+                                    <div id="proofProducts" class="form-control-plaintext border rounded p-2 bg-light"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-success mb-3">
+                                    <i class="fas fa-images me-2"></i>
+                                    Minh chứng đã upload
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Ảnh chứng minh:</label>
+                                    <div id="proofImages" class="border rounded p-2 bg-light"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Video chứng minh:</label>
+                                    <div id="proofVideo" class="border rounded p-2 bg-light"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Lưu ý:</strong> Sau khi gửi yêu cầu, bạn không thể chỉnh sửa thông tin. Hãy kiểm tra kỹ trước khi xác nhận!
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-edit me-2"></i>
+                            Chỉnh sửa
+                        </button>
+                        <button type="button" class="btn btn-success" id="btn-final-confirm">
+                            <i class="fas fa-check me-2"></i>
+                            Xác nhận và gửi yêu cầu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 @endsection
 
 @push('styles')
@@ -944,6 +1208,24 @@
     margin-bottom: 8px;
     transition: all 0.3s ease;
     cursor: pointer;
+}
+
+.product-checkbox:checked + .form-check-label .card {
+    border-color: #007bff !important;
+    background-color: #f8f9ff;
+}
+
+.product-checkbox:checked + .form-check-label .card .card-body {
+    background-color: #f8f9ff;
+}
+
+.product-images-container .card {
+    transition: all 0.3s ease;
+}
+
+.product-images-container .card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
 }
 
 .cancel-reasons-list .form-check:hover,
@@ -1218,6 +1500,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Xử lý chọn sản phẩm
+    var productCheckboxes = document.querySelectorAll('.product-checkbox');
+    var productImagesSection = document.getElementById('productImagesSection');
+    
+    productCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            var productId = this.value;
+            var productImagesContainer = document.getElementById('productImages' + productId);
+            
+            if (this.checked) {
+                productImagesContainer.style.display = 'block';
+                productImagesSection.style.display = 'block';
+            } else {
+                productImagesContainer.style.display = 'none';
+            }
+            
+            // Kiểm tra xem có sản phẩm nào được chọn không
+            var checkedProducts = document.querySelectorAll('.product-checkbox:checked');
+            if (checkedProducts.length === 0) {
+                productImagesSection.style.display = 'none';
+            }
+        });
+    });
+    
+    // Xử lý preview ảnh cho từng sản phẩm
+    var productImagesInputs = document.querySelectorAll('.product-images-input');
+    productImagesInputs.forEach(function(input) {
+        input.addEventListener('change', function() {
+            var productId = this.getAttribute('data-product-id');
+            var previewContainer = document.getElementById('productImagePreview' + productId);
+            previewContainer.innerHTML = '';
+            
+            var files = this.files;
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                if (file.type.startsWith('image/')) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = '80px';
+                        img.style.height = '80px';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '6px';
+                        img.style.border = '2px solid #ddd';
+                        previewContainer.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    });
+    
+    // Xử lý preview video
+    var returnVideo = document.getElementById('returnVideo');
+    var videoPreview = document.getElementById('videoPreview');
+    if (returnVideo) {
+        returnVideo.addEventListener('change', function() {
+            videoPreview.innerHTML = '';
+            var file = this.files[0];
+            
+            if (file && file.type.startsWith('video/')) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var video = document.createElement('video');
+                    video.src = e.target.result;
+                    video.controls = true;
+                    video.style.width = '100%';
+                    video.style.maxWidth = '400px';
+                    video.style.borderRadius = '8px';
+                    videoPreview.appendChild(video);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
     // Xử lý nút xác nhận trả hàng
     var btnConfirmReturn = document.getElementById('btn-confirm-return');
     if (btnConfirmReturn) {
@@ -1242,6 +1601,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 clientNote = otherReason;
             }
             
+            // Kiểm tra chọn sản phẩm
+            var selectedProducts = document.querySelectorAll('.product-checkbox:checked');
+            if (selectedProducts.length === 0) {
+                alert('Vui lòng chọn ít nhất một sản phẩm để đổi/trả');
+                return;
+            }
+            
+            // Kiểm tra upload ảnh cho từng sản phẩm được chọn
+            var hasImages = true;
+            selectedProducts.forEach(function(checkbox) {
+                var productId = checkbox.value;
+                var imageInput = document.querySelector('input[name="product_images[' + productId + '][]"]');
+                if (!imageInput.files || imageInput.files.length === 0) {
+                    alert('Vui lòng chọn ảnh chứng minh cho sản phẩm: ' + checkbox.closest('.card').querySelector('h6').textContent);
+                    imageInput.focus();
+                    hasImages = false;
+                    return;
+                }
+            });
+            
+            if (!hasImages) {
+                return;
+            }
+            
+            // Kiểm tra upload video
+            var returnVideo = document.getElementById('returnVideo');
+            if (!returnVideo.files || returnVideo.files.length === 0) {
+                alert('Vui lòng chọn video chứng minh');
+                returnVideo.focus();
+                return;
+            }
+            
+            // Kiểm tra kích thước video (50MB)
+            var videoFile = returnVideo.files[0];
+            if (videoFile.size > 50 * 1024 * 1024) {
+                alert('Video quá lớn. Vui lòng chọn video nhỏ hơn 50MB');
+                return;
+            }
+            
             // Hiển thị xác nhận cuối cùng
             if (confirm('Bạn có chắc chắn muốn gửi yêu cầu trả hàng này không?\n\nLý do: ' + clientNote + '\n\nYêu cầu sẽ được gửi đến admin để xử lý!')) {
                 var orderId = {{ $order->id }};
@@ -1249,7 +1647,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 var formData = new FormData();
                 formData.append('cancel_reason', clientNote);
-                formData.append('client_note', clientNote);
+                
+                // Thêm sản phẩm được chọn
+                selectedProducts.forEach(function(checkbox) {
+                    formData.append('selected_products[]', checkbox.value);
+                });
+                
+                // Thêm ảnh cho từng sản phẩm
+                selectedProducts.forEach(function(checkbox) {
+                    var productId = checkbox.value;
+                    var imageInput = document.querySelector('input[name="product_images[' + productId + '][]"]');
+                    for (var i = 0; i < imageInput.files.length; i++) {
+                        formData.append('product_images[' + productId + '][]', imageInput.files[i]);
+                    }
+                });
+                
+                // Thêm video
+                formData.append('return_video', returnVideo.files[0]);
+                
+                // Thêm ghi chú
+                var returnNote = document.getElementById('returnNote').value;
+                formData.append('client_note', returnNote || '');
                 
                 fetch(`/client/orders/${orderId}/request-return`, {
                     method: 'POST',
@@ -1308,6 +1726,35 @@ function confirmReceived(orderId) {
             alert('Có lỗi xảy ra khi xác nhận nhận hàng');
         });
     }
+}
+
+// Hàm mở modal xem ảnh to
+function openImageModal(imageSrc) {
+    // Tạo modal nếu chưa có
+    var existingModal = document.getElementById('imageModal');
+    if (!existingModal) {
+        var modalHTML = `
+            <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalLabel">Xem ảnh</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img id="modalImage" src="" alt="Ảnh chứng minh" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Cập nhật ảnh và hiển thị modal
+    document.getElementById('modalImage').src = imageSrc;
+    var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
 }
 </script>
 @endpush

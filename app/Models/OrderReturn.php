@@ -18,12 +18,18 @@ class OrderReturn extends Model
         'processed_at',
         'admin_note',
         'client_note',
-        'exchange_items',
+        'images',
+        'video',
+        'admin_proof_images',
+        'selected_products',
     ];
 
     protected $casts = [
         'requested_at' => 'datetime',
         'processed_at' => 'datetime',
+        'images' => 'array',
+        'admin_proof_images' => 'array',
+        'selected_products' => 'array',
     ];
 
     /**

@@ -348,6 +348,99 @@ class CommentHelper
     }
 
     /**
+     * Lấy danh sách sản phẩm đã mua và chưa đánh giá (gom nhóm theo đơn hàng)
+     */
+    public static function getPurchasedItemsGrouped($productId)
+    {
+        if (!Auth::check()) {
+            return collect();
+        }
+
+        $user = Auth::user();
+        
+        // Lấy tất cả order items của sản phẩm này mà user đã mua và đã nhận hàng
+        $orderItems = OrderItem::whereHas('order', function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->whereIn('status', ['delivered', 'received']);
+        })->where('product_id', $productId)
+          ->with(['productVariant.attributeValues.attribute', 'order'])
+          ->get();
+
+        if ($orderItems->isEmpty()) {
+            return collect();
+        }
+
+        // Gom nhóm theo order_id
+        $groupedItems = $orderItems->groupBy('order_id');
+        $purchasedItems = collect();
+
+        foreach ($groupedItems as $orderId => $items) {
+            $order = $items->first()->order;
+            $canReview = false;
+            $remainingDays = 0;
+
+            // Kiểm tra trạng thái đơn hàng và thời gian
+            if ($order->status === 'delivered') {
+                $deliveredAt = $order->shipped_at ?: $order->updated_at;
+                $daysSinceDelivered = now()->diffInDays($deliveredAt);
+                if ($daysSinceDelivered < 0) {
+                    $daysSinceDelivered = 0;
+                }
+                if ($daysSinceDelivered <= 15) {
+                    // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
+                    $existingComment = ProductComment::where('user_id', $user->id)
+                                                   ->where('product_id', $productId)
+                                                   ->where('order_id', $order->id)
+                                                   ->whereNull('parent_id')
+                                                   ->first();
+
+                    if (!$existingComment) {
+                        $canReview = true;
+                        $remainingDays = 15 - $daysSinceDelivered;
+                    }
+                }
+            } elseif ($order->status === 'received' && $order->received_at) {
+                $receivedAt = is_string($order->received_at) ? \Carbon\Carbon::parse($order->received_at) : $order->received_at;
+                $daysSinceReceived = now()->diffInDays($receivedAt);
+                if ($daysSinceReceived < 0) {
+                    $daysSinceReceived = 0;
+                }
+                if ($daysSinceReceived <= 15) {
+                    // Kiểm tra đã comment cho sản phẩm này trong đơn hàng này chưa
+                    $existingComment = ProductComment::where('user_id', $user->id)
+                                                   ->where('product_id', $productId)
+                                                   ->where('order_id', $order->id)
+                                                   ->whereNull('parent_id')
+                                                   ->first();
+
+                    if (!$existingComment) {
+                        $canReview = true;
+                        $remainingDays = 15 - $daysSinceReceived;
+                    }
+                }
+            }
+
+            if ($canReview) {
+                // Tạo object gom nhóm
+                $groupedItem = (object) [
+                    'order' => $order,
+                    'items' => $items,
+                    'can_review' => $canReview,
+                    'remaining_days' => $remainingDays,
+                    'total_quantity' => $items->sum('quantity'),
+                    'total_price' => $items->sum(function($item) {
+                        return $item->price * $item->quantity;
+                    })
+                ];
+                
+                $purchasedItems->push($groupedItem);
+            }
+        }
+
+        return $purchasedItems;
+    }
+
+    /**
      * Kiểm tra xem có thể đánh giá không và trả về thông tin chi tiết
      */
     public static function getReviewStatus($productId)
@@ -461,4 +554,4 @@ class CommentHelper
             'remaining_days' => $remainingDays
         ];
     }
-} 
+}

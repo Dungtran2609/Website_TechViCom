@@ -8,21 +8,296 @@
 
     <style>
         .checkout-step {
-            transition: .3s
+            transition: all 0.3s ease;
         }
-
-        .checkout-step.active {
-            background: #ea580c;
-            color: #fff
+        
+        .checkout-step.active .checkout-step-number {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
         }
-
-        .checkout-step.completed {
-            background: #16a34a;
-            color: #fff
+        
+        .checkout-step.active .checkout-step-title {
+            color: #f97316;
         }
-
+        
+        .checkout-step.completed .checkout-step-number {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .checkout-step.completed .checkout-step-title {
+            color: #10b981;
+        }
+        
+        .checkout-step.completed .checkout-step-subtitle {
+            color: #10b981;
+        }
+        
+        .checkout-content {
+            display: none;
+        }
+        
+        .checkout-content.active {
+            display: block;
+        }
+        
         .form-group {
-            margin-bottom: 1rem
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ff6c2f;
+            box-shadow: 0 0 0 3px rgba(255, 108, 47, 0.1);
+        }
+        
+        .form-group input.border-red-500,
+        .form-group select.border-red-500,
+        .form-group textarea.border-red-500 {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        
+        .btn-primary {
+            background-color: #ff6c2f;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #e55a1f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .checkout-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+        
+        .checkout-item:hover {
+            border-color: #ff6c2f;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .checkout-item.selected {
+            border-color: #ff6c2f;
+            background-color: #fef7f0;
+        }
+        
+        .checkout-item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: -0.5rem;
+            right: -0.5rem;
+            background-color: #ff6c2f;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .payment-method,
+        .shipping-method {
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .payment-method:hover,
+        .shipping-method:hover {
+            border-color: #ff6c2f;
+            background-color: #fef7f0;
+        }
+        
+        .payment-method.selected,
+        .shipping-method.selected {
+            border-color: #ff6c2f;
+            background-color: #fef7f0;
+        }
+        
+        .coupon-section {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .coupon-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .coupon-input input {
+            flex: 1;
+        }
+        
+        .coupon-error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        
+        .order-summary {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            position: sticky;
+            top: 1rem;
+        }
+        
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .order-summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            font-weight: bold;
+            font-size: 1.125rem;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .step.active .step-number {
+            background-color: #ff6c2f;
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .step-title {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .step.active .step-title {
+            color: #ff6c2f;
+        }
+        
+        .step.completed .step-title {
+            color: #10b981;
+        }
+        
+        .step-connector {
+            flex: 1;
+            height: 2px;
+            background-color: #e5e7eb;
+            margin: 0 1rem;
+        }
+        
+        .step.completed .step-connector {
+            background-color: #10b981;
         }
 
         .payment-option {
@@ -95,14 +370,14 @@
     @endif
 
     @if (session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert" id="error-notification">
             <strong class="font-bold">Lỗi!</strong>
             <span class="block sm:inline">{{ session('error') }}</span>
         </div>
     @endif
 
     @if (session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert" id="success-notification">
             <strong class="font-bold">Thành công!</strong>
             <span class="block sm:inline">{{ session('success') }}</span>
         </div>
@@ -126,25 +401,45 @@
     <div class="bg-white border-b no-print">
         <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-center">
-                <div class="hidden md:flex items-center space-x-4">
-                    <div id="step-1" class="checkout-step active flex items-center px-4 py-2 rounded-full">
-                        <span
-                            class="w-6 h-6 bg-white text-orange-600 rounded-full flex items-center justify-center text-sm font-bold mr-2">1</span>
-                        <span>Thông tin</span>
+                <div class="hidden md:flex items-center space-x-6">
+                    <div id="step-1" class="checkout-step active flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg">
+                            <span class="text-white text-lg font-bold">1</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="checkout-step-subtitle text-sm text-gray-500 font-medium">Bước 1</span>
+                            <span class="checkout-step-title text-lg font-semibold text-orange-600">Thông tin</span>
+                        </div>
                     </div>
-                    <div class="w-8 h-0.5 bg-gray-300"></div>
-                    <div id="step-2"
-                        class="checkout-step flex items-center px-4 py-2 rounded-full bg-gray-200 text-gray-600">
-                        <span
-                            class="w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2">2</span>
-                        <span>Thanh toán</span>
+                    
+                    <div class="flex items-center">
+                        <div class="w-16 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
+                        <div class="w-4 h-1 bg-gray-300 rounded-full ml-1"></div>
                     </div>
-                    <div class="w-8 h-0.5 bg-gray-300"></div>
-                    <div id="step-3"
-                        class="checkout-step flex items-center px-4 py-2 rounded-full bg-gray-200 text-gray-600">
-                        <span
-                            class="w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold mr-2">3</span>
-                        <span>Hoàn tất</span>
+                    
+                    <div id="step-2" class="checkout-step flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+                            <span class="text-gray-500 text-lg font-bold">2</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="checkout-step-subtitle text-sm text-gray-400 font-medium">Bước 2</span>
+                            <span class="checkout-step-title text-lg font-semibold text-gray-500">Thanh toán</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="w-16 h-1 bg-gray-300 rounded-full"></div>
+                        <div class="w-4 h-1 bg-gray-300 rounded-full ml-1"></div>
+                    </div>
+                    
+                    <div id="step-3" class="checkout-step flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+                            <span class="text-gray-500 text-lg font-bold">3</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="checkout-step-subtitle text-sm text-gray-400 font-medium">Bước 3</span>
+                            <span class="checkout-step-title text-lg font-semibold text-gray-500">Hoàn tất</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,7 +454,7 @@
                     @csrf
                     <input type="hidden" id="selected-input" name="selected" value="{{ request('selected') }}">
                     {{-- STEP 1 --}}
-                    <div id="checkout-step-1" class="checkout-content">
+                    <div id="checkout-step-1" class="checkout-content active">
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-xl font-semibold mb-6">Thông tin khách hàng</h3>
                             <div class="grid md:grid-cols-2 gap-4">
@@ -186,7 +481,6 @@
                                 <span id="email-error" class="text-xs text-red-500"></span>
                             </div>
                             <div class="form-group">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ giao hàng *</label>
                                 @if (isset($addresses) && count($addresses) > 0)
                                     <div class="mb-2">
                                         <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
@@ -482,6 +776,7 @@
                         </div>
                         <div class="flex space-x-2 mb-1">
                             <input type="text" id="checkout-coupon-code" placeholder="Nhập mã"
+                                value="{{ $appliedCoupon->code ?? '' }}"
                                 class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500 text-sm">
                             <button type="button" onclick="applyCheckoutCoupon()"
                                 class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm">Áp
@@ -491,6 +786,9 @@
                                 title="Hủy">×</button>
                         </div>
                         <div id="checkout-coupon-message" class="mt-1 text-xs"></div>
+                        @if(isset($existingOrder) && $existingOrder && $appliedCoupon && $discountAmount > 0)
+                            <p class="text-green-600 text-xs mt-1">✓ Mã giảm giá "{{ $appliedCoupon->code }}" đã được áp dụng</p>
+                        @endif
                         <div id="checkout-available-coupons"
                             class="hidden mt-2 space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded p-2 bg-gray-50 text-xs">
                         </div>
@@ -1535,6 +1833,78 @@
             const modal = document.getElementById('loginRequiredModal');
             if (modal) {
                 modal.remove();
+            }
+        }
+        
+        // Tự động cập nhật discount row nếu có mã giảm giá (chỉ khi thanh toán lại)
+        @if(isset($existingOrder) && $existingOrder && $appliedCoupon && $discountAmount > 0)
+            setTimeout(function() {
+                updateDiscountRow({{ $discountAmount }}, '{{ $appliedCoupon->code }}');
+                // Tự động điền mã giảm giá vào input
+                const couponInput = document.getElementById('checkout-coupon-code');
+                if (couponInput) {
+                    couponInput.value = '{{ $appliedCoupon->code }}';
+                }
+            }, 100);
+        @endif
+        
+        // Tự động ẩn thông báo sau 5 giây
+        function autoHideNotifications() {
+            const errorNotification = document.getElementById('error-notification');
+            const successNotification = document.getElementById('success-notification');
+            const paymentCancelledMessage = document.querySelector('[data-message="payment-cancelled"]');
+            
+            if (errorNotification) {
+                setTimeout(function() {
+                    errorNotification.style.transition = 'opacity 0.5s ease-out';
+                    errorNotification.style.opacity = '0';
+                    setTimeout(function() {
+                        errorNotification.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            }
+            
+            if (successNotification) {
+                setTimeout(function() {
+                    successNotification.style.transition = 'opacity 0.5s ease-out';
+                    successNotification.style.opacity = '0';
+                    setTimeout(function() {
+                        successNotification.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            }
+            
+            if (paymentCancelledMessage) {
+                setTimeout(function() {
+                    paymentCancelledMessage.style.transition = 'opacity 0.5s ease-out';
+                    paymentCancelledMessage.style.opacity = '0';
+                    setTimeout(function() {
+                        paymentCancelledMessage.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            }
+        }
+        
+        // Chạy khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            autoHideNotifications();
+        });
+        
+        // Hàm cập nhật discount row
+        function updateDiscountRow(discountAmount, couponCode) {
+            const discountRow = document.getElementById('discount-row');
+            const discountAmountSpan = document.getElementById('discount-amount');
+            const totalAmountSpan = document.getElementById('total-amount');
+            
+            if (discountRow && discountAmountSpan && totalAmountSpan) {
+                discountRow.style.display = 'flex';
+                discountAmountSpan.textContent = '-' + new Intl.NumberFormat('vi-VN').format(discountAmount) + '₫';
+                
+                // Cập nhật total
+                const subtotal = Number(window.checkoutSubtotal || 0);
+                const shippingFee = subtotal >= 3000000 ? 0 : 50000;
+                const total = subtotal + shippingFee - discountAmount;
+                totalAmountSpan.textContent = new Intl.NumberFormat('vi-VN').format(total) + '₫';
             }
         }
     </script>

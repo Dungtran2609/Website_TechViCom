@@ -98,6 +98,31 @@
             /* tất cả chữ bằng nhau */
             line-height: 1.75;
         }
+        
+        /* ===== VALIDATION STYLES ===== */
+        .hidden {
+            display: none !important;
+        }
+        
+        .rating-error, .content-error, .reply-content-error {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #ff6c2f;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e55a1f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
 
         /* ===== PRODUCT CARD STYLES ===== */
         .rp-card {
@@ -632,7 +657,24 @@
                                                             <i class="fas fa-calendar-check mr-1"></i>
                                                             Nhận hàng: {{ $item->order->received_at ? $item->order->received_at->format('d/m/Y') : 'N/A' }}
                                                         </p>
-                                                        @if($item->order->received_at)
+                                                        @if($item->order->status === 'delivered')
+                                                            @php
+                                                                $deliveredAt = $item->order->shipped_at ?: $item->order->updated_at;
+                                                                $daysSinceDelivered = now()->diffInDays($deliveredAt);
+                                                                $daysLeftDelivered = 15 - $daysSinceDelivered;
+                                                            @endphp
+                                                            @if($daysLeftDelivered > 0)
+                                                                <p class="text-xs text-[#ff6c2f] font-medium mt-1">
+                                                                    <i class="fas fa-clock mr-1"></i>
+                                                                    Còn {{ $daysLeftDelivered }} ngày để đánh giá (từ khi giao hàng)
+                                                                </p>
+                                                            @else
+                                                                <p class="text-xs text-red-500 font-medium mt-1">
+                                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                                    Đã hết thời gian đánh giá (từ khi giao hàng)
+                                                                </p>
+                                                            @endif
+                                                        @elseif($item->order->received_at)
                                                             @php
                                                                 $daysSinceReceived = now()->diffInDays($item->order->received_at);
                                                                 $daysLeft = 15 - $daysSinceReceived;
@@ -653,7 +695,7 @@
                                                 </div>
 
                                                 <!-- Form đánh giá cho đơn hàng này -->
-                                                @if($item->order->received_at && (15 - now()->diffInDays($item->order->received_at)) > 0)
+                                                @if(($item->order->status === 'delivered' && (15 - now()->diffInDays($item->order->shipped_at ?: $item->order->updated_at)) > 0) || ($item->order->status === 'received' && $item->order->received_at && (15 - now()->diffInDays($item->order->received_at)) > 0))
                                                     <form action="{{ route('products.comments.store', $product->id) }}" method="POST" class="order-review-form" onsubmit="console.log('Form submitted');">
                                                         @csrf
                                                         <input type="hidden" name="order_id" value="{{ $item->order->id }}">
@@ -688,8 +730,23 @@
                                                     </form>
                                                 @else
                                                     <div class="text-center py-4 text-gray-500">
-                                                        <i class="fas fa-clock text-2xl mb-2"></i>
-                                                        <p>Đã hết thời gian đánh giá cho đơn hàng này</p>
+                                                        @if($item->order->status === 'delivered')
+                                                            @php
+                                                                $deliveredAt = $item->order->shipped_at ?: $item->order->updated_at;
+                                                                $daysSinceDelivered = now()->diffInDays($deliveredAt);
+                                                                $daysLeftDelivered = 15 - $daysSinceDelivered;
+                                                            @endphp
+                                                            @if($daysLeftDelivered <= 0)
+                                                                <i class="fas fa-exclamation-triangle text-2xl mb-2 text-red-500"></i>
+                                                                <p>Đã hết thời gian đánh giá (từ khi giao hàng)</p>
+                                                            @else
+                                                                <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                                                <p>Bạn đã đánh giá đơn hàng này rồi</p>
+                                                            @endif
+                                                        @else
+                                                            <i class="fas fa-clock text-2xl mb-2"></i>
+                                                            <p>Đã hết thời gian đánh giá cho đơn hàng này</p>
+                                                        @endif
                                                     </div>
                                                 @endif
                                             </div>
@@ -841,6 +898,41 @@
                                                 @endforeach
                                             </div>
                                         @endif
+                                        
+                                        <!-- Form reply comment -->
+                                        @auth
+                                            @if(\App\Helpers\CommentHelper::canReply($product->id))
+                                                <div class="mt-3">
+                                                    <button type="button" class="text-sm text-[#ff6c2f] hover:text-[#e55a1f] transition-colors" onclick="toggleReplyForm({{ $cmt->id }})">
+                                                        <i class="fas fa-reply mr-1"></i>Phản hồi
+                                                    </button>
+                                                    
+                                                    <div id="replyForm{{ $cmt->id }}" class="hidden mt-3 ml-4">
+                                                        <form action="{{ route('products.comments.reply', ['productId' => $product->id, 'commentId' => $cmt->id]) }}" method="POST" class="reply-form" onsubmit="return validateReplyForm(this)">
+                                                            @csrf
+                                                            <div class="mb-3">
+                                                                <textarea name="reply_content" rows="3" maxlength="200" 
+                                                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f] resize-none" 
+                                                                    placeholder="Viết phản hồi của bạn..."></textarea>
+                                                                <div class="text-xs text-gray-500 mt-1">
+                                                                    <span class="replyCharCount">0</span>/200 ký tự
+                                                                </div>
+                                                                <div class="reply-content-error text-red-500 text-xs mt-1 hidden"></div>
+                                                            </div>
+                                                            
+                                                            <div class="flex gap-2">
+                                                                <button type="submit" class="btn-primary px-4 py-2 rounded-md text-sm">
+                                                                    <i class="fas fa-paper-plane mr-1"></i>Gửi phản hồi
+                                                                </button>
+                                                                <button type="button" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors" onclick="toggleReplyForm({{ $cmt->id }})">
+                                                                    Hủy
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endauth
                                     </div>
                                 </div>
                             </div>
@@ -1381,7 +1473,105 @@
         document.querySelectorAll('.order-review-form').forEach(form => {
             const stars = form.querySelectorAll('input[type="radio"]');
             const starLabels = form.querySelectorAll('label[for^="star"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const textarea = form.querySelector('textarea[name="content"]');
+            const ratingError = form.querySelector('.rating-error') || createRatingErrorElement(form);
+            const contentError = form.querySelector('.content-error') || createContentErrorElement(form);
             
+            // Tạo element hiển thị lỗi rating
+            function createRatingErrorElement(form) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'rating-error text-red-500 text-xs mt-1 hidden';
+                form.querySelector('.mb-3').appendChild(errorDiv);
+                return errorDiv;
+            }
+            
+            // Tạo element hiển thị lỗi content
+            function createContentErrorElement(form) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'content-error text-red-500 text-xs mt-1 hidden';
+                textarea.parentElement.appendChild(errorDiv);
+                return errorDiv;
+            }
+            
+            // Validation function
+            function validateForm() {
+                let isValid = true;
+                
+                // Validate rating
+                const selectedRating = form.querySelector('input[name="rating"]:checked');
+                if (!selectedRating) {
+                    ratingError.textContent = 'Vui lòng chọn đánh giá sao!';
+                    ratingError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    ratingError.classList.add('hidden');
+                }
+                
+                // Validate content
+                const content = textarea.value.trim();
+                if (!content) {
+                    contentError.textContent = 'Nội dung đánh giá không được để trống!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else if (content.length < 10) {
+                    contentError.textContent = 'Nội dung đánh giá phải có ít nhất 10 ký tự!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else if (content.length > 500) {
+                    contentError.textContent = 'Nội dung đánh giá không được quá 500 ký tự!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    contentError.classList.add('hidden');
+                }
+                
+                // Validate HTML tags
+                if (content.includes('<') || content.includes('>')) {
+                    contentError.textContent = 'Nội dung đánh giá không được chứa HTML tags!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                }
+                
+                // Validate spam words
+                const spamWords = ['spam', 'advertisement', 'quảng cáo', 'mua ngay', 'giá rẻ', 'khuyến mãi'];
+                const lowerContent = content.toLowerCase();
+                for (const word of spamWords) {
+                    if (lowerContent.includes(word)) {
+                        contentError.textContent = 'Nội dung đánh giá không được chứa từ khóa quảng cáo!';
+                        contentError.classList.remove('hidden');
+                        isValid = false;
+                        break;
+                    }
+                }
+                
+                // Validate repeated characters
+                if (/(.)\1{4,}/.test(content)) {
+                    contentError.textContent = 'Nội dung đánh giá không được chứa ký tự lặp lại quá nhiều!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            // Form submit validation
+            form.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Real-time validation for content
+            textarea.addEventListener('input', function() {
+                const content = this.value.trim();
+                if (content.length >= 10 && content.length <= 500) {
+                    contentError.classList.add('hidden');
+                }
+            });
+            
+            // Real-time validation for rating
             stars.forEach((star, index) => {
                 star.addEventListener('change', function() {
                     // Reset all stars in this form
@@ -1394,6 +1584,104 @@
                     for (let i = 0; i <= index; i++) {
                         starLabels[i].querySelector('i').classList.remove('text-gray-300');
                         starLabels[i].querySelector('i').classList.add('text-yellow-400');
+                    }
+                    
+                    // Hide rating error when rating is selected
+                    ratingError.classList.add('hidden');
+                });
+            });
+        });
+
+        /* ===== Reply Form Functions ===== */
+        // Toggle reply form
+        window.toggleReplyForm = function(commentId) {
+            const form = document.getElementById('replyForm' + commentId);
+            if (form) {
+                form.classList.toggle('hidden');
+                
+                // Focus vào textarea khi hiển thị form
+                if (!form.classList.contains('hidden')) {
+                    const textarea = form.querySelector('textarea[name="reply_content"]');
+                    if (textarea) {
+                        textarea.focus();
+                    }
+                }
+            }
+        };
+
+        // Validate reply form
+        window.validateReplyForm = function(form) {
+            const textarea = form.querySelector('textarea[name="reply_content"]');
+            const errorDiv = form.querySelector('.reply-content-error');
+            const content = textarea.value.trim();
+            
+            // Reset error
+            errorDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            
+            // Validate required
+            if (!content) {
+                errorDiv.textContent = 'Nội dung phản hồi không được để trống!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate length
+            if (content.length < 5) {
+                errorDiv.textContent = 'Nội dung phản hồi phải có ít nhất 5 ký tự!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            if (content.length > 200) {
+                errorDiv.textContent = 'Nội dung phản hồi không được quá 200 ký tự!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate HTML tags
+            if (content.includes('<') || content.includes('>')) {
+                errorDiv.textContent = 'Nội dung phản hồi không được chứa HTML tags!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate spam words
+            const spamWords = ['spam', 'advertisement', 'quảng cáo', 'mua ngay', 'giá rẻ', 'khuyến mãi'];
+            const lowerContent = content.toLowerCase();
+            for (const word of spamWords) {
+                if (lowerContent.includes(word)) {
+                    errorDiv.textContent = 'Nội dung phản hồi không được chứa từ khóa quảng cáo!';
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+            }
+            
+            // Validate repeated characters
+            if (/(.)\1{4,}/.test(content)) {
+                errorDiv.textContent = 'Nội dung phản hồi không được chứa ký tự lặp lại quá nhiều!';
+                errorDiv.classList.remove('hidden');
+                    return false;
+            }
+            
+            return true;
+        };
+
+        // Character count for reply forms
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.reply-form textarea').forEach(textarea => {
+                const charCount = textarea.parentElement.querySelector('.replyCharCount');
+                
+                textarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    charCount.textContent = length;
+                    
+                    if (length > 180) {
+                        charCount.classList.add('text-red-500');
+                        charCount.classList.remove('text-gray-500');
+                    } else {
+                        charCount.classList.remove('text-red-500');
+                        charCount.classList.add('text-gray-500');
                     }
                 });
             });

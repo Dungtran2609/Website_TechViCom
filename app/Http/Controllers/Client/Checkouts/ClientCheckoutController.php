@@ -1306,8 +1306,9 @@ class ClientCheckoutController extends Controller
 
                 if ($existingOrderForPricing) {
                     $shippingFee = $existingOrderForPricing->shipping_fee ?? 0;
-                    $discountAmount = $existingOrderForPricing->discount_amount ?? 0;
-                    $couponCode = $existingOrderForPricing->coupon_code;
+                    // Không sử dụng discount_amount cũ, để xử lý coupon mới
+                    $discountAmount = 0;
+                    $couponCode = null;
                 } else {
                     // Fallback nếu không tìm thấy đơn hàng cũ
                     $shippingFee = ($shippingMethodId == 1) ? (($subtotal >= 3000000) ? 0 : 50000) : 0;
@@ -1478,9 +1479,9 @@ class ClientCheckoutController extends Controller
                     'shipping_method_id' => $shippingMethodId,
                     'total_amount'       => $originalSubtotal, // Sử dụng giá cũ
                     'shipping_fee'       => $originalShippingFee, // Sử dụng giá cũ
-                    'discount_amount'    => $originalDiscountAmount, // Sử dụng giá cũ
-                    'coupon_code'        => $order->coupon_code, // Giữ nguyên coupon cũ
-                    'final_total'        => $originalFinalTotal, // Sử dụng giá cũ
+                    'discount_amount'    => $discountAmount, // Sử dụng discount mới từ coupon
+                    'coupon_code'        => $couponCode, // Sử dụng coupon mới
+                    'final_total'        => $originalSubtotal + $originalShippingFee - $discountAmount, // Tính lại với discount mới
                     'order_notes'        => $request->order_notes, // Cập nhật ghi chú mới
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                     'updated_at'         => now(),

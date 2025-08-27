@@ -40,7 +40,7 @@ class ClientProductCommentController extends Controller
         // Kiểm tra order có tồn tại và thuộc về user không
         $order = Order::where('id', $orderId)
                      ->where('user_id', $user->id)
-                     ->where('status', 'received')
+                     ->whereIn('status', ['delivered', 'received'])
                      ->first();
 
         if (!$order) {
@@ -48,10 +48,24 @@ class ClientProductCommentController extends Controller
             return back()->with('error', 'Đơn hàng không tồn tại hoặc không hợp lệ.');
         }
 
-        Log::info('Order hợp lệ', ['order_id' => $orderId, 'received_at' => $order->received_at]);
+        Log::info('Order hợp lệ', ['order_id' => $orderId, 'status' => $order->status, 'received_at' => $order->received_at]);
 
-        // Kiểm tra thời gian nhận hàng (15 ngày)
-        if ($order->received_at) {
+        // Nếu trạng thái là 'delivered', kiểm tra thời gian giao hàng (15 ngày)
+        if ($order->status === 'delivered') {
+            // Sử dụng shipped_at hoặc updated_at khi chuyển sang delivered để tính thời gian
+            $deliveredAt = $order->shipped_at ?: $order->updated_at;
+            $daysSinceDelivered = now()->diffInDays($deliveredAt);
+            if ($daysSinceDelivered < 0) {
+                $daysSinceDelivered = 0;
+            }
+            if ($daysSinceDelivered > 15) {
+                Log::info('Quá thời gian đánh giá cho đơn hàng đã giao', ['days' => $daysSinceDelivered]);
+                return back()->with('error', 'Đã quá thời gian đánh giá (15 ngày kể từ khi giao hàng).');
+            }
+            Log::info('Thời gian hợp lệ cho đơn hàng đã giao', ['days' => $daysSinceDelivered]);
+        }
+        // Nếu trạng thái là 'received', kiểm tra thời gian nhận hàng (15 ngày)
+        elseif ($order->status === 'received' && $order->received_at) {
             $daysSinceReceived = now()->diffInDays($order->received_at);
             if ($daysSinceReceived < 0) {
                 $daysSinceReceived = 0;
@@ -98,10 +112,15 @@ class ClientProductCommentController extends Controller
         }
     }
 
-    public function reply(ReplyProductCommentRequest $request, $commentId)
+    public function reply(ReplyProductCommentRequest $request, $productId, $commentId)
     {
         $user = Auth::user();
         $parentComment = ProductComment::findOrFail($commentId);
+
+        // Kiểm tra comment có thuộc về sản phẩm này không
+        if ($parentComment->product_id != $productId) {
+            return back()->with('error', 'Bình luận không thuộc về sản phẩm này!');
+        }
 
         // Kiểm tra quyền reply
         if (!CommentHelper::canReply($parentComment->product_id)) {

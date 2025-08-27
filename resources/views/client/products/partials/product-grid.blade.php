@@ -86,12 +86,12 @@
         @endforeach
     </div>
     
-    <!-- Pagination -->
-    @if($products->hasPages())
+    <!-- Pagination - Đã ẩn theo yêu cầu -->
+    {{-- @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
         <div class="mt-8">
             {{ $products->links() }}
         </div>
-    @endif
+    @endif --}}
 @else
     <div class="text-center py-12">
         <div class="text-gray-500 text-lg mb-4">

@@ -285,10 +285,10 @@
                     <a href="https://zalo.me/g/eogvfy529" target="_blank" class="btn btn-primary w-100 mb-2">
                         <i class="fab fa-zalo me-2"></i>Chat bằng Zalo
                     </a>
-                    <a href="{{ route('chatbot.index') }}" class="btn btn-info w-100 mb-2 text-white"
+                    <button class="btn btn-info w-100 mb-2 text-white"
                         id="openChatbotBtn">
                         <i class="fas fa-robot me-2"></i>Chat với Trợ lý ảo
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -297,6 +297,20 @@
         <button id="scrollToTopBtn" title="Lên đầu trang">
             <i class="fas fa-chevron-up"></i>
         </button>
+        
+        <!-- Chatbot Container - Hiển thị trực tiếp trên trang -->
+        <div class="chatbot-popup" id="chatbotContainer" style="display: none;">
+            <div class="chatbot-header">
+                <span><i class="fas fa-robot me-2"></i>Trợ lý ảo Techvicom</span>
+                <button class="btn-close-chat" id="closeChatbotBtn" title="Đóng">&times;</button>
+            </div>
+            <div class="chat-box" id="chat-box"></div>
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Nhập câu hỏi..." autocomplete="off" />
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        
         <script>
             const scrollBtn = document.getElementById('scrollToTopBtn');
             window.addEventListener('scroll', function() {

@@ -172,7 +172,7 @@
                             <h5 class="modal-title" id="processModalLabel{{ $return['id'] }}">Xử lý yêu cầu #{{ $return['id'] }}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form action="{{ route('admin.orders.process-return', $return['id']) }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('admin.orders.process-return', $return['id']) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateAndSubmit({{ $return['id'] }})">
                             @csrf
                             <div class="modal-body">
                                 <div class="row mb-3">
@@ -333,19 +333,19 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="admin_note{{ $return['id'] }}" class="form-label fw-medium">Ghi chú của Admin <span class="text-danger">*</span>:</label>
-                                    <textarea name="admin_note" id="admin_note{{ $return['id'] }}" class="form-control @error('admin_note') is-invalid @enderror" rows="4" placeholder="Nhập ghi chú khi xử lý yêu cầu..." >{{ old('admin_note') }}</textarea>
+                                    <textarea name="admin_note" id="admin_note{{ $return['id'] }}" class="form-control @error('admin_note') is-invalid @enderror" rows="4" placeholder="Nhập ghi chú khi xử lý yêu cầu..." required>{{ old('admin_note') }}</textarea>
                                     <div class="invalid-feedback" id="admin_note_error{{ $return['id'] }}" style="display: none;">
                                         Vui lòng nhập ghi chú khi xử lý yêu cầu.
                                     </div>
                                     @error('admin_note')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 
                                 <!-- Xác nhận đã xem minh chứng -->
                                 <div class="mb-3">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="confirmProofViewed{{ $return['id'] }}" name="confirm_proof_viewed" required>
+                                        <input class="form-check-input @error('confirm_proof_viewed') is-invalid @enderror" type="checkbox" id="confirmProofViewed{{ $return['id'] }}" name="confirm_proof_viewed" required>
                                         <label class="form-check-label fw-medium" for="confirmProofViewed{{ $return['id'] }}">
                                             <i class="fas fa-check-circle text-success me-2"></i>
                                             <strong>Tôi đã xem xét kỹ lưỡng tất cả minh chứng của khách hàng và hiểu rõ vấn đề</strong>
@@ -368,10 +368,13 @@
                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                         <strong>Bắt buộc:</strong> Vui lòng upload ảnh chứng minh đã hoàn tiền cho khách hàng.
                                     </div>
-                                    <input type="file" name="admin_proof_images[]" class="form-control @error('admin_proof_images') is-invalid @enderror" accept="image/*" multiple>
+                                    <input type="file" name="admin_proof_images[]" class="form-control @error('admin_proof_images') is-invalid @enderror" accept="image/*" multiple required>
                                     <div class="form-text">Có thể chọn nhiều ảnh (JPG, PNG, GIF)</div>
+                                    <div class="invalid-feedback" id="admin_proof_images_error{{ $return['id'] }}" style="display: none;">
+                                        Vui lòng upload ảnh chứng minh đã hoàn tiền!
+                                    </div>
                                     @error('admin_proof_images')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 @endif
@@ -381,7 +384,7 @@
                                 <button type="submit" name="action" value="reject" class="btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn từ chối yêu cầu này?')">
                                     <i class="fas fa-times me-1"></i> Từ chối
                                 </button>
-                                <button type="submit" name="action" value="approve" class="btn btn-success">
+                                <button type="submit" name="action" value="approve" class="btn btn-success" onclick="return validateAndSubmit({{ $return['id'] }})">
                                     <i class="fas fa-check me-1"></i> Chấp nhận
                                 </button>
                             </div>
@@ -688,34 +691,56 @@ document.addEventListener('DOMContentLoaded', function() {
     window.validateAndSubmit = function(returnId) {
         console.log('validateAndSubmit called for returnId:', returnId);
         
+        let isValid = true;
+        
         // Check if admin note is filled
         const textarea = document.getElementById('admin_note' + returnId);
+        const adminNoteError = document.getElementById('admin_note_error' + returnId);
         if (!textarea.value.trim()) {
-            alert('Vui lòng nhập ghi chú!');
+            textarea.classList.add('is-invalid');
+            adminNoteError.style.display = 'block';
             textarea.focus();
-            return false;
+            isValid = false;
+        } else {
+            textarea.classList.remove('is-invalid');
+            adminNoteError.style.display = 'none';
         }
         
         // Check if admin has confirmed viewing client proof
         const confirmProofCheckbox = document.getElementById('confirmProofViewed' + returnId);
+        const confirmProofError = document.getElementById('confirm_proof_viewed_error' + returnId);
         if (!confirmProofCheckbox || !confirmProofCheckbox.checked) {
-            alert('Vui lòng xác nhận đã xem xét minh chứng của khách hàng trước khi xử lý yêu cầu!');
+            confirmProofCheckbox.classList.add('is-invalid');
+            confirmProofError.style.display = 'block';
             if (confirmProofCheckbox) confirmProofCheckbox.focus();
-            return false;
+            isValid = false;
+        } else {
+            confirmProofCheckbox.classList.remove('is-invalid');
+            confirmProofError.style.display = 'none';
         }
         
-        // Check if admin proof images are uploaded
+        // Check if admin proof images are uploaded (chỉ khi chấp nhận trả hàng)
         const adminProofSection = document.getElementById('adminProofSection' + returnId);
-        if (adminProofSection) {
+        if (adminProofSection && adminProofSection.style.display !== 'none') {
             const fileInput = adminProofSection.querySelector('input[name="admin_proof_images[]"]');
+            const adminProofError = document.getElementById('admin_proof_images_error' + returnId);
             console.log('fileInput:', fileInput);
             console.log('fileInput files:', fileInput ? fileInput.files : 'null');
             
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                alert('Vui lòng upload ảnh chứng minh đã hoàn tiền!');
+                fileInput.classList.add('is-invalid');
+                adminProofError.style.display = 'block';
                 if (fileInput) fileInput.focus();
-                return false;
+                isValid = false;
+            } else {
+                fileInput.classList.remove('is-invalid');
+                adminProofError.style.display = 'none';
             }
+        }
+        
+        if (!isValid) {
+            alert('Vui lòng kiểm tra và điền đầy đủ các trường bắt buộc!');
+            return false;
         }
         
         // Confirm action

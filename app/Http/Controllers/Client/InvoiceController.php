@@ -303,6 +303,9 @@ class InvoiceController extends Controller
             $order->status = 'cancelled';
             $order->save();
 
+            // Cộng lại tồn kho khi hủy đơn hàng
+            \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
+
             // Tạo record lưu lý do hủy với trạng thái approved
             \App\Models\OrderReturn::create([
                 'order_id'     => $order->id,

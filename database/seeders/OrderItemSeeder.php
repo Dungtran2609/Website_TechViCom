@@ -1,57 +1,49 @@
 <?php
 
-
 namespace Database\Seeders;
 
-
 use Illuminate\Database\Seeder;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\ProductVariant;
-
+use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class OrderItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $orders = Order::inRandomOrder()->take(20)->get();
+        $faker = Faker::create();
 
+        for ($i = 0; $i < 20; $i++) {
+            $orderId = DB::table('orders')->inRandomOrder()->value('id') ?? 1;
+            $variantId = DB::table('product_variants')->inRandomOrder()->value('id') ?? 1;
+            $productId = DB::table('products')->inRandomOrder()->value('id') ?? 1;
 
-        foreach ($orders as $order) {
-            $products = Product::inRandomOrder()->take(2)->get();
+            $quantity = $faker->numberBetween(1, 5);
+            $unitPrice = $faker->randomFloat(2, 10, 200);
+            $totalPrice = round($quantity * $unitPrice, 2);
 
+            // Query tên từ products, ảnh từ variants
+            $product = DB::table('products')
+                ->select('name')
+                ->where('id', $productId)
+                ->first();
 
-            foreach ($products as $product) {
-                $variant = $product->variants()->inRandomOrder()->first();
+            $variant = DB::table('product_variants')
+                ->select('image') // đảm bảo cột này tồn tại
+                ->where('id', $variantId)
+                ->first();
 
-
-                if (!$variant) continue;
-
-
-                $quantity = rand(1, 3);
-                $price = $variant->price;
-                $total = $price * $quantity;
-
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'variant_id' => $variant->id,
-                    'name_product' => $product->name,
-                    'image_product' => $product->thumbnail_url ?? null,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'total_price' => $total,
-                ]);
-            }
+            DB::table('order_items')->insert([
+                'order_id' => $orderId,
+                'variant_id' => $variantId,
+                'product_id' => $productId,
+                'name_product' => $product->name ?? $faker->word,
+                'image_product' => $variant->image ?? null,
+                'quantity' => $quantity,
+                'price' => $unitPrice,
+                'total_price' => $totalPrice,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }
-
-
-
-
-
-
-

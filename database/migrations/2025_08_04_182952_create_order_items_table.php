@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 
 return new class extends Migration {
-    public function up(): void {
+    public function up(): void
+    {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
@@ -16,15 +17,14 @@ return new class extends Migration {
             $table->string('name_product');
             $table->string('image_product')->nullable();
             $table->integer('quantity');
-            $table->decimal('price', 10, 2);
-            $table->decimal('total_price', 10, 2);
+            $table->decimal('price', 20, 2);
+            $table->decimal('total_price', 20, 2);
             $table->timestamps();
         });
     }
 
-    public function down(): void {
+    public function down(): void
+    {
         Schema::dropIfExists('order_items');
     }
 };
-
-

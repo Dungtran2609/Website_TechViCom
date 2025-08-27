@@ -22,12 +22,17 @@ class Product extends Model
         'type',
         'short_description',
         'long_description',
+        'description',
         'thumbnail',
         'status',
         'brand_id',
         'category_id',
         'is_featured',
+        'discount_percent',
         'view_count',
+        'price',
+        'compare_price',
+        'sku',
     ];
 
 
@@ -62,10 +67,40 @@ class Product extends Model
 
     public function allImages()
     {
-        return $this->hasMany(ProductAllImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductAllImage::class);
     }
 
+    public function productAllImages()
+    {
+        return $this->hasMany(ProductAllImage::class);
+    }
 
+    public function productVariants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function productComments()
+    {
+        return $this->hasMany(ProductComment::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(
+            ProductAllImage::class,
+            'product_id', // FK trên product_all_images
+            'id'          // PK của product
+        );
+    }
+
+    /**
+     * Mối quan hệ với các item trong đơn hàng
+     */
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
     public function getPriceRangeAttribute(): string
     {
         if ($this->variants->isEmpty()) {
@@ -97,10 +132,55 @@ class Product extends Model
     }
 
 
- public function comments()
+    public function comments()
     {
         return $this->hasMany(ProductComment::class);
     }
 
+    /**
+     * Quan hệ một-nhiều với FavoriteProduct.
+     */
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'product_id', 'id');
+    }
 
+    public function getDisplayPriceAttribute()
+    {
+        if ($this->type === 'simple') {
+            return $this->sale_price && $this->sale_price < $this->price
+                ? $this->sale_price
+                : $this->price;
+        }
+        if ($this->variants->count()) {
+            $min = $this->variants->min('price');
+            $max = $this->variants->max('price');
+            return ($min && $max && $min != $max)
+                ? ['min' => $min, 'max' => $max]
+                : $min;
+        }
+        return null;
+    }
+
+    /**
+     * Tính giá sau khi áp dụng discount_percent
+     */
+    public function getDiscountedPriceAttribute()
+    {
+        if ($this->discount_percent > 0) {
+            if ($this->type === 'simple' && $this->variants->count() > 0) {
+                $originalPrice = $this->variants->first()->price;
+                return round($originalPrice * (1 - $this->discount_percent / 100));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Kiểm tra xem sản phẩm có đang giảm giá không
+     */
+    public function getIsOnSaleAttribute()
+    {
+        return $this->discount_percent > 0;
+    }
 }

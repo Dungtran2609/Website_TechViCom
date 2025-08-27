@@ -12,9 +12,6 @@ class CreateShippingMethodsTable extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('estimated_days');
-            $table->decimal('max_weight', 10, 2);
-            $table->text('regions');
             $table->timestamps();
         });
     }

@@ -26,109 +26,79 @@
                 </div>
 
 
-                <!-- Notification -->
-                <div class="dropdown topbar-item">
-                    <!-- Button Thông báo -->
+                <!-- Thông báo (Custom Dropdown) -->
+                <div class="custom-dropdown topbar-item">
                     <button type="button"
-                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle position-relative btn-notification"
-                        id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-
+                        class="custom-dropdown-toggle btn btn-icon btn-topbar btn-ghost-secondary rounded-circle position-relative btn-notification"
+                        aria-label="Thông báo mới">
                         <i class="bx bx-bell fs-22"></i>
-
-                        {{-- @if ($newContacts->count() > 0)
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger fs-10 px-2 notification-badge"
-                                style="z-index: 1;">
-                                {{ $newContacts->count() }}
-                            </span>
-                        @endif --}}
+                        @if ($Contacts->count() > 0)
+                            <span class="custom-badge">{{ $Contacts->count() }}</span>
+                        @endif
                     </button>
-
-                    <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
-                        aria-labelledby="page-header-notifications-dropdown">
-                        <div class="p-3">
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <h6 class="m-0 fs-16 fw-semibold">Thông báo liên hệ mới</h6>
-                                </div>
-                                <div class="col-auto">
-                                    <a href="#"
-                                        class="text-dark text-decoration-underline"><small>Xem tất cả</small></a>
-                                </div>
-                            </div>
+                    <div class="custom-dropdown-menu dropdown-lg dropdown-menu-end">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span><i class="bx bx-bell me-2"></i>Thông báo liên hệ mới</span>
+                            <a href="{{ route('admin.contacts.index') }}" class="text-dark text-decoration-underline"
+                                style="font-size:13px"><small>Xem tất cả</small></a>
                         </div>
-
-                        <div data-simplebar style="max-height: 280px;">
-                            {{-- @forelse($newContacts as $contact)
+                        <div style="max-height: 280px; overflow-y: auto;">
+                            @forelse($Contacts as $contact)
                                 <a href="{{ route('admin.contacts.show', $contact->id) }}"
-                                    class="dropdown-item py-3 border-bottom text-wrap">
-                                    <div class="d-flex">
-                                        <div class="flex-grow-1">
-                                            <p class="mb-0">
-                                                <span class="fw-medium">{{ $contact->name }}</span> đã gửi một liên hệ
-                                                mới.
-                                                <br>
-                                                <small
-                                                    class="text-muted">{{ $contact->created_at->diffForHumans() }}</small>
-                                            </p>
-                                        </div>
+                                    class="dropdown-item border-bottom text-wrap">
+                                    <i class="bx bx-envelope-open text-primary"></i>
+                                    <div style="flex:1">
+                                        <span class="notification-contact">{{ $contact->name }}</span> đã gửi một liên
+                                        hệ mới.<br>
+                                        <span
+                                            class="notification-time">{{ $contact->created_at->diffForHumans() }}</span>
                                     </div>
                                 </a>
                             @empty
-                                <p class="text-center text-muted p-3">Không có liên hệ mới.</p>
-                            @endforelse --}}
+                                <div class="dropdown-item text-center text-muted">Không có liên hệ mới.</div>
+                            @endforelse
                         </div>
-
-                        <div class="text-center py-3">
-                            <a href="# class="btn btn-primary btn-sm">Xem tất cả liên
-                                hệ</a>
+                        <div class="text-center">
+                            <a href="{{ route('admin.contacts.index') }}" class="btn btn-primary btn-sm mt-2">Xem tất cả
+                                liên hệ</a>
                         </div>
                     </div>
                 </div>
 
 
-                <!-- Theme Settings -->
-                <div class="topbar-item d-none d-md-flex">
-                    <button type="button" class="topbar-button" data-bs-toggle="offcanvas"
-                        data-bs-target="#theme-settings-offcanvas" aria-controls="theme-settings-offcanvas">
-                        <iconify-icon icon="solar:settings-bold-duotone" class="fs-24 align-middle"></iconify-icon>
-                    </button>
-                </div>
-
-
-                <!-- User Dropdown -->
-                <div class="dropdown topbar-item">
-                    <a type="button" class="topbar-button" data-bs-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
+                <!-- User Dropdown (Custom Dropdown) -->
+                <div class="custom-dropdown topbar-item">
+                    <button type="button" class="custom-dropdown-toggle topbar-button" aria-label="Tài khoản">
                         <span class="d-flex align-items-center">
-                            <img class="rounded-circle" width="32"
-                                src="#"
-                                alt="avatar">
+                            @php
+                                $user = Auth::user();
+                                $avatar = $user && $user->image_profile
+                                    ? asset('storage/' . $user->image_profile)
+                                    : asset('admin_css/images/avta.png');
+                            @endphp
+                            <img class="rounded-circle" width="32" src="{{ $avatar }}" alt="avatar">
                         </span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <h6 class="dropdown-header">Welcome, Admin!</h6>
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-user-circle text-muted fs-18 align-middle me-1"></i> Profile
-                        </a>
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-message-dots text-muted fs-18 align-middle me-1"></i> Messages
-                        </a>
-                        <div class="dropdown-divider my-1"></div>
-                        <a class="dropdown-item text-danger" href="#">
-                            <i class="bx bx-log-out fs-18 align-middle me-1"></i> Logout
-                        </a>
+                    </button>
+                    <div class="custom-dropdown-menu dropdown-menu-end" style="top:110%; min-width:200px;">
+                        <div class="dropdown-header"><i class="bx bx-user me-2"></i>Xin chào</div>
+                        @if($user)
+                            <a class="dropdown-item" href="{{ route('admin.users.show', $user->id) }}">
+                                <i class="bx bx-user-circle text-primary"></i> Hồ sơ cá nhân<br>
+                                <span class="fw-bold">{{ $user->name }}</span><br>
+                            </a>
+                        @endif
+                        <div class="dropdown-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger"
+                                style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;">
+                                <i class="bx bx-log-out"></i> Đăng xuất
+                            </button>
+                        </form>
                     </div>
                 </div>
 
-                <!-- Search -->
-                <form class="app-search d-none d-md-block ms-2">
-                    <div class="position-relative">
-                        <input type="search" class="form-control" placeholder="Search..." autocomplete="off">
-                        <iconify-icon icon="solar:magnifer-linear" class="search-widget-icon"></iconify-icon>
-                    </div>
-                </form>
+                
             </div>
         </div>
     </div>

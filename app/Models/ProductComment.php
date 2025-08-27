@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductComment extends Model
 {
     protected $fillable = [
-        'product_id', 'user_id', 'content', 'rating', 'status', 'parent_id'
+        'product_id', 'user_id', 'order_id', 'content', 'rating', 'status', 'parent_id', 'is_hidden'
     ];
 
 
@@ -38,5 +38,92 @@ class ProductComment extends Model
     public function parent()
     {
         return $this->belongsTo(ProductComment::class, 'parent_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Kiểm tra xem user có thể đánh giá sản phẩm này không
+     */
+    public static function canUserReview($userId, $productId, $orderId = null)
+    {
+        // Kiểm tra đã đánh giá sản phẩm này chưa (bất kỳ đơn hàng nào)
+        $existingReview = self::where('user_id', $userId)
+            ->where('product_id', $productId)
+            ->whereNull('parent_id')
+            ->first();
+
+        if ($existingReview) {
+            return false; // Đã đánh giá rồi
+        }
+
+        // Nếu có order_id, kiểm tra đơn hàng cụ thể
+        if ($orderId) {
+            $order = Order::where('id', $orderId)
+                ->where('user_id', $userId)
+                ->whereIn('status', ['delivered', 'received'])
+                ->first();
+
+            if (!$order) {
+                return false;
+            }
+
+            // Nếu trạng thái là 'delivered', kiểm tra thời gian giao hàng (15 ngày)
+            if ($order->status === 'delivered') {
+                // Sử dụng shipped_at hoặc updated_at khi chuyển sang delivered để tính thời gian
+                $deliveredAt = $order->shipped_at ?: $order->updated_at;
+                $daysSinceDelivered = now()->diffInDays($deliveredAt);
+                if ($daysSinceDelivered > 15) {
+                    return false;
+                }
+                return true; // Có thể đánh giá
+            }
+            
+            // Nếu trạng thái là 'received', kiểm tra thời gian nhận hàng (15 ngày)
+            if ($order->status === 'received' && $order->received_at && now()->diffInDays($order->received_at) > 15) {
+                return false;
+            }
+
+            return true; // Có thể đánh giá
+        }
+
+        // Nếu không có order_id, kiểm tra có đơn hàng nào hợp lệ không
+        $orderItems = \App\Models\OrderItem::whereHas('order', function($query) use ($userId) {
+            $query->where('user_id', $userId)
+                  ->whereIn('status', ['delivered', 'received']);
+        })->where('product_id', $productId)->get();
+
+        foreach ($orderItems as $orderItem) {
+            $order = $orderItem->order;
+            
+            // Nếu trạng thái là 'delivered', kiểm tra thời gian giao hàng (15 ngày)
+            if ($order->status === 'delivered') {
+                // Sử dụng shipped_at hoặc updated_at khi chuyển sang delivered để tính thời gian
+                $deliveredAt = $order->shipped_at ?: $order->updated_at;
+                $daysSinceDelivered = now()->diffInDays($deliveredAt);
+                if ($daysSinceDelivered < 0) {
+                    $daysSinceDelivered = 0;
+                }
+                if ($daysSinceDelivered <= 15) {
+                    return true; // Có đơn hàng hợp lệ
+                }
+            }
+            
+            // Nếu trạng thái là 'received', kiểm tra thời gian nhận hàng (15 ngày)
+            if ($order->status === 'received' && $order->received_at) {
+                $daysSinceReceived = now()->diffInDays($order->received_at);
+                if ($daysSinceReceived < 0) {
+                    $daysSinceReceived = 0;
+                }
+                if ($daysSinceReceived <= 15) {
+                    return true; // Có đơn hàng hợp lệ
+                }
+            }
+        }
+
+        return false;
     }
 }

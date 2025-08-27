@@ -1,7 +1,19 @@
 <?php
 
 
+
+
+
+
+
+
 namespace App\Models;
+
+
+
+
+
+
 
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +25,24 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 
+
+
+
+
+
+
 class User extends Authenticatable
 {
+    // Luôn eager load permissions khi lấy roles để tránh lỗi undefined method
+    protected $with = ['roles.permissions'];
     // Thứ tự các Trait không quá quan trọng, nhưng đây là thứ tự phổ biến
     use  HasFactory, Notifiable, SoftDeletes, HasRoles;
+
+
+
+
+
+
 
 
     protected $fillable = [
@@ -40,10 +66,26 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active' => 'boolean', // Ép kiểu is_active về boolean
+        'birthday' => 'date', // Ép kiểu birthday về date
     ];
 
 
+
+
+
+
+
+
     protected $dates = ['deleted_at'];
+
+
+
+    public function favoriteProducts()
+    {
+        return $this->hasMany(FavoriteProduct::class, 'user_id', 'id');
+    }
+
+
 
 
     /**
@@ -51,8 +93,14 @@ class User extends Authenticatable
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')->with('permissions');
     }
+
+
+
+
+
+
 
 
     /**
@@ -62,6 +110,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserAddress::class, 'user_id', 'id');
     }
+
+
+
+
+
+
 
 
     /**
@@ -78,6 +132,12 @@ class User extends Authenticatable
     }
 
 
+
+
+
+
+
+
     /**
      * Kiểm tra xem người dùng có phải admin không.
      */
@@ -89,13 +149,26 @@ class User extends Authenticatable
     public function hasPermission(string $permissionName): bool
     {
         foreach ($this->roles as $role) {
+            // Chỉ tính quyền từ vai trò đang hoạt động
+            if (isset($role->status) && !$role->status) {
+                continue;
+            }
             if ($role->permissions->contains('name', $permissionName)) {
                 return true;
             }
         }
 
+
+
+
         return false;
     }
+
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'user_id', 'id');
+    }
+
+    
 }
-
-

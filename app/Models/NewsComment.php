@@ -1,15 +1,12 @@
 <?php
 
-
 namespace App\Models;
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-
 
 class NewsComment extends Model
 {
@@ -26,8 +23,10 @@ class NewsComment extends Model
         'news_id',
         'content',
         'is_hidden',
-        'parent_id', // ID của bình luận cha (nếu có)
+        'parent_id',
+        'like_count', // Thêm vào đây
     ];
+
 
 
     /**
@@ -74,4 +73,15 @@ class NewsComment extends Model
     {
         return $this->hasMany(NewsComment::class, 'parent_id');
     }
+
+    public function replies()
+    {
+        return $this->hasMany(NewsComment::class, 'parent_id')->where('is_hidden', 1)->latest();
+    }
+
+    public function visibleChildren(): HasMany
+    {
+        return $this->hasMany(NewsComment::class, 'parent_id')->where('is_hidden', 0);
+    }
+
 }

@@ -1,0 +1,249 @@
+<?php
+
+namespace App\Http\Controllers\Admin\Products;
+
+use App\Models\Brand;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Attribute;
+use App\Models\OrderItem;
+use App\Models\ProductComment;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\ProductVariant;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Admin\AdminProductRequest;
+
+class AdminProductController extends Controller
+{
+    public function index(Request $request)
+    {
+        $products = Product::with(['category', 'brand', 'variants'])
+            ->when($request->search, fn($q, $s) => $q->where('name', 'like', "%{$s}%"))
+            ->when($request->type, fn($q, $type) => $q->where('type', $type))
+            ->when($request->status, fn($q, $status) => $q->where('status', $status))
+            ->when($request->stock === 'in', fn($q) => $q->whereHas('variants', fn($v) => $v->where('stock', '>', 0)))
+            ->when($request->stock === 'out', fn($q) => $q->whereHas('variants', fn($v) => $v->where('stock', '<=', 0)))
+            ->when($request->sort_price === 'asc', fn($q) => $q->orderByRaw('(select min(price) from product_variants where product_id=products.id) asc'))
+            ->when($request->sort_price === 'desc', fn($q) => $q->orderByRaw('(select max(price) from product_variants where product_id=products.id) desc'))
+            ->when(!$request->sort_price, fn($q) => $q->latest('updated_at'))
+            ->paginate(10);
+        return view('admin.products.index', compact('products'));
+    }
+
+    public function create()
+    {
+        return view('admin.products.create', [
+            'brands' => Brand::all(),
+            'categories' => Category::all(),
+            'attributes' => Attribute::with('values')->get(),
+        ]);
+    }
+
+    private function generateUniqueSku($prefix = 'SP')
+    {
+        do {
+            $sku = $prefix . strtoupper(Str::random(6));
+        } while (ProductVariant::where('sku', $sku)->exists());
+        return $sku;
+    }
+
+    public function store(AdminProductRequest $request)
+    {
+        DB::transaction(function () use ($request) {
+            $productData = $this->prepareProductData($request);
+            $product = Product::create($productData);
+            $this->syncVariants($product, $request);
+            if ($request->hasFile('gallery')) {
+                foreach ($request->file('gallery') as $image) {
+                    $path = $image->store('products/gallery', 'public');
+                    $product->allImages()->create(['image_path' => $path]);
+                }
+            }
+        });
+
+        return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công.');
+    }
+
+    public function show(Product $product)
+    {
+        $product->load(['brand', 'category', 'variants.attributeValues.attribute', 'allImages']);
+        return view('admin.products.show', compact('product'));
+    }
+
+    public function edit(Product $product)
+    {
+        $product->load(['variants.attributeValues', 'brand', 'category', 'allImages']);
+        return view('admin.products.edit', [
+            'product' => $product,
+            'brands' => Brand::all(),
+            'categories' => Category::all(),
+            'attributes' => Attribute::with('values')->get(),
+        ]);
+    }
+
+    public function update(AdminProductRequest $request, Product $product)
+    {
+        // Nếu chuyển từ variable sang simple thì kiểm tra các biến thể có đơn hàng không
+        if ($product->type === 'variable' && $request->type === 'simple') {
+            $variantIds = $product->variants()->pluck('id');
+            $hasOrder = OrderItem::whereIn('variant_id', $variantIds)->exists();
+            if ($hasOrder) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['type' => 'Không thể chuyển về sản phẩm đơn vì có biến thể đã có đơn hàng.']);
+            }
+            // Lấy dữ liệu biến thể đầu tiên để cập nhật vào request
+            $firstVariant = $product->variants()->first();
+            if ($firstVariant) {
+                // Gán lại dữ liệu vào request->request để các hàm input() lấy đúng giá trị
+                $request->request->add([
+                    'price' => $firstVariant->price,
+                    'sale_price' => $firstVariant->sale_price,
+                    'stock' => $firstVariant->stock,
+                    'low_stock_amount' => $firstVariant->low_stock_amount,
+                    'weight' => $firstVariant->weight,
+                    'length' => $firstVariant->length,
+                    'width' => $firstVariant->width,
+                    'height' => $firstVariant->height,
+                    'attributes' => $firstVariant->attributeValues->pluck('id')->toArray(),
+                ]);
+            }
+        }
+
+        DB::transaction(function () use ($request, $product) {
+            $productData = $this->prepareProductData($request, $product);
+            $product->update($productData);
+            $this->syncVariants($product, $request);
+
+            if ($request->filled('delete_images')) {
+                foreach ($request->delete_images as $id) {
+                    $image = $product->allImages()->find($id);
+                    if ($image) {
+                        Storage::disk('public')->delete($image->image_path);
+                        $image->delete();
+                    }
+                }
+            }
+
+            if ($request->hasFile('gallery')) {
+                foreach ($request->file('gallery') as $file) {
+                    $path = $file->store('products/gallery', 'public');
+                    $product->allImages()->create(['image_path' => $path]);
+                }
+            }
+        });
+        return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công.');
+    }
+
+    public function destroy(Product $product)
+    {
+        $hasOrders = $product->orderItems()->exists();
+        if ($hasOrders) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+        $product->delete();
+        return redirect()->route('admin.products.index')->with('success', 'Sản phẩm đã được chuyển vào thùng rác.');
+    }
+
+    private function prepareProductData(Request $request, Product $product = null): array
+    {
+        $validated = $request->safe()->except(['price', 'sale_price', 'stock', 'variants', 'weight', 'length', 'width', 'height', 'low_stock_amount']);
+        if ($product === null || $request->name !== $product->name) {
+            $validated['slug'] = Str::slug($request->name);
+        }
+        if ($request->hasFile('thumbnail')) {
+            if ($product?->thumbnail) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $validated['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        }
+        return $validated;
+    }
+
+    private function syncVariants(Product $product, Request $request): void
+    {
+        $submittedVariantIds = [];
+        if ($request->type === 'simple') {
+            $simpleVariantData = $request->only(['price', 'sale_price', 'stock', 'low_stock_amount', 'weight', 'length', 'width', 'height']);
+            $simpleVariantData['is_active'] = true;
+
+            $variant = $product->variants()->first();
+            if ($variant) {
+                $variant->update($simpleVariantData);
+            } else {
+                $simpleVariantData['sku'] = $this->generateUniqueSku();
+                $variant = $product->variants()->create($simpleVariantData);
+            }
+
+            $attributeValueIds = collect($request->input('attributes', []))->filter()->values()->toArray();
+            $variant->attributeValues()->sync($attributeValueIds);
+            $submittedVariantIds[] = $variant->id;
+        } elseif ($request->type === 'variable' && $request->has('variants')) {
+            foreach ($request->variants as $key => $variantData) {
+                $variantData['is_active'] = isset($variantData['is_active']);
+                $variantPayload = Arr::except($variantData, ['attributes', 'image']);
+
+                $variantId = $variantData['id'] ?? null;
+                $variant = $product->variants()->find($variantId);
+
+                if ($variant) {
+                    $variant->update($variantPayload);
+                } else {
+                    $variantPayload['sku'] = $this->generateUniqueSku();
+                    $variant = $product->variants()->create($variantPayload);
+                }
+
+                if ($request->hasFile("variants.{$key}.image")) {
+                    $path = $request->file("variants.{$key}.image")->store('products/variants', 'public');
+                    $variant->update(['image' => $path]);
+                }
+
+                $variant->attributeValues()->sync($variantData['attributes']);
+                $submittedVariantIds[] = $variant->id;
+            }
+        }
+        $product->variants()->whereNotIn('id', $submittedVariantIds)->delete();
+    }
+
+    public function trashed()
+    {
+        $products = Product::onlyTrashed()->with(['brand', 'category'])->latest('deleted_at')->paginate(10);
+        return view('admin.products.trashed', compact('products'));
+    }
+
+    public function restore($id)
+    {
+        $product = Product::onlyTrashed()->findOrFail($id);
+        $product->restore();
+        return redirect()->route('admin.products.trashed')->with('success', 'Khôi phục sản phẩm thành công.');
+    }
+
+    public function forceDelete($id)
+    {
+        $product = Product::onlyTrashed()->with('allImages')->findOrFail($id);
+        $hasOrders = $product->orderItems()->exists();
+
+        if ($hasOrders) {
+            return redirect()->route('admin.products.trashed')
+                ->with('error', 'Không thể xóa vĩnh viễn sản phẩm này vì sản phẩm đang được đặt hàng.');
+        }
+
+        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        foreach ($product->allImages as $image) {
+            if ($image->image_path && Storage::disk('public')->exists($image->image_path)) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+        }
+
+        $product->forceDelete();
+        return redirect()->route('admin.products.trashed')->with('success', 'Đã xoá vĩnh viễn sản phẩm.');
+    }
+}

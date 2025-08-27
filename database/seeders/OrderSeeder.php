@@ -1,82 +1,65 @@
 <?php
 
-
 namespace Database\Seeders;
 
-
 use Illuminate\Database\Seeder;
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\User;
-use App\Models\UserAddress;
-use App\Models\Product;
-use App\Models\ProductVariant;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Faker\Factory as Faker;
+use Carbon\Carbon;
 
 class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::first();
-        $address = UserAddress::first();
-
-
-        if (!$user || !$address) return;
-
-
+        $faker = Faker::create();
+        $paymentMethods = ['credit_card', 'paypal', 'bank_transfer'];
+        $statuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled'];
+        $paymentStatuses = ['pending', 'paid', 'failed'];
         for ($i = 0; $i < 20; $i++) {
-            $total = 0;
+            // Sinh thời gian tạo và shipped_at, deleted_at
+            $createdAt = $faker->dateTimeBetween('-6 months', 'now');
+            $shippedAt = $faker->boolean(60) ? $faker->dateTimeBetween($createdAt, 'now') : null;
+            $deletedAt = $faker->boolean(10) ? Carbon::instance($faker->dateTimeBetween($createdAt, 'now')) : null;
 
+            // Lấy ngẫu nhiên khóa ngoại
+            $userId = DB::table('users')->inRandomOrder()->value('id') ?? 1;
+            $addressId = DB::table('user_addresses')->inRandomOrder()->value('id') ?? 1;
+            $couponId = $faker->boolean(30)
+                ? DB::table('coupons')->inRandomOrder()->value('id')
+                : null;
+            $shippingMethodId = $faker->boolean(50)
+                ? DB::table('shipping_methods')->inRandomOrder()->value('id')
+                : null;
 
-            $order = Order::create([
-                'user_id' => $user->id,
-                'address_id' => $address->id,
-                'payment_method' => 'cod',
-                'coupon_id' => null,
-                'coupon_code' => null,
-                'discount_amount' => 0,
-                'shipping_fee' => 50000,
-                'total_amount' => 0, // to be updated below
-                'final_total' => 0,
+            // Tính toán giá
+            $subtotal = $faker->randomFloat(2, 50, 500);
+            $discount = $faker->randomFloat(2, 0, min(50, $subtotal));
+            $shippingFee = $faker->randomFloat(2, 5, 20);
+            $totalAmount = $subtotal;
+            $finalTotal = $subtotal - $discount + $shippingFee;
+
+            DB::table('orders')->insert([
+                'user_id' => $userId,
+                'address_id' => $addressId,
+                'payment_method' => $faker->randomElement($paymentMethods),
+                'coupon_id' => $couponId,
+                'coupon_code' => $couponId ? strtoupper(Str::random(8)) : null,
+                'discount_amount' => $discount,
+                'shipping_fee' => $shippingFee,
+                'total_amount' => $totalAmount,
+                'final_total' => $finalTotal,
                 'status' => 'pending',
-                'recipient_name' => $address->recipient_name,
-                'recipient_phone' => $address->recipient_phone,
-                'recipient_address' => $address->full_address,
-            ]);
-
-
-            $products = Product::inRandomOrder()->take(2)->get();
-
-
-            foreach ($products as $product) {
-                $variant = $product->variants()->first();
-                if (!$variant) continue;
-
-
-                $quantity = rand(1, 3);
-                $itemTotal = $variant->price * $quantity;
-                $total += $itemTotal;
-
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'variant_id' => $variant->id,
-                    'name_product' => $product->name,
-                    'image_product' => $product->thumbnail_url,
-                    'quantity' => $quantity,
-                    'price' => $variant->price,
-                    'total_price' => $itemTotal,
-                ]);
-            }
-
-
-            $order->update([
-                'total_amount' => $total,
-                'final_total' => $total + 50000,
+                'payment_status' => 'pending',
+                'recipient_name' => $faker->name,
+                'recipient_phone' => $faker->phoneNumber,
+                'recipient_address' => $faker->address,
+                'shipped_at' => $shippedAt,
+                'shipping_method_id' => $shippingMethodId,
+                'created_at' => $createdAt,
+                'updated_at' => now(),
+                'deleted_at' => $deletedAt,
             ]);
         }
     }
 }
-
-

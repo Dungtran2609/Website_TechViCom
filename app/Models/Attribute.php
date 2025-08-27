@@ -9,7 +9,13 @@ class Attribute extends Model
 {
     use SoftDeletes;
     protected $fillable = ['name', 'slug', 'type', 'description'];
+    
     public function values()
+    {
+        return $this->hasMany(AttributeValue::class);
+    }
+    
+    public function attributeValues()
     {
         return $this->hasMany(AttributeValue::class);
     }

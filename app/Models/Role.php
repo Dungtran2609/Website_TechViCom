@@ -1,6 +1,4 @@
 <?php
-
-
 namespace App\Models;
 
 
@@ -11,11 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Role extends Model
 {
+    protected $casts = [
+        'status' => 'boolean',
+    ];
     use HasFactory, SoftDeletes;
 
 
     // Cho phép gán các thuộc tính
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'slug', 'status'];
 
 
     // Dùng soft delete
@@ -40,8 +41,6 @@ class Role extends Model
     }
 
 
-
-
     /**
      * Kiểm tra vai trò có một quyền cụ thể không
      *
@@ -53,3 +52,6 @@ class Role extends Model
         return $this->permissions->contains('name', $permissionName);
     }
 }
+
+
+

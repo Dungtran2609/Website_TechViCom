@@ -40,4 +40,28 @@ class ProductVariant extends Model
     {
         return $this->belongsToMany(AttributeValue::class, 'product_variant_attribute_values');
     }
+
+    public function attributes()
+    {
+        return $this->hasMany(ProductVariantAttributeValue::class);
+    }
+
+    public function attributesValue()
+    {
+        return $this->belongsToMany(
+            AttributeValue::class,
+            'product_variants_attributes',
+            'product_variant_id',
+            'attribute_value_id'
+        )->withTimestamps()->with('attribute'); // thêm để lấy tên thuộc tính gốc (Color, Size)
+    }
+    public function images()
+    {
+        // FK trên product_all_images là product_id, local key bên variant cũng là product_id
+        return $this->hasMany(
+            ProductAllImage::class,
+            'product_id',   // foreign key trên product_all_images
+            'product_id'    // local key trên product_variants
+        )->limit(1);              // chỉ load 1 ảnh “chính”
+    }
 }

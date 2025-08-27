@@ -33,6 +33,20 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Vui lòng nhập địa chỉ email',
+            'email.email' => 'Địa chỉ email không hợp lệ',
+            'password.required' => 'Vui lòng nhập mật khẩu',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -45,7 +59,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Email hoặc mật khẩu không đúng',
             ]);
         }
 
@@ -68,10 +82,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau ' . ceil($seconds / 60) . ' phút.',
         ]);
     }
 

@@ -11,10 +11,11 @@ class CreateNewsCommentsTable extends Migration
         Schema::create('news_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('news_id');
-            $table->foreign('news_id')->references('id')->on('news')->onDelete('cascade');
+            $table->foreignId('news_id')->constrained('news')->onDelete('cascade');
+            $table->foreignId('parent_id')->nullable()->constrained('news_comments')->onDelete('cascade'); // 💬 reply
             $table->text('content');
             $table->boolean('is_hidden')->default(false);
+            $table->unsignedInteger('likes_count')->default(0); // 👍 optional
             $table->timestamps();
         });
     }
@@ -23,5 +24,3 @@ class CreateNewsCommentsTable extends Migration
         Schema::dropIfExists('news_comments');
     }
 }
-
-

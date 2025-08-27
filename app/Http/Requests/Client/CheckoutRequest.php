@@ -159,15 +159,17 @@ class CheckoutRequest extends FormRequest
         // Cho phép khách vãng lai thanh toán
         $isGuest = !Auth::check();
         
-        // Nếu là khách vãng lai, kiểm tra session cart
-        if ($isGuest) {
-            $sessionCart = session()->get('cart', []);
-            if (empty($sessionCart)) {
-                $validator->errors()->add('cart', 'Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng.');
-                return;
-            }
-        }
-
+        // Debug logging
+        Log::info('Checkout validation started', [
+            'is_guest' => $isGuest,
+            'user_id' => Auth::id(),
+            'selected_param' => $this->input('selected'),
+            'buynow_session' => session('buynow'),
+            'cart_session' => session('cart'),
+            'order_id' => $this->input('order_id'),
+            'repayment_order_id' => session('repayment_order_id')
+        ]);
+        
         // Kiểm tra có sản phẩm để thanh toán không
         $hasValidItems = false;
         
@@ -175,7 +177,7 @@ class CheckoutRequest extends FormRequest
         $orderId = $this->input('order_id') ?: session('repayment_order_id');
         $isRepayment = false;
         
-        if ($orderId) {
+        if ($orderId && Auth::check()) {
             $existingOrder = Order::where('user_id', Auth::id())
                 ->where('id', $orderId)
                 ->where('status', 'pending')
@@ -185,6 +187,11 @@ class CheckoutRequest extends FormRequest
             if ($existingOrder && $existingOrder->orderItems->count() > 0) {
                 $hasValidItems = true;
                 $isRepayment = true;
+                
+                Log::info('Repayment order validation passed', [
+                    'order_id' => $existingOrder->id,
+                    'order_items_count' => $existingOrder->orderItems->count()
+                ]);
                 
                 // Khi thanh toán lại, không cần kiểm tra tồn kho vì sản phẩm đã được reserve cho đơn hàng này
                 // Chỉ kiểm tra sản phẩm có tồn tại không
@@ -207,11 +214,16 @@ class CheckoutRequest extends FormRequest
             }
         }
         
-        // Chỉ kiểm tra giỏ hàng nếu không phải thanh toán lại và có selected items
+        // Nếu không phải thanh toán lại, kiểm tra các trường hợp khác
         if (!$isRepayment) {
+            // 1. Kiểm tra selected items (mua từ giỏ hàng)
             $selectedParam = $this->input('selected');
             if (!empty($selectedParam)) {
                 $hasValidItems = true;
+                
+                Log::info('Selected items validation passed', [
+                    'selected_param' => $selectedParam
+                ]);
                 
                 // Kiểm tra tồn kho cho selected items
                 $selectedIds = array_filter(explode(',', $selectedParam));
@@ -271,23 +283,72 @@ class CheckoutRequest extends FormRequest
                         }
                     }
                 }
-            } else {
-                // Nếu không có selected items, kiểm tra session cart cho khách vãng lai
-                if ($isGuest) {
-                    $sessionCart = session()->get('cart', []);
-                    if (!empty($sessionCart)) {
-                        $hasValidItems = true;
-                        // Không cần kiểm tra tồn kho chi tiết cho khách vãng lai
-                        // Sẽ được kiểm tra trong controller khi xử lý
+            }
+            
+            // 2. Nếu chưa có valid items, kiểm tra session buynow
+            if (!$hasValidItems) {
+                $buynow = session('buynow');
+                if (!empty($buynow) && isset($buynow['product_id'])) {
+                    $hasValidItems = true;
+                    
+                    Log::info('Buynow session validation passed', [
+                        'buynow_data' => $buynow
+                    ]);
+                    
+                    // Kiểm tra tồn kho cho buynow
+                    $product = Product::find($buynow['product_id']);
+                    if (!$product) {
+                        $validator->errors()->add('cart', 'Sản phẩm không tồn tại.');
+                        return;
                     }
+                    
+                    if (isset($buynow['variant_id']) && $buynow['variant_id']) {
+                        $variant = ProductVariant::find($buynow['variant_id']);
+                        if (!$variant || (int)$variant->stock < (int)($buynow['quantity'] ?? 1)) {
+                            $validator->errors()->add('cart', "Sản phẩm {$product->name} chỉ còn " . ($variant ? (int)$variant->stock : 0) . " sản phẩm trong kho.");
+                            return;
+                        }
+                    } else {
+                        // Kiểm tra tổng stock của tất cả variants
+                        $totalStock = ProductVariant::where('product_id', $buynow['product_id'])
+                            ->where('is_active', true)
+                            ->sum('stock');
+                        $quantity = (int)($buynow['quantity'] ?? 1);
+                        if ($totalStock < $quantity) {
+                            $validator->errors()->add('cart', "Sản phẩm {$product->name} chỉ còn {$totalStock} sản phẩm trong kho.");
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // 3. Nếu vẫn chưa có valid items, kiểm tra session cart cho khách vãng lai
+            if (!$hasValidItems && $isGuest) {
+                $sessionCart = session()->get('cart', []);
+                if (!empty($sessionCart)) {
+                    $hasValidItems = true;
+                    
+                    Log::info('Guest session cart validation passed', [
+                        'session_cart_count' => count($sessionCart)
+                    ]);
+                    
+                    // Không cần kiểm tra tồn kho chi tiết cho khách vãng lai
+                    // Sẽ được kiểm tra trong controller khi xử lý
                 }
             }
         }
         
-
+        // Debug logging kết quả cuối cùng
+        Log::info('Checkout validation result', [
+            'has_valid_items' => $hasValidItems,
+            'is_repayment' => $isRepayment,
+            'is_guest' => $isGuest
+        ]);
         
+        // Nếu không có valid items nào, báo lỗi
         if (!$hasValidItems) {
-            $validator->errors()->add('cart', 'Không có sản phẩm nào để thanh toán.');
+            Log::warning('Checkout validation failed - no valid items found');
+            $validator->errors()->add('cart', 'Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng.');
             return;
         }
 

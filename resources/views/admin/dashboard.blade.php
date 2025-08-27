@@ -67,7 +67,7 @@
                             <h3 class="fw-bold text-success mb-0">{{ number_format($totalRevenue) }}₫</h3>
                             <small class="text-success">
                                 <i class="fas fa-chart-line me-1"></i>
-                                khi Khách đã nhận hàng
+                                Đã giao + Đã nhận - Đã trả hàng
                             </small>
                         </div>
                     </div>
@@ -195,7 +195,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-chart-line me-2 text-primary"></i>
-                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (đã nhận hàng)</span>
+                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (Đã giao + Đã nhận - Đã trả hàng)</span>
                         </h5>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleChartType()">
@@ -1013,10 +1013,10 @@
             let title = '';
             switch(period) {
                 case '7days':
-                    title = 'Doanh thu 7 ngày gần đây';
+                    title = 'Doanh thu 7 ngày gần đây (Đã giao + Đã nhận - Đã trả hàng)';
                     break;
                 case '30days':
-                    title = 'Doanh thu 30 ngày gần đây';
+                    title = 'Doanh thu 30 ngày gần đây (Đã giao + Đã nhận - Đã trả hàng)';
                     break;
                 case 'month':
                     title = `Doanh thu tháng ${month}/${year}`;

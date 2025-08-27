@@ -23,13 +23,22 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalProducts = Product::count();
         $totalOrders = Order::count();
-        // Tính doanh thu: đơn hàng khách đã xác nhận nhận hàng (bao gồm cả COD và online đã thanh toán)
-        $totalRevenue = Order::where('status', 'received')
-                            ->where(function($query) {
-                                $query->where('payment_status', 'paid')
-                                      ->orWhere('payment_method', 'cod');
-                            })
-                            ->sum('final_total');
+        // Tính doanh thu: đơn hàng đã giao + đã nhận - đã trả hàng (bao gồm cả COD và online đã thanh toán)
+        $deliveredRevenue = Order::whereIn('status', ['delivered', 'received'])
+                                ->where(function($query) {
+                                    $query->where('payment_status', 'paid')
+                                          ->orWhere('payment_method', 'cod');
+                                })
+                                ->sum('final_total');
+        
+        $returnedRevenue = Order::where('status', 'returned')
+                               ->where(function($query) {
+                                   $query->where('payment_status', 'paid')
+                                         ->orWhere('payment_method', 'cod');
+                               })
+                               ->sum('final_total');
+        
+        $totalRevenue = $deliveredRevenue - $returnedRevenue;
 
         // Thống kê đơn hàng theo trạng thái
         $orderStats = [
@@ -41,17 +50,27 @@ class AdminController extends Controller
             'returned' => Order::where('status', 'returned')->count(),
         ];
 
-        // Doanh thu 7 ngày gần đây (bao gồm cả COD và online đã thanh toán)
+        // Doanh thu 7 ngày gần đây (đã giao + đã nhận - đã trả hàng)
         $revenueLastWeek = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
-            $revenue = Order::whereDate('created_at', $date)
-                           ->where('status', 'received')
-                           ->where(function($query) {
-                               $query->where('payment_status', 'paid')
-                                     ->orWhere('payment_method', 'cod');
-                           })
-                           ->sum('final_total');
+            $deliveredRevenue = Order::whereDate('created_at', $date)
+                                   ->whereIn('status', ['delivered', 'received'])
+                                   ->where(function($query) {
+                                       $query->where('payment_status', 'paid')
+                                             ->orWhere('payment_method', 'cod');
+                                   })
+                                   ->sum('final_total');
+            
+            $returnedRevenue = Order::whereDate('created_at', $date)
+                                   ->where('status', 'returned')
+                                   ->where(function($query) {
+                                       $query->where('payment_status', 'paid')
+                                             ->orWhere('payment_method', 'cod');
+                                   })
+                                   ->sum('final_total');
+            
+            $revenue = $deliveredRevenue - $returnedRevenue;
             $revenueLastWeek[] = [
                 'date' => $date->format('d/m'),
                 'revenue' => $revenue
@@ -242,16 +261,26 @@ class AdminController extends Controller
         ));
     }
 
-    // Lấy doanh thu cho một ngày cụ thể
+    // Lấy doanh thu cho một ngày cụ thể (đã giao + đã nhận - đã trả hàng)
     private function getRevenueForDate($date)
     {
-        return Order::whereDate('created_at', $date)
-                   ->where('status', 'received')
-                   ->where(function($query) {
-                       $query->where('payment_status', 'paid')
-                             ->orWhere('payment_method', 'cod');
-                   })
-                   ->sum('final_total');
+        $deliveredRevenue = Order::whereDate('created_at', $date)
+                               ->whereIn('status', ['delivered', 'received'])
+                               ->where(function($query) {
+                                   $query->where('payment_status', 'paid')
+                                         ->orWhere('payment_method', 'cod');
+                               })
+                               ->sum('final_total');
+        
+        $returnedRevenue = Order::whereDate('created_at', $date)
+                               ->where('status', 'returned')
+                               ->where(function($query) {
+                                   $query->where('payment_status', 'paid')
+                                         ->orWhere('payment_method', 'cod');
+                               })
+                               ->sum('final_total');
+        
+        return $deliveredRevenue - $returnedRevenue;
     }
 
     // Lấy số đơn hàng cho một ngày cụ thể
@@ -260,16 +289,26 @@ class AdminController extends Controller
         return Order::whereDate('created_at', $date)->count();
     }
 
-    // Lấy doanh thu cho khoảng thời gian
+    // Lấy doanh thu cho khoảng thời gian (đã giao + đã nhận - đã trả hàng)
     private function getRevenueForDateRange($startDate, $endDate)
     {
-        return Order::whereBetween('created_at', [$startDate, $endDate])
-                   ->where('status', 'received')
-                   ->where(function($query) {
-                       $query->where('payment_status', 'paid')
-                             ->orWhere('payment_method', 'cod');
-                   })
-                   ->sum('final_total');
+        $deliveredRevenue = Order::whereBetween('created_at', [$startDate, $endDate])
+                               ->whereIn('status', ['delivered', 'received'])
+                               ->where(function($query) {
+                                   $query->where('payment_status', 'paid')
+                                         ->orWhere('payment_method', 'cod');
+                               })
+                               ->sum('final_total');
+        
+        $returnedRevenue = Order::whereBetween('created_at', [$startDate, $endDate])
+                               ->where('status', 'returned')
+                               ->where(function($query) {
+                                   $query->where('payment_status', 'paid')
+                                         ->orWhere('payment_method', 'cod');
+                               })
+                               ->sum('final_total');
+        
+        return $deliveredRevenue - $returnedRevenue;
     }
 
     // Lấy số đơn hàng cho khoảng thời gian

@@ -136,9 +136,9 @@ class ClientCheckoutController extends Controller
         $totalCount = 0;
         $currentTime = time();
         
-        // Chỉ tính những lần hủy trong vòng 24 giờ qua
+        // Chỉ tính những lần hủy trong vòng 2 phút qua
         foreach ($cancelData as $timestamp => $count) {
-            if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+            if ($currentTime - $timestamp < 120) { // 2 phút = 120 giây
                 $totalCount += $count;
             }
         }
@@ -158,10 +158,10 @@ class ClientCheckoutController extends Controller
         }
         $cancelData[$currentTime]++;
         
-        // Dọn dẹp dữ liệu cũ (hơn 24 giờ)
+        // Dọn dẹp dữ liệu cũ (hơn 2 phút)
         $cleanedData = [];
         foreach ($cancelData as $timestamp => $count) {
-            if ($currentTime - $timestamp < 86400) {
+            if ($currentTime - $timestamp < 120) {
                 $cleanedData[$timestamp] = $count;
             }
         }
@@ -327,6 +327,17 @@ class ClientCheckoutController extends Controller
         file_put_contents(storage_path('logs/debug.txt'), "Checkout method called at " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         file_put_contents(storage_path('logs/debug.txt'), "User logged in: " . (Auth::check() ? 'Yes' : 'No') . "\n", FILE_APPEND);
         if (Auth::check()) file_put_contents(storage_path('logs/debug.txt'), "User ID: " . Auth::id() . "\n", FILE_APPEND);
+
+        // Debug logging cho session
+        Log::info('Checkout index method started', [
+            'user_id' => Auth::id(),
+            'is_guest' => !Auth::check(),
+            'buynow_session' => session('buynow'),
+            'cart_session' => session('cart'),
+            'selected_param' => $request->get('selected'),
+            'order_id' => $request->get('order_id'),
+            'repayment_order_id' => session('repayment_order_id')
+        ]);
 
         if ($request->has('clear_restored_coupon')) {
             session()->forget('restored_coupon');
@@ -1705,7 +1716,7 @@ class ClientCheckoutController extends Controller
 
                     if ($totalCancelCount >= 3) {
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 } else {
                     // Kiểm tra tổng số lần hủy VNPay của khách vãng lai
@@ -1717,7 +1728,7 @@ class ClientCheckoutController extends Controller
                             'guest_cancel_count' => $guestCancelCount
                         ]);
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 }
 
@@ -1919,7 +1930,7 @@ class ClientCheckoutController extends Controller
                     if ($totalCancelCount >= 3) {
                         session()->forget('repayment_order_id');
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 } else {
                     // Xử lý cho khách vãng lai
@@ -1942,7 +1953,7 @@ class ClientCheckoutController extends Controller
                     if ($guestCancelCount >= 3) {
                         session()->forget('repayment_order_id');
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 }
 
@@ -2469,6 +2480,12 @@ class ClientCheckoutController extends Controller
     {
         $instance = new self();
         $instance->releaseStock($order);
+    }
+
+    public static function reserveStockStatic($order)
+    {
+        $instance = new self();
+        $instance->reserveStock($order);
     }
 
     /* ================== Coupon helper ================== */

@@ -139,6 +139,10 @@ class ClientAccountController extends Controller
                 'status' => 'pending',
                 'requested_at' => now(),
             ]);
+            
+            // Cộng lại tồn kho khi hủy đơn hàng (ngay cả khi cần phê duyệt)
+            \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
+            
         } catch (\Exception $e) {
             // Trả về lỗi server dưới dạng JSON
             return response()->json([

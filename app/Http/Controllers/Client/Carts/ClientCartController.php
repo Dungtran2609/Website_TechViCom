@@ -15,6 +15,11 @@ class ClientCartController extends Controller
 
     public function index(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         if (Auth::check()) {
             $cartItems = Cart::with(['product.productAllImages', 'productVariant.attributeValues.attribute'])
                 ->where('user_id', Auth::id())
@@ -250,6 +255,20 @@ class ClientCartController extends Controller
 
     public function setBuyNow(Request $request)
     {
+        // Chặn admin và staff không được mua hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+        
         try {
             $data = $request->validate([
                 'product_id' => ['required', 'integer', 'exists:products,id'],
@@ -286,6 +305,20 @@ class ClientCartController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Chặn admin và staff không được mua hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+        
         error_log('Update cart called with id: ' . $id . ' and quantity: ' . $request->quantity);
 
         $request->validate([
@@ -366,6 +399,20 @@ class ClientCartController extends Controller
 
     public function remove($id)
     {
+        // Chặn admin và staff không được mua hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+        
         error_log('Remove cart called with id: ' . $id);
 
         if (Auth::check()) {
@@ -406,6 +453,20 @@ class ClientCartController extends Controller
 
     public function clear()
     {
+        // Chặn admin và staff không được mua hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+        
         if (Auth::check()) {
             Cart::where('user_id', Auth::id())->delete();
         } else {
@@ -420,6 +481,20 @@ class ClientCartController extends Controller
 
     public function count()
     {
+        // Chặn admin và staff không được mua hàng
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userRoles = $user->roles->pluck('name')->toArray();
+            $blockedRoles = ['admin', 'staff', 'employee', 'manager'];
+            
+            if (array_intersect($userRoles, $blockedRoles)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản Admin/Staff không được phép mua hàng!'
+                ], 403);
+            }
+        }
+        
         if (Auth::check()) {
             $count = Cart::where('user_id', Auth::id())->sum('quantity');
         } else {

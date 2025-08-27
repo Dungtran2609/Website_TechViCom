@@ -342,8 +342,11 @@
                     <!-- Sort -->
                     <div class="flex flex-wrap items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-md">
                         <div class="flex items-center gap-4">
-                            <span class="text-gray-700">Hiển thị {{ $products->count() }} trong tổng số
-                                {{ $products->total() }} sản phẩm</span>
+                            @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                <span class="text-gray-700">Tổng số {{ $products->total() }} sản phẩm</span>
+                            @else
+                                <span class="text-gray-700">Hiển thị tất cả {{ $products->count() }} sản phẩm</span>
+                            @endif
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-gray-700">Sắp xếp:</span>
@@ -367,6 +370,42 @@
                     <!-- Products Grid -->
                     <div id="products-container">
                         @include('client.products.partials.product-grid', ['products' => $products, 'favoriteProductIds' => $favoriteProductIds])
+                    </div>
+                    
+                    <!-- Show More/Less Buttons -->
+                    <div class="mt-8 text-center" id="show-more-container">
+                        @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasMorePages())
+                            <div class="space-y-3">
+                                <button id="show-more-btn" class="bg-[#ff6c2f] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#e55a28] transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>Xem thêm sản phẩm
+                                </button>
+                                @if($products->total() > 12)
+                                    <button id="show-all-btn" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-list mr-2"></i>Xem tất cả {{ $products->total() }} sản phẩm
+                                    </button>
+                                @endif
+                            </div>
+                        @elseif($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->currentPage() > 1)
+                            <button id="show-less-btn" class="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-minus mr-2"></i>Ẩn bớt sản phẩm
+                            </button>
+                        @elseif(!($products instanceof \Illuminate\Pagination\LengthAwarePaginator))
+                            <button id="show-less-btn" class="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-minus mr-2"></i>Ẩn bớt sản phẩm
+                            </button>
+                        @endif
+                        
+                        <!-- Info text -->
+                        <div class="mt-4 text-sm text-gray-600">
+                            @if($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                <p>Tổng số {{ $products->total() }} sản phẩm</p>
+                                @if($products->hasMorePages())
+                                    <p class="mt-1">Đang hiển thị {{ $products->count() }} sản phẩm đầu tiên</p>
+                                @endif
+                            @else
+                                <p>Đang hiển thị tất cả {{ $products->count() }} sản phẩm</p>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1003,6 +1042,65 @@
 
             // Initialize favorite buttons
             initializeFavoriteButtons();
+            
+            // Show More/Less functionality
+            const showMoreBtn = document.getElementById('show-more-btn');
+            const showLessBtn = document.getElementById('show-less-btn');
+            const showAllBtn = document.getElementById('show-all-btn');
+            
+            if (showMoreBtn) {
+                showMoreBtn.addEventListener('click', function() {
+                    showAllProducts();
+                });
+            }
+            
+            if (showLessBtn) {
+                showLessBtn.addEventListener('click', function() {
+                    showLessProducts();
+                });
+            }
+            
+            if (showAllBtn) {
+                showAllBtn.addEventListener('click', function() {
+                    showAllProducts();
+                });
+            }
+            
+            // Lưu trạng thái show_all vào localStorage để cải thiện UX
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('show_all') === 'true') {
+                localStorage.setItem('products_show_all', 'true');
+            } else {
+                localStorage.removeItem('products_show_all');
+            }
         });
+        
+        // Function to show all products
+        function showAllProducts() {
+            const btn = document.getElementById('show-more-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...';
+            }
+            
+            const url = new URL(window.location);
+            url.searchParams.set('show_all', 'true');
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
+        
+        // Function to show less products (back to pagination)
+        function showLessProducts() {
+            const btn = document.getElementById('show-less-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...';
+            }
+            
+            const url = new URL(window.location);
+            url.searchParams.delete('show_all');
+            url.searchParams.delete('page');
+            window.location.href = url.toString();
+        }
     </script>
 @endpush

@@ -11,7 +11,7 @@
                 <div class="flex items-center space-x-2 text-sm">
                     <a href="{{ route('home') }}" class="text-gray-500 hover:text-[#ff6c2f]">Trang chủ</a>
                     <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
-                    <a href="{{ route('brands.index') }}" class="text-gray-500 hover:text-[#ff6c2f]">Thương hiệu</a>
+                    <a class="text-gray-500 hover:text-[#ff6c2f]">Thương hiệu</a>
                     <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
                     <span class="text-gray-900 font-medium">{{ $brand->name }}</span>
                 </div>

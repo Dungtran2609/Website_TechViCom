@@ -324,6 +324,11 @@ class ClientCheckoutController extends Controller
     /* ============================== PAGE: index ============================== */
     public function index(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         file_put_contents(storage_path('logs/debug.txt'), "Checkout method called at " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         file_put_contents(storage_path('logs/debug.txt'), "User logged in: " . (Auth::check() ? 'Yes' : 'No') . "\n", FILE_APPEND);
         if (Auth::check()) file_put_contents(storage_path('logs/debug.txt'), "User ID: " . Auth::id() . "\n", FILE_APPEND);
@@ -815,6 +820,14 @@ class ClientCheckoutController extends Controller
     /* ============================== Coupon AJAX ============================== */
     public function applyCoupon(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.'
+            ], 403);
+        }
+        
         $request->validate([
             'coupon_code' => 'required|string',
             'subtotal'    => 'required|numeric|min:0',
@@ -880,6 +893,11 @@ class ClientCheckoutController extends Controller
     /* ============================== PROCESS CHECKOUT ============================== */
     public function process(CheckoutRequest $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             Log::info('Checkout process started', [
                 'payment_method'   => $request->payment_method,
@@ -1796,6 +1814,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Re-init VNPay for an order ============================== */
     public function vnpay_payment($order_id)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $order = Order::with(['orderItems.product'])->findOrFail($order_id);
 
@@ -1861,6 +1884,11 @@ class ClientCheckoutController extends Controller
     /* ============================== VNPay return ============================== */
     public function vnpay_return(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $svc = new VNPayService();
             $vnp = $svc->processReturn($request);
@@ -2274,6 +2302,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Success page ============================== */
     public function success($orderId)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $order = Order::with([
                 'orderItems.product.productAllImages',
@@ -2337,6 +2370,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Fail page ============================== */
     public function fail()
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         return view('client.checkouts.fail');
     }
 

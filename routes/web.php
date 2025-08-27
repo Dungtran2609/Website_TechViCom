@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -40,7 +39,6 @@ use App\Http\Controllers\Client\Address\ClientAddressController;
 use App\Http\Controllers\Client\Brands\ClientBrandController;
 use App\Http\Controllers\Client\Carts\ClientCartController;
 use App\Http\Controllers\Client\Categories\ClientCategoryController;
-use App\Http\Controllers\Client\ChatbotController;
 use App\Http\Controllers\Client\Checkouts\ClientCheckoutController;
 use App\Http\Controllers\Client\Contacts\ClientContactController;
 use App\Http\Controllers\Client\Coupon\ClientCouponController;
@@ -60,6 +58,7 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 
+// AI hỗ trợ admin
 
 /*
 |--------------------------------------------------------------------------
@@ -118,7 +117,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('coupons', AdminCouponController::class)->except(['show']);
     Route::resource('promotions', App\Http\Controllers\Admin\Promotions\AdminPromotionController::class)->names('promotions');
     // Quản lý mail động
-    Route::get('mails/send', [AdminMailController::class, 'sendForm'])->name('mails.send');
+    Route::get('mails/send', [AdminMailController::class, 'sendForm'])->name('mails.sendForm');
     Route::post('mails/send', [AdminMailController::class, 'send'])->name('mails.send');
     Route::get('mails/trash', [AdminMailController::class, 'trash'])->name('mails.trash');
     Route::post('mails/{mail}/restore', [AdminMailController::class, 'restore'])->name('mails.restore');
@@ -127,7 +126,6 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::post('mails/{mail}/send-test', [AdminMailController::class, 'sendTest'])->name('mails.sendTest');
     Route::resource('mails', AdminMailController::class)->names('mails');
 });
-
 
 
 // Products
@@ -200,9 +198,6 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('/', [ClientContactController::class, 'store'])->name('store');
     });
 });
-
-// Chatbot
-Route::post('/chatbot/send', [ChatbotController::class, 'send'])->name('chatbot.send');
 
 /*
 |--------------------------------------------------------------------------

@@ -1,20 +1,5 @@
 <?php
-
-
-
-
-
-
-
-
 namespace App\Models;
-
-
-
-
-
-
-
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,26 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-
-
-
-
-
-
-
 class User extends Authenticatable
 {
     // Luôn eager load permissions khi lấy roles để tránh lỗi undefined method
     protected $with = ['roles.permissions'];
     // Thứ tự các Trait không quá quan trọng, nhưng đây là thứ tự phổ biến
     use  HasFactory, Notifiable, SoftDeletes, HasRoles;
-
-
-
-
-
-
-
 
     protected $fillable = [
         'name',
@@ -56,12 +27,10 @@ class User extends Authenticatable
         'gender',
     ];
 
-
     protected $hidden = [
         'password',
         'remember_token',
     ];
-
 
     protected $casts = [
         'email_verified_at' => 'datetime',

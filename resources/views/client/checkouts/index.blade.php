@@ -965,7 +965,7 @@
                                                         @endif
                                                     @endforeach
                                                 </p>
-                                            @endif>
+                                            @endif
                                             <div class="flex items-center space-x-2 mt-1">
                                                 <span
                                                     class="text-orange-500 font-semibold text-sm">{{ number_format($displayPrice) }}₫</span>

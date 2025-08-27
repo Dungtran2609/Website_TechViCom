@@ -257,6 +257,9 @@ Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
 
+    // Thêm route cho revenue data API
+    Route::get('/revenue-data', [AdminController::class, 'getRevenueData'])->name('revenue.data');
+
     // Users, Roles, Permissions
     Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {
         Route::get('trashed', [AdminUserController::class, 'trashed'])->name('trashed');

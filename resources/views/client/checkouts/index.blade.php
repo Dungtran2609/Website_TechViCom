@@ -331,6 +331,153 @@
                 background: #fff !important
             }
         }
+        
+        /* Address Selection Styles */
+        .address-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .address-option:hover {
+            border-color: #f97316;
+            transform: translateY(-1px);
+        }
+        
+        .address-option.selected {
+            border-color: #f97316;
+            background-color: #fff7ed;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+        }
+        
+        .address-option.selected .address-radio {
+            border-color: #f97316;
+            background-color: #f97316;
+        }
+        
+        .address-option.selected .selected-dot {
+            display: block !important;
+        }
+        
+        .add-new-address {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .add-new-address:hover {
+            border-color: #f97316;
+            background-color: #fff7ed;
+        }
+        
+        .add-new-address.selected {
+            border-color: #f97316;
+            background-color: #fff7ed;
+        }
+        
+        .add-new-address.selected .selected-dot {
+            display: block !important;
+        }
+        
+        /* Shipping and Payment Option Styles */
+        .shipping-option, .payment-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .shipping-option:hover, .payment-option:hover {
+            transform: translateY(-2px);
+        }
+        
+        .shipping-option.selected, .payment-option.selected {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+        
+        .shipping-option.selected .shipping-radio {
+            border-color: #10b981;
+            background-color: #10b981;
+        }
+        
+        .shipping-option.selected .selected-dot {
+            display: block !important;
+        }
+        
+        .payment-option.selected {
+            border-color: #f97316;
+            background-color: #fff7ed;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+        }
+        
+        .payment-option.selected .payment-radio {
+            border-color: #f97316;
+            background-color: #f97316;
+        }
+        
+        .payment-option.selected .selected-dot {
+            display: block !important;
+        }
+        
+        /* Progress Bar Styles */
+        .checkout-step {
+            transition: all 0.3s ease;
+        }
+        
+        .checkout-step.completed .checkout-step-number {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            transform: scale(1.05);
+        }
+        
+        .checkout-step.completed .checkout-step-title {
+            color: #10b981 !important;
+        }
+        
+        .checkout-step.completed .checkout-step-subtitle {
+            color: #10b981 !important;
+        }
+        
+        .checkout-step.completed .checkout-step-number .absolute {
+            display: block !important;
+        }
+        
+        .checkout-step:not(.completed) .checkout-step-number .absolute {
+            display: none !important;
+        }
+        
+        .checkout-step.active .checkout-step-number {
+            background: linear-gradient(135deg, #f97316, #ea580c) !important;
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(249, 115, 22, 0.3);
+        }
+        
+        .checkout-step.active .checkout-step-title {
+            color: #f97316 !important;
+        }
+        
+        .checkout-step.active .checkout-step-subtitle {
+            color: #6b7280 !important;
+        }
+        
+        .checkout-step.pending .checkout-step-number {
+            background-color: #e5e7eb !important;
+            transform: scale(1);
+        }
+        
+        .checkout-step.pending .checkout-step-title {
+            color: #6b7280 !important;
+        }
+        
+        .checkout-step.pending .checkout-step-subtitle {
+            color: #9ca3af !important;
+        }
+        
+        .step-connector-completed {
+            background: linear-gradient(90deg, #10b981, #059669) !important;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+        
+        .step-connector-pending {
+            background-color: #e5e7eb !important;
+        }
     </style>
 @endpush
 
@@ -402,39 +549,42 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-center">
                 <div class="hidden md:flex items-center space-x-6">
-                    <div id="step-1" class="checkout-step active flex items-center space-x-3">
-                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg">
-                            <span class="text-white text-lg font-bold">1</span>
+                    <div id="step-1" class="checkout-step completed flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-lg relative">
+                            <span class="text-white text-xl font-bold">1</span>
+                            <div class="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md">
+                                <i class="fas fa-check text-green-600 text-xs"></i>
+                            </div>
                         </div>
                         <div class="flex flex-col">
-                            <span class="checkout-step-subtitle text-sm text-gray-500 font-medium">Bước 1</span>
-                            <span class="checkout-step-title text-lg font-semibold text-orange-600">Thông tin</span>
+                            <span class="checkout-step-subtitle text-sm text-green-600 font-medium">Bước 1</span>
+                            <span class="checkout-step-title text-lg font-semibold text-green-600">Thông tin</span>
                         </div>
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-16 h-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"></div>
-                        <div class="w-4 h-1 bg-gray-300 rounded-full ml-1"></div>
+                        <div class="step-connector step-connector-completed w-16 h-2 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-sm"></div>
+                        <div class="w-4 h-2 bg-gray-300 rounded-full ml-1"></div>
                     </div>
                     
-                    <div id="step-2" class="checkout-step flex items-center space-x-3">
-                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
-                            <span class="text-gray-500 text-lg font-bold">2</span>
+                    <div id="step-2" class="checkout-step active flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full shadow-lg">
+                            <span class="text-white text-xl font-bold">2</span>
                         </div>
                         <div class="flex flex-col">
-                            <span class="checkout-step-subtitle text-sm text-gray-400 font-medium">Bước 2</span>
-                            <span class="checkout-step-title text-lg font-semibold text-gray-500">Thanh toán</span>
+                            <span class="checkout-step-subtitle text-sm text-gray-500 font-medium">Bước 2</span>
+                            <span class="checkout-step-title text-lg font-semibold text-orange-600">Thanh toán</span>
                         </div>
                     </div>
                     
                     <div class="flex items-center">
-                        <div class="w-16 h-1 bg-gray-300 rounded-full"></div>
-                        <div class="w-4 h-1 bg-gray-300 rounded-full ml-1"></div>
+                        <div class="step-connector step-connector-pending w-16 h-2 bg-gray-300 rounded-full"></div>
+                        <div class="w-4 h-2 bg-gray-300 rounded-full ml-1"></div>
                     </div>
                     
-                    <div id="step-3" class="checkout-step flex items-center space-x-3">
-                        <div class="checkout-step-number flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
-                            <span class="text-gray-500 text-lg font-bold">3</span>
+                    <div id="step-3" class="checkout-step pending flex items-center space-x-3">
+                        <div class="checkout-step-number flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full">
+                            <span class="text-gray-500 text-xl font-bold">3</span>
                         </div>
                         <div class="flex flex-col">
                             <span class="checkout-step-subtitle text-sm text-gray-400 font-medium">Bước 3</span>
@@ -482,37 +632,61 @@
                             </div>
                             <div class="form-group">
                                 @if (isset($addresses) && count($addresses) > 0)
-                                    <div class="mb-2">
-                                        <label class="block text-xs font-medium text-gray-500 mb-1">Chọn địa chỉ đã
-                                            lưu</label>
-                                        <div class="space-y-2">
+                                    <div class="mb-6">
+                                        <label class="block text-sm font-medium text-gray-700 mb-4">Chọn địa chỉ giao hàng</label>
+                                        <div class="space-y-3">
                                             @foreach ($addresses as $address)
-                                                <label class="flex items-center space-x-2 cursor-pointer">
-                                                    <input type="radio" name="selected_address"
-                                                        value="{{ $address->id }}"
-                                                        @if ($loop->first) checked @endif
-                                                        onchange="toggleAddressForm(false)"
-                                                        data-ward="{{ $address->ward }}"
-                                                        data-district="{{ $address->district }}"
-                                                        data-city="{{ $address->city }}"
-                                                        data-address="{{ $address->address_line }}" data-province-code="01"
-                                                        data-district-code="{{ $address->district_code ?? '' }}"
-                                                        data-ward-code="{{ $address->ward_code ?? '' }}">
-                                                    <span>
-                                                        {{ $address->address_line }}, {{ $address->ward }},
-                                                        {{ $address->district }}, {{ $address->city }}
-                                                        @if ($address->is_default)
-                                                            <span class="text-xs text-orange-500 font-semibold">(Mặc
-                                                                định)</span>
-                                                        @endif
-                                                    </span>
-                                                </label>
+                                                <div class="address-option border-2 border-gray-200 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-orange-300 hover:shadow-md"
+                                                     onclick="selectAddress({{ $address->id }}, this)">
+                                                    <div class="flex items-start space-x-3">
+                                                        <div class="flex-shrink-0 mt-1">
+                                                            <div class="w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center address-radio">
+                                                                <div class="w-2 h-2 bg-orange-500 rounded-full hidden selected-dot"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-1">
+                                                            <div class="flex items-center justify-between mb-2">
+                                                                <h4 class="font-medium text-gray-900">
+                                                                    {{ $address->address_line }}
+                                                                </h4>
+                                                                @if ($address->is_default)
+                                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                                        <i class="fas fa-star mr-1"></i>Mặc định
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+                                                            <p class="text-sm text-gray-600 leading-relaxed">
+                                                                {{ $address->ward }}, {{ $address->district }}, {{ $address->city }}
+                                                            </p>
+                                                            <input type="radio" name="selected_address" 
+                                                                   value="{{ $address->id }}"
+                                                                   @if ($loop->first) checked @endif
+                                                                   onchange="toggleAddressForm(false)"
+                                                                   data-ward="{{ $address->ward }}"
+                                                                   data-district="{{ $address->district }}"
+                                                                   data-city="{{ $address->city }}"
+                                                                   data-address="{{ $address->address_line }}" 
+                                                                   data-province-code="01"
+                                                                   data-district-code="{{ $address->district_code ?? '' }}"
+                                                                   data-ward-code="{{ $address->ward_code ?? '' }}"
+                                                                   class="hidden">
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             @endforeach
-                                            <label class="flex items-center space-x-2 cursor-pointer mt-2">
+                                            
+                                            <div class="add-new-address border-2 border-dashed border-gray-300 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-orange-400 hover:bg-orange-50"
+                                                 onclick="selectNewAddress(this)">
+                                                <div class="flex items-center justify-center space-x-3 text-gray-600 hover:text-orange-600">
+                                                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                                        <div class="w-2 h-2 bg-orange-500 rounded-full hidden selected-dot"></div>
+                                                    </div>
+                                                    <i class="fas fa-plus-circle text-lg"></i>
+                                                    <span class="font-medium">Thêm địa chỉ mới</span>
+                                                </div>
                                                 <input type="radio" name="selected_address" value="new"
-                                                    onchange="toggleAddressForm(true)">
-                                                <span>Thêm địa chỉ mới</span>
-                                            </label>
+                                                       onchange="toggleAddressForm(true)" class="hidden">
+                                            </div>
                                         </div>
                                     </div>
                                 @endif
@@ -583,94 +757,140 @@
                             <h3 class="text-xl font-semibold mb-6">Phương thức vận chuyển</h3>
                             <div class="space-y-4 mb-8">
                                 @foreach ($shippingMethods->whereIn('id', [1, 2]) as $method)
-                                    <div class="payment-option border-2 border-gray-300 rounded-lg p-4 {{ $loop->first ? 'selected' : '' }} flex items-center"
-                                        data-shipping="{{ $method->id }}">
+                                    <div class="shipping-option border-2 border-gray-200 rounded-xl p-5 {{ $loop->first ? 'selected' : '' }} flex items-center cursor-pointer transition-all duration-300 hover:border-green-300 hover:shadow-md"
+                                        data-shipping="{{ $method->id }}" onclick="selectShippingMethod({{ $method->id }}, this)">
+                                        <div class="flex items-center justify-center w-5 h-5 border-2 border-gray-300 rounded-full mr-4 shipping-radio">
+                                            <div class="w-2.5 h-2.5 bg-green-500 rounded-full hidden selected-dot"></div>
+                                        </div>
                                         <input type="radio" id="shipping{{ $method->id }}" name="shipping_method_id"
                                             value="{{ $method->id }}" {{ $loop->first ? 'checked' : '' }}
-                                            class="mr-3 accent-orange-500">
+                                            class="hidden">
                                         <div class="flex-1">
                                             <label for="shipping{{ $method->id }}"
-                                                class="font-medium cursor-pointer">{{ $method->name }}</label>
-                                            <p class="text-sm text-gray-600">{{ $method->description }}</p>
+                                                class="font-semibold text-gray-900 text-lg cursor-pointer">{{ $method->name }}</label>
+                                            <p class="text-sm text-gray-600 mt-1">{{ $method->description }}</p>
                                         </div>
-                                        <i class="fas fa-truck text-orange-600 text-xl"></i>
+                                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-truck text-green-600 text-xl"></i>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
                             <h3 class="text-xl font-semibold mb-6">Phương thức thanh toán</h3>
                             <div class="space-y-4">
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 selected flex items-center"
-                                    data-payment="cod">
-                                    <input type="radio" id="cod" name="payment_method" value="cod" checked
-                                        class="mr-3 accent-orange-500">
-                                    <div class="flex-1">
-                                        <label for="cod" class="font-medium cursor-pointer">Thanh toán khi nhận hàng
-                                            (COD)</label>
-                                        <p class="text-sm text-gray-600">Thanh toán bằng tiền mặt khi nhận được hàng</p>
+                                <div class="payment-option border-2 border-orange-300 rounded-xl p-5 selected flex items-center cursor-pointer transition-all duration-300 hover:border-orange-400 hover:shadow-md"
+                                    data-payment="cod" onclick="selectPaymentMethod('cod', this)">
+                                    <div class="flex items-center justify-center w-5 h-5 border-2 border-orange-300 rounded-full mr-4 payment-radio">
+                                        <div class="w-2.5 h-2.5 bg-orange-500 rounded-full selected-dot"></div>
                                     </div>
-                                    <i class="fas fa-money-bill-wave text-orange-600 text-xl"></i>
+                                    <input type="radio" id="cod" name="payment_method" value="cod" checked
+                                        class="hidden">
+                                    <div class="flex-1">
+                                        <label for="cod" class="font-semibold text-gray-900 text-lg cursor-pointer">Thanh toán khi nhận hàng (COD)</label>
+                                        <p class="text-sm text-gray-600 mt-1">Thanh toán bằng tiền mặt khi nhận được hàng</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-money-bill-wave text-orange-600 text-xl"></i>
+                                    </div>
                                 </div>
 
                                 {{-- VNPay: bị khóa nếu đã hủy >= 3 lần --}}
-                                <div class="payment-option border-2 border-gray-300 rounded-lg p-4 flex items-center
-                                            {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
+                                <div class="payment-option border-2 border-gray-200 rounded-xl p-5 flex items-center cursor-pointer transition-all duration-300 hover:border-purple-300 hover:shadow-md {{ $vnpayLocked ? 'opacity-60 cursor-not-allowed' : '' }}"
                                     data-payment="bank_transfer" data-disabled="{{ $vnpayLocked ? 'true' : 'false' }}"
-                                    data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục.">
+                                    data-reason="Bạn đã hủy VNPay quá 3 lần. Vui lòng chọn COD để tiếp tục." 
+                                    onclick="{{ !$vnpayLocked ? 'selectPaymentMethod(\'bank_transfer\', this)' : '' }}">
+                                    <div class="flex items-center justify-center w-5 h-5 border-2 border-gray-300 rounded-full mr-4 payment-radio">
+                                        <div class="w-2.5 h-2.5 bg-purple-500 rounded-full hidden selected-dot"></div>
+                                    </div>
                                     <input type="radio" id="banking" name="payment_method" value="bank_transfer"
-                                        class="mr-3 accent-orange-500" {{ $vnpayLocked ? 'disabled' : '' }}>
+                                        class="hidden" {{ $vnpayLocked ? 'disabled' : '' }}>
                                     <div class="flex-1">
-                                        <label for="banking" class="font-medium cursor-pointer">Thanh toán VNPAY</label>
-                                        <p class="text-sm text-gray-600">Thanh toán trực tuyến an toàn</p>
+                                        <label for="banking" class="font-semibold text-gray-900 text-lg cursor-pointer">Thanh toán VNPAY</label>
+                                        <p class="text-sm text-gray-600 mt-1">Thanh toán trực tuyến an toàn</p>
                                         @if ($vnpayLocked)
-                                            <p class="text-xs text-red-600 mt-1">
-                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn
-                                                COD.
+                                            <p class="text-xs text-red-600 mt-1 font-medium">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                Phương thức này đã bị khóa do bạn đã hủy thanh toán 3 lần. Vui lòng chọn COD.
                                             </p>
                                         @endif
                                     </div>
-                                    <i class="fas fa-university text-orange-600 text-xl"></i>
+                                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-university text-purple-600 text-xl"></i>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-lg shadow-md p-6 mt-6 flex justify-between">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-6 flex justify-between">
                             <button type="button" id="prev-step-2"
-                                class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
-                                    class="fas fa-arrow-left mr-2"></i>Quay lại</button>
+                                class="px-8 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                <i class="fas fa-arrow-left mr-3 text-lg"></i>
+                                <span class="text-lg">Quay lại</span>
+                            </button>
                             <button type="button" id="next-step-2"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Bước
-                                tiếp theo<i class="fas fa-arrow-right ml-2"></i></button>
+                                class="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                <span class="text-lg">Bước tiếp theo</span>
+                                <i class="fas fa-arrow-right ml-3 text-lg"></i>
+                            </button>
                         </div>
                     </div>
                     {{-- STEP 3 --}}
                     <div id="checkout-step-3" class="checkout-content" style="display:none">
                         <div class="bg-white rounded-lg shadow-md p-6">
                             <h3 class="text-xl font-semibold mb-6">Xác nhận đơn hàng</h3>
-                            <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                                <h4 class="font-semibold mb-4">Thông tin giao hàng</h4>
-                                <div id="delivery-summary" class="space-y-2 text-sm"></div>
+                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-6 shadow-sm">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-shipping-fast text-blue-600"></i>
+                                    </div>
+                                    <h4 class="font-semibold text-blue-900 text-lg">Thông tin giao hàng</h4>
+                                </div>
+                                <div id="delivery-summary" class="space-y-3 text-sm"></div>
                             </div>
-                            <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                                <h4 class="font-semibold mb-4">Phương thức vận chuyển</h4>
+                            
+                            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 mb-6 shadow-sm">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-truck text-green-600"></i>
+                                    </div>
+                                    <h4 class="font-semibold text-green-900 text-lg">Phương thức vận chuyển</h4>
+                                </div>
                                 <div id="shipping-summary" class="text-sm"></div>
                             </div>
-                            <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                                <h4 class="font-semibold mb-4">Phương thức thanh toán</h4>
+                            
+                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-6 mb-6 shadow-sm">
+                                <div class="flex items-center mb-4">
+                                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                        <i class="fas fa-credit-card text-purple-600"></i>
+                                    </div>
+                                    <h4 class="font-semibold text-purple-900 text-lg">Phương thức thanh toán</h4>
+                                </div>
                                 <div id="payment-summary" class="text-sm"></div>
                             </div>
-                            <div class="flex items-center mb-6">
-                                <input type="checkbox" id="agree-terms" required class="mr-3 accent-orange-500">
-                                <label for="agree-terms" class="text-sm">Tôi đã đọc và đồng ý với <a href="#"
-                                        class="text-orange-600 hover:underline">điều khoản và điều kiện</a> của
-                                    website</label>
+                            <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 mb-6 shadow-sm">
+                                <div class="flex items-start">
+                                    <div class="flex items-center h-5 mt-0.5">
+                                        <input type="checkbox" id="agree-terms" required 
+                                               class="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2">
+                                    </div>
+                                    <label for="agree-terms" class="ml-3 text-sm text-gray-700">
+                                        Tôi đã đọc và đồng ý với 
+                                        <a href="#" class="text-orange-600 hover:text-orange-700 underline font-medium">điều khoản và điều kiện</a> 
+                                        của website
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                        <div class="bg-white rounded-lg shadow-md p-6 mt-6 flex justify-between">
+                        <div class="bg-white rounded-xl shadow-lg p-6 mt-6 flex justify-between">
                             <button type="button" id="prev-step-3"
-                                class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition flex items-center"><i
-                                    class="fas fa-arrow-left mr-2"></i>Quay lại</button>
+                                class="px-8 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl font-semibold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                <i class="fas fa-arrow-left mr-3 text-lg"></i>
+                                <span class="text-lg">Quay lại</span>
+                            </button>
                             <button type="button" id="confirm-order"
-                                class="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition flex items-center">Xác
-                                nhận<i class="fas fa-arrow-right ml-2"></i></button>
+                                class="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 flex items-center shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                                <span class="text-lg">Xác nhận đơn hàng</span>
+                                <i class="fas fa-check ml-3 text-lg"></i>
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -825,6 +1045,45 @@
     </script>
 
     <script>
+        // Address selection functions
+        function selectAddress(addressId, element) {
+            // Remove selected class from all address options
+            document.querySelectorAll('.address-option, .add-new-address').forEach(option => {
+                option.classList.remove('selected');
+                option.querySelector('.selected-dot').classList.add('hidden');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            element.querySelector('.selected-dot').classList.remove('hidden');
+            
+            // Check the radio button
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+        }
+        
+        function selectNewAddress(element) {
+            // Remove selected class from all address options
+            document.querySelectorAll('.address-option, .add-new-address').forEach(option => {
+                option.classList.remove('selected');
+                option.querySelector('.selected-dot').classList.add('hidden');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            element.querySelector('.selected-dot').classList.remove('hidden');
+            
+            // Check the radio button
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+        }
+        
         // Toggle hiển thị form nhập địa chỉ mới
         function toggleAddressForm(show) {
             var form = document.getElementById('add-address-form');
@@ -1134,7 +1393,7 @@
                 function goToStep(step) {
                     document.querySelectorAll('.checkout-content').forEach(c => c.style.display = 'none');
                     if (step <= 3) document.getElementById(`checkout-step-${step}`).style.display = 'block';
-                    updateStepIndicators(step);
+                    updateProgressBar(step);
                     window.currentStep = step;
                     updateStep1NextBtnVisibility(step);
                     window.scrollTo({
@@ -1888,7 +2147,119 @@
         // Chạy khi trang load
         document.addEventListener('DOMContentLoaded', function() {
             autoHideNotifications();
+            
+            // Initialize address selection
+            initializeAddressSelection();
         });
+        
+        // Initialize address selection on page load
+        function initializeAddressSelection() {
+            // Select first address by default
+            const firstAddress = document.querySelector('.address-option');
+            if (firstAddress) {
+                selectAddress(null, firstAddress);
+            }
+            
+            // Initialize shipping and payment methods
+            initializeShippingAndPayment();
+            
+            // Initialize progress bar
+            updateProgressBar(1);
+        }
+        
+        // Initialize shipping and payment methods
+        function initializeShippingAndPayment() {
+            // Select first shipping method by default
+            const firstShipping = document.querySelector('.shipping-option');
+            if (firstShipping) {
+                selectShippingMethod(null, firstShipping);
+            }
+            
+            // Select first payment method by default
+            const firstPayment = document.querySelector('.payment-option');
+            if (firstPayment) {
+                selectPaymentMethod(null, firstPayment);
+            }
+        }
+        
+        // Update progress bar based on current step
+        function updateProgressBar(stepNumber) {
+            // Remove all classes first
+            document.querySelectorAll('.checkout-step').forEach((step, index) => {
+                step.classList.remove('completed', 'active', 'pending');
+                step.classList.add('pending');
+            });
+            
+            // Update step classes based on current step
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step-${i}`);
+                const connector = step.nextElementSibling?.querySelector('.step-connector');
+                
+                if (i < stepNumber) {
+                    // Completed steps
+                    step.classList.remove('pending', 'active');
+                    step.classList.add('completed');
+                    if (connector) {
+                        connector.classList.remove('step-connector-pending');
+                        connector.classList.add('step-connector-completed');
+                    }
+                } else if (i === stepNumber) {
+                    // Current active step
+                    step.classList.remove('pending', 'completed');
+                    step.classList.add('active');
+                    if (connector) {
+                        connector.classList.remove('step-connector-completed');
+                        connector.classList.add('step-connector-pending');
+                    }
+                } else {
+                    // Pending steps
+                    step.classList.remove('completed', 'active');
+                    step.classList.add('pending');
+                    if (connector) {
+                        connector.classList.remove('step-connector-completed');
+                        connector.classList.add('step-connector-pending');
+                    }
+                }
+            }
+        }
+        
+        // Shipping method selection
+        function selectShippingMethod(methodId, element) {
+            // Remove selected class from all shipping options
+            document.querySelectorAll('.shipping-option').forEach(option => {
+                option.classList.remove('selected');
+                option.querySelector('.selected-dot').classList.add('hidden');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            element.querySelector('.selected-dot').classList.remove('hidden');
+            
+            // Check the radio button
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+        
+        // Payment method selection
+        function selectPaymentMethod(methodId, element) {
+            // Remove selected class from all payment options
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+                option.querySelector('.selected-dot').classList.add('hidden');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            element.querySelector('.selected-dot').classList.remove('hidden');
+            
+            // Check the radio button
+            const radio = element.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+            }
+        }
         
         // Hàm cập nhật discount row
         function updateDiscountRow(discountAmount, couponCode) {

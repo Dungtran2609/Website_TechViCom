@@ -256,8 +256,19 @@
                             'cancelled' => ['class' => 'bg-danger', 'text' => 'Đã hủy', 'icon' => 'times-circle'],
                             'returned' => ['class' => 'bg-secondary', 'text' => 'Đã trả', 'icon' => 'undo']
                         ];
-                        $config = $statusConfig[$order->status] ?? ['class' => 'bg-secondary', 'text' => $order->status, 'icon' => 'question'];
-                        $orderReturn = $order->returns()->latest()->first();
+                        
+                        // Kiểm tra nếu có yêu cầu trả hàng đang chờ xử lý
+                        $returnRequest = $order->returns()->where('type', 'return')->where('status', 'pending')->first();
+                        $cancelRequest = $order->returns()->where('type', 'cancel')->where('status', 'pending')->first();
+                        
+                        // Nếu có yêu cầu trả hàng đang chờ, hiển thị trạng thái rõ ràng
+                        if ($returnRequest && $returnRequest->status === 'pending' && $order->status === 'delivered') {
+                            $config = ['class' => 'bg-warning text-dark', 'text' => 'Chờ xử lý trả hàng', 'icon' => 'clock'];
+                        } elseif ($cancelRequest && $cancelRequest->status === 'pending' && $order->status === 'pending') {
+                            $config = ['class' => 'bg-warning text-dark', 'text' => 'Chờ xử lý hủy đơn', 'icon' => 'clock'];
+                        } else {
+                            $config = $statusConfig[$order->status] ?? ['class' => 'bg-secondary', 'text' => $order->status, 'icon' => 'question'];
+                        }
                     @endphp
                     <span class="status-badge badge {{ $config['class'] }} fs-6 px-4 py-3 rounded-pill">
                         <i class="fas fa-{{ $config['icon'] }} me-2"></i>
@@ -282,8 +293,14 @@
                         </span>
                     </div>
                     
-                    @if($order->status === 'returned' && $orderReturn && $orderReturn->status === 'pending')
-                        <span class="status-badge badge bg-info ms-2 mt-2 rounded-pill">Chờ admin xác nhận trả hàng</span>
+                    @php
+                        $returnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
+                    @endphp
+                    @if($returnRequest && $returnRequest->status === 'pending')
+                        <span class="status-badge badge bg-info ms-2 mt-2 rounded-pill">
+                            <i class="fas fa-hourglass-half me-1"></i>
+                            Yêu cầu trả hàng đang chờ xử lý
+                        </span>
                     @endif
                     @php
                         $cancelRequest = $order->returns()->where('type', 'cancel')->whereIn('status', ['pending', 'approved'])->first();
@@ -377,18 +394,32 @@
                     $returnRequest = $order->returns()->where('type', 'return')->whereIn('status', ['pending', 'approved', 'rejected'])->first();
                 @endphp
                 @if($returnRequest)
-                    <div class="alert alert-info-custom alert-custom mb-4">
+                    <div class="alert {{ $returnRequest->status === 'pending' ? 'alert-warning-custom' : 'alert-info-custom' }} alert-custom mb-4">
                         <div class="d-flex align-items-start">
-                            <i class="fas fa-undo me-3 mt-1 text-xl"></i>
+                            <i class="fas {{ $returnRequest->status === 'pending' ? 'fa-hourglass-half' : 'fa-undo' }} me-3 mt-1 text-xl"></i>
                             <div class="w-100">
                                 <strong>Yêu cầu trả hàng:</strong><br>
                                 <strong>Trạng thái:</strong> 
                                 @if($returnRequest->status === 'pending')
-                                    <span class="status-badge badge bg-warning text-dark">Đang chờ admin xử lý</span>
+                                    <span class="status-badge badge bg-warning text-dark">
+                                        <i class="fas fa-hourglass-half me-1"></i>
+                                        Đang chờ admin xử lý
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Admin sẽ xem xét và phản hồi yêu cầu của bạn trong thời gian sớm nhất
+                                    </small>
                                 @elseif($returnRequest->status === 'approved')
-                                    <span class="status-badge badge bg-success">Đã được phê duyệt</span>
+                                    <span class="status-badge badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Đã được phê duyệt - Đơn hàng đã được trả
+                                    </span>
                                 @elseif($returnRequest->status === 'rejected')
-                                    <span class="status-badge badge bg-danger">Đã bị từ chối</span>
+                                    <span class="status-badge badge bg-danger">
+                                        <i class="fas fa-times-circle me-1"></i>
+                                        Đã bị từ chối
+                                    </span>
                                 @endif
                                 <br>
                                 <strong>Lý do:</strong> {{ $returnRequest->client_note }}

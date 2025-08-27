@@ -33,88 +33,56 @@
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-shopping-cart fa-2x text-primary"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted fw-normal mb-1">Tổng đơn hàng</h6>
-                            <h3 class="fw-bold text-primary mb-0">{{ number_format($totalOrders) }}</h3>
-                            <small class="text-success">
-                                <i class="fas fa-arrow-up me-1"></i>
-                                +{{ $orderStats['pending'] }} chờ xử lý
-                            </small>
-                        </div>
-                    </div>
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted fw-normal mb-1">Tổng đơn hàng</h6>
+                    <h3 class="fw-bold text-primary mb-2">{{ number_format($totalOrders) }}</h3>
+                    <small class="text-success d-block">
+                        <i class="fas fa-arrow-up me-1"></i>
+                        +{{ $orderStats['pending'] }} chờ xử lý
+                    </small>
+                    <small class="text-primary d-block mt-1">
+                        <i class="fas fa-check me-1"></i>
+                        {{ $orderStats['delivered'] }} đã giao
+                    </small>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-dollar-sign fa-2x text-success"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted fw-normal mb-1">Doanh thu</h6>
-                            <h3 class="fw-bold text-success mb-0">{{ number_format($totalRevenue) }}₫</h3>
-                            <small class="text-success">
-                                <i class="fas fa-chart-line me-1"></i>
-                                khi Khách đã nhận hàng
-                            </small>
-                        </div>
-                    </div>
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted fw-normal mb-1">Doanh thu</h6>
+                    <h3 class="fw-bold text-success mb-2">{{ number_format($totalRevenue) }}₫</h3>
+                    <small class="text-success">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Chỉ đã giao
+                    </small>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-box fa-2x text-warning"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted fw-normal mb-1">Sản phẩm</h6>
-                            <h3 class="fw-bold text-warning mb-0">{{ number_format($totalProducts) }}</h3>
-                            <small class="text-danger">
-                                <i class="fas fa-exclamation-triangle me-1"></i>
-                                {{ $stats['low_stock_products'] }} sắp hết hàng
-                            </small>
-                        </div>
-                    </div>
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted fw-normal mb-1">Sản phẩm</h6>
+                    <h3 class="fw-bold text-warning mb-2">{{ number_format($totalProducts) }}</h3>
+                    <small class="text-danger">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        {{ $stats['low_stock_products'] }} sắp hết hàng
+                    </small>
                 </div>
             </div>
         </div>
 
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-0 shadow-sm h-100 stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-users fa-2x text-info"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h6 class="text-muted fw-normal mb-1">Khách hàng</h6>
-                            <h3 class="fw-bold text-info mb-0">{{ number_format($totalUsers) }}</h3>
-                            <small class="text-info">
-                                <i class="fas fa-user-plus me-1"></i>
-                                Đã đăng ký
-                            </small>
-                        </div>
-                    </div>
+                <div class="card-body p-4 text-center">
+                    <h6 class="text-muted fw-normal mb-1">Khách hàng</h6>
+                    <h3 class="fw-bold text-info mb-2">{{ number_format($totalUsers) }}</h3>
+                    <small class="text-info">
+                        <i class="fas fa-user-plus me-1"></i>
+                        Đã đăng ký
+                    </small>
                 </div>
             </div>
         </div>
@@ -139,8 +107,12 @@
                         <div class="col-md-2" id="revenueYearInput">
                             <label for="revenueYear" class="form-label fw-bold mb-1">Năm</label>
                             <select class="form-select form-select-sm" id="revenueYear" onchange="updateRevenueChart()">
-                                @for($y = date('Y'); $y >= date('Y') - 5; $y--)
-                                    <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                                @php
+                                    $currentYear = date('Y');
+                                    $startYear = max(2025, $currentYear - 4); // Chỉ hiển thị từ 2025
+                                @endphp
+                                @for($y = $currentYear; $y >= $startYear; $y--)
+                                    <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
@@ -195,7 +167,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-chart-line me-2 text-primary"></i>
-                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (đã nhận hàng)</span>
+                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (Chỉ đã giao)</span>
                         </h5>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleChartType()">
@@ -215,60 +187,50 @@
             </div>
         </div>
 
-        <!-- Revenue Statistics Summary -->
+        <!-- Simple Revenue Summary -->
         <div class="col-xl-4 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 p-4">
                     <h5 class="fw-bold mb-0">
-                        <i class="fas fa-chart-pie me-2 text-success"></i>
-                        Thống kê doanh thu
+                        <i class="fas fa-chart-line me-2 text-primary"></i>
+                        Tóm tắt doanh thu
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div id="revenueStats">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="text-center p-3 bg-light rounded">
-                                    <i class="fas fa-arrow-up fa-lg text-success mb-2"></i>
-                                    <h6 class="fw-bold text-success" id="maxRevenue">0₫</h6>
-                                    <small class="text-muted">Cao nhất</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-center p-3 bg-light rounded">
-                                    <i class="fas fa-arrow-down fa-lg text-danger mb-2"></i>
-                                    <h6 class="fw-bold text-danger" id="minRevenue">0₫</h6>
-                                    <small class="text-muted">Thấp nhất</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-center p-3 bg-light rounded">
-                                    <i class="fas fa-chart-line fa-lg text-info mb-2"></i>
-                                    <h6 class="fw-bold text-info" id="avgRevenue">0₫</h6>
-                                    <small class="text-muted">Trung bình</small>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="text-center p-3 bg-light rounded">
-                                    <i class="fas fa-percentage fa-lg text-warning mb-2"></i>
-                                    <h6 class="fw-bold text-warning" id="growthRate">0%</h6>
-                                    <small class="text-muted">Tăng trưởng</small>
-                                </div>
+                    <div class="text-center mb-4">
+                        <div class="display-6 fw-bold text-success mb-2">
+                            {{ number_format($totalRevenue) }}₫
+                        </div>
+                        <p class="text-muted mb-0">Tổng doanh thu (đã giao)</p>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h4 fw-bold text-primary mb-1">{{ $orderStats['delivered'] }}</div>
+                                <small class="text-muted">Đơn đã giao</small>
                             </div>
                         </div>
-                        <div class="mt-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Tổng doanh thu:</span>
-                                <span class="fw-bold text-success" id="totalRevenueDisplay">0₫</span>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <div class="h4 fw-bold text-warning mb-1">{{ $orderStats['pending'] }}</div>
+                                <small class="text-muted">Đơn chờ xử lý</small>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Tổng đơn hàng:</span>
-                                <span class="fw-bold text-primary" id="totalOrdersDisplay">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-muted">Giá trị TB/ĐH:</span>
-                                <span class="fw-bold text-warning" id="avgOrderValue">0₫</span>
-                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Giá trị TB/ĐH:</span>
+                            <span class="fw-bold text-success">
+                                {{ $totalRevenue > 0 && $orderStats['delivered'] > 0 ? number_format($totalRevenue / $orderStats['delivered']) : '0' }}₫
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Tỷ lệ hoàn thành:</span>
+                            <span class="fw-bold text-info">
+                                {{ $totalOrders > 0 ? round(($orderStats['delivered'] / $totalOrders) * 100, 1) : '0' }}%
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -278,7 +240,7 @@
 
     <!-- Order Status Chart Row -->
     <div class="row mb-4">
-        <div class="col-xl-6 mb-4">
+        <div class="col-xl-12 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 p-4">
                     <h5 class="fw-bold mb-0">
@@ -327,25 +289,42 @@
             </div>
         </div>
 
-        <!-- Revenue Trend Chart -->
-        <div class="col-xl-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
+
+    </div>
+
+    <!-- Order Status Details Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
                 <div class="card-header bg-transparent border-0 p-4">
                     <h5 class="fw-bold mb-0">
-                        <i class="fas fa-trending-up me-2 text-info"></i>
-                        Xu hướng doanh thu
+                        <i class="fas fa-list-alt me-2 text-primary"></i>
+                        Thống kê chi tiết đơn hàng theo trạng thái
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="chart-wrapper" style="height: 180px;">
-                        <canvas id="revenueTrendChart"></canvas>
+                    <div class="row g-3">
+                        @foreach($orderStatusDetails as $status => $detail)
+                        <div class="col-xl-2 col-md-4 col-sm-6">
+                            <div class="text-center p-3 rounded" style="background-color: {{ $detail['color'] }}15; border-left: 4px solid {{ $detail['color'] }}">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; background-color: {{ $detail['color'] }}20;">
+                                        <i class="fas fa-shopping-cart text-white" style="color: {{ $detail['color'] }} !important;"></i>
+                                    </div>
+                                </div>
+                                <h4 class="fw-bold mb-1" style="color: {{ $detail['color'] }}">{{ $detail['count'] }}</h4>
+                                <p class="text-muted mb-1 small">{{ $detail['label'] }}</p>
+                                <p class="mb-0 fw-bold" style="color: {{ $detail['color'] }}">{{ number_format($detail['revenue']) }}₫</p>
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Stats Row -->
+    <!-- Quick Stats Row 1 -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-3">
             <div class="card border-0 bg-light shadow-sm">
@@ -380,6 +359,28 @@
                     <i class="fas fa-ticket-alt fa-2x text-success mb-3"></i>
                     <h4 class="fw-bold text-success">{{ $stats['active_coupons'] }}</h4>
                     <p class="text-muted mb-0">Coupon đang hoạt động</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Row 2 -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 bg-light shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-gift fa-2x text-danger mb-3"></i>
+                    <h4 class="fw-bold text-danger">{{ $stats['promotions'] ?? 0 }}</h4>
+                    <p class="text-muted mb-0">Chương trình</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-0 bg-light shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-envelope fa-2x text-secondary mb-3"></i>
+                    <h4 class="fw-bold text-secondary">{{ $stats['contacts'] ?? 0 }}</h4>
+                    <p class="text-muted mb-0">Liên hệ</p>
                 </div>
             </div>
         </div>
@@ -454,6 +455,10 @@
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-star me-2 text-warning"></i>
                             Sản phẩm bán chạy
+                            <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Chỉ đã giao, trừ đi đã hủy
+                            </small>
                         </h5>
                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-warning btn-sm">
                             Xem tất cả
@@ -477,10 +482,14 @@
                                         <strong>{{ Str::limit($product->name, 30) }}</strong>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary">{{ $product->total_sold }}</span>
+                                        <span class="badge bg-primary" title="Số lượng: Đã giao - Đã hủy">
+                                            {{ $product->total_sold }}
+                                        </span>
                                     </td>
                                     <td>
-                                        <strong class="text-success">{{ number_format($product->total_revenue) }}₫</strong>
+                                        <strong class="text-success" title="Doanh thu: Đã giao - Đã hủy">
+                                            {{ number_format($product->total_revenue) }}₫
+                                        </strong>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -501,6 +510,10 @@
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
                             Sản phẩm bán chậm
+                            <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Chỉ đã giao, trừ đi đã hủy
+                            </small>
                         </h5>
                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-danger btn-sm">
                             Xem tất cả
@@ -528,7 +541,9 @@
                                         <span class="badge bg-secondary">{{ $product->total_stock }}</span>
                                     </td>
                                     <td>
-                                        <span class="badge bg-danger">{{ $product->total_sold }}</span>
+                                        <span class="badge bg-danger" title="Số lượng: Đã giao - Đã hủy">
+                                            {{ $product->total_sold }}
+                                        </span>
                                     </td>
                                     <td>
                                         @if($product->total_sold == 0)
@@ -549,59 +564,7 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 p-4">
-                    <h5 class="fw-bold mb-0">
-                        <i class="fas fa-bolt me-2 text-primary"></i>
-                        Thao tác nhanh
-                    </h5>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.orders.index') }}" class="btn btn-outline-primary w-100 p-3">
-                                <i class="fas fa-shopping-cart fa-lg mb-2 d-block"></i>
-                                Quản lý đơn hàng
-                            </a>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.products.index') }}" class="btn btn-outline-warning w-100 p-3">
-                                <i class="fas fa-box fa-lg mb-2 d-block"></i>
-                                Quản lý sản phẩm
-                            </a>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-info w-100 p-3">
-                                <i class="fas fa-users fa-lg mb-2 d-block"></i>
-                                Quản lý người dùng
-                            </a>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.products.categories.index') }}" class="btn btn-outline-success w-100 p-3">
-                                <i class="fas fa-tags fa-lg mb-2 d-block"></i>
-                                Danh mục
-                            </a>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary w-100 p-3">
-                                <i class="fas fa-newspaper fa-lg mb-2 d-block"></i>
-                                Tin tức
-                            </a>
-                        </div>
-                        <div class="col-lg-2 col-md-4 col-sm-6">
-                            <a href="{{ route('admin.coupons.index') }}" class="btn btn-outline-danger w-100 p-3">
-                                <i class="fas fa-ticket-alt fa-lg mb-2 d-block"></i>
-                                Coupon
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 </div>
 @endsection
 
@@ -819,7 +782,7 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let revenueChart, orderStatusChart, revenueTrendChart;
+        let revenueChart, orderStatusChart;
         let currentChartType = 'line';
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -827,10 +790,31 @@
             initializeCharts();
             
             // Cập nhật thống kê ban đầu
-            updateRevenueStats(@json($revenueLastWeek));
+            const initialData = @json($revenueLastWeek);
+            const ordersData = @json($ordersLastWeek);
+            const initialStats = {
+                data: initialData.map(item => item.revenue),
+                labels: initialData.map(item => item.date),
+                totalRevenue: initialData.reduce((sum, item) => sum + item.revenue, 0),
+                maxRevenue: Math.max(...initialData.map(item => item.revenue)),
+                minRevenue: Math.min(...initialData.map(item => item.revenue)),
+                avgRevenue: initialData.reduce((sum, item) => sum + item.revenue, 0) / initialData.length,
+                growth: 0,
+                totalOrders: ordersData.reduce((sum, item) => sum + item.count, 0) // Tổng số đơn hàng thực tế
+            };
+            updateRevenueStats(initialStats);
             
             // Cập nhật input controls
             updateRevenueInputs();
+            
+            // Ẩn các input không cần thiết ban đầu
+            const yearInput = document.getElementById('revenueYearInput');
+            const monthInput = document.getElementById('revenueMonthInput');
+            const quarterInput = document.getElementById('revenueQuarterInput');
+            
+            yearInput.style.display = 'none';
+            monthInput.style.display = 'none';
+            quarterInput.style.display = 'none';
         });
 
         function initializeCharts() {
@@ -910,41 +894,7 @@
                 }
             });
 
-            // Revenue Trend Chart
-            const trendCtx = document.getElementById('revenueTrendChart').getContext('2d');
-            const trendData = @json($revenueLastWeek);
-            
-            revenueTrendChart = new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: trendData.map(item => item.date),
-                    datasets: [{
-                        label: 'Xu hướng',
-                        data: trendData.map(item => item.revenue),
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return new Intl.NumberFormat('vi-VN').format(value) + '₫';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+
         }
 
         function updateRevenueChart() {
@@ -983,49 +933,52 @@
             revenueChart.data.labels = data.labels;
             revenueChart.data.datasets[0].data = data.data;
             revenueChart.update();
-
-            // Cập nhật biểu đồ xu hướng
-            revenueTrendChart.data.labels = data.labels;
-            revenueTrendChart.data.datasets[0].data = data.data;
-            revenueTrendChart.update();
         }
 
         function updateRevenueStats(data) {
+            // Cập nhật thống kê doanh thu
             const totalRevenue = data.totalRevenue || 0;
             const maxRevenue = data.maxRevenue || 0;
             const avgRevenue = data.avgRevenue || 0;
-            const minRevenue = Math.min(...data.data) || 0;
+            const minRevenue = data.minRevenue || 0;
             const totalOrders = data.totalOrders || 0;
             const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-            const growthRate = maxRevenue > 0 ? ((maxRevenue - minRevenue) / maxRevenue) * 100 : 0;
+            const growthRate = data.growth || 0;
 
             // Cập nhật các element
-            document.getElementById('maxRevenue').textContent = new Intl.NumberFormat('vi-VN').format(maxRevenue) + '₫';
-            document.getElementById('minRevenue').textContent = new Intl.NumberFormat('vi-VN').format(minRevenue) + '₫';
-            document.getElementById('avgRevenue').textContent = new Intl.NumberFormat('vi-VN').format(avgRevenue) + '₫';
-            document.getElementById('growthRate').textContent = new Intl.NumberFormat('vi-VN', {maximumFractionDigits: 1}).format(growthRate) + '%';
-            document.getElementById('totalRevenueDisplay').textContent = new Intl.NumberFormat('vi-VN').format(totalRevenue) + '₫';
-            document.getElementById('totalOrdersDisplay').textContent = new Intl.NumberFormat('vi-VN').format(totalOrders);
-            document.getElementById('avgOrderValue').textContent = new Intl.NumberFormat('vi-VN').format(avgOrderValue) + '₫';
+            document.getElementById('maxRevenue').textContent = formatCurrency(maxRevenue);
+            document.getElementById('minRevenue').textContent = formatCurrency(minRevenue);
+            document.getElementById('avgRevenue').textContent = formatCurrency(avgRevenue);
+            document.getElementById('growthRate').textContent = (growthRate >= 0 ? '+' : '') + growthRate + '%';
+            document.getElementById('totalRevenueDisplay').textContent = formatCurrency(totalRevenue);
+            document.getElementById('totalOrdersDisplay').textContent = totalOrders.toLocaleString('vi-VN');
+            document.getElementById('avgOrderValue').textContent = formatCurrency(avgOrderValue);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
         }
 
         function updateChartTitle(period, year, month, quarter) {
             let title = '';
             switch(period) {
                 case '7days':
-                    title = 'Doanh thu 7 ngày gần đây';
+                    title = 'Doanh thu 7 ngày gần đây (Chỉ đã giao)';
                     break;
                 case '30days':
-                    title = 'Doanh thu 30 ngày gần đây';
+                    title = 'Doanh thu 30 ngày gần đây (Chỉ đã giao)';
                     break;
                 case 'month':
-                    title = `Doanh thu tháng ${month}/${year}`;
+                    title = `Doanh thu tháng ${month}/${year} (Chỉ đã giao)`;
                     break;
                 case 'quarter':
-                    title = `Doanh thu quý ${quarter}/${year}`;
+                    title = `Doanh thu quý ${quarter}/${year} (Chỉ đã giao)`;
                     break;
                 case 'year':
-                    title = `Doanh thu năm ${year}`;
+                    title = `Doanh thu năm ${year} (Chỉ đã giao)`;
                     break;
             }
             document.getElementById('revenueChartTitle').textContent = title;

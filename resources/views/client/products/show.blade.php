@@ -98,6 +98,31 @@
             /* tất cả chữ bằng nhau */
             line-height: 1.75;
         }
+        
+        /* ===== VALIDATION STYLES ===== */
+        .hidden {
+            display: none !important;
+        }
+        
+        .rating-error, .content-error, .reply-content-error {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #ff6c2f;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e55a1f;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
 
         /* ===== PRODUCT CARD STYLES ===== */
         .rp-card {
@@ -582,7 +607,7 @@
                         @php
                             $reviewStatus = \App\Helpers\CommentHelper::getReviewStatus($product->id);
                             $remainingDays = \App\Helpers\CommentHelper::getRemainingDaysToReview($product->id);
-                            $purchasedItems = \App\Helpers\CommentHelper::getPurchasedItems($product->id);
+                            $purchasedItems = \App\Helpers\CommentHelper::getPurchasedItemsGrouped($product->id);
                         @endphp
                         @if ($reviewStatus['can_review'])
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
@@ -594,77 +619,87 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Hiển thị form đánh giá cho từng đơn hàng -->
+                                <!-- Hiển thị form đánh giá cho từng đơn hàng (gom nhóm biến thể) -->
                                 @if($purchasedItems->count() > 0)
                                     <div class="space-y-6">
-                                        @foreach($purchasedItems as $item)
+                                        @foreach($purchasedItems as $groupedItem)
                                             <div class="bg-white rounded-lg border border-gray-200 p-5">
-                                                <!-- Thông tin sản phẩm và đơn hàng -->
-                                                <div class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                                                    <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                                                        @if($item->productVariant && $item->productVariant->image)
-                                                            <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
-                                                        @elseif($item->image_product)
-                                                            <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
-                                                        @elseif($item->productVariant && $item->productVariant->product && $item->productVariant->product->thumbnail)
-                                                            <img src="{{ asset('storage/' . ltrim($item->productVariant->product->thumbnail, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
-                                                        @else
-                                                            <div class="flex flex-col items-center justify-center text-gray-400">
-                                                                <i class="fas fa-image text-lg"></i>
-                                                            </div>
-                                                        @endif
+                                                <!-- Thông tin đơn hàng -->
+                                                <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                    <div class="flex items-center justify-between mb-2">
+                                                        <h5 class="font-semibold text-blue-900">
+                                                            <i class="fas fa-shopping-cart mr-2"></i>
+                                                            Đơn hàng #{{ $groupedItem->order->order_number }}
+                                                        </h5>
+                                                        <span class="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                                                            {{ $groupedItem->items->count() }} biến thể
+                                                        </span>
                                                     </div>
-                                                    <div class="flex-1">
-                                                        <h5 class="font-medium text-gray-900">{{ $item->name_product }}</h5>
-                                                        @if($item->productVariant)
-                                                            <p class="text-sm text-gray-600">
-                                                                @foreach($item->productVariant->attributeValues as $attrValue)
-                                                                    <span class="inline-block bg-gray-200 px-2 py-1 rounded text-xs mr-1 mb-1">
-                                                                        {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
-                                                                    </span>
-                                                                @endforeach
-                                                            </p>
-                                                        @endif
-                                                        <p class="text-sm text-gray-500">Số lượng: {{ $item->quantity }} | Giá: {{ number_format($item->price) }}₫</p>
-                                                        <p class="text-xs text-gray-400">
-                                                            <i class="fas fa-shopping-cart mr-1"></i>
-                                                            Đơn hàng: #{{ $item->order->order_number }} | 
-                                                            <i class="fas fa-calendar-check mr-1"></i>
-                                                            Nhận hàng: {{ $item->order->received_at ? $item->order->received_at->format('d/m/Y') : 'N/A' }}
+
+                                                    <p class="text-sm text-blue-700">
+                                                        <i class="fas fa-boxes mr-1"></i>
+                                                        Tổng số lượng: {{ $groupedItem->total_quantity }} | 
+                                                        <i class="fas fa-money-bill mr-1"></i>
+                                                        Tổng giá: {{ number_format($groupedItem->total_price) }}₫
+                                                    </p>
+                                                    @if($groupedItem->remaining_days > 0)
+                                                        <p class="text-xs text-[#ff6c2f] font-medium mt-2">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Còn {{ $groupedItem->remaining_days }} ngày để đánh giá
                                                         </p>
-                                                        @if($item->order->received_at)
-                                                            @php
-                                                                $daysSinceReceived = now()->diffInDays($item->order->received_at);
-                                                                $daysLeft = 15 - $daysSinceReceived;
-                                                            @endphp
-                                                            @if($daysLeft > 0)
-                                                                <p class="text-xs text-[#ff6c2f] font-medium mt-1">
-                                                                    <i class="fas fa-clock mr-1"></i>
-                                                                    Còn {{ $daysLeft }} ngày để đánh giá
+                                                    @endif
+                                                </div>
+
+                                                <!-- Danh sách các biến thể trong đơn hàng -->
+                                                <div class="mb-4 space-y-3">
+                                                    <h6 class="font-medium text-gray-700 mb-2">Các biến thể đã mua:</h6>
+                                                    @foreach($groupedItem->items as $item)
+                                                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                                            <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                                @if($item->productVariant && $item->productVariant->image)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->productVariant->image, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                                @elseif($item->image_product)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->image_product, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                                @elseif($item->productVariant && $item->productVariant->product && $item->productVariant->product->thumbnail)
+                                                                    <img src="{{ asset('storage/' . ltrim($item->productVariant->product->thumbnail, '/')) }}" alt="{{ $item->name_product }}" class="w-full h-full object-cover">
+                                                                @else
+                                                                    <div class="flex flex-col items-center justify-center text-gray-400">
+                                                                        <i class="fas fa-image text-sm"></i>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="flex-1 min-w-0">
+                                                                <h6 class="font-medium text-gray-900 text-sm truncate">{{ $item->name_product }}</h6>
+                                                                @if($item->productVariant)
+                                                                    <div class="flex flex-wrap gap-1 mt-1">
+                                                                        @foreach($item->productVariant->attributeValues as $attrValue)
+                                                                            <span class="inline-block bg-white border border-gray-200 px-2 py-1 rounded text-xs text-gray-600">
+                                                                                {{ $attrValue->attribute->name }}: {{ $attrValue->value }}
+                                                                            </span>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endif
+                                                                <p class="text-xs text-gray-500 mt-1">
+                                                                    Số lượng: {{ $item->quantity }} | Giá: {{ number_format($item->price) }}₫
                                                                 </p>
-                                                            @else
-                                                                <p class="text-xs text-red-500 font-medium mt-1">
-                                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                                                                    Đã hết thời gian đánh giá
-                                                                </p>
-                                                            @endif
-                                                        @endif
-                                                    </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
 
                                                 <!-- Form đánh giá cho đơn hàng này -->
-                                                @if($item->order->received_at && (15 - now()->diffInDays($item->order->received_at)) > 0)
+                                                @if($groupedItem->can_review)
                                                     <form action="{{ route('products.comments.store', $product->id) }}" method="POST" class="order-review-form" onsubmit="console.log('Form submitted');">
                                                         @csrf
-                                                        <input type="hidden" name="order_id" value="{{ $item->order->id }}">
+                                                        <input type="hidden" name="order_id" value="{{ $groupedItem->order->id }}">
                                                         
                                                         <div class="mb-3">
                                                             <label class="block text-sm font-medium mb-1">Đánh giá <span class="text-red-500">*</span></label>
                                                             <div class="flex items-center space-x-1">
                                                                 @for ($i = 1; $i <= 5; $i++)
-                                                                    <input type="radio" id="star{{ $item->order->id }}_{{ $i }}" name="rating"
+                                                                    <input type="radio" id="star{{ $groupedItem->order->id }}_{{ $i }}" name="rating"
                                                                         value="{{ $i }}" class="sr-only">
-                                                                    <label for="star{{ $item->order->id }}_{{ $i }}"
+                                                                    <label for="star{{ $groupedItem->order->id }}_{{ $i }}"
                                                                         class="cursor-pointer text-2xl text-gray-300 hover:text-yellow-400">
                                                                         <i class="fas fa-star"></i>
                                                                     </label>
@@ -683,13 +718,13 @@
                                                         </div>
                                                         
                                                         <button type="submit" class="btn-primary px-5 py-2 rounded-md">
-                                                            <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá cho đơn hàng #{{ $item->order->order_number }}
+                                                            <i class="fas fa-paper-plane mr-2"></i>Gửi đánh giá cho đơn hàng #{{ $groupedItem->order->order_number }}
                                                         </button>
                                                     </form>
                                                 @else
                                                     <div class="text-center py-4 text-gray-500">
-                                                        <i class="fas fa-clock text-2xl mb-2"></i>
-                                                        <p>Đã hết thời gian đánh giá cho đơn hàng này</p>
+                                                        <i class="fas fa-check-circle text-2xl mb-2 text-green-500"></i>
+                                                        <p>Bạn đã đánh giá đơn hàng này rồi hoặc đã hết thời gian đánh giá</p>
                                                     </div>
                                                 @endif
                                             </div>
@@ -823,24 +858,124 @@
                                             @endif
                                         @endif
                                         
-                                        <p class="text-gray-800">{{ $cmt->content }}</p>
+                                        <div class="mb-3 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-200">
+                                            <h6 class="text-sm font-medium text-gray-700 mb-2">Nội dung đánh giá:</h6>
+                                            @php
+                                                // Xử lý nội dung comment
+                                                $content = $cmt->content;
+                                                
+                                                // Nếu nội dung chứa form data, trích xuất phần content
+                                                if (strpos($content, '&content=') !== false) {
+                                                    // Tìm và trích xuất nội dung sau &content=
+                                                    if (preg_match('/&content=([^&]*)/', $content, $matches)) {
+                                                        $cleanContent = urldecode($matches[1]);
+                                                    } else {
+                                                        $cleanContent = $content;
+                                                    }
+                                                } else {
+                                                    // Nếu không có form data, chỉ loại bỏ token
+                                                    $cleanContent = preg_replace('/_token=[^&\s]*/', '', $content);
+                                                    $cleanContent = preg_replace('/&order_id=[^&\s]*/', '', $cleanContent);
+                                                    $cleanContent = preg_replace('/&rating=[^&\s]*/', '', $cleanContent);
+                                                }
+                                                
+                                                $cleanContent = trim($cleanContent);
+                                            @endphp
+                                            @if(!empty($cleanContent))
+                                                <p class="text-gray-800 text-sm leading-relaxed">{{ $cleanContent }}</p>
+                                            @else
+                                                <p class="text-gray-500 text-sm italic">Không có nội dung đánh giá</p>
+                                                @if(config('app.debug'))
+                                                    <details class="mt-2 text-xs text-gray-400">
+                                                        <summary>Debug: Nội dung gốc</summary>
+                                                        <pre class="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto">{{ $cmt->content }}</pre>
+                                                    </details>
+                                                @endif
+                                            @endif
+                                        </div>
 
                                         @if ($cmt->replies->count() > 0)
                                             <div class="mt-3 space-y-3">
                                                 @foreach ($cmt->replies as $rep)
                                                     @if ($rep->status === 'approved' && !$rep->is_hidden && $rep->user)
-                                                        <div class="bg-gray-50 rounded-md p-3 ml-4">
-                                                            <div class="flex items-center gap-2">
-                                                                <b class="text-sm">{{ $rep->user->name ?? 'Khách vãng lai' }}</b>
+                                                        <div class="bg-white rounded-md p-3 ml-4 border border-gray-200">
+                                                            <div class="flex items-center gap-2 mb-2">
+                                                                <b class="text-sm text-gray-800">{{ $rep->user->name ?? 'Khách vãng lai' }}</b>
                                                                 <span
                                                                     class="text-xs text-gray-500">{{ $rep->created_at->format('d/m/Y H:i') }}</span>
                                                             </div>
-                                                            <div class="text-sm text-gray-700">{{ $rep->content }}</div>
+                                                            @php
+                                                                // Xử lý nội dung reply
+                                                                $replyContent = $rep->content;
+                                                                
+                                                                // Nếu nội dung chứa form data, trích xuất phần content
+                                                                if (strpos($replyContent, '&content=') !== false) {
+                                                                    // Tìm và trích xuất nội dung sau &content=
+                                                                    if (preg_match('/&content=([^&]*)/', $replyContent, $matches)) {
+                                                                        $cleanReplyContent = urldecode($matches[1]);
+                                                                    } else {
+                                                                        $cleanReplyContent = $replyContent;
+                                                                    }
+                                                                } else {
+                                                                    // Nếu không có form data, chỉ loại bỏ token
+                                                                    $cleanReplyContent = preg_replace('/_token=[^&\s]*/', '', $replyContent);
+                                                                    $cleanReplyContent = preg_replace('/&order_id=[^&\s]*/', '', $cleanReplyContent);
+                                                                    $cleanReplyContent = preg_replace('/&rating=[^&\s]*/', '', $cleanReplyContent);
+                                                                }
+                                                                
+                                                                $cleanReplyContent = trim($cleanReplyContent);
+                                                            @endphp
+                                                            @if(!empty($cleanReplyContent))
+                                                                <div class="text-sm text-gray-700 leading-relaxed">{{ $cleanReplyContent }}</div>
+                                                            @else
+                                                                <div class="text-gray-500 text-sm italic">Không có nội dung phản hồi</div>
+                                                                @if(config('app.debug'))
+                                                                    <details class="mt-2 text-xs text-gray-400">
+                                                                        <summary>Debug: Nội dung gốc</summary>
+                                                                        <pre class="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto">{{ $rep->content }}</pre>
+                                                                    </details>
+                                                                @endif
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 @endforeach
                                             </div>
                                         @endif
+                                        
+                                        <!-- Form reply comment -->
+                                        @auth
+                                            @if(\App\Helpers\CommentHelper::canReply($product->id))
+                                                <div class="mt-3">
+                                                    <button type="button" class="text-sm text-[#ff6c2f] hover:text-[#e55a1f] transition-colors" onclick="toggleReplyForm({{ $cmt->id }})">
+                                                        <i class="fas fa-reply mr-1"></i>Phản hồi
+                                                    </button>
+                                                    
+                                                    <div id="replyForm{{ $cmt->id }}" class="hidden mt-3 ml-4">
+                                                        <form action="{{ route('products.comments.reply', ['productId' => $product->id, 'commentId' => $cmt->id]) }}" method="POST" class="reply-form" onsubmit="return validateReplyForm(this)">
+                                                            @csrf
+                                                            <div class="mb-3">
+                                                                <textarea name="reply_content" rows="3" maxlength="200" 
+                                                                    class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#ff6c2f] resize-none" 
+                                                                    placeholder="Viết phản hồi của bạn..."></textarea>
+                                                                <div class="text-xs text-gray-500 mt-1">
+                                                                    <span class="replyCharCount">0</span>/200 ký tự
+                                                                </div>
+                                                                <div class="reply-content-error text-red-500 text-xs mt-1 hidden"></div>
+                                                            </div>
+                                                            
+                                                            <div class="flex gap-2">
+                                                                <button type="submit" class="btn-primary px-4 py-2 rounded-md text-sm">
+                                                                    <i class="fas fa-paper-plane mr-1"></i>Gửi phản hồi
+                                                                </button>
+                                                                <button type="button" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors" onclick="toggleReplyForm({{ $cmt->id }})">
+                                                                    Hủy
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endauth
                                     </div>
                                 </div>
                             </div>
@@ -962,6 +1097,26 @@
         const productData = @json($jsProductData);
 
         /* ===== Helpers ===== */
+        
+        // Function để xử lý nội dung comment
+        function processCommentContent(content) {
+            if (!content) return '';
+            
+            // Nếu nội dung chứa form data, trích xuất phần content
+            if (content.includes('&content=')) {
+                const match = content.match(/&content=([^&]*)/);
+                if (match) {
+                    return decodeURIComponent(match[1]);
+                }
+            }
+            
+            // Nếu không có form data, chỉ loại bỏ token
+            return content
+                .replace(/_token=[^&\s]*/g, '')
+                .replace(/&order_id=[^&\s]*/g, '')
+                .replace(/&rating=[^&\s]*/g, '')
+                .trim();
+        }
         const el = s => document.querySelector(s);
         const els = s => Array.from(document.querySelectorAll(s));
         const VND = n => (Number(n) || 0).toLocaleString('vi-VN') + '₫';
@@ -1381,7 +1536,105 @@
         document.querySelectorAll('.order-review-form').forEach(form => {
             const stars = form.querySelectorAll('input[type="radio"]');
             const starLabels = form.querySelectorAll('label[for^="star"]');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const textarea = form.querySelector('textarea[name="content"]');
+            const ratingError = form.querySelector('.rating-error') || createRatingErrorElement(form);
+            const contentError = form.querySelector('.content-error') || createContentErrorElement(form);
             
+            // Tạo element hiển thị lỗi rating
+            function createRatingErrorElement(form) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'rating-error text-red-500 text-xs mt-1 hidden';
+                form.querySelector('.mb-3').appendChild(errorDiv);
+                return errorDiv;
+            }
+            
+            // Tạo element hiển thị lỗi content
+            function createContentErrorElement(form) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'content-error text-red-500 text-xs mt-1 hidden';
+                textarea.parentElement.appendChild(errorDiv);
+                return errorDiv;
+            }
+            
+            // Validation function
+            function validateForm() {
+                let isValid = true;
+                
+                // Validate rating
+                const selectedRating = form.querySelector('input[name="rating"]:checked');
+                if (!selectedRating) {
+                    ratingError.textContent = 'Vui lòng chọn đánh giá sao!';
+                    ratingError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    ratingError.classList.add('hidden');
+                }
+                
+                // Validate content
+                const content = textarea.value.trim();
+                if (!content) {
+                    contentError.textContent = 'Nội dung đánh giá không được để trống!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else if (content.length < 10) {
+                    contentError.textContent = 'Nội dung đánh giá phải có ít nhất 10 ký tự!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else if (content.length > 500) {
+                    contentError.textContent = 'Nội dung đánh giá không được quá 500 ký tự!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    contentError.classList.add('hidden');
+                }
+                
+                // Validate HTML tags
+                if (content.includes('<') || content.includes('>')) {
+                    contentError.textContent = 'Nội dung đánh giá không được chứa HTML tags!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                }
+                
+                // Validate spam words
+                const spamWords = ['spam', 'advertisement', 'quảng cáo', 'mua ngay', 'giá rẻ', 'khuyến mãi'];
+                const lowerContent = content.toLowerCase();
+                for (const word of spamWords) {
+                    if (lowerContent.includes(word)) {
+                        contentError.textContent = 'Nội dung đánh giá không được chứa từ khóa quảng cáo!';
+                        contentError.classList.remove('hidden');
+                        isValid = false;
+                        break;
+                    }
+                }
+                
+                // Validate repeated characters
+                if (/(.)\1{4,}/.test(content)) {
+                    contentError.textContent = 'Nội dung đánh giá không được chứa ký tự lặp lại quá nhiều!';
+                    contentError.classList.remove('hidden');
+                    isValid = false;
+                }
+                
+                return isValid;
+            }
+            
+            // Form submit validation
+            form.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Real-time validation for content
+            textarea.addEventListener('input', function() {
+                const content = this.value.trim();
+                if (content.length >= 10 && content.length <= 500) {
+                    contentError.classList.add('hidden');
+                }
+            });
+            
+            // Real-time validation for rating
             stars.forEach((star, index) => {
                 star.addEventListener('change', function() {
                     // Reset all stars in this form
@@ -1394,6 +1647,104 @@
                     for (let i = 0; i <= index; i++) {
                         starLabels[i].querySelector('i').classList.remove('text-gray-300');
                         starLabels[i].querySelector('i').classList.add('text-yellow-400');
+                    }
+                    
+                    // Hide rating error when rating is selected
+                    ratingError.classList.add('hidden');
+                });
+            });
+        });
+
+        /* ===== Reply Form Functions ===== */
+        // Toggle reply form
+        window.toggleReplyForm = function(commentId) {
+            const form = document.getElementById('replyForm' + commentId);
+            if (form) {
+                form.classList.toggle('hidden');
+                
+                // Focus vào textarea khi hiển thị form
+                if (!form.classList.contains('hidden')) {
+                    const textarea = form.querySelector('textarea[name="reply_content"]');
+                    if (textarea) {
+                        textarea.focus();
+                    }
+                }
+            }
+        };
+
+        // Validate reply form
+        window.validateReplyForm = function(form) {
+            const textarea = form.querySelector('textarea[name="reply_content"]');
+            const errorDiv = form.querySelector('.reply-content-error');
+            const content = textarea.value.trim();
+            
+            // Reset error
+            errorDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            
+            // Validate required
+            if (!content) {
+                errorDiv.textContent = 'Nội dung phản hồi không được để trống!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate length
+            if (content.length < 5) {
+                errorDiv.textContent = 'Nội dung phản hồi phải có ít nhất 5 ký tự!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            if (content.length > 200) {
+                errorDiv.textContent = 'Nội dung phản hồi không được quá 200 ký tự!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate HTML tags
+            if (content.includes('<') || content.includes('>')) {
+                errorDiv.textContent = 'Nội dung phản hồi không được chứa HTML tags!';
+                errorDiv.classList.remove('hidden');
+                return false;
+            }
+            
+            // Validate spam words
+            const spamWords = ['spam', 'advertisement', 'quảng cáo', 'mua ngay', 'giá rẻ', 'khuyến mãi'];
+            const lowerContent = content.toLowerCase();
+            for (const word of spamWords) {
+                if (lowerContent.includes(word)) {
+                    errorDiv.textContent = 'Nội dung phản hồi không được chứa từ khóa quảng cáo!';
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+            }
+            
+            // Validate repeated characters
+            if (/(.)\1{4,}/.test(content)) {
+                errorDiv.textContent = 'Nội dung phản hồi không được chứa ký tự lặp lại quá nhiều!';
+                errorDiv.classList.remove('hidden');
+                    return false;
+            }
+            
+            return true;
+        };
+
+        // Character count for reply forms
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.reply-form textarea').forEach(textarea => {
+                const charCount = textarea.parentElement.querySelector('.replyCharCount');
+                
+                textarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    charCount.textContent = length;
+                    
+                    if (length > 180) {
+                        charCount.classList.add('text-red-500');
+                        charCount.classList.remove('text-gray-500');
+                    } else {
+                        charCount.classList.remove('text-red-500');
+                        charCount.classList.add('text-gray-500');
                     }
                 });
             });
@@ -1449,7 +1800,7 @@
                                                     <span class="text-sm text-gray-600 ml-1">${comment.rating}/5</span>
                                                 </div>
                                             ` : ''}
-                                            <p class="text-gray-800">${comment.content}</p>
+                                            <p class="text-gray-800">${processCommentContent(comment.content)}</p>
                                             ${comment.replies && comment.replies.length > 0 ? `
                                                 <div class="mt-3 space-y-3">
                                                     ${comment.replies.map(reply => 
@@ -1459,7 +1810,7 @@
                                                                     <b class="text-sm">${reply.user.name}</b>
                                                                     <span class="text-xs text-gray-500">${new Date(reply.created_at).toLocaleDateString('vi-VN')} ${new Date(reply.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
                                                                 </div>
-                                                                <div class="text-sm text-gray-700">${reply.content}</div>
+                                                                <div class="text-sm text-gray-700">${processCommentContent(reply.content)}</div>
                                                             </div>
                                                         ` : ''
                                                     ).join('')}

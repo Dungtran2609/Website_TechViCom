@@ -50,6 +50,9 @@ use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Products\ClientProductController;
 use App\Http\Controllers\Client\InvoiceController;
 
+// Chatbot API
+use App\Http\Controllers\ChatbotController;
+
 // --- OTHER Controllers ---
 use App\Http\Controllers\Auth\SocialController;
 use App\Http\Controllers\WebhookController;
@@ -67,6 +70,8 @@ use App\Http\Middleware\CheckRole;
 */
 
 // Trang chủ và các trang tĩnh
+// Chatbot API route
+Route::post('/chatbot/send', [ChatbotController::class, 'send'])->name('chatbot.send');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/about', 'client.pages.about')->name('about');
 Route::view('/policy', 'client.pages.policy')->name('policy');
@@ -75,7 +80,7 @@ Route::view('/warranty', 'client.pages.warranty')->name('warranty');
 Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('authorized_dealer');
 Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
-
+Route::view('/chatbot', 'client.chatbots.index')->name('chatbot.index');
 // Hóa đơn (Invoice) - phía client
 Route::get('/invoice', [InvoiceController::class, 'index'])->name('client.invoice.index');
 Route::post('/invoice/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])
@@ -138,7 +143,7 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::prefix('{productId}/comments')->name('comments.')->middleware('auth')->group(function () {
         Route::post('/', [ClientProductCommentController::class, 'store'])->name('store');
         Route::post('/{commentId}/reply', [ClientProductCommentController::class, 'reply'])->name('reply');
-        Route::get('/test', function($productId) {
+        Route::get('/test', function ($productId) {
             return response()->json(['message' => 'Test route works', 'product_id' => $productId]);
         })->name('test');
     });
@@ -248,6 +253,9 @@ Route::post('/apply-coupon', [ClientCouponController::class, 'validateCoupon']);
 */
 Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Thêm route cho revenue data API
+    Route::get('/revenue-data', [AdminController::class, 'getRevenueData'])->name('revenue.data');
 
     // Users, Roles, Permissions
     Route::prefix('users')->middleware(CheckRole::class . ':admin')->name('users.')->group(function () {

@@ -1,8 +1,4 @@
 @extends('admin.layouts.app')
-
-
-
-
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Quản lý người dùng</h1>
@@ -15,11 +11,6 @@
             </a>
         </div>
     </div>
-
-
-
-
-
 
     <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 d-flex gap-2 align-items-center flex-wrap">
         <input type="text" name="search" value="{{ request('search') }}" class="form-control w-auto"
@@ -43,31 +34,17 @@
             </a>
         @endif
     </form>
-
-
-
-
-
-
-
-
     @if (session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
         </div>
     @endif
 
-
-
-
     @if ($errors->has('delete'))
         <div class="alert alert-danger">
             {{ $errors->first('delete') }}
         </div>
     @endif
-
-
-
 
     <div class="card">
         <div class="card-body">
@@ -119,8 +96,8 @@
                                         </a>
                                         @php
                                             $protectedRoles = ['admin'];
-                                            $isProtected = $user->roles->contains(function($role) use ($protectedRoles) { 
-                                                return in_array($role->name, $protectedRoles); 
+                                            $isProtected = $user->roles->contains(function($role) use ($protectedRoles) {
+                                                return in_array($role->name, $protectedRoles);
                                             });
                                         @endphp
                                         @if (!$isProtected)
@@ -153,6 +130,3 @@
         </div>
     </div>
 @endsection
-
-
-

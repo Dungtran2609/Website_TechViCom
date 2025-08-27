@@ -136,9 +136,9 @@ class ClientCheckoutController extends Controller
         $totalCount = 0;
         $currentTime = time();
         
-        // Chỉ tính những lần hủy trong vòng 24 giờ qua
+        // Chỉ tính những lần hủy trong vòng 2 phút qua
         foreach ($cancelData as $timestamp => $count) {
-            if ($currentTime - $timestamp < 86400) { // 24 giờ = 86400 giây
+            if ($currentTime - $timestamp < 120) { // 2 phút = 120 giây
                 $totalCount += $count;
             }
         }
@@ -158,10 +158,10 @@ class ClientCheckoutController extends Controller
         }
         $cancelData[$currentTime]++;
         
-        // Dọn dẹp dữ liệu cũ (hơn 24 giờ)
+        // Dọn dẹp dữ liệu cũ (hơn 2 phút)
         $cleanedData = [];
         foreach ($cancelData as $timestamp => $count) {
-            if ($currentTime - $timestamp < 86400) {
+            if ($currentTime - $timestamp < 120) {
                 $cleanedData[$timestamp] = $count;
             }
         }
@@ -324,9 +324,25 @@ class ClientCheckoutController extends Controller
     /* ============================== PAGE: index ============================== */
     public function index(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         file_put_contents(storage_path('logs/debug.txt'), "Checkout method called at " . date('Y-m-d H:i:s') . "\n", FILE_APPEND);
         file_put_contents(storage_path('logs/debug.txt'), "User logged in: " . (Auth::check() ? 'Yes' : 'No') . "\n", FILE_APPEND);
         if (Auth::check()) file_put_contents(storage_path('logs/debug.txt'), "User ID: " . Auth::id() . "\n", FILE_APPEND);
+
+        // Debug logging cho session
+        Log::info('Checkout index method started', [
+            'user_id' => Auth::id(),
+            'is_guest' => !Auth::check(),
+            'buynow_session' => session('buynow'),
+            'cart_session' => session('cart'),
+            'selected_param' => $request->get('selected'),
+            'order_id' => $request->get('order_id'),
+            'repayment_order_id' => session('repayment_order_id')
+        ]);
 
         if ($request->has('clear_restored_coupon')) {
             session()->forget('restored_coupon');
@@ -804,6 +820,14 @@ class ClientCheckoutController extends Controller
     /* ============================== Coupon AJAX ============================== */
     public function applyCoupon(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.'
+            ], 403);
+        }
+        
         $request->validate([
             'coupon_code' => 'required|string',
             'subtotal'    => 'required|numeric|min:0',
@@ -869,6 +893,11 @@ class ClientCheckoutController extends Controller
     /* ============================== PROCESS CHECKOUT ============================== */
     public function process(CheckoutRequest $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             Log::info('Checkout process started', [
                 'payment_method'   => $request->payment_method,
@@ -1306,8 +1335,9 @@ class ClientCheckoutController extends Controller
 
                 if ($existingOrderForPricing) {
                     $shippingFee = $existingOrderForPricing->shipping_fee ?? 0;
-                    $discountAmount = $existingOrderForPricing->discount_amount ?? 0;
-                    $couponCode = $existingOrderForPricing->coupon_code;
+                    // Không sử dụng discount_amount cũ, để xử lý coupon mới
+                    $discountAmount = 0;
+                    $couponCode = null;
                 } else {
                     // Fallback nếu không tìm thấy đơn hàng cũ
                     $shippingFee = ($shippingMethodId == 1) ? (($subtotal >= 3000000) ? 0 : 50000) : 0;
@@ -1478,9 +1508,9 @@ class ClientCheckoutController extends Controller
                     'shipping_method_id' => $shippingMethodId,
                     'total_amount'       => $originalSubtotal, // Sử dụng giá cũ
                     'shipping_fee'       => $originalShippingFee, // Sử dụng giá cũ
-                    'discount_amount'    => $originalDiscountAmount, // Sử dụng giá cũ
-                    'coupon_code'        => $order->coupon_code, // Giữ nguyên coupon cũ
-                    'final_total'        => $originalFinalTotal, // Sử dụng giá cũ
+                    'discount_amount'    => $discountAmount, // Sử dụng discount mới từ coupon
+                    'coupon_code'        => $couponCode, // Sử dụng coupon mới
+                    'final_total'        => $originalSubtotal + $originalShippingFee - $discountAmount, // Tính lại với discount mới
                     'order_notes'        => $request->order_notes, // Cập nhật ghi chú mới
                     'payment_status'     => $request->payment_method === 'cod' ? 'pending' : 'processing',
                     'updated_at'         => now(),
@@ -1704,7 +1734,7 @@ class ClientCheckoutController extends Controller
 
                     if ($totalCancelCount >= 3) {
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 } else {
                     // Kiểm tra tổng số lần hủy VNPay của khách vãng lai
@@ -1716,7 +1746,7 @@ class ClientCheckoutController extends Controller
                             'guest_cancel_count' => $guestCancelCount
                         ]);
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 }
 
@@ -1784,6 +1814,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Re-init VNPay for an order ============================== */
     public function vnpay_payment($order_id)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $order = Order::with(['orderItems.product'])->findOrFail($order_id);
 
@@ -1849,6 +1884,11 @@ class ClientCheckoutController extends Controller
     /* ============================== VNPay return ============================== */
     public function vnpay_return(Request $request)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $svc = new VNPayService();
             $vnp = $svc->processReturn($request);
@@ -1918,7 +1958,7 @@ class ClientCheckoutController extends Controller
                     if ($totalCancelCount >= 3) {
                         session()->forget('repayment_order_id');
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 } else {
                     // Xử lý cho khách vãng lai
@@ -1941,7 +1981,7 @@ class ClientCheckoutController extends Controller
                     if ($guestCancelCount >= 3) {
                         session()->forget('repayment_order_id');
                         return redirect()->route('checkout.fail')
-                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 24 giờ.');
+                            ->with('error', 'Bạn đã hủy VNPay quá 3 lần. Vui lòng thử lại sau 2 phút.');
                     }
                 }
 
@@ -2262,6 +2302,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Success page ============================== */
     public function success($orderId)
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         try {
             $order = Order::with([
                 'orderItems.product.productAllImages',
@@ -2325,6 +2370,11 @@ class ClientCheckoutController extends Controller
     /* ============================== Fail page ============================== */
     public function fail()
     {
+        // Chặn admin không cho mua hàng
+        if (Auth::check() && Auth::user()->hasRole('admin')) {
+            return redirect()->route('home')->with('error', 'Admin không thể mua hàng. Vui lòng sử dụng tài khoản khách hàng.');
+        }
+        
         return view('client.checkouts.fail');
     }
 
@@ -2468,6 +2518,12 @@ class ClientCheckoutController extends Controller
     {
         $instance = new self();
         $instance->releaseStock($order);
+    }
+
+    public static function reserveStockStatic($order)
+    {
+        $instance = new self();
+        $instance->reserveStock($order);
     }
 
     /* ================== Coupon helper ================== */

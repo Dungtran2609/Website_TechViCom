@@ -89,7 +89,7 @@ class AdminUserController extends Controller
         // Lấy danh sách tên vai trò của người dùng
         $userRoleNames = $user->roles->pluck('name')->toArray();
 
-        // ---- LOGIC ĐẶC BIỆT CHO VAI TRÒ 'USER' HOẶC 'CUSTOMER' ----
+        // ---- LOGIC CHO VAI TRÒ 'USER' HOẶC 'CUSTOMER' ----
         if (count($userRoleNames) === 1 && (in_array('user', $userRoleNames) || in_array('customer', $userRoleNames))) {
 
             // Bước 1: Kiểm tra xem có bất kỳ nỗ lực thay đổi thông tin bị cấm hay không.
@@ -242,7 +242,7 @@ public function destroy(User $user)
         // Kiểm tra vai trò của user - Chỉ bảo vệ tài khoản admin
         $userRoleNames = $user->roles->pluck('name')->toArray();
         $protectedRoles = ['admin'];
-        
+
         if (array_intersect($userRoleNames, $protectedRoles)) {
             return redirect()->route('admin.users.trashed')->with('error', 'Không thể xóa tài khoản Admin!');
         }

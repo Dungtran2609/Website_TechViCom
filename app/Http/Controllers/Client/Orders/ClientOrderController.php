@@ -227,9 +227,10 @@ class ClientOrderController extends Controller
                     'quantity'   => $itm['quantity'],
                     'price'      => $price,
                 ]);
-
-                $variant->decrement('stock', $itm['quantity']);
             }
+
+            // Sử dụng hệ thống reserveStock để đảm bảo có thể hoàn lại tồn kho khi hủy
+            \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::reserveStockStatic($order);
 
             DB::commit();
 
@@ -266,6 +267,9 @@ class ClientOrderController extends Controller
         // Hủy đơn hàng ngay lập tức
         $order->status = 'cancelled';
         $order->save();
+
+        // Cộng lại tồn kho khi hủy đơn hàng
+        \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
 
         // Tạo record lưu lý do hủy
         OrderReturn::create([
@@ -367,22 +371,26 @@ class ClientOrderController extends Controller
             }
         }
 
-        // Tạo record trả hàng
+        // Tạo record trả hàng với status pending
+        // KHÔNG thay đổi trạng thái đơn hàng - để admin xử lý
         $orderReturn = OrderReturn::create([
             'order_id'     => $order->id,
             'type'         => 'return',
             'reason'       => $returnReason,
             'client_note'  => $clientNote,
-            'status'       => 'pending',
+            'status'       => 'pending', // Chờ admin phê duyệt
             'requested_at' => now(),
             'images'       => $productImages,
             'video'        => $videoPath,
             'selected_products' => $selectedProducts,
         ]);
 
+        // Trạng thái đơn hàng vẫn giữ nguyên 'delivered' 
+        // Chỉ khi admin phê duyệt mới chuyển thành 'returned'
+
         return response()->json([
             'success' => true, 
-            'message' => 'Yêu cầu đổi/trả hàng đã được gửi với đầy đủ chứng minh!'
+            'message' => 'Yêu cầu đổi/trả hàng đã được gửi với đầy đủ chứng minh! Admin sẽ xem xét và xử lý yêu cầu của bạn.'
         ]);
     }
 

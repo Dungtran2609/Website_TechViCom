@@ -171,7 +171,12 @@ class ClientProductController extends Controller
                 break;
         }
 
-        $products   = $query->paginate(12);
+        // Kiểm tra nếu có yêu cầu hiển thị tất cả sản phẩm
+        if ($request->has('show_all') && $request->show_all == 'true') {
+            $products = $query->get();
+        } else {
+            $products = $query->paginate(12);
+        }
         $categories = Category::where('status', 1)
             ->with(['children' => function($q) {
                 $q->where('status', 1);

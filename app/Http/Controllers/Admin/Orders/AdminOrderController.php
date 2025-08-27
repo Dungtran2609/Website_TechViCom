@@ -442,6 +442,12 @@ $subtotal = $order->orderItems->sum(function ($item) {
                 \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
             }
             
+            // Nếu chuyển từ trạng thái khác sang returned, hoàn lại stock
+            if ($data['status'] === 'returned' && $oldStatus !== 'returned') {
+                // Hoàn lại stock khi admin trả hàng
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($order);
+            }
+            
             if ($data['status'] === 'received') {
                 $order->status = 'received';
                 $order->received_at = now();
@@ -731,6 +737,8 @@ $subtotal = $order->orderItems->sum(function ($item) {
                 \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($ord);
                 $ord->status = 'cancelled';
             } elseif ($ret->type === 'return' && $ord->status === 'delivered') {
+                // Cộng lại tồn kho khi duyệt trả hàng
+                \App\Http\Controllers\Client\Checkouts\ClientCheckoutController::releaseStockStatic($ord);
                 $ord->status = 'returned';
             } else {
                 return back()->with('error', 'Không thể xử lý yêu cầu dựa trên trạng thái hiện tại.');

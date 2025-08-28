@@ -49,14 +49,20 @@ class AdminPromotionController extends Controller
         $promotions = $query->latest()->paginate(15)->appends(request()->query());
         
         // Thêm thông tin trạng thái thời gian cho mỗi promotion
-        $now = now();
+        $now = \Carbon\Carbon::now(config('app.timezone'));
         $promotions->getCollection()->transform(function ($promotion) use ($now) {
-            if ($promotion->start_date <= $now && $promotion->end_date >= $now) {
-                $promotion->time_status = 'active'; // Đang diễn ra
-            } elseif ($promotion->start_date > $now) {
-                $promotion->time_status = 'upcoming'; // Sắp diễn ra
-            } elseif ($promotion->end_date < $now) {
-                $promotion->time_status = 'expired'; // Đã kết thúc
+            $start = $promotion->start_date ? \Carbon\Carbon::parse($promotion->start_date)->timezone(config('app.timezone')) : null;
+            $end = $promotion->end_date ? \Carbon\Carbon::parse($promotion->end_date)->timezone(config('app.timezone')) : null;
+            if ($start && $end) {
+                if ($now->betweenIncluded($start, $end)) {
+                    $promotion->time_status = 'active'; // Đang diễn ra
+                } elseif ($now->lessThan($start)) {
+                    $promotion->time_status = 'upcoming'; // Sắp diễn ra
+                } elseif ($now->greaterThan($end)) {
+                    $promotion->time_status = 'expired'; // Đã kết thúc
+                } else {
+                    $promotion->time_status = 'unknown';
+                }
             } else {
                 $promotion->time_status = 'unknown';
             }
@@ -77,30 +83,11 @@ class AdminPromotionController extends Controller
         $expiredPromotions = Promotion::where('status', 1)
             ->where('end_date', '<', $now)
             ->get();
-            
         foreach ($expiredPromotions as $promotion) {
             $promotion->status = 0;
             $promotion->save();
         }
-        
-        // Ẩn tất cả chương trình đang kích hoạt trước khi kích hoạt chương trình mới
-        $currentlyActivePromotions = Promotion::where('status', 1)->get();
-        foreach ($currentlyActivePromotions as $promotion) {
-            $promotion->status = 0;
-            $promotion->save();
-        }
-        
-        // Kích hoạt chương trình đang diễn ra (ưu tiên cao nhất)
-        $activePromotion = Promotion::where('status', 0)
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now)
-            ->orderBy('start_date', 'asc')
-            ->first();
-            
-        if ($activePromotion) {
-            $activePromotion->status = 1;
-            $activePromotion->save();
-        }
+        // Không tự động tắt các promotion đang kích hoạt khác, không tự động kích hoạt promotion mới ở đây
     }
 
     public function create()
@@ -228,24 +215,22 @@ class AdminPromotionController extends Controller
 
     public function edit($id)
     {
-                $promotion = Promotion::with(['categories', 'products', 'coupons'])->findOrFail($id);
-                $categories = Category::all();
-                
-                // Sắp xếp sản phẩm: sản phẩm đã chọn lên đầu
-                $allProducts = Product::all();
-                $selectedProductIds = $promotion->products->pluck('id')->toArray();
-                
-                $selectedProducts = $allProducts->whereIn('id', $selectedProductIds);
-                $unselectedProducts = $allProducts->whereNotIn('id', $selectedProductIds);
-                
-                $products = $selectedProducts->merge($unselectedProducts);
-                
-                $coupons = \App\Models\Coupon::where(function($q) use ($promotion) {
-                        $q->whereNull('promotion_id')
-                            ->orWhere('promotion_id', 0)
-                            ->orWhere('promotion_id', $promotion->id);
-                })->get();
-                return view('admin.promotions.edit', compact('promotion', 'categories', 'products', 'coupons'));
+        $promotion = Promotion::with(['categories', 'products', 'coupons'])->findOrFail($id);
+        $categories = Category::all();
+        // Sắp xếp sản phẩm: sản phẩm đã chọn lên đầu
+        $allProducts = Product::all();
+        $selectedProductIds = $promotion->products->pluck('id')->toArray();
+        $selectedProducts = $allProducts->whereIn('id', $selectedProductIds);
+        $unselectedProducts = $allProducts->whereNotIn('id', $selectedProductIds);
+        $products = $selectedProducts->merge($unselectedProducts);
+        $coupons = \App\Models\Coupon::where(function($q) use ($promotion) {
+            $q->whereNull('promotion_id')
+                ->orWhere('promotion_id', 0)
+                ->orWhere('promotion_id', $promotion->id);
+        })->get();
+        // Đảm bảo biến $selectedType luôn có giá trị
+        $selectedType = old('flash_type', $promotion->flash_type);
+        return view('admin.promotions.edit', compact('promotion', 'categories', 'products', 'coupons', 'selectedType'));
     }
 
         public function update(PromotionRequest $request, $id)

@@ -363,20 +363,6 @@ $subtotal = $order->orderItems->sum(function ($item) {
         // TÍNH LẠI THEO ĐƠN HIỆN TẠI (sau khi item được cập nhật)
         $subtotal = $order->orderItems()->sum(DB::raw('COALESCE(total_price, price*quantity)'));
 
-        // VÔ HIỆU HÓA: Không cho phép thay đổi shipping_method_id và coupon
-        // $methodId = $data['shipping_method_id'] ?? $order->shipping_method_id;
-        // $order->shipping_method_id = $methodId;
-
-        // VÔ HIỆU HÓA: Không cho phép thay đổi coupon
-        // if (isset($data['coupon_id'])) {
-        //     $order->coupon_id = $data['coupon_id'];
-        //     $order->coupon_code = Coupon::find($data['coupon_id'])?->code;
-        // } elseif (!empty($data['coupon_code'])) {
-        //     $order->coupon_code = $data['coupon_code'];
-        //     $order->coupon_id = Coupon::where('code', $data['coupon_code'])->value('id');
-        // }
-
-        // TÍNH DISCOUNT GIỐNG CLIENT
         $discountAmount = 0;
         $coupon = null;
         if ($order->coupon_id) {
@@ -412,27 +398,11 @@ $subtotal = $order->orderItems->sum(function ($item) {
         $order->recipient_phone = $data['recipient_phone'] ?? $order->recipient_phone;
         $order->recipient_address = $data['recipient_address'] ?? $order->recipient_address;
 
-        // VÔ HIỆU HÓA: Không cho phép thay đổi phương thức thanh toán
-        // if ($oldStatus === 'pending' && !empty($data['payment_method'])) {
-        //     $order->payment_method = $data['payment_method'];
-        // }
 
         // Cập nhật trạng thái thanh toán
         if (!empty($data['payment_status'])) {
             $order->payment_status = $data['payment_status'];
         }
-
-        // ====== QUY TẮC MỚI: nếu thanh toán ONLINE đã "paid" thì tự chuyển trạng thái đơn từ pending => processing ======
-        // (tránh việc "paid" mà đơn vẫn ở trạng thái pending)
-        // ĐÃ BỎ ĐOẠN NÀY THEO YÊU CẦU KHÁCH HÀNG
-        // if (
-        //     $isOnlinePayment
-        //     && ($data['payment_status'] ?? $order->payment_status) === 'paid'
-        //     && ($data['status'] ?? $order->status) === 'pending'
-        // ) {
-        //     // Nếu người dùng không tự set status thì tự nâng lên processing
-        //     $order->status = 'processing';
-        // }
 
         // Nếu client gửi status rõ ràng thì ưu tiên theo client
         if (!empty($data['status'])) {

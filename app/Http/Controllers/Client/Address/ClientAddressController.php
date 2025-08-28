@@ -67,12 +67,6 @@ class ClientAddressController extends Controller
             return response()->json([]);
         }
     }
-
-    /**
-     * GET /api/wards/{districtCodeOrSlug}
-     * Trả danh sách phường/xã theo quận/huyện thuộc Hà Nội.
-     * Cho phép truyền code (vd: '001') hoặc slug tên (vd: 'ba-dinh').
-     */
     public function getWards($districtCode)
     {
         try {
@@ -114,10 +108,6 @@ class ClientAddressController extends Controller
         return ($code === '01' || $code === 'hanoi' || $code === 'ha-noi') ? '01' : $code;
     }
 
-    /**
-     * Nhận 'districtCode' hoặc slug tên quận và trả về mã quận hợp lệ của Hà Nội.
-     * Dùng cache từ getDistricts().
-     */
     protected function resolveDistrictCode(string $input): ?string
     {
         $input = strtolower(trim($input));

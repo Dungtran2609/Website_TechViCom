@@ -59,9 +59,6 @@ class AdminCategoryController extends Controller
         return view('admin.products.categories.index', compact('categories', 'parentCategories', 'childCategories'));
     }
 
-
-
-
     public function create()
     {
         $categories = Category::all();

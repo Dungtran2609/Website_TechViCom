@@ -532,7 +532,7 @@
 
     @if ($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 mx-4 mt-4" role="alert">
-            <strong class="font-bold">Lỗi validation:</strong>
+            <strong class="font-bold">Lỗi :</strong>
             <ul class="mt-2">
                 @foreach ($errors->all() as $error)
                     <li>• {{ $error }}</li>
@@ -1018,7 +1018,7 @@
                         <div class="flex justify-between"><span>Tạm tính:</span><span
                                 id="subtotal">{{ number_format($subtotal) }}₫</span></div>
                         <div class="flex justify-between"><span>Phí vận chuyển:</span><span
-                                id="shipping-fee">{{ number_format(($subtotal ?? 0) >= 3000000 ? 0 : 50000) }}₫</span>
+                                id="shipping-fee">{{ number_format(($subtotal ?? 0) >= 3000000 ? 0 : (request('shipping_method_id') == 2 ? 0 : 50000)) }}₫</span>
                         </div>
                         <div class="flex justify-between text-green-600" id="discount-row" style="display:none">
                             <span>Giảm giá:</span><span id="discount-amount">-0₫</span>
@@ -1294,8 +1294,22 @@
             const subtotal = Number(window.checkoutSubtotal || 0);
             const discount = Number(window.checkoutDiscount || 0);
             const method = document.querySelector('input[name="shipping_method_id"]:checked')?.value || '1';
+            
             let shipping = 0;
-            if (method == '1') shipping = subtotal >= 3000000 ? 0 : 50000;
+            if (subtotal < 3000000) {
+                // Dưới 3 triệu
+                if (method == '2') {
+                    // Nhận tại cửa hàng
+                    shipping = 0;
+                } else {
+                    // Giao tận nơi
+                    shipping = 50000;
+                }
+            } else {
+                // Từ 3 triệu trở lên - free ship
+                shipping = 0;
+            }
+            
             const total = Math.max(0, subtotal + shipping - discount);
             const subtotalEl = document.getElementById('subtotal');
             const shippingEl = document.getElementById('shipping-fee');
@@ -1533,12 +1547,65 @@
                     const sm = document.querySelector('input[name="shipping_method_id"]:checked');
                     let shippingText = 'Chưa chọn';
                     if (sm && window.shippingMethods) shippingText = window.shippingMethods[sm.value] || 'Chưa chọn';
-                    shipping.innerHTML = `<div><strong>Phương thức:</strong> ${shippingText}</div>`;
+                    
+                    // Tính phí vận chuyển
+                    const subtotal = Number(window.checkoutSubtotal || 0);
+                    let shippingFee = 0;
+                    if (subtotal < 3000000) {
+                        if (sm.value == '2') {
+                            shippingFee = 0; // Nhận tại cửa hàng
+                        } else {
+                            shippingFee = 50000; // Giao tận nơi
+                        }
+                    } else {
+                        shippingFee = 0; // Free ship từ 3 triệu
+                    }
+                    
+                    shipping.innerHTML = `<div><strong>Phương thức:</strong> ${shippingText}</div>
+                                        <div><strong>Phí vận chuyển:</strong> ${new Intl.NumberFormat('vi-VN').format(shippingFee)}₫</div>`;
 
                     const pay = document.getElementById('payment-summary');
                     const pm = document.querySelector('input[name="payment_method"]:checked');
                     const txt = pm?.value === 'cod' ? 'Thanh toán khi nhận hàng (COD)' : 'Thanh toán online';
                     pay.innerHTML = `<div><strong>Phương thức:</strong> ${txt}</div>`;
+                    
+                    // Hiển thị tổng tiền
+                    const discount = Number(window.checkoutDiscount || 0);
+                    const total = Math.max(0, subtotal + shippingFee - discount);
+                    
+                    // Tìm hoặc tạo element hiển thị tổng tiền
+                    let totalSummary = document.getElementById('total-summary');
+                    if (!totalSummary) {
+                        totalSummary = document.createElement('div');
+                        totalSummary.id = 'total-summary';
+                        totalSummary.className = 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 mb-6 shadow-sm';
+                        totalSummary.innerHTML = `
+                            <div class="flex items-center mb-4">
+                                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-calculator text-orange-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-orange-900 text-lg">Tổng tiền đơn hàng</h4>
+                            </div>
+                            <div id="total-summary-content" class="text-sm"></div>
+                        `;
+                        
+                        // Chèn vào sau payment-summary
+                        const paymentContainer = document.getElementById('payment-summary').parentElement;
+                        paymentContainer.parentNode.insertBefore(totalSummary, paymentContainer.nextSibling);
+                    }
+                    
+                    const totalSummaryContent = document.getElementById('total-summary-content');
+                    if (totalSummaryContent) {
+                        let totalHtml = `<div><strong>Tạm tính:</strong> ${new Intl.NumberFormat('vi-VN').format(subtotal)}₫</div>`;
+                        if (shippingFee > 0) {
+                            totalHtml += `<div><strong>Phí vận chuyển:</strong> ${new Intl.NumberFormat('vi-VN').format(shippingFee)}₫</div>`;
+                        }
+                        if (discount > 0) {
+                            totalHtml += `<div class="text-green-600"><strong>Giảm giá:</strong> -${new Intl.NumberFormat('vi-VN').format(discount)}₫</div>`;
+                        }
+                        totalHtml += `<div class="text-lg font-bold text-orange-600 border-t pt-2 mt-2"><strong>Tổng cộng:</strong> ${new Intl.NumberFormat('vi-VN').format(total)}₫</div>`;
+                        totalSummaryContent.innerHTML = totalHtml;
+                    }
                 }
 
                 function setupPaymentOptions() {
@@ -2240,6 +2307,51 @@
             if (radio) {
                 radio.checked = true;
             }
+            
+            // Update shipping fee and total
+            updateShippingFee();
+        }
+        
+        // Update shipping fee based on selected method and subtotal
+        function updateShippingFee() {
+            const subtotal = Number(window.checkoutSubtotal || 0);
+            const selectedMethodId = document.querySelector('input[name="shipping_method_id"]:checked')?.value;
+            
+            let shippingFee = 0;
+            if (subtotal < 3000000) {
+                // Dưới 3 triệu
+                if (selectedMethodId == 2) {
+                    // Nhận tại cửa hàng
+                    shippingFee = 0;
+                } else {
+                    // Giao tận nơi
+                    shippingFee = 50000;
+                }
+            } else {
+                // Từ 3 triệu trở lên - free ship
+                shippingFee = 0;
+            }
+            
+            // Update shipping fee display
+            const shippingFeeElement = document.getElementById('shipping-fee');
+            if (shippingFeeElement) {
+                shippingFeeElement.textContent = new Intl.NumberFormat('vi-VN').format(shippingFee) + '₫';
+            }
+            
+            // Update total
+            updateTotal(shippingFee);
+        }
+        
+        // Update total amount
+        function updateTotal(shippingFee) {
+            const subtotal = Number(window.checkoutSubtotal || 0);
+            const discountAmount = Number(window.checkoutDiscountAmount || 0);
+            const total = subtotal + shippingFee - discountAmount;
+            
+            const totalElement = document.getElementById('total-amount');
+            if (totalElement) {
+                totalElement.textContent = new Intl.NumberFormat('vi-VN').format(total) + '₫';
+            }
         }
         
         // Payment method selection
@@ -2265,17 +2377,13 @@
         function updateDiscountRow(discountAmount, couponCode) {
             const discountRow = document.getElementById('discount-row');
             const discountAmountSpan = document.getElementById('discount-amount');
-            const totalAmountSpan = document.getElementById('total-amount');
             
-            if (discountRow && discountAmountSpan && totalAmountSpan) {
+            if (discountRow && discountAmountSpan) {
                 discountRow.style.display = 'flex';
                 discountAmountSpan.textContent = '-' + new Intl.NumberFormat('vi-VN').format(discountAmount) + '₫';
                 
-                // Cập nhật total
-                const subtotal = Number(window.checkoutSubtotal || 0);
-                const shippingFee = subtotal >= 3000000 ? 0 : 50000;
-                const total = subtotal + shippingFee - discountAmount;
-                totalAmountSpan.textContent = new Intl.NumberFormat('vi-VN').format(total) + '₫';
+                // Cập nhật shipping fee và total
+                updateShippingFee();
             }
         }
     </script>

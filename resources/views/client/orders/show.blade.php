@@ -564,7 +564,7 @@
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg p-6">
+                {{-- <div class="bg-white rounded-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
                         <i class="fas fa-route me-2 text-orange-500"></i>
                         Trạng thái đơn hàng
@@ -626,7 +626,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Shipping Info -->
                 <div class="bg-white rounded-lg p-6 mt-4">

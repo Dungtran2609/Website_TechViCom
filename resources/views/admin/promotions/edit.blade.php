@@ -34,18 +34,14 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         {{-- Kiểu áp dụng --}}
                         <div class="mb-3">
-                            <label for="flash_type" class="form-label">Kiểu áp dụng <span
-                                    class="text-danger">*</span></label>
-                            <select name="flash_type" id="flash_type"
-                                class="form-select @error('flash_type') is-invalid @enderror">
-                                @php $selectedType = request()->old('flash_type', $promotion->flash_type); @endphp
+                            <label for="flash_type" class="form-label">Kiểu áp dụng <span class="text-danger">*</span></label>
+                            <select name="flash_type" id="flash_type" class="form-select @error('flash_type') is-invalid @enderror" required>
                                 <option value="">-- Chọn kiểu áp dụng --</option>
-                                <option value="flash_sale" {{ $selectedType == 'flash_sale' ? 'selected' : '' }}>Theo sản
-                                    phẩm (Flash Sale)</option>
+                                <option value="all" {{ old('flash_type', $promotion->flash_type) == 'all' ? 'selected' : '' }}>Toàn bộ sản phẩm</option>
+                                <option value="category" {{ old('flash_type', $promotion->flash_type) == 'category' ? 'selected' : '' }}>Theo danh mục</option>
+                                <option value="flash_sale" {{ old('flash_type', $promotion->flash_type) == 'flash_sale' ? 'selected' : '' }}>Theo sản phẩm (Flash Sale)</option>
                             </select>
                             @error('flash_type')
                                 <div class="invalid-feedback">{{ $message }}</div>

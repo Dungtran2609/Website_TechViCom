@@ -457,7 +457,7 @@
                     <div class="text-center mb-4">
                         <div
                             class="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="fas fa-microchip text-white text-2xl"></i>
+                            <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Techvicom" class="w-8 h-8 text-white">
                         </div>
                         <h4 class="modal-title fw-bold text-dark mb-2" id="authModalLabel">Chào mừng trở lại!</h4>
                         <p class="text-muted small">Đăng nhập để tiếp tục mua sắm đồ điện tử</p>
@@ -494,7 +494,7 @@
                             </div>
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="loginSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-arrow-right me-2"></i>Đăng nhập
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Arrow" class="w-4 h-4 me-2 inline">Đăng nhập
                             </button>
                         </form>
                         <div class="text-center mb-3">
@@ -604,7 +604,7 @@
                             </div>
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" id="registerSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-arrow-right me-2"></i>Đăng ký
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Arrow" class="w-4 h-4 me-2 inline">Đăng ký
                             </button>
                         </form>
                         <div class="text-center mb-3">
@@ -651,7 +651,7 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3"
                                 id="forgotPasswordSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-paper-plane me-2"></i>Gửi link đặt lại mật khẩu
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Send" class="w-4 h-4 me-2 inline">Gửi link đặt lại mật khẩu
                             </button>
                         </form>
                         <div class="text-center mb-2">
@@ -730,7 +730,7 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3"
                                 id="resetPasswordSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-shield-alt me-2"></i>Đặt lại mật khẩu
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Shield" class="w-4 h-4 me-2 inline">Đặt lại mật khẩu
                             </button>
                         </form>
                         <div class="text-center">
@@ -766,7 +766,7 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3"
                                 id="confirmPasswordSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-check me-2"></i>Xác nhận
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Check" class="w-4 h-4 me-2 inline">Xác nhận
                             </button>
                         </form>
                     </div>
@@ -776,7 +776,7 @@
                         <div class="text-center mb-4">
                             <div
                                 class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-envelope text-white text-2xl"></i>
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Email" class="w-8 h-8 text-white">
                             </div>
                             <h4 class="fw-bold text-dark mb-2">Xác thực email</h4>
                             <p class="text-muted">Vui lòng kiểm tra email và nhấp vào liên kết xác thực để hoàn tất
@@ -787,7 +787,7 @@
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3"
                                 id="verifyEmailSubmitBtn"
                                 style="background: linear-gradient(135deg, #ff6c2f 0%, #ff8c42 100%); border: none; border-radius: 12px; font-weight: 600;">
-                                <i class="fas fa-paper-plane me-2"></i>Gửi lại email xác thực
+                                <img src="{{ asset('logos/logo_techvicom.png') }}" alt="Send" class="w-4 h-4 me-2 inline">Gửi lại email xác thực
                             </button>
                         </form>
                         <div class="text-center">

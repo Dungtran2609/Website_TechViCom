@@ -24,8 +24,8 @@ class AdminController extends Controller
         $totalUsers = User::count();
         $totalProducts = Product::count();
         $totalOrders = Order::count();
-        // Tính doanh thu: chỉ đơn hàng đã giao (bao gồm cả COD và online đã thanh toán)
-        $totalRevenue = Order::where('status', 'delivered')
+        // Tính doanh thu: đơn hàng đã giao và đã nhận (bao gồm cả COD và online đã thanh toán)
+        $totalRevenue = Order::whereIn('status', ['delivered', 'received'])
                             ->where(function($query) {
                                 $query->where('payment_status', 'paid')
                                       ->orWhere('payment_method', 'cod');
@@ -38,6 +38,7 @@ class AdminController extends Controller
             'processing' => Order::where('status', 'processing')->count(),
             'shipped' => Order::where('status', 'shipped')->count(),
             'delivered' => Order::where('status', 'delivered')->count(),
+            'received' => Order::where('status', 'received')->count(),
             'cancelled' => Order::where('status', 'cancelled')->count(),
             'returned' => Order::where('status', 'returned')->count(),
         ];
@@ -68,6 +69,12 @@ class AdminController extends Controller
                 'label' => 'Đã giao',
                 'color' => '#28a745'
             ],
+            'received' => [
+                'count' => Order::where('status', 'received')->count(),
+                'revenue' => Order::where('status', 'received')->sum('final_total'),
+                'label' => 'Đã nhận hàng',
+                'color' => '#20c997'
+            ],
             'cancelled' => [
                 'count' => Order::where('status', 'cancelled')->count(),
                 'revenue' => Order::where('status', 'cancelled')->sum('final_total'),
@@ -82,12 +89,12 @@ class AdminController extends Controller
             ],
         ];
 
-        // Doanh thu 7 ngày gần đây (chỉ đã giao)
+        // Doanh thu 7 ngày gần đây (đã giao và đã nhận)
         $revenueLastWeek = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $revenue = Order::whereDate('created_at', $date)
-                           ->where('status', 'delivered')
+                           ->whereIn('status', ['delivered', 'received'])
                            ->where(function($query) {
                                $query->where('payment_status', 'paid')
                                      ->orWhere('payment_method', 'cod');
@@ -100,12 +107,12 @@ class AdminController extends Controller
             ];
         }
 
-        // Đơn hàng 7 ngày gần đây (chỉ đã giao)
+        // Đơn hàng 7 ngày gần đây (đã giao và đã nhận)
         $ordersLastWeek = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::now()->subDays($i);
             $count = Order::whereDate('created_at', $date)
-                         ->where('status', 'delivered')
+                         ->whereIn('status', ['delivered', 'received'])
                          ->where(function($query) {
                              $query->where('payment_status', 'paid')
                                    ->orWhere('payment_method', 'cod');
@@ -117,26 +124,26 @@ class AdminController extends Controller
             ];
         }
 
-        // Top 5 sản phẩm bán chậm nhất (chỉ đã giao, trừ đi đã hủy)
+        // Top 5 sản phẩm bán chậm nhất (đã giao + đã nhận, trừ đi đã hủy)
         $slowMovingProducts = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
             ->leftJoin('order_items', 'product_variants.id', '=', 'order_items.variant_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
             ->select('products.id', 'products.name', 
                     DB::raw('COALESCE(SUM(product_variants.stock), 0) as total_stock'),
-                    DB::raw('COALESCE(SUM(CASE WHEN orders.status = "delivered" THEN order_items.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.quantity ELSE 0 END), 0) as total_sold'))
+                    DB::raw('COALESCE(SUM(CASE WHEN orders.status IN ("delivered", "received") THEN order_items.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.quantity ELSE 0 END), 0) as total_sold'))
             ->groupBy('products.id', 'products.name')
             ->havingRaw('total_sold > 0') // Chỉ hiển thị sản phẩm có số lượng bán > 0
             ->orderBy('total_sold', 'asc')
             ->limit(5)
             ->get();
 
-        // Top 5 sản phẩm bán chạy nhất (chỉ đã giao, trừ đi đã hủy)
+        // Top 5 sản phẩm bán chạy nhất (đã giao + đã nhận, trừ đi đã hủy)
         $topProducts = Product::leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
             ->leftJoin('order_items', 'product_variants.id', '=', 'order_items.variant_id')
             ->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')
             ->select('products.id', 'products.name', 
-                    DB::raw('COALESCE(SUM(CASE WHEN orders.status = "delivered" THEN order_items.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.quantity ELSE 0 END), 0) as total_sold'),
-                    DB::raw('COALESCE(SUM(CASE WHEN orders.status = "delivered" THEN order_items.total_price ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.total_price ELSE 0 END), 0) as total_revenue'))
+                    DB::raw('COALESCE(SUM(CASE WHEN orders.status IN ("delivered", "received") THEN order_items.quantity ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.quantity ELSE 0 END), 0) as total_sold'),
+                    DB::raw('COALESCE(SUM(CASE WHEN orders.status IN ("delivered", "received") THEN order_items.total_price ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN orders.status = "cancelled" THEN order_items.total_price ELSE 0 END), 0) as total_revenue'))
             ->groupBy('products.id', 'products.name')
             ->havingRaw('total_sold > 0') // Chỉ hiển thị sản phẩm có số lượng bán > 0
             ->orderBy('total_sold', 'desc')
@@ -302,11 +309,11 @@ class AdminController extends Controller
         ));
     }
 
-    // Lấy doanh thu cho một ngày cụ thể (chỉ đã giao)
+    // Lấy doanh thu cho một ngày cụ thể (đã giao và đã nhận)
     private function getRevenueForDate($date)
     {
         return Order::whereDate('created_at', $date)
-                   ->where('status', 'delivered')
+                   ->whereIn('status', ['delivered', 'received'])
                    ->where(function($query) {
                        $query->where('payment_status', 'paid')
                              ->orWhere('payment_method', 'cod');
@@ -314,11 +321,11 @@ class AdminController extends Controller
                    ->sum('final_total');
     }
 
-    // Lấy số đơn hàng cho một ngày cụ thể (chỉ đã giao)
+    // Lấy số đơn hàng cho một ngày cụ thể (đã giao và đã nhận)
     private function getOrdersForDate($date)
     {
         return Order::whereDate('created_at', $date)
-                   ->where('status', 'delivered')
+                   ->whereIn('status', ['delivered', 'received'])
                    ->where(function($query) {
                        $query->where('payment_status', 'paid')
                              ->orWhere('payment_method', 'cod');
@@ -326,11 +333,11 @@ class AdminController extends Controller
                    ->count();
     }
 
-    // Lấy doanh thu cho khoảng thời gian (chỉ đã giao)
+    // Lấy doanh thu cho khoảng thời gian (đã giao và đã nhận)
     private function getRevenueForDateRange($startDate, $endDate)
     {
         return Order::whereBetween('created_at', [$startDate, $endDate])
-                   ->where('status', 'delivered')
+                   ->whereIn('status', ['delivered', 'received'])
                    ->where(function($query) {
                        $query->where('payment_status', 'paid')
                              ->orWhere('payment_method', 'cod');
@@ -338,11 +345,11 @@ class AdminController extends Controller
                    ->sum('final_total');
     }
 
-    // Lấy số đơn hàng cho khoảng thời gian (chỉ đã giao)
+    // Lấy số đơn hàng cho khoảng thời gian (đã giao và đã nhận)
     private function getOrdersForDateRange($startDate, $endDate)
     {
         return Order::whereBetween('created_at', [$startDate, $endDate])
-                   ->where('status', 'delivered')
+                   ->whereIn('status', ['delivered', 'received'])
                    ->where(function($query) {
                        $query->where('payment_status', 'paid')
                              ->orWhere('payment_method', 'cod');

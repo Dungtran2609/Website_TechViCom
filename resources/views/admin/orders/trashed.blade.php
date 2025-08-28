@@ -116,14 +116,7 @@
                                                 <iconify-icon icon="solar:restart-bold" class="align-middle fs-18"></iconify-icon>
                                             </button>
                                         </form>
-                                        <form action="{{ route('admin.orders.forceDelete', $order['id']) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('Bạn có chắc muốn xóa vĩnh viễn đơn hàng này?')" title="Xóa vĩnh viễn">
-                                                <iconify-icon icon="solar:trash-bin-minimalistic-2-broken" class="align-middle fs-18"></iconify-icon>
-                                            </button>
-                                        </form>
+                                       
                                     </div>
                                 </td>
                             </tr>

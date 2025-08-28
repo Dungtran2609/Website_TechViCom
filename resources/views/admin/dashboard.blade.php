@@ -12,7 +12,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h1 class="display-6 fw-bold mb-2">
-                                <i class="fas fa-tachometer-alt me-3"></i>Dashboard Quản Trị
+                                <i class="fas fa-tachometer-alt me-3"></i>Trang Thống Kê
                             </h1>
                             <p class="lead mb-0 opacity-75">
                                 Chào mừng {{ Auth::user()->name ?? 'Admin' }} - {{ Carbon\Carbon::now()->format('d/m/Y H:i') }}
@@ -42,7 +42,7 @@
                     </small>
                     <small class="text-primary d-block mt-1">
                         <i class="fas fa-check me-1"></i>
-                        {{ $orderStats['delivered'] }} đã giao
+                        {{ $orderStats['delivered'] }} đã giao, {{ $orderStats['received'] }} đã nhận
                     </small>
                 </div>
             </div>
@@ -167,7 +167,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">
                             <i class="fas fa-chart-line me-2 text-primary"></i>
-                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (Chỉ đã giao)</span>
+                            <span id="revenueChartTitle">Doanh thu 7 ngày gần đây (Đã giao + Đã nhận)</span>
                         </h5>
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleChartType()">
@@ -201,14 +201,14 @@
                         <div class="display-6 fw-bold text-success mb-2">
                             {{ number_format($totalRevenue) }}₫
                         </div>
-                        <p class="text-muted mb-0">Tổng doanh thu (đã giao)</p>
+                        <p class="text-muted mb-0">Tổng doanh thu (đã giao + đã nhận)</p>
                     </div>
                     
                     <div class="row g-3">
                         <div class="col-6">
                             <div class="text-center p-3 bg-light rounded">
-                                <div class="h4 fw-bold text-primary mb-1">{{ $orderStats['delivered'] }}</div>
-                                <small class="text-muted">Đơn đã giao</small>
+                                <div class="h4 fw-bold text-primary mb-1">{{ $orderStats['delivered'] + $orderStats['received'] }}</div>
+                                <small class="text-muted">Đơn hoàn thành</small>
                             </div>
                         </div>
                         <div class="col-6">
@@ -229,7 +229,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Tỷ lệ hoàn thành:</span>
                             <span class="fw-bold text-info">
-                                {{ $totalOrders > 0 ? round(($orderStats['delivered'] / $totalOrders) * 100, 1) : '0' }}%
+                                {{ $totalOrders > 0 ? round((($orderStats['delivered'] + $orderStats['received']) / $totalOrders) * 100, 1) : '0' }}%
                             </span>
                         </div>
                     </div>
@@ -272,7 +272,11 @@
                             <div class="col-6">
                                 <div class="d-flex align-items-center mb-1">
                                     <div class="legend-color" style="background-color: #28a745; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
-                                    <small class="text-muted" style="font-size: 10px;">Hoàn thành</small>
+                                    <small class="text-muted" style="font-size: 10px;">Đã giao</small>
+                                </div>
+                                <div class="d-flex align-items-center mb-1">
+                                    <div class="legend-color" style="background-color: #20c997; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
+                                    <small class="text-muted" style="font-size: 10px;">Đã nhận</small>
                                 </div>
                                 <div class="d-flex align-items-center mb-1">
                                     <div class="legend-color" style="background-color: #dc3545; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px;"></div>
@@ -303,20 +307,51 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        @foreach($orderStatusDetails as $status => $detail)
-                        <div class="col-xl-2 col-md-4 col-sm-6">
-                            <div class="text-center p-3 rounded" style="background-color: {{ $detail['color'] }}15; border-left: 4px solid {{ $detail['color'] }}">
-                                <div class="d-flex align-items-center justify-content-center mb-2">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; background-color: {{ $detail['color'] }}20;">
-                                        <i class="fas fa-shopping-cart text-white" style="color: {{ $detail['color'] }} !important;"></i>
+                    <!-- Hàng đầu: 4 cột -->
+                    <div class="row g-3 mb-3">
+                        @php
+                            $firstRowStatuses = ['pending', 'processing', 'shipped', 'delivered'];
+                        @endphp
+                        @foreach($firstRowStatuses as $status)
+                            @if(isset($orderStatusDetails[$status]))
+                            @php $detail = $orderStatusDetails[$status]; @endphp
+                            <div class="col-xl-3 col-md-6 col-sm-6">
+                                <div class="text-center p-3 rounded" style="background-color: {{ $detail['color'] }}15; border-left: 4px solid {{ $detail['color'] }}">
+                                    <div class="d-flex align-items-center justify-content-center mb-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; background-color: {{ $detail['color'] }}20;">
+                                            <i class="fas fa-shopping-cart text-white" style="color: {{ $detail['color'] }} !important;"></i>
+                                        </div>
                                     </div>
+                                    <h4 class="fw-bold mb-1" style="color: {{ $detail['color'] }}">{{ $detail['count'] }}</h4>
+                                    <p class="text-muted mb-1 small">{{ $detail['label'] }}</p>
+                                    <p class="mb-0 fw-bold" style="color: {{ $detail['color'] }}">{{ number_format($detail['revenue']) }}₫</p>
                                 </div>
-                                <h4 class="fw-bold mb-1" style="color: {{ $detail['color'] }}">{{ $detail['count'] }}</h4>
-                                <p class="text-muted mb-1 small">{{ $detail['label'] }}</p>
-                                <p class="mb-0 fw-bold" style="color: {{ $detail['color'] }}">{{ number_format($detail['revenue']) }}₫</p>
                             </div>
-                        </div>
+                            @endif
+                        @endforeach
+                    </div>
+                    
+                    <!-- Hàng thứ hai: 3 cột -->
+                    <div class="row g-3">
+                        @php
+                            $secondRowStatuses = ['received', 'cancelled', 'returned'];
+                        @endphp
+                        @foreach($secondRowStatuses as $status)
+                            @if(isset($orderStatusDetails[$status]))
+                            @php $detail = $orderStatusDetails[$status]; @endphp
+                            <div class="col-xl-4 col-md-6 col-sm-6">
+                                <div class="text-center p-3 rounded" style="background-color: {{ $detail['color'] }}15; border-left: 4px solid {{ $detail['color'] }}">
+                                    <div class="d-flex align-items-center justify-content-center mb-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; background-color: {{ $detail['color'] }}20;">
+                                            <i class="fas fa-shopping-cart text-white" style="color: {{ $detail['color'] }} !important;"></i>
+                                        </div>
+                                    </div>
+                                    <h4 class="fw-bold mb-1" style="color: {{ $detail['color'] }}">{{ $detail['count'] }}</h4>
+                                    <p class="text-muted mb-1 small">{{ $detail['label'] }}</p>
+                                    <p class="mb-0 fw-bold" style="color: {{ $detail['color'] }}">{{ number_format($detail['revenue']) }}₫</p>
+                                </div>
+                            </div>
+                            @endif
                         @endforeach
                     </div>
                 </div>
@@ -430,7 +465,8 @@
                                                 'pending' => ['class' => 'warning', 'text' => 'Chờ xử lý'],
                                                 'processing' => ['class' => 'info', 'text' => 'Đang xử lý'],
                                                 'shipped' => ['class' => 'primary', 'text' => 'Đang giao'],
-                                                'delivered' => ['class' => 'success', 'text' => 'Hoàn thành'],
+                                                'delivered' => ['class' => 'success', 'text' => 'Đã giao'],
+                                                'received' => ['class' => 'success', 'text' => 'Đã nhận hàng'],
                                                 'cancelled' => ['class' => 'danger', 'text' => 'Đã hủy'],
                                                 'returned' => ['class' => 'secondary', 'text' => 'Đã trả']
                                             ];
@@ -457,7 +493,7 @@
                             Sản phẩm bán chạy
                             <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Chỉ đã giao, trừ đi đã hủy
+                                Đã giao + Đã nhận, trừ đi đã hủy
                             </small>
                         </h5>
                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-warning btn-sm">
@@ -512,7 +548,7 @@
                             Sản phẩm bán chậm
                             <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
                                 <i class="fas fa-info-circle me-1"></i>
-                                Chỉ đã giao, trừ đi đã hủy
+                                Đã giao + Đã nhận, trừ đi đã hủy
                             </small>
                         </h5>
                         <a href="{{ route('admin.products.index') }}" class="btn btn-outline-danger btn-sm">
@@ -870,18 +906,19 @@
             orderStatusChart = new Chart(orderStatusCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Chờ xử lý', 'Đang xử lý', 'Đang giao', 'Hoàn thành', 'Đã hủy', 'Đã trả'],
+                    labels: ['Chờ xử lý', 'Đang xử lý', 'Đang giao', 'Đã giao', 'Đã nhận', 'Đã hủy', 'Đã trả'],
                     datasets: [{
                         data: [
                             orderStats.pending,
                             orderStats.processing,
                             orderStats.shipped,
                             orderStats.delivered,
+                            orderStats.received,
                             orderStats.cancelled,
                             orderStats.returned
                         ],
                         backgroundColor: [
-                            '#ffc107', '#17a2b8', '#007bff', '#28a745', '#dc3545', '#6c757d'
+                            '#ffc107', '#17a2b8', '#007bff', '#28a745', '#20c997', '#dc3545', '#6c757d'
                         ],
                         borderWidth: 0,
                         cutout: '60%'
@@ -966,19 +1003,19 @@
             let title = '';
             switch(period) {
                 case '7days':
-                    title = 'Doanh thu 7 ngày gần đây (Chỉ đã giao)';
+                    title = 'Doanh thu 7 ngày gần đây (Đã giao + Đã nhận)';
                     break;
                 case '30days':
-                    title = 'Doanh thu 30 ngày gần đây (Chỉ đã giao)';
+                    title = 'Doanh thu 30 ngày gần đây (Đã giao + Đã nhận)';
                     break;
                 case 'month':
-                    title = `Doanh thu tháng ${month}/${year} (Chỉ đã giao)`;
+                    title = `Doanh thu tháng ${month}/${year} (Đã giao + Đã nhận)`;
                     break;
                 case 'quarter':
-                    title = `Doanh thu quý ${quarter}/${year} (Chỉ đã giao)`;
+                    title = `Doanh thu quý ${quarter}/${year} (Đã giao + Đã nhận)`;
                     break;
                 case 'year':
-                    title = `Doanh thu năm ${year} (Chỉ đã giao)`;
+                    title = `Doanh thu năm ${year} (Đã giao + Đã nhận)`;
                     break;
             }
             document.getElementById('revenueChartTitle').textContent = title;

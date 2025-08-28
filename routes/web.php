@@ -49,6 +49,7 @@ use App\Http\Controllers\Client\Orders\ClientOrderController;
 use App\Http\Controllers\Client\Products\ClientProductCommentController;
 use App\Http\Controllers\Client\Products\ClientProductController;
 use App\Http\Controllers\Client\InvoiceController;
+use App\Http\Controllers\Client\TermsController;
 
 // Chatbot API
 use App\Http\Controllers\ChatbotController;
@@ -80,6 +81,7 @@ Route::view('/authorized-dealer', 'client.pages.authorized_dealer')->name('autho
 Route::view('/enterprise-project', 'client.pages.enterprise_project')->name('enterprise_project');
 Route::view('/tuyen-dung', 'client.pages.recruitment')->name('recruitment');
 Route::view('/chatbot', 'client.chatbots.index')->name('chatbot.index');
+Route::get('/terms', [TermsController::class, 'index'])->name('terms');
 // Hóa đơn (Invoice) - phía client
 Route::get('/invoice', [InvoiceController::class, 'index'])->name('client.invoice.index');
 Route::post('/invoice/send-verification-code', [InvoiceController::class, 'sendVerificationCode'])

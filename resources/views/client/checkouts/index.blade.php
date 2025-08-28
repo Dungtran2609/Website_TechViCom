@@ -874,7 +874,7 @@
                                     </div>
                                     <label for="agree-terms" class="ml-3 text-sm text-gray-700">
                                         Tôi đã đọc và đồng ý với 
-                                        <a href="#" class="text-orange-600 hover:text-orange-700 underline font-medium">điều khoản và điều kiện</a> 
+                                        <a href="{{ route('terms') }}" target="_blank" class="text-orange-600 hover:text-orange-700 underline font-medium">điều khoản và điều kiện</a> 
                                         của website
                                     </label>
                                 </div>

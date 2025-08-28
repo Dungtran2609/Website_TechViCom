@@ -8,12 +8,7 @@
                         <iconify-icon icon="solar:hamburger-menu-broken" class="fs-24 align-middle"></iconify-icon>
                     </button>
                 </div>
-
-
-                <!-- Welcome Message -->
-                <div class="topbar-item">
-                    <h4 class="fw-bold topbar-button pe-none text-uppercase mb-0">Welcome!</h4>
-                </div>
+             
             </div>
 
 

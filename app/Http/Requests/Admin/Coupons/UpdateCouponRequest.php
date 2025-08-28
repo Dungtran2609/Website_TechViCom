@@ -111,29 +111,28 @@ class UpdateCouponRequest extends FormRequest
 
         $validator->after(function ($validator) {
             $data = $this->all();
+            $today = date('Y-m-d');
+            $newStart = $this->input('start_date');
             if (isset($data['min_order_value'], $data['max_order_value']) && $data['min_order_value'] > $data['max_order_value']) {
                 $validator->errors()->add('max_order_value', 'Giá trị đơn hàng tối đa phải lớn hơn hoặc bằng tối thiểu.');
             }
 
-            // Custom: only block changing start_date to a past date
             $routeCoupon = $this->route('coupon');
             $routeId = $this->route('id');
-            if (!is_null($routeCoupon) || !is_null($routeId)) {
-                $couponId = $routeCoupon ?? $routeId;
-                $oldCoupon = \App\Models\Coupon::find($couponId);
-                if ($oldCoupon) {
-                    $oldStart = $oldCoupon->start_date ? date('Y-m-d', strtotime($oldCoupon->start_date)) : null;
-                    $newStart = $this->input('start_date');
-                    if ($newStart && $newStart !== $oldStart) {
-                        if (strtotime($newStart) < strtotime(date('Y-m-d'))) {
-                            $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
-                        }
+            $couponId = $routeCoupon ?? $routeId;
+            $oldCoupon = $couponId ? \App\Models\Coupon::find($couponId) : null;
+
+            // Nếu người dùng đổi ngày bắt đầu thì ngày mới phải >= hôm nay
+            if ($oldCoupon && $oldCoupon->start_date) {
+                $oldStart = date('Y-m-d', strtotime($oldCoupon->start_date));
+                if ($newStart && $newStart !== $oldStart) {
+                    if (strtotime($newStart) < strtotime($today)) {
+                        $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
                     }
                 }
             } else {
-                // Create: always block past date
-                $newStart = $this->input('start_date');
-                if ($newStart && strtotime($newStart) < strtotime(date('Y-m-d'))) {
+                // Nếu tạo mới hoặc không có ngày cũ, luôn kiểm tra ngày mới
+                if ($newStart && strtotime($newStart) < strtotime($today)) {
                     $validator->errors()->add('start_date', 'Không được chọn ngày bắt đầu trong quá khứ.');
                 }
             }

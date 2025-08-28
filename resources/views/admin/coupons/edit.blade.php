@@ -162,8 +162,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
                     <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror"
-                        value="{{ old('start_date', \Carbon\Carbon::parse($coupon->start_date)->format('Y-m-d')) }}" 
-                        min="{{ date('Y-m-d') }}" 
+                        value="{{ old('start_date', \Carbon\Carbon::parse($coupon->start_date)->format('Y-m-d')) }}"
                         placeholder="Chọn ngày bắt đầu">
                     <small class="form-text text-muted">Ngày bắt đầu hiệu lực của mã giảm giá</small>
                     @error('start_date')

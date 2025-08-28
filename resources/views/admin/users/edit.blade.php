@@ -38,26 +38,26 @@
 
 
                 {{-- Thay đổi ảnh đại diện --}}
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <label for="image_profile" class="form-label">Thay ảnh đại diện mới</label>
                     <input type="file" name="image_profile" id="image_profile"
                            class="form-control @error('image_profile') is-invalid @enderror"
-                           accept="image/*" @if($onlyUserRole) disabled @endif>
+                           accept="image/*" disabled @if($onlyUserRole) disabled @endif>
                     @if($onlyUserRole)
                         <div class="text-muted small mt-1">Không thể thay đổi ảnh đại diện cho tài khoản khách hàng.</div>
                     @endif
                     @error('image_profile')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                </div>
+                </div> --}}
                 <!-- Tên người dùng -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Tên người dùng <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="name"
                            class="form-control @error('name') is-invalid @enderror"
-                           value="{{ old('name', $user->name) }}" @if($onlyUserRole) readonly @endif>
+                           value="{{ old('name', $user->name) }}  " disabled @if($onlyUserRole)    @endif>
                     @if($onlyUserRole)
-                        <input type="hidden" name="name" value="{{ $user->name }}">
+                        <input type="hidden" name="name" value="{{ $user->name}}" >
                     @endif
                     @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -70,7 +70,7 @@
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="email"
                            class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email', $user->email) }}" @if($onlyUserRole) readonly @endif>
+                           value="{{ old('email', $user->email) }}"disabled @if($onlyUserRole) readonly @endif>
                     @if($onlyUserRole)
                         <input type="hidden" name="email" value="{{ $user->email }}">
                     @endif
@@ -81,11 +81,11 @@
 
 
                 <!-- Mật khẩu mới -->
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <label for="password" class="form-label">Mật khẩu mới</label>
                     <input type="password" name="password" id="password"
                            class="form-control @error('password') is-invalid @enderror"
-                           placeholder="Để trống nếu không muốn thay đổi" @if($onlyUserRole) readonly @endif>
+                           placeholder="Để trống nếu không muốn thay đổi" disabled @if($onlyUserRole) readonly @endif>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -101,7 +101,7 @@
                     @error('password_confirmation')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                </div>
+                </div> --}}
 
 
                 <!-- Số điện thoại -->
@@ -109,7 +109,7 @@
                     <label for="phone_number" class="form-label">Số điện thoại</label>
                     <input type="text" name="phone_number" id="phone_number"
                            class="form-control @error('phone_number') is-invalid @enderror"
-                           value="{{ old('phone_number', $user->phone_number) }}" @if($onlyUserRole) readonly @endif>
+                           value="{{ old('phone_number', $user->phone_number) }}" disabled @if($onlyUserRole) readonly @endif>
                     @if($onlyUserRole)
                         <input type="hidden" name="phone_number" value="{{ $user->phone_number }}">
                     @endif
@@ -124,7 +124,7 @@
                     <label for="birthday" class="form-label">Ngày sinh</label>
                     <input type="date" name="birthday" id="birthday"
                            class="form-control @error('birthday') is-invalid @enderror"
-                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}" @if($onlyUserRole) readonly @endif>
+                           value="{{ old('birthday', $user->birthday ? \Carbon\Carbon::parse($user->birthday)->format('Y-m-d') : '') }}"disabled @if($onlyUserRole) readonly @endif>
                     @if($onlyUserRole)
                         <input type="hidden" name="birthday" value="{{ $user->birthday }}">
                     @endif
@@ -137,7 +137,7 @@
                 <!-- Giới tính -->
                 <div class="mb-3">
                     <label for="gender" class="form-label">Giới tính</label>
-                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror" @if($onlyUserRole) disabled @endif>
+                    <select name="gender" id="gender" class="form-select @error('gender') is-invalid @enderror"disabled @if($onlyUserRole) disabled @endif>
                         <option value="">Chọn giới tính</option>
                         <option value="male" {{ old('gender', $user->gender) === 'male' ? 'selected' : '' }}>Nam</option>
                         <option value="female" {{ old('gender', $user->gender) === 'female' ? 'selected' : '' }}>Nữ</option>
@@ -201,12 +201,12 @@
                 @if(!$onlyUserRole)
                 <div class="col-12 mb-3">
                     <label class="form-label font-semibold">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                    <input type="text" name="address_line" class="form-control mb-2 @error('address_line') is-invalid @enderror" id="edit_address_line" value="{{ old('address_line', $defaultAddress->address_line ?? '') }}" placeholder="Nhập số nhà, tên đường...">
+                    <input type="text" name="address_line" class="form-control mb-2 @error('address_line') is-invalid @enderror" id="edit_address_line" value="{{ old('address_line', $defaultAddress->address_line ?? '') }}"disabled placeholder="Nhập số nhà, tên đường...">
                     @error('address_line')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                     <div class="row">
-                        <div class="col-md-4 mb-2">
+                        {{-- <div class="col-md-4 mb-2">
                             <select id="edit_province" name="city_code" class="form-control @error('city_code') is-invalid @enderror">
                                 <option value="">Chọn tỉnh/thành phố</option>
                             </select>
@@ -234,7 +234,7 @@
                             @error('ward_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 @endif

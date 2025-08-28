@@ -7,9 +7,9 @@
         <a href="{{ route('admin.orders.returns') }}" class="btn btn-outline-warning">
             <i class="fas fa-exchange-alt me-1"></i> Hủy/Đổi trả
         </a>
-        <a href="{{ route('admin.orders.trashed') }}" class="btn btn-outline-danger">
+        {{-- <a href="{{ route('admin.orders.trashed') }}" class="btn btn-outline-danger">
             <i class="fas fa-trash-alt me-1"></i> Thùng rác
-        </a>
+        </a> --}}
     </div>
 </div>
 
